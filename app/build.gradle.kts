@@ -33,6 +33,10 @@ android {
     buildFeatures { compose = true }
 }
 
+ksp {
+    arg("room.schemaLocation", "$projectDir/schemas")
+}
+
 dependencies {
     implementation(libs.core.ktx)
     implementation(libs.activity.compose)
