@@ -7,6 +7,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -24,9 +25,10 @@ fun StatusBadge(status: MacroStatus?) {
         MacroStatus.FAILED -> ErrorRed
         MacroStatus.PENDING -> Amber
     }
+    val textColor = if (status == MacroStatus.FAILED) Color.White else OnPrimary
     Text(
         text = status.name,
-        color = OnPrimary,
+        color = textColor,
         fontSize = 11.sp,
         fontWeight = FontWeight.Medium,
         modifier = Modifier

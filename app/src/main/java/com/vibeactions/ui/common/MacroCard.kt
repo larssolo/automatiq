@@ -2,6 +2,8 @@ package com.vibeactions.ui.common
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -26,6 +28,7 @@ fun MacroCard(
     Row(
         Modifier
             .fillMaxWidth()
+            .height(IntrinsicSize.Max)
             .clip(RoundedCornerShape(12.dp))
             .background(Surface)
     ) {
