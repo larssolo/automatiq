@@ -1,7 +1,5 @@
 package com.vibeactions.util
 
-private val DIGITS = Regex("\\d")
-
 /** Accepts optional leading +, then 6–15 digits (spaces ignored). */
 fun isValidPhone(raw: String): Boolean {
     val trimmed = raw.trim()
