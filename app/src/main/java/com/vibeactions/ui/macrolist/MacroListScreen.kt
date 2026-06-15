@@ -8,6 +8,8 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -15,6 +17,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.vibeactions.ui.common.MacroCard
 import com.vibeactions.ui.theme.OnSurfaceVariant
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -25,7 +28,10 @@ fun MacroListScreen(
     vm: MacroListViewModel = hiltViewModel()
 ) {
     val macros by vm.macros.collectAsStateWithLifecycle()
+    val snackbar = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbar) },
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 onClick = onNew,
@@ -49,7 +55,19 @@ fun MacroListScreen(
                             macro = macro,
                             onToggle = { vm.onToggle(macro, it) },
                             onTap = { vm.onTrigger(macro) },
-                            onEdit = { onEdit(macro.id) }
+                            onEdit = { onEdit(macro.id) },
+                            onDelete = {
+                                vm.onDelete(macro)
+                                scope.launch {
+                                    val result = snackbar.showSnackbar(
+                                        message = "Macro deleted",
+                                        actionLabel = "Undo"
+                                    )
+                                    if (result == SnackbarResult.ActionPerformed) {
+                                        vm.onUndoDelete(macro)
+                                    }
+                                }
+                            }
                         )
                     }
                 }

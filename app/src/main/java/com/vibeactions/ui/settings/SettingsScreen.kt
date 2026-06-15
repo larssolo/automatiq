@@ -12,12 +12,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(vm: SettingsViewModel = hiltViewModel()) {
     val context = LocalContext.current
     val snackbar = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
     var pendingExport by remember { mutableStateOf<String?>(null) }
 
     val createDoc = rememberLauncherForActivityResult(
@@ -25,15 +28,21 @@ fun SettingsScreen(vm: SettingsViewModel = hiltViewModel()) {
     ) { uri ->
         val content = pendingExport
         if (uri != null && content != null) {
-            context.contentResolver.openOutputStream(uri)?.use { it.write(content.toByteArray()) }
+            scope.launch(Dispatchers.IO) {
+                context.contentResolver.openOutputStream(uri)?.use { it.write(content.toByteArray()) }
+            }
         }
     }
     val openDoc = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenDocument()
     ) { uri ->
         if (uri != null) {
-            val text = context.contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() }
-            if (text != null) vm.import(text) { /* count */ }
+            scope.launch(Dispatchers.IO) {
+                val text = context.contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() }
+                if (text != null) vm.import(text) { count ->
+                    scope.launch { snackbar.showSnackbar("Imported $count macros") }
+                }
+            }
         }
     }
 

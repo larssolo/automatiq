@@ -22,7 +22,9 @@ data class EditorState(
     val recipient: String = "",
     val message: String = "",
     val enabled: Boolean = true,
-    val createdAt: Long = System.currentTimeMillis()
+    val createdAt: Long = System.currentTimeMillis(),
+    val lastTriggeredAt: Long? = null,
+    val lastStatus: com.vibeactions.domain.model.MacroStatus? = null
 ) {
     val nameValid get() = name.isNotBlank()
     val phoneValid get() = isValidPhone(recipient)
@@ -43,7 +45,8 @@ class MacroEditorViewModel @Inject constructor(
         viewModelScope.launch {
             repo.getById(macroId)?.let { m ->
                 _state.value = EditorState(m.id, m.name, m.triggerType,
-                    m.scheduledTime ?: "09:00", m.recipientNumber, m.messageBody, m.enabled, m.createdAt)
+                    m.scheduledTime ?: "09:00", m.recipientNumber, m.messageBody, m.enabled, m.createdAt,
+                    m.lastTriggeredAt, m.lastStatus)
             }
         }
     }
@@ -53,8 +56,10 @@ class MacroEditorViewModel @Inject constructor(
     fun save(onDone: () -> Unit) {
         val s = _state.value
         if (!s.canSave) return
+        val id = s.id ?: UUID.randomUUID().toString()
+        _state.value = _state.value.copy(id = id)
         val macro = Macro(
-            id = s.id ?: UUID.randomUUID().toString(),
+            id = id,
             name = s.name.trim(),
             triggerType = s.triggerType,
             scheduledTime = if (s.triggerType == TriggerType.SCHEDULED) s.scheduledTime else null,
@@ -62,7 +67,9 @@ class MacroEditorViewModel @Inject constructor(
             recipientNumber = s.recipient.trim(),
             messageBody = s.message,
             enabled = s.enabled,
-            createdAt = s.createdAt
+            createdAt = s.createdAt,
+            lastTriggeredAt = s.lastTriggeredAt,
+            lastStatus = s.lastStatus
         )
         viewModelScope.launch { save(macro); onDone() }
     }

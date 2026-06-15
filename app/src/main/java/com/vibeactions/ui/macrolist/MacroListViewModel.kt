@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.vibeactions.data.repository.MacroRepository
 import com.vibeactions.domain.model.Macro
 import com.vibeactions.domain.usecase.DeleteMacroUseCase
+import com.vibeactions.domain.usecase.SaveMacroUseCase
 import com.vibeactions.domain.usecase.ToggleMacroUseCase
 import com.vibeactions.domain.usecase.TriggerMacroUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -19,6 +20,7 @@ class MacroListViewModel @Inject constructor(
     repo: MacroRepository,
     private val toggle: ToggleMacroUseCase,
     private val delete: DeleteMacroUseCase,
+    private val save: SaveMacroUseCase,
     private val trigger: TriggerMacroUseCase
 ) : ViewModel() {
     val macros: StateFlow<List<Macro>> =
@@ -26,5 +28,6 @@ class MacroListViewModel @Inject constructor(
 
     fun onToggle(macro: Macro, enabled: Boolean) = viewModelScope.launch { toggle(macro, enabled) }
     fun onDelete(macro: Macro) = viewModelScope.launch { delete(macro) }
+    fun onUndoDelete(macro: Macro) = viewModelScope.launch { save(macro) }
     fun onTrigger(macro: Macro) = viewModelScope.launch { trigger(macro.id) }
 }

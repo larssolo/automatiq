@@ -1,6 +1,7 @@
 package com.vibeactions.ui
 
 import android.Manifest
+import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -14,6 +15,11 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.compose.*
 import androidx.navigation.navArgument
 import com.vibeactions.ui.common.PermissionBanner
@@ -36,18 +42,39 @@ class MainActivity : ComponentActivity() {
 @Composable
 private fun AppRoot() {
     val nav = rememberNavController()
-    var smsGranted by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    var smsGranted by remember {
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(context, Manifest.permission.SEND_SMS) ==
+                PackageManager.PERMISSION_GRANTED
+        )
+    }
 
     val smsPermLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { result -> smsGranted = result[Manifest.permission.SEND_SMS] == true }
 
     LaunchedEffect(Unit) {
-        val perms = mutableListOf(Manifest.permission.SEND_SMS)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            perms += Manifest.permission.POST_NOTIFICATIONS
+        if (!smsGranted) {
+            val perms = mutableListOf(Manifest.permission.SEND_SMS)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                perms += Manifest.permission.POST_NOTIFICATIONS
+            }
+            smsPermLauncher.launch(perms.toTypedArray())
         }
-        smsPermLauncher.launch(perms.toTypedArray())
+    }
+
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                smsGranted = ContextCompat.checkSelfPermission(
+                    context, Manifest.permission.SEND_SMS
+                ) == PackageManager.PERMISSION_GRANTED
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
     val backStack by nav.currentBackStackEntryAsState()
