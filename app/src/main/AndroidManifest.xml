@@ -28,5 +28,13 @@
         </activity>
 
         <receiver android:name=".scheduler.MacroAlarmReceiver" android:exported="false" />
+
+        <receiver
+            android:name=".scheduler.BootReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
     </application>
 </manifest>

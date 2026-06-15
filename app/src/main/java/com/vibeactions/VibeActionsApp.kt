@@ -10,11 +10,13 @@ import javax.inject.Inject
 class VibeActionsApp : Application(), Configuration.Provider {
     @Inject lateinit var workerFactory: HiltWorkerFactory
     @Inject lateinit var notifications: com.vibeactions.notifications.MacroNotificationManager
+    @Inject lateinit var workScheduler: com.vibeactions.scheduler.WorkScheduler
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder().setWorkerFactory(workerFactory).build()
 
     override fun onCreate() {
         super.onCreate()
         notifications.ensureChannel()
+        workScheduler.ensurePeriodicCatchUp()
     }
 }
