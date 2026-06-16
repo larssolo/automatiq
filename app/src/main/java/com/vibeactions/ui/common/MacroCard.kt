@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -26,8 +27,10 @@ fun MacroCard(
     onToggle: (Boolean) -> Unit,
     onTap: () -> Unit,
     onEdit: () -> Unit,
+    onCopy: () -> Unit,
     onDelete: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    dragHandle: @Composable () -> Unit = {}
 ) {
     Row(
         modifier
@@ -60,6 +63,9 @@ fun MacroCard(
                 }
                 Spacer(Modifier.weight(1f))
                 TextButton(onClick = onEdit) { Text("Edit", color = OnSurfaceVariant) }
+                IconButton(onClick = onCopy) {
+                    Icon(Icons.Default.ContentCopy, contentDescription = "Duplicate macro", tint = OnSurfaceVariant)
+                }
                 IconButton(onClick = onDelete) {
                     Icon(Icons.Default.Delete, contentDescription = "Delete macro", tint = OnSurfaceVariant)
                 }
@@ -67,5 +73,6 @@ fun MacroCard(
                     colors = SwitchDefaults.colors(checkedThumbColor = OnPrimary, checkedTrackColor = Primary))
             }
         }
+        dragHandle()
     }
 }

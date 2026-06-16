@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.util.UUID
 import javax.inject.Inject
 
 @HiltViewModel
@@ -30,6 +31,21 @@ class MacroListViewModel @Inject constructor(
     fun onDelete(macro: Macro) = viewModelScope.launch { delete(macro) }
     fun onUndoDelete(macro: Macro) = viewModelScope.launch { save(macro) }
     fun onTrigger(macro: Macro) = viewModelScope.launch { trigger(macro.id) }
+
+    /** Duplicate a macro: new id, "(copy)" name, cleared run history; same trigger/recipient/body.
+     *  Goes through SaveMacroUseCase so a scheduled+enabled copy is armed like any other. */
+    fun onCopy(macro: Macro) = viewModelScope.launch {
+        save(
+            macro.copy(
+                id = UUID.randomUUID().toString(),
+                name = macro.name + " (copy)",
+                lastTriggeredAt = null,
+                lastStatus = null,
+                lastScheduledFireAt = null,
+                createdAt = System.currentTimeMillis()
+            )
+        )
+    }
 
     /** Persist a drag-and-drop reorder: ids in their new top-to-bottom order. */
     fun onReorder(orderedIds: List<String>) = viewModelScope.launch { repo.persistOrder(orderedIds) }

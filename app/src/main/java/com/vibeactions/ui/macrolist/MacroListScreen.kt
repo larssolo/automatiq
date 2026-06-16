@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.DragHandle
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -75,12 +76,27 @@ fun MacroListScreen(
                         ReorderableItem(reorderState, key = macro.id) { _ ->
                             MacroCard(
                                 macro = macro,
-                                modifier = Modifier.longPressDraggableHandle(
-                                    onDragStopped = { vm.onReorder(ordered.map(Macro::id)) }
-                                ),
+                                dragHandle = {
+                                    Box(
+                                        Modifier
+                                            .fillMaxHeight()
+                                            .draggableHandle(
+                                                onDragStopped = { vm.onReorder(ordered.map(Macro::id)) }
+                                            )
+                                            .padding(horizontal = 8.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(
+                                            Icons.Default.DragHandle,
+                                            contentDescription = "Reorder macro",
+                                            tint = OnSurfaceVariant
+                                        )
+                                    }
+                                },
                                 onToggle = { vm.onToggle(macro, it) },
                                 onTap = { vm.onTrigger(macro) },
                                 onEdit = { onEdit(macro.id) },
+                                onCopy = { vm.onCopy(macro) },
                                 onDelete = {
                                     vm.onDelete(macro)
                                     scope.launch {
