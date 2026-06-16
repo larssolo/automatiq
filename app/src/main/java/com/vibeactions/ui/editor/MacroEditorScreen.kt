@@ -53,6 +53,43 @@ fun MacroEditorScreen(
                 OutlinedButton(onClick = { showTime = true }, modifier = Modifier.fillMaxWidth()) {
                     Text("Time: ${s.scheduledTime}")
                 }
+
+                Text("Repeat on", style = MaterialTheme.typography.labelLarge)
+                // Single letters (Mon→Sun) so all seven fit across; fixed order disambiguates T/T, S/S.
+                val dayLabels = listOf("M", "T", "W", "T", "F", "S", "S")
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    (1..7).forEach { day ->
+                        val selected = s.daysOfWeek.contains(day)
+                        FilterChip(
+                            selected = selected,
+                            onClick = {
+                                vm.update {
+                                    val next = if (selected) it.daysOfWeek - day else it.daysOfWeek + day
+                                    it.copy(daysOfWeek = next)
+                                }
+                            },
+                            label = {
+                                Text(
+                                    dayLabels[day - 1],
+                                    maxLines = 1,
+                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                }
+                if (!s.daysValid) {
+                    Text(
+                        "Pick at least one day",
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
             }
 
             OutlinedTextField(

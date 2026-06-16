@@ -19,7 +19,9 @@ data class Macro(
      *  manual/widget tap (which updates [lastTriggeredAt]) never blocks the day's scheduled send. */
     val lastScheduledFireAt: Long? = null,
     /** Manual list ordering; lower sorts first. Ties fall back to newest-created-first. */
-    val sortOrder: Int = 0
+    val sortOrder: Int = 0,
+    /** Allowed weekdays for a SCHEDULED macro (ISO 1=Mon..7=Sun). All seven = every day. */
+    val daysOfWeek: Set<Int> = setOf(1, 2, 3, 4, 5, 6, 7)
 ) {
     /** Stable positive Int request code for PendingIntent, derived from the UUID. */
     fun alarmRequestCode(): Int = (id.hashCode() and 0x7FFFFFFF)
