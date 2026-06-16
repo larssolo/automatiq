@@ -10,9 +10,11 @@ class MacroJsonTest {
     @Test fun roundTripPreservesAllFields() {
         val macros = listOf(
             Macro("id-1", "Morning", TriggerType.SCHEDULED, "09:00", true, "+4512345678",
-                "Hej", true, 123L, MacroStatus.SUCCESS, 100L),
+                "Hej", true, 123L, MacroStatus.SUCCESS, 100L,
+                lastScheduledFireAt = 124L, sortOrder = 2),
             Macro("id-2", "Tap", TriggerType.MANUAL, null, true, "+4587654321",
-                "Yo", false, null, null, 200L)
+                "Yo", false, null, null, 200L,
+                lastScheduledFireAt = null, sortOrder = 0)
         )
         val json = exportMacros(macros)
         val restored = importMacros(json)

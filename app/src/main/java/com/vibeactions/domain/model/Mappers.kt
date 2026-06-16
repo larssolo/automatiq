@@ -7,14 +7,15 @@ fun MacroEntity.toDomain() = Macro(
     id = id, name = name, triggerType = TriggerType.valueOf(triggerType),
     scheduledTime = scheduledTime, repeatDaily = repeatDaily, recipientNumber = recipientNumber,
     messageBody = messageBody, enabled = enabled, lastTriggeredAt = lastTriggeredAt,
-    lastStatus = lastStatus?.let { MacroStatus.valueOf(it) }, createdAt = createdAt
+    lastStatus = lastStatus?.let { MacroStatus.valueOf(it) }, createdAt = createdAt,
+    lastScheduledFireAt = lastScheduledFireAt, sortOrder = sortOrder
 )
 
 fun Macro.toEntity() = MacroEntity(
     id = id, name = name, triggerType = triggerType.name, scheduledTime = scheduledTime,
     repeatDaily = repeatDaily, recipientNumber = recipientNumber, messageBody = messageBody,
     enabled = enabled, lastTriggeredAt = lastTriggeredAt, lastStatus = lastStatus?.name,
-    createdAt = createdAt
+    createdAt = createdAt, lastScheduledFireAt = lastScheduledFireAt, sortOrder = sortOrder
 )
 
 fun MacroLogEntity.toDomain() = MacroLog(

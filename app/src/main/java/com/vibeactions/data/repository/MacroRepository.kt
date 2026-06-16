@@ -19,4 +19,11 @@ class MacroRepository @Inject constructor(private val dao: MacroDao) {
     suspend fun delete(macro: Macro) = dao.delete(macro.toEntity())
     suspend fun updateStatus(id: String, at: Long, status: MacroStatus) =
         dao.updateStatus(id, at, status.name)
+
+    suspend fun updateScheduledFireAt(id: String, at: Long) = dao.updateScheduledFireAt(id, at)
+
+    /** Persist a new manual ordering: each id's sort_order becomes its index in [orderedIds]. */
+    suspend fun persistOrder(orderedIds: List<String>) {
+        orderedIds.forEachIndexed { index, id -> dao.updateSortOrder(id, index) }
+    }
 }

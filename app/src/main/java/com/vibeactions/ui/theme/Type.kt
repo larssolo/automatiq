@@ -6,9 +6,9 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import com.vibeactions.R
 
-val Inter = FontFamily(
-    Font(R.font.inter_regular, FontWeight.Normal),
-    Font(R.font.inter_medium, FontWeight.Medium)
+val DmSans = FontFamily(
+    Font(R.font.dm_sans_regular, FontWeight.Normal),
+    Font(R.font.dm_sans_medium, FontWeight.Medium)
 )
 val JetBrainsMono = FontFamily(
     Font(R.font.jetbrains_mono_regular, FontWeight.Normal),
@@ -17,9 +17,9 @@ val JetBrainsMono = FontFamily(
 
 val AppTypography = Typography().run {
     copy(
-        bodyLarge = bodyLarge.copy(fontFamily = Inter),
-        bodyMedium = bodyMedium.copy(fontFamily = Inter),
-        titleMedium = titleMedium.copy(fontFamily = Inter, fontWeight = FontWeight.Medium),
-        labelLarge = labelLarge.copy(fontFamily = Inter)
+        bodyLarge = bodyLarge.copy(fontFamily = DmSans),
+        bodyMedium = bodyMedium.copy(fontFamily = DmSans),
+        titleMedium = titleMedium.copy(fontFamily = DmSans, fontWeight = FontWeight.Medium),
+        labelLarge = labelLarge.copy(fontFamily = DmSans)
     )
 }

@@ -24,15 +24,28 @@ class AlarmScheduler @Inject constructor(
         val time = macro.scheduledTime ?: return
         val triggerAt = calculateNextFireTime(time)
         val pi = pendingIntent(macro)
-        try {
-            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pi)
-        } catch (_: SecurityException) {
-            // Exact-alarm permission missing; UI banner prompts the user. WorkManager catch-up still covers it.
+        // setAlarmClock fires at the exact wall-clock time and is exempt from Doze and battery
+        // optimisation — the only reliable way to hit a daily time on stock + OEM Android. It does
+        // NOT require SCHEDULE_EXACT_ALARM. We still fall back to an idle-allowed alarm on the rare
+        // device where exact alarms are blocked, rather than failing silently.
+        if (canScheduleExact()) {
+            alarmManager.setAlarmClock(AlarmManager.AlarmClockInfo(triggerAt, showIntent()), pi)
+        } else {
+            alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pi)
         }
     }
 
     fun cancel(macro: Macro) {
         alarmManager.cancel(pendingIntent(macro))
+    }
+
+    /** Shown when the user taps the system alarm-clock icon; just opens the app. */
+    private fun showIntent(): PendingIntent {
+        val intent = Intent(context, com.vibeactions.ui.MainActivity::class.java)
+        return PendingIntent.getActivity(
+            context, 0, intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
     }
 
     private fun pendingIntent(macro: Macro): PendingIntent {

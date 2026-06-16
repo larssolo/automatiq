@@ -16,5 +16,7 @@ data class MacroEntity(
     val enabled: Boolean,
     @ColumnInfo(name = "last_triggered_at") val lastTriggeredAt: Long?,
     @ColumnInfo(name = "last_status") val lastStatus: String?,
-    @ColumnInfo(name = "created_at") val createdAt: Long
+    @ColumnInfo(name = "created_at") val createdAt: Long,
+    @ColumnInfo(name = "last_scheduled_fire_at") val lastScheduledFireAt: Long? = null,
+    @ColumnInfo(name = "sort_order", defaultValue = "0") val sortOrder: Int = 0
 )

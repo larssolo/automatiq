@@ -14,7 +14,12 @@ data class Macro(
     val enabled: Boolean = true,
     val lastTriggeredAt: Long? = null,
     val lastStatus: MacroStatus? = null,
-    val createdAt: Long = System.currentTimeMillis()
+    val createdAt: Long = System.currentTimeMillis(),
+    /** When this macro last fired as a SCHEDULED occurrence. Drives the once-per-day guard so a
+     *  manual/widget tap (which updates [lastTriggeredAt]) never blocks the day's scheduled send. */
+    val lastScheduledFireAt: Long? = null,
+    /** Manual list ordering; lower sorts first. Ties fall back to newest-created-first. */
+    val sortOrder: Int = 0
 ) {
     /** Stable positive Int request code for PendingIntent, derived from the UUID. */
     fun alarmRequestCode(): Int = (id.hashCode() and 0x7FFFFFFF)

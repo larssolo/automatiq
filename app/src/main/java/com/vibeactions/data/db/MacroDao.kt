@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface MacroDao {
-    @Query("SELECT * FROM macros ORDER BY created_at DESC")
+    @Query("SELECT * FROM macros ORDER BY sort_order ASC, created_at DESC")
     fun observeAll(): Flow<List<MacroEntity>>
 
     @Query("SELECT * FROM macros WHERE id = :id")
@@ -26,4 +26,10 @@ interface MacroDao {
 
     @Query("UPDATE macros SET last_triggered_at = :at, last_status = :status WHERE id = :id")
     suspend fun updateStatus(id: String, at: Long, status: String)
+
+    @Query("UPDATE macros SET last_scheduled_fire_at = :at WHERE id = :id")
+    suspend fun updateScheduledFireAt(id: String, at: Long)
+
+    @Query("UPDATE macros SET sort_order = :order WHERE id = :id")
+    suspend fun updateSortOrder(id: String, order: Int)
 }

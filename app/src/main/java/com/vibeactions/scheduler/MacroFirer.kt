@@ -27,13 +27,16 @@ class MacroFirer @Inject constructor(
         val macro = macroRepo.getById(macroId) ?: return
         if (!macro.enabled) return
         val now = System.currentTimeMillis()
-        if (enforceOncePerDay && alreadySentToday(macro.lastTriggeredAt, now)) return
+        // Scheduled fires (alarm + catch-up worker) dedupe on the scheduled-fire marker only, so a
+        // manual/widget tap earlier today does not consume the day's scheduled send.
+        if (enforceOncePerDay && alreadySentToday(macro.lastScheduledFireAt, now)) return
 
         val result = sms.send(macro.recipientNumber, macro.messageBody)
         val status = if (result.isSuccess) MacroStatus.SUCCESS else MacroStatus.FAILED
         val error = result.exceptionOrNull()?.message
 
         macroRepo.updateStatus(macro.id, now, status)
+        if (enforceOncePerDay) macroRepo.updateScheduledFireAt(macro.id, now)
         logRepo.add(
             MacroLog(
                 macroId = macro.id, triggeredAt = now, status = status,
