@@ -15,3 +15,13 @@ val MIGRATION_1_2 = object : Migration(1, 2) {
         db.execSQL("ALTER TABLE macros ADD COLUMN sort_order INTEGER NOT NULL DEFAULT 0")
     }
 }
+
+/**
+ * v2 → v3: adds `days_of_week` (weekday bitmask, bit day-1 for ISO 1=Mon..7=Sun). Existing rows
+ * default to 127 (all seven days) so prior "every day" scheduled macros keep firing daily.
+ */
+val MIGRATION_2_3 = object : Migration(2, 3) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE macros ADD COLUMN days_of_week INTEGER NOT NULL DEFAULT 127")
+    }
+}

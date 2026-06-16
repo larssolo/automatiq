@@ -26,12 +26,14 @@ data class EditorState(
     val lastTriggeredAt: Long? = null,
     val lastStatus: com.vibeactions.domain.model.MacroStatus? = null,
     val lastScheduledFireAt: Long? = null,
-    val sortOrder: Int = 0
+    val sortOrder: Int = 0,
+    val daysOfWeek: Set<Int> = setOf(1, 2, 3, 4, 5, 6, 7)
 ) {
     val nameValid get() = name.isNotBlank()
     val phoneValid get() = isValidPhone(recipient)
     val messageValid get() = message.isNotBlank()
-    val canSave get() = nameValid && phoneValid && messageValid
+    val daysValid get() = triggerType != TriggerType.SCHEDULED || daysOfWeek.isNotEmpty()
+    val canSave get() = nameValid && phoneValid && messageValid && daysValid
 }
 
 @HiltViewModel
@@ -48,7 +50,7 @@ class MacroEditorViewModel @Inject constructor(
             repo.getById(macroId)?.let { m ->
                 _state.value = EditorState(m.id, m.name, m.triggerType,
                     m.scheduledTime ?: "09:00", m.recipientNumber, m.messageBody, m.enabled, m.createdAt,
-                    m.lastTriggeredAt, m.lastStatus, m.lastScheduledFireAt, m.sortOrder)
+                    m.lastTriggeredAt, m.lastStatus, m.lastScheduledFireAt, m.sortOrder, m.daysOfWeek)
             }
         }
     }
@@ -73,7 +75,8 @@ class MacroEditorViewModel @Inject constructor(
             lastTriggeredAt = s.lastTriggeredAt,
             lastStatus = s.lastStatus,
             lastScheduledFireAt = s.lastScheduledFireAt,
-            sortOrder = s.sortOrder
+            sortOrder = s.sortOrder,
+            daysOfWeek = if (s.triggerType == TriggerType.SCHEDULED) s.daysOfWeek else setOf(1, 2, 3, 4, 5, 6, 7)
         )
         viewModelScope.launch { save(macro); onDone() }
     }

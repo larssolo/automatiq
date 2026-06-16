@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.sp
 import com.vibeactions.domain.model.Macro
 import com.vibeactions.domain.model.TriggerType
 import com.vibeactions.ui.theme.*
+import com.vibeactions.util.formatDays
 import com.vibeactions.util.maskPhone
 
 @Composable
@@ -56,8 +57,11 @@ fun MacroCard(
             Spacer(Modifier.height(8.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 if (macro.triggerType == TriggerType.SCHEDULED) {
-                    Text(macro.scheduledTime ?: "--:--", fontFamily = JetBrainsMono,
-                        color = OnSurface, fontSize = 20.sp)
+                    Column {
+                        Text(macro.scheduledTime ?: "--:--", fontFamily = JetBrainsMono,
+                            color = OnSurface, fontSize = 20.sp)
+                        Text(formatDays(macro.daysOfWeek), color = OnSurfaceVariant, fontSize = 11.sp)
+                    }
                 } else {
                     TextButton(onClick = onTap) { Text("TRIGGER", color = Primary) }
                 }
