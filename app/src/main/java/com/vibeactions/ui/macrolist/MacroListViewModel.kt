@@ -17,7 +17,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MacroListViewModel @Inject constructor(
-    repo: MacroRepository,
+    private val repo: MacroRepository,
     private val toggle: ToggleMacroUseCase,
     private val delete: DeleteMacroUseCase,
     private val save: SaveMacroUseCase,
@@ -30,4 +30,7 @@ class MacroListViewModel @Inject constructor(
     fun onDelete(macro: Macro) = viewModelScope.launch { delete(macro) }
     fun onUndoDelete(macro: Macro) = viewModelScope.launch { save(macro) }
     fun onTrigger(macro: Macro) = viewModelScope.launch { trigger(macro.id) }
+
+    /** Persist a drag-and-drop reorder: ids in their new top-to-bottom order. */
+    fun onReorder(orderedIds: List<String>) = viewModelScope.launch { repo.persistOrder(orderedIds) }
 }

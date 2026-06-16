@@ -24,7 +24,9 @@ class MacroCatchUpWorker @AssistedInject constructor(
         repo.getEnabledScheduled().forEach { macro ->
             val time = macro.scheduledTime?.let { LocalTime.parse(it) } ?: return@forEach
             val passedToday = !nowTime.isBefore(time)
-            if (passedToday && !alreadySentToday(macro.lastTriggeredAt, now)) {
+            // Dedupe on the scheduled-fire marker (not lastTriggeredAt), so a manual tap today
+            // doesn't suppress the catch-up of a missed scheduled fire.
+            if (passedToday && !alreadySentToday(macro.lastScheduledFireAt, now)) {
                 firer.fire(macro.id, enforceOncePerDay = true)
             }
         }

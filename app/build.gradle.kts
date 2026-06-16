@@ -59,6 +59,7 @@ dependencies {
     ksp(libs.room.compiler)
     implementation(libs.work.runtime.ktx)
     implementation(libs.kotlinx.serialization.json)
+    implementation(libs.reorderable)
     debugImplementation(libs.compose.ui.tooling)
     testImplementation(libs.junit)
 }
