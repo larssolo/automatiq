@@ -1,0 +1,3 @@
+<resources>
+    <style name="Theme.VibeActions" parent="android:Theme.Material.NoActionBar" />
+</resources>
