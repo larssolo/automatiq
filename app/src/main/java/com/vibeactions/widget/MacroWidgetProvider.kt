@@ -5,9 +5,13 @@ import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
 import android.content.Context
 import android.content.Intent
+import android.os.Handler
+import android.os.Looper
 import android.widget.RemoteViews
+import android.widget.Toast
 import com.vibeactions.R
 import com.vibeactions.data.repository.MacroRepository
+import com.vibeactions.domain.model.MacroStatus
 import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
@@ -43,9 +47,25 @@ class MacroWidgetProvider : AppWidgetProvider() {
             val widgetId = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, -1)
             val macroId = WidgetIds.get(context, widgetId) ?: return
             val ep = EntryPointAccessors.fromApplication(context.applicationContext, WidgetEntryPoint::class.java)
+            val pending = goAsync()
             CoroutineScope(Dispatchers.IO).launch {
-                ep.firer().fire(macroId, enforceOncePerDay = false)
-                renderWidget(context, AppWidgetManager.getInstance(context), widgetId)
+                try {
+                    ep.firer().fire(macroId, enforceOncePerDay = false)
+                    renderWidget(context, AppWidgetManager.getInstance(context), widgetId)
+                    val macro = ep.macroRepository().getById(macroId)
+                    if (macro != null) {
+                        val msg = if (macro.lastStatus == MacroStatus.SUCCESS) {
+                            "Sent: ${macro.name}"
+                        } else {
+                            "Failed: ${macro.name}"
+                        }
+                        Handler(Looper.getMainLooper()).post {
+                            Toast.makeText(context.applicationContext, msg, Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                } finally {
+                    pending.finish()
+                }
             }
         }
     }
