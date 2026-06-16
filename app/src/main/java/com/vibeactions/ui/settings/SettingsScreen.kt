@@ -73,7 +73,7 @@ fun SettingsScreen(vm: SettingsViewModel = hiltViewModel()) {
             )
             ListItem(
                 headlineContent = { Text("Battery optimisation") },
-                supportingContent = { Text("Whitelist VibeActions so alarms are not delayed") },
+                supportingContent = { Text("Whitelist Automatiq so alarms are not delayed") },
                 trailingContent = {
                     TextButton(onClick = {
                         context.startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))
@@ -91,7 +91,7 @@ fun SettingsScreen(vm: SettingsViewModel = hiltViewModel()) {
                 }
             )
             HorizontalDivider()
-            Button(onClick = { vm.export { json -> pendingExport = json; createDoc.launch("vibeactions-macros.json") } },
+            Button(onClick = { vm.export { json -> pendingExport = json; createDoc.launch("automatiq-macros.json") } },
                 modifier = Modifier.fillMaxWidth()) { Text("Export macros (JSON)") }
             OutlinedButton(onClick = { openDoc.launch(arrayOf("application/json")) },
                 modifier = Modifier.fillMaxWidth()) { Text("Import macros (JSON)") }
