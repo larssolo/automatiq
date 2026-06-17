@@ -18,6 +18,9 @@ interface MacroDao {
     @Query("SELECT * FROM macros WHERE enabled = 1 AND trigger_type = 'SCHEDULED'")
     suspend fun getEnabledScheduled(): List<MacroEntity>
 
+    @Query("SELECT * FROM macros WHERE enabled = 1 AND trigger_type = :type")
+    suspend fun getEnabledByTrigger(type: String): List<MacroEntity>
+
     @Upsert
     suspend fun upsert(macro: MacroEntity)
 

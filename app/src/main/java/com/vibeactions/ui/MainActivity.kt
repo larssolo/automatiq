@@ -55,12 +55,15 @@ private fun AppRoot() {
     ) { result -> smsGranted = result[Manifest.permission.SEND_SMS] == true }
 
     LaunchedEffect(Unit) {
-        if (!smsGranted) {
-            val perms = mutableListOf(Manifest.permission.SEND_SMS)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                perms += Manifest.permission.POST_NOTIFICATIONS
-            }
-            smsPermLauncher.launch(perms.toTypedArray())
+        val perms = mutableListOf(Manifest.permission.SEND_SMS, Manifest.permission.RECEIVE_SMS)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            perms += Manifest.permission.POST_NOTIFICATIONS
+        }
+        val missing = perms.filter {
+            ContextCompat.checkSelfPermission(context, it) != PackageManager.PERMISSION_GRANTED
+        }
+        if (missing.isNotEmpty()) {
+            smsPermLauncher.launch(missing.toTypedArray())
         }
     }
 

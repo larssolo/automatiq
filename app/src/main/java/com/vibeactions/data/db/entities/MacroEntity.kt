@@ -24,5 +24,7 @@ data class MacroEntity(
     @ColumnInfo(name = "week_interval", defaultValue = "1") val weekInterval: Int = 1,
     @ColumnInfo(name = "anchor_epoch_day") val anchorEpochDay: Long? = null,
     @ColumnInfo(name = "card_color", defaultValue = "0") val cardColor: Long = 0L,
-    @ColumnInfo(name = "valid_until_epoch_day") val validUntilEpochDay: Long? = null
+    @ColumnInfo(name = "valid_until_epoch_day") val validUntilEpochDay: Long? = null,
+    @ColumnInfo(name = "match_sender") val matchSender: String? = null,
+    @ColumnInfo(name = "match_keyword") val matchKeyword: String? = null
 )

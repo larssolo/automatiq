@@ -1,6 +1,6 @@
 package com.vibeactions.domain.model
 
-enum class TriggerType { SCHEDULED, MANUAL }
+enum class TriggerType { SCHEDULED, MANUAL, INCOMING }
 enum class MacroStatus { SUCCESS, FAILED, PENDING }
 
 data class Macro(
@@ -30,7 +30,11 @@ data class Macro(
     /** ARGB card accent color (from CardColorPalette). 0 = not yet assigned → UI falls back to primary. */
     val cardColor: Long = 0L,
     /** Last day (epoch day) the macro may fire on, inclusive; null = no expiry. */
-    val validUntilEpochDay: Long? = null
+    val validUntilEpochDay: Long? = null,
+    /** INCOMING only: reply only when the sender matches (digits-normalised); null/blank = any sender. */
+    val matchSender: String? = null,
+    /** INCOMING only: reply only when the message contains this text (case-insensitive); null/blank = any. */
+    val matchKeyword: String? = null
 ) {
     /** Stable positive Int request code for PendingIntent, derived from the UUID. */
     fun alarmRequestCode(): Int = (id.hashCode() and 0x7FFFFFFF)
