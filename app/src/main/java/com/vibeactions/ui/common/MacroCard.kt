@@ -2,14 +2,14 @@ package com.vibeactions.ui.common
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.layout.IntrinsicSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -46,38 +46,69 @@ fun MacroCard(
                 .fillMaxHeight()
                 .background(if (macro.enabled) Primary else Outline)
         )
-        Column(Modifier.weight(1f).padding(16.dp)) {
+        Column(Modifier.weight(1f).padding(start = 16.dp, top = 12.dp, bottom = 12.dp, end = 4.dp)) {
+
+            // Header: name + recipient | status | overflow menu
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(macro.name, fontFamily = JetBrainsMono, fontWeight = FontWeight.Medium,
-                    color = OnSurface, fontSize = 16.sp, modifier = Modifier.weight(1f))
+                Column(Modifier.weight(1f)) {
+                    Text(macro.name, fontFamily = JetBrainsMono, fontWeight = FontWeight.Medium,
+                        color = OnSurface, fontSize = 16.sp)
+                    Spacer(Modifier.height(2.dp))
+                    Text(maskPhone(macro.recipientNumber), color = OnSurfaceVariant, fontSize = 13.sp)
+                }
                 StatusBadge(macro.lastStatus)
+                MacroMenu(onEdit = onEdit, onCopy = onCopy, onDelete = onDelete)
             }
-            Spacer(Modifier.height(6.dp))
-            Text(maskPhone(macro.recipientNumber), color = OnSurfaceVariant, fontSize = 13.sp)
-            Spacer(Modifier.height(8.dp))
+
+            Spacer(Modifier.height(10.dp))
+
+            // Footer: schedule (time + recurrence) or a Send action | enable switch
             Row(verticalAlignment = Alignment.CenterVertically) {
                 if (macro.triggerType == TriggerType.SCHEDULED) {
-                    Column {
+                    Column(Modifier.weight(1f)) {
                         Text(macro.scheduledTime ?: "--:--", fontFamily = JetBrainsMono,
                             color = OnSurface, fontSize = 20.sp)
                         Text(formatRecurrence(macro.daysOfWeek, macro.weekInterval),
                             color = OnSurfaceVariant, fontSize = 11.sp)
                     }
                 } else {
-                    TextButton(onClick = onTap) { Text("TRIGGER", color = Primary) }
+                    FilledTonalButton(onClick = onTap) { Text("Send now") }
+                    Spacer(Modifier.weight(1f))
                 }
-                Spacer(Modifier.weight(1f))
-                TextButton(onClick = onEdit) { Text("Edit", color = OnSurfaceVariant) }
-                IconButton(onClick = onCopy) {
-                    Icon(Icons.Default.ContentCopy, contentDescription = "Duplicate macro", tint = OnSurfaceVariant)
-                }
-                IconButton(onClick = onDelete) {
-                    Icon(Icons.Default.Delete, contentDescription = "Delete macro", tint = OnSurfaceVariant)
-                }
-                Switch(checked = macro.enabled, onCheckedChange = onToggle,
-                    colors = SwitchDefaults.colors(checkedThumbColor = OnPrimary, checkedTrackColor = Primary))
+                Switch(
+                    checked = macro.enabled,
+                    onCheckedChange = onToggle,
+                    colors = SwitchDefaults.colors(checkedThumbColor = OnPrimary, checkedTrackColor = Primary)
+                )
             }
         }
         dragHandle()
+    }
+}
+
+@Composable
+private fun MacroMenu(onEdit: () -> Unit, onCopy: () -> Unit, onDelete: () -> Unit) {
+    var open by remember { mutableStateOf(false) }
+    Box {
+        IconButton(onClick = { open = true }) {
+            Icon(Icons.Default.MoreVert, contentDescription = "Macro actions", tint = OnSurfaceVariant)
+        }
+        DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+            DropdownMenuItem(
+                text = { Text("Edit") },
+                leadingIcon = { Icon(Icons.Default.Edit, contentDescription = null) },
+                onClick = { open = false; onEdit() }
+            )
+            DropdownMenuItem(
+                text = { Text("Duplicate") },
+                leadingIcon = { Icon(Icons.Default.ContentCopy, contentDescription = null) },
+                onClick = { open = false; onCopy() }
+            )
+            DropdownMenuItem(
+                text = { Text("Delete") },
+                leadingIcon = { Icon(Icons.Default.Delete, contentDescription = null, tint = ErrorRed) },
+                onClick = { open = false; onDelete() }
+            )
+        }
     }
 }
