@@ -8,6 +8,7 @@ import com.vibeactions.domain.usecase.DeleteMacroUseCase
 import com.vibeactions.domain.usecase.SaveMacroUseCase
 import com.vibeactions.domain.usecase.ToggleMacroUseCase
 import com.vibeactions.domain.usecase.TriggerMacroUseCase
+import com.vibeactions.util.randomCardColor
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -42,7 +43,8 @@ class MacroListViewModel @Inject constructor(
                 lastTriggeredAt = null,
                 lastStatus = null,
                 lastScheduledFireAt = null,
-                createdAt = System.currentTimeMillis()
+                createdAt = System.currentTimeMillis(),
+                cardColor = randomCardColor()
             )
         )
     }

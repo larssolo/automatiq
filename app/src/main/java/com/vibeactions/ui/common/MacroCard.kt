@@ -13,6 +13,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -33,18 +34,20 @@ fun MacroCard(
     modifier: Modifier = Modifier,
     dragHandle: @Composable () -> Unit = {}
 ) {
+    val accent = if (macro.cardColor != 0L) Color(macro.cardColor) else Primary
     Row(
         modifier
             .fillMaxWidth()
             .height(IntrinsicSize.Max)
             .clip(RoundedCornerShape(12.dp))
             .background(Surface)
+            .background(accent.copy(alpha = if (macro.cardColor != 0L) 0.07f else 0f))
     ) {
         Box(
             Modifier
-                .width(3.dp)
+                .width(4.dp)
                 .fillMaxHeight()
-                .background(if (macro.enabled) Primary else Outline)
+                .background(if (macro.enabled) accent else Outline)
         )
         Column(Modifier.weight(1f).padding(start = 16.dp, top = 12.dp, bottom = 12.dp, end = 4.dp)) {
 
