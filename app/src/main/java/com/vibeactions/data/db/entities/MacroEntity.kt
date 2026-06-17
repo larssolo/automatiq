@@ -22,5 +22,6 @@ data class MacroEntity(
     /** Weekday bitmask: bit (day-1) set for ISO day 1=Mon..7=Sun. 127 = all days. */
     @ColumnInfo(name = "days_of_week", defaultValue = "127") val daysOfWeek: Int = 127,
     @ColumnInfo(name = "week_interval", defaultValue = "1") val weekInterval: Int = 1,
-    @ColumnInfo(name = "anchor_epoch_day") val anchorEpochDay: Long? = null
+    @ColumnInfo(name = "anchor_epoch_day") val anchorEpochDay: Long? = null,
+    @ColumnInfo(name = "card_color", defaultValue = "0") val cardColor: Long = 0L
 )

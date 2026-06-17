@@ -15,7 +15,8 @@ fun MacroEntity.toDomain() = Macro(
     messageBody = messageBody, enabled = enabled, lastTriggeredAt = lastTriggeredAt,
     lastStatus = lastStatus?.let { MacroStatus.valueOf(it) }, createdAt = createdAt,
     lastScheduledFireAt = lastScheduledFireAt, sortOrder = sortOrder,
-    daysOfWeek = daysOfWeek.toDaySet(), weekInterval = weekInterval, anchorEpochDay = anchorEpochDay
+    daysOfWeek = daysOfWeek.toDaySet(), weekInterval = weekInterval, anchorEpochDay = anchorEpochDay,
+    cardColor = cardColor
 )
 
 fun Macro.toEntity() = MacroEntity(
@@ -23,7 +24,8 @@ fun Macro.toEntity() = MacroEntity(
     repeatDaily = repeatDaily, recipientNumber = recipientNumber, messageBody = messageBody,
     enabled = enabled, lastTriggeredAt = lastTriggeredAt, lastStatus = lastStatus?.name,
     createdAt = createdAt, lastScheduledFireAt = lastScheduledFireAt, sortOrder = sortOrder,
-    daysOfWeek = daysOfWeek.toDayMask(), weekInterval = weekInterval, anchorEpochDay = anchorEpochDay
+    daysOfWeek = daysOfWeek.toDayMask(), weekInterval = weekInterval, anchorEpochDay = anchorEpochDay,
+    cardColor = cardColor
 )
 
 fun MacroLogEntity.toDomain() = MacroLog(

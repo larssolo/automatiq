@@ -8,6 +8,7 @@ import com.vibeactions.domain.model.TriggerType
 import com.vibeactions.domain.usecase.SaveMacroUseCase
 import com.vibeactions.util.firstScheduledDateOnOrAfter
 import com.vibeactions.util.isValidPhone
+import com.vibeactions.util.randomCardColor
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -31,7 +32,8 @@ data class EditorState(
     val sortOrder: Int = 0,
     val daysOfWeek: Set<Int> = setOf(1, 2, 3, 4, 5, 6, 7),
     val weekInterval: Int = 1,
-    val startEpochDay: Long? = null
+    val startEpochDay: Long? = null,
+    val cardColor: Long = randomCardColor()
 ) {
     val nameValid get() = name.isNotBlank()
     val phoneValid get() = isValidPhone(recipient)
@@ -55,7 +57,8 @@ class MacroEditorViewModel @Inject constructor(
                 _state.value = EditorState(m.id, m.name, m.triggerType,
                     m.scheduledTime ?: "09:00", m.recipientNumber, m.messageBody, m.enabled, m.createdAt,
                     m.lastTriggeredAt, m.lastStatus, m.lastScheduledFireAt, m.sortOrder, m.daysOfWeek,
-                    m.weekInterval, m.anchorEpochDay)
+                    m.weekInterval, m.anchorEpochDay,
+                    cardColor = if (m.cardColor != 0L) m.cardColor else _state.value.cardColor)
             }
         }
     }
@@ -91,7 +94,8 @@ class MacroEditorViewModel @Inject constructor(
             sortOrder = s.sortOrder,
             daysOfWeek = if (scheduled) s.daysOfWeek else setOf(1, 2, 3, 4, 5, 6, 7),
             weekInterval = interval,
-            anchorEpochDay = anchor
+            anchorEpochDay = anchor,
+            cardColor = s.cardColor
         )
         viewModelScope.launch { save(macro); onDone() }
     }

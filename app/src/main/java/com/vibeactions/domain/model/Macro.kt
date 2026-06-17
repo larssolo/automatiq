@@ -25,7 +25,9 @@ data class Macro(
     /** Recurrence in weeks: 1 = every week, 2 = every other week, … */
     val weekInterval: Int = 1,
     /** First fire date (epoch day) anchoring the multi-week rhythm; null when [weekInterval] == 1. */
-    val anchorEpochDay: Long? = null
+    val anchorEpochDay: Long? = null,
+    /** ARGB card accent color (from CardColorPalette). 0 = not yet assigned → UI falls back to primary. */
+    val cardColor: Long = 0L
 ) {
     /** Stable positive Int request code for PendingIntent, derived from the UUID. */
     fun alarmRequestCode(): Int = (id.hashCode() and 0x7FFFFFFF)
