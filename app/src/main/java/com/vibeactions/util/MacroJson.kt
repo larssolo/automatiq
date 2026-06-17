@@ -9,7 +9,8 @@ import kotlinx.serialization.json.Json
 @Serializable
 private data class MacroDto(
     val id: String, val name: String, val triggerType: String, val scheduledTime: String?,
-    val repeatDaily: Boolean, val recipientNumber: String, val messageBody: String,
+    val repeatDaily: Boolean, val recipientNumber: String? = null,
+    val recipients: List<String> = emptyList(), val messageBody: String,
     val enabled: Boolean, val lastTriggeredAt: Long?, val lastStatus: String?, val createdAt: Long,
     val lastScheduledFireAt: Long? = null, val sortOrder: Int = 0,
     val daysOfWeek: List<Int> = listOf(1, 2, 3, 4, 5, 6, 7),
@@ -23,10 +24,15 @@ fun exportMacros(macros: List<Macro>): String =
     json.encodeToString(
         kotlinx.serialization.builtins.ListSerializer(MacroDto.serializer()),
         macros.map {
-            MacroDto(it.id, it.name, it.triggerType.name, it.scheduledTime, it.repeatDaily,
-                it.recipientNumber, it.messageBody, it.enabled, it.lastTriggeredAt,
-                it.lastStatus?.name, it.createdAt, it.lastScheduledFireAt, it.sortOrder,
-                it.daysOfWeek.sorted(), it.weekInterval, it.anchorEpochDay, it.cardColor)
+            MacroDto(
+                id = it.id, name = it.name, triggerType = it.triggerType.name,
+                scheduledTime = it.scheduledTime, repeatDaily = it.repeatDaily,
+                recipients = it.recipients, messageBody = it.messageBody, enabled = it.enabled,
+                lastTriggeredAt = it.lastTriggeredAt, lastStatus = it.lastStatus?.name,
+                createdAt = it.createdAt, lastScheduledFireAt = it.lastScheduledFireAt,
+                sortOrder = it.sortOrder, daysOfWeek = it.daysOfWeek.sorted(),
+                weekInterval = it.weekInterval, anchorEpochDay = it.anchorEpochDay,
+                cardColor = it.cardColor)
         }
     )
 
@@ -34,9 +40,14 @@ fun importMacros(text: String): List<Macro> =
     json.decodeFromString(
         kotlinx.serialization.builtins.ListSerializer(MacroDto.serializer()), text
     ).map {
-        Macro(it.id, it.name, TriggerType.valueOf(it.triggerType), it.scheduledTime, it.repeatDaily,
-            it.recipientNumber, it.messageBody, it.enabled, it.lastTriggeredAt,
-            it.lastStatus?.let { s -> MacroStatus.valueOf(s) }, it.createdAt,
-            it.lastScheduledFireAt, it.sortOrder, it.daysOfWeek.toSet(),
-            it.weekInterval, it.anchorEpochDay, it.cardColor)
+        Macro(
+            id = it.id, name = it.name, triggerType = TriggerType.valueOf(it.triggerType),
+            scheduledTime = it.scheduledTime, repeatDaily = it.repeatDaily,
+            // New exports carry `recipients`; legacy single-number exports fall back to recipientNumber.
+            recipients = it.recipients.ifEmpty { listOfNotNull(it.recipientNumber) },
+            messageBody = it.messageBody, enabled = it.enabled, lastTriggeredAt = it.lastTriggeredAt,
+            lastStatus = it.lastStatus?.let { s -> MacroStatus.valueOf(s) }, createdAt = it.createdAt,
+            lastScheduledFireAt = it.lastScheduledFireAt, sortOrder = it.sortOrder,
+            daysOfWeek = it.daysOfWeek.toSet(), weekInterval = it.weekInterval,
+            anchorEpochDay = it.anchorEpochDay, cardColor = it.cardColor)
     }

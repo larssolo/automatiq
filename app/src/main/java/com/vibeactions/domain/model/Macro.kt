@@ -9,7 +9,8 @@ data class Macro(
     val triggerType: TriggerType,
     val scheduledTime: String?,   // "HH:mm" when SCHEDULED
     val repeatDaily: Boolean = true,
-    val recipientNumber: String,
+    /** One or more recipient numbers; the macro sends its message to each. Never empty in practice. */
+    val recipients: List<String>,
     val messageBody: String,
     val enabled: Boolean = true,
     val lastTriggeredAt: Long? = null,

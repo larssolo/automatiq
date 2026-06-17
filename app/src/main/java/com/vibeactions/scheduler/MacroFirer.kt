@@ -8,6 +8,8 @@ import com.vibeactions.domain.model.MacroStatus
 import com.vibeactions.domain.model.TriggerType
 import com.vibeactions.notifications.MacroNotificationManager
 import com.vibeactions.sms.SmsDispatcher
+import com.vibeactions.util.expandTemplate
+import java.time.LocalDateTime
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -31,16 +33,26 @@ class MacroFirer @Inject constructor(
         // manual/widget tap earlier today does not consume the day's scheduled send.
         if (enforceOncePerDay && alreadySentToday(macro.lastScheduledFireAt, now)) return
 
-        val result = sms.send(macro.recipientNumber, macro.messageBody)
-        val status = if (result.isSuccess) MacroStatus.SUCCESS else MacroStatus.FAILED
-        val error = result.exceptionOrNull()?.message
+        // Expand {dato}/{tid}/{ugedag}/{navn} once, then send the same text to every recipient.
+        val body = expandTemplate(macro.messageBody, LocalDateTime.now(), macro.name)
+        // Send to every recipient; success only if all succeed, otherwise FAILED with a summary error.
+        val failures = macro.recipients.mapNotNull { number ->
+            sms.send(number, body).exceptionOrNull()?.let { number to it }
+        }
+        val status = if (failures.isEmpty()) MacroStatus.SUCCESS else MacroStatus.FAILED
+        val error = when {
+            failures.isEmpty() -> null
+            failures.size == macro.recipients.size -> failures.first().second.message ?: "send failed"
+            else -> "${failures.size}/${macro.recipients.size} failed: " +
+                failures.first().second.message
+        }
 
         macroRepo.updateStatus(macro.id, now, status)
         if (enforceOncePerDay) macroRepo.updateScheduledFireAt(macro.id, now)
         logRepo.add(
             MacroLog(
                 macroId = macro.id, triggeredAt = now, status = status,
-                messagePreview = macro.messageBody.take(40), errorMessage = error
+                messagePreview = body.take(40), errorMessage = error
             )
         )
         notifications.notifyResult(macro, status, error)

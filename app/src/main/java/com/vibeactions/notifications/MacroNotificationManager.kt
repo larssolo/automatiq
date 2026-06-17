@@ -8,7 +8,7 @@ import android.content.Intent
 import androidx.core.app.NotificationCompat
 import com.vibeactions.domain.model.Macro
 import com.vibeactions.domain.model.MacroStatus
-import com.vibeactions.util.maskPhone
+import com.vibeactions.util.maskRecipients
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -28,9 +28,9 @@ class MacroNotificationManager @Inject constructor(
     fun notifyResult(macro: Macro, status: MacroStatus, error: String?) {
         val title = if (status == MacroStatus.SUCCESS) "Sent: ${macro.name}" else "Failed: ${macro.name}"
         val text = if (status == MacroStatus.SUCCESS)
-            "To ${maskPhone(macro.recipientNumber)}"
+            "To ${maskRecipients(macro.recipients)}"
         else
-            "To ${maskPhone(macro.recipientNumber)} — ${error ?: "unknown error"}"
+            "To ${maskRecipients(macro.recipients)} — ${error ?: "unknown error"}"
 
         val builder = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.stat_notify_chat)

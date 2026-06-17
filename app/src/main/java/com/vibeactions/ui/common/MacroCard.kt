@@ -21,7 +21,7 @@ import com.vibeactions.domain.model.Macro
 import com.vibeactions.domain.model.TriggerType
 import com.vibeactions.ui.theme.*
 import com.vibeactions.util.formatRecurrence
-import com.vibeactions.util.maskPhone
+import com.vibeactions.util.maskRecipients
 
 @Composable
 fun MacroCard(
@@ -57,7 +57,7 @@ fun MacroCard(
                     Text(macro.name, fontFamily = JetBrainsMono, fontWeight = FontWeight.Medium,
                         color = OnSurface, fontSize = 16.sp)
                     Spacer(Modifier.height(2.dp))
-                    Text(maskPhone(macro.recipientNumber), color = OnSurfaceVariant, fontSize = 13.sp)
+                    Text(maskRecipients(macro.recipients), color = OnSurfaceVariant, fontSize = 13.sp)
                 }
                 StatusBadge(macro.lastStatus)
                 MacroMenu(onEdit = onEdit, onCopy = onCopy, onDelete = onDelete)

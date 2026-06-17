@@ -32,7 +32,7 @@ class IdempotencyGuardTest {
     @Test fun manualTapTodayDoesNotBlockScheduledFire() {
         val macro = Macro(
             id = "m1", name = "Morning", triggerType = TriggerType.SCHEDULED, scheduledTime = "09:00",
-            recipientNumber = "+4512345678", messageBody = "Hej",
+            recipients = listOf("+4512345678"), messageBody = "Hej",
             lastTriggeredAt = now,            // manual tap today
             lastScheduledFireAt = null        // scheduled occurrence has NOT fired today
         )
