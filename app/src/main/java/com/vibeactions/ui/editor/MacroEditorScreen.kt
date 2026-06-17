@@ -1,7 +1,9 @@
 package com.vibeactions.ui.editor
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -33,8 +35,14 @@ fun MacroEditorScreen(
             actions = { TextButton(enabled = s.canSave, onClick = { vm.save(onDone) }) { Text("Save") } }
         )
     }) { p ->
-        Column(Modifier.padding(p).padding(16.dp).fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        Column(
+            Modifier
+                .padding(p)
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
 
             OutlinedTextField(
                 value = s.name, onValueChange = { v -> vm.update { it.copy(name = v) } },
