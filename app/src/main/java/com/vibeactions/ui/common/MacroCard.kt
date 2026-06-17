@@ -21,6 +21,7 @@ import com.vibeactions.domain.model.Macro
 import com.vibeactions.domain.model.TriggerType
 import com.vibeactions.ui.theme.*
 import com.vibeactions.util.formatRecurrence
+import com.vibeactions.util.maskPhone
 import com.vibeactions.util.maskRecipients
 
 @Composable
@@ -65,20 +66,30 @@ fun MacroCard(
 
             Spacer(Modifier.height(10.dp))
 
-            // Footer: schedule (time + recurrence) or a Send action | enable switch
+            // Footer: schedule (time + recurrence), auto-reply summary, or a Send action | enable switch
             Row(verticalAlignment = Alignment.CenterVertically) {
-                if (macro.triggerType == TriggerType.SCHEDULED) {
-                    Column(Modifier.weight(1f)) {
-                        Text(macro.scheduledTime ?: "--:--", fontFamily = JetBrainsMono,
-                            color = OnSurface, fontSize = 20.sp)
-                        val recurrence = formatRecurrence(macro.daysOfWeek, macro.weekInterval)
-                        val expiry = macro.validUntilEpochDay
-                            ?.let { " · until ${java.time.LocalDate.ofEpochDay(it)}" } ?: ""
-                        Text(recurrence + expiry, color = OnSurfaceVariant, fontSize = 11.sp)
+                when (macro.triggerType) {
+                    TriggerType.SCHEDULED -> {
+                        Column(Modifier.weight(1f)) {
+                            Text(macro.scheduledTime ?: "--:--", fontFamily = JetBrainsMono,
+                                color = OnSurface, fontSize = 20.sp)
+                            val recurrence = formatRecurrence(macro.daysOfWeek, macro.weekInterval)
+                            val expiry = macro.validUntilEpochDay
+                                ?.let { " · until ${java.time.LocalDate.ofEpochDay(it)}" } ?: ""
+                            Text(recurrence + expiry, color = OnSurfaceVariant, fontSize = 11.sp)
+                        }
                     }
-                } else {
-                    FilledTonalButton(onClick = onTap) { Text("Send now") }
-                    Spacer(Modifier.weight(1f))
+                    TriggerType.INCOMING -> {
+                        Column(Modifier.weight(1f)) {
+                            Text("Auto-reply", fontFamily = JetBrainsMono, color = OnSurface, fontSize = 16.sp)
+                            Text(autoReplySummary(macro.matchSender, macro.matchKeyword),
+                                color = OnSurfaceVariant, fontSize = 11.sp)
+                        }
+                    }
+                    TriggerType.MANUAL -> {
+                        FilledTonalButton(onClick = onTap) { Text("Send now") }
+                        Spacer(Modifier.weight(1f))
+                    }
                 }
                 Switch(
                     checked = macro.enabled,
@@ -89,6 +100,13 @@ fun MacroCard(
         }
         dragHandle()
     }
+}
+
+/** Short description of an auto-reply macro's match conditions for the card. */
+private fun autoReplySummary(matchSender: String?, matchKeyword: String?): String {
+    val from = if (!matchSender.isNullOrBlank()) "from ${maskPhone(matchSender)}" else "from anyone"
+    val on = if (!matchKeyword.isNullOrBlank()) " · \"${matchKeyword.trim()}\"" else ""
+    return from + on
 }
 
 @Composable

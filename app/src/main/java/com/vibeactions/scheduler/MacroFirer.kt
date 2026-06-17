@@ -24,8 +24,9 @@ class MacroFirer @Inject constructor(
     /**
      * Sends the macro's SMS, logs, notifies, updates status, and (for scheduled+repeat) re-arms tomorrow.
      * [enforceOncePerDay] guards scheduled fires against alarm+worker double-send; manual taps pass false.
+     * [overrideRecipient] (auto-reply) sends to that number instead of the macro's own recipient list.
      */
-    suspend fun fire(macroId: String, enforceOncePerDay: Boolean) {
+    suspend fun fire(macroId: String, enforceOncePerDay: Boolean, overrideRecipient: String? = null) {
         val macro = macroRepo.getById(macroId) ?: return
         if (!macro.enabled) return
         val now = System.currentTimeMillis()
@@ -33,18 +34,20 @@ class MacroFirer @Inject constructor(
         // manual/widget tap earlier today does not consume the day's scheduled send.
         if (enforceOncePerDay && alreadySentToday(macro.lastScheduledFireAt, now)) return
 
+        // Auto-reply targets the incoming sender; everything else uses the macro's recipient list.
+        val targets = overrideRecipient?.let { listOf(it) } ?: macro.recipients
+        if (targets.isEmpty()) return
         // Expand {dato}/{tid}/{ugedag}/{navn} once, then send the same text to every recipient.
         val body = expandTemplate(macro.messageBody, LocalDateTime.now(), macro.name)
         // Send to every recipient; success only if all succeed, otherwise FAILED with a summary error.
-        val failures = macro.recipients.mapNotNull { number ->
+        val failures = targets.mapNotNull { number ->
             sms.send(number, body).exceptionOrNull()?.let { number to it }
         }
         val status = if (failures.isEmpty()) MacroStatus.SUCCESS else MacroStatus.FAILED
         val error = when {
             failures.isEmpty() -> null
-            failures.size == macro.recipients.size -> failures.first().second.message ?: "send failed"
-            else -> "${failures.size}/${macro.recipients.size} failed: " +
-                failures.first().second.message
+            failures.size == targets.size -> failures.first().second.message ?: "send failed"
+            else -> "${failures.size}/${targets.size} failed: " + failures.first().second.message
         }
 
         macroRepo.updateStatus(macro.id, now, status)

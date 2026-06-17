@@ -34,6 +34,8 @@ data class EditorState(
     val weekInterval: Int = 1,
     val startEpochDay: Long? = null,
     val validUntilEpochDay: Long? = null,
+    val matchSender: String = "",
+    val matchKeyword: String = "",
     val cardColor: Long = randomCardColor()
 ) {
     val nameValid get() = name.isNotBlank()
@@ -42,7 +44,10 @@ data class EditorState(
     val phoneValid get() = cleanRecipients.isNotEmpty() && cleanRecipients.all { isValidPhone(it) }
     val messageValid get() = message.isNotBlank()
     val daysValid get() = triggerType != TriggerType.SCHEDULED || daysOfWeek.isNotEmpty()
-    val canSave get() = nameValid && phoneValid && messageValid && daysValid
+    /** Auto-reply macros reply to the incoming sender, so they need no recipient list. */
+    val recipientsRequired get() = triggerType != TriggerType.INCOMING
+    val canSave get() = nameValid && messageValid && daysValid &&
+        (!recipientsRequired || phoneValid)
 }
 
 @HiltViewModel
@@ -62,6 +67,7 @@ class MacroEditorViewModel @Inject constructor(
                     m.enabled, m.createdAt,
                     m.lastTriggeredAt, m.lastStatus, m.lastScheduledFireAt, m.sortOrder, m.daysOfWeek,
                     m.weekInterval, m.anchorEpochDay, validUntilEpochDay = m.validUntilEpochDay,
+                    matchSender = m.matchSender ?: "", matchKeyword = m.matchKeyword ?: "",
                     cardColor = if (m.cardColor != 0L) m.cardColor else _state.value.cardColor)
             }
         }
@@ -100,7 +106,11 @@ class MacroEditorViewModel @Inject constructor(
             weekInterval = interval,
             anchorEpochDay = anchor,
             cardColor = s.cardColor,
-            validUntilEpochDay = if (scheduled) s.validUntilEpochDay else null
+            validUntilEpochDay = if (scheduled) s.validUntilEpochDay else null,
+            matchSender = if (s.triggerType == TriggerType.INCOMING)
+                s.matchSender.trim().ifBlank { null } else null,
+            matchKeyword = if (s.triggerType == TriggerType.INCOMING)
+                s.matchKeyword.trim().ifBlank { null } else null
         )
         viewModelScope.launch { save(macro); onDone() }
     }

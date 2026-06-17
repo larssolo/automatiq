@@ -62,7 +62,7 @@ fun MacroEditorScreen(
                         selected = s.triggerType == type,
                         onClick = { vm.update { it.copy(triggerType = type) } },
                         shape = SegmentedButtonDefaults.itemShape(i, TriggerType.entries.size)
-                    ) { Text(type.name.lowercase().replaceFirstChar { c -> c.uppercase() }) }
+                    ) { Text(triggerLabel(type)) }
                 }
             }
 
@@ -170,49 +170,68 @@ fun MacroEditorScreen(
                 }
             }
 
-            Text("Recipients", style = MaterialTheme.typography.labelLarge)
-            s.recipients.forEachIndexed { index, number ->
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    OutlinedTextField(
-                        value = number,
-                        onValueChange = { v ->
-                            vm.update { st ->
-                                st.copy(recipients = st.recipients.toMutableList().also { it[index] = v })
-                            }
-                        },
-                        label = { Text("Number ${index + 1}") },
-                        isError = number.isNotBlank() && !isValidPhone(number),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-                        singleLine = true, modifier = Modifier.weight(1f)
-                    )
-                    if (s.recipients.size > 1) {
-                        IconButton(onClick = {
-                            vm.update { st ->
-                                st.copy(recipients = st.recipients.filterIndexed { i, _ -> i != index })
-                            }
-                        }) { Icon(Icons.Default.Close, contentDescription = "Remove recipient") }
+            if (s.triggerType == TriggerType.INCOMING) {
+                // Auto-reply: match on the incoming sender/keyword; reply goes back to the sender.
+                OutlinedTextField(
+                    value = s.matchSender,
+                    onValueChange = { v -> vm.update { it.copy(matchSender = v) } },
+                    label = { Text("From sender (optional)") },
+                    supportingText = { Text("Leave blank to reply to anyone") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                    singleLine = true, modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = s.matchKeyword,
+                    onValueChange = { v -> vm.update { it.copy(matchKeyword = v) } },
+                    label = { Text("If message contains (optional)") },
+                    supportingText = { Text("Leave blank to reply to any message") },
+                    singleLine = true, modifier = Modifier.fillMaxWidth()
+                )
+            } else {
+                Text("Recipients", style = MaterialTheme.typography.labelLarge)
+                s.recipients.forEachIndexed { index, number ->
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        OutlinedTextField(
+                            value = number,
+                            onValueChange = { v ->
+                                vm.update { st ->
+                                    st.copy(recipients = st.recipients.toMutableList().also { it[index] = v })
+                                }
+                            },
+                            label = { Text("Number ${index + 1}") },
+                            isError = number.isNotBlank() && !isValidPhone(number),
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                            singleLine = true, modifier = Modifier.weight(1f)
+                        )
+                        if (s.recipients.size > 1) {
+                            IconButton(onClick = {
+                                vm.update { st ->
+                                    st.copy(recipients = st.recipients.filterIndexed { i, _ -> i != index })
+                                }
+                            }) { Icon(Icons.Default.Close, contentDescription = "Remove recipient") }
+                        }
                     }
                 }
-            }
-            TextButton(onClick = { vm.update { st -> st.copy(recipients = st.recipients + "") } }) {
-                Icon(Icons.Default.Add, contentDescription = null)
-                Spacer(Modifier.width(4.dp))
-                Text("Add recipient")
-            }
-            if (!s.phoneValid && s.recipients.any { it.isNotBlank() }) {
-                Text(
-                    "Enter at least one valid number",
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodySmall
-                )
+                TextButton(onClick = { vm.update { st -> st.copy(recipients = st.recipients + "") } }) {
+                    Icon(Icons.Default.Add, contentDescription = null)
+                    Spacer(Modifier.width(4.dp))
+                    Text("Add recipient")
+                }
+                if (!s.phoneValid && s.recipients.any { it.isNotBlank() }) {
+                    Text(
+                        "Enter at least one valid number",
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
             }
 
             OutlinedTextField(
                 value = s.message, onValueChange = { v -> vm.update { it.copy(message = v) } },
-                label = { Text("Message") },
+                label = { Text(if (s.triggerType == TriggerType.INCOMING) "Reply message" else "Message") },
                 supportingText = {
                     Text("${s.message.length} chars · variables: ${TEMPLATE_TOKENS.joinToString(" ")}")
                 },
@@ -279,3 +298,9 @@ fun MacroEditorScreen(
 }
 
 private fun intervalLabel(n: Int): String = if (n <= 1) "Every week" else "Every $n weeks"
+
+private fun triggerLabel(type: TriggerType): String = when (type) {
+    TriggerType.SCHEDULED -> "Scheduled"
+    TriggerType.MANUAL -> "Manual"
+    TriggerType.INCOMING -> "Auto-reply"
+}

@@ -51,3 +51,11 @@ val MIGRATION_5_6 = object : Migration(5, 6) {
         db.execSQL("ALTER TABLE macros ADD COLUMN valid_until_epoch_day INTEGER")
     }
 }
+
+/** v6 → v7: adds `match_sender` and `match_keyword` for INCOMING (auto-reply) macros. NULL = match any. */
+val MIGRATION_6_7 = object : Migration(6, 7) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE macros ADD COLUMN match_sender TEXT")
+        db.execSQL("ALTER TABLE macros ADD COLUMN match_keyword TEXT")
+    }
+}
