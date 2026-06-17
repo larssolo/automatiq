@@ -1,9 +1,12 @@
 package com.vibeactions.util
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.time.DayOfWeek
 import java.time.Instant
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
 
@@ -65,5 +68,40 @@ class TimeUtilsTest {
         assertEquals("Weekend", formatDays(setOf(6, 7)))
         assertEquals("Mon · Wed · Fri", formatDays(setOf(1, 3, 5)))
         assertTrue(formatDays(emptySet()) == "Every day")
+    }
+
+    @Test fun biweekly_firesAnchorWeekThenSkips() {
+        val anchorMon = LocalDate.of(2026, 6, 15).with(DayOfWeek.MONDAY)
+        val anchor = anchorMon.toEpochDay()
+        val mondays = setOf(1)
+        // Anchor Monday, before the time -> fires that Monday.
+        val f0 = calculateNextFireTime("09:00", anchorMon.atTime(8, 0), zone,
+            days = mondays, weekInterval = 2, anchorEpochDay = anchor)
+        assertEquals(anchorMon.atTime(9, 0), fireAt(f0))
+        // Anchor Monday, time passed -> next fire is 14 days later, NOT the in-between Monday.
+        val f1 = calculateNextFireTime("09:00", anchorMon.atTime(10, 0), zone,
+            days = mondays, weekInterval = 2, anchorEpochDay = anchor)
+        assertEquals(anchorMon.plusDays(14).atTime(9, 0), fireAt(f1))
+    }
+
+    @Test fun isScheduledDay_biweeklyAlignment() {
+        val anchorMon = LocalDate.of(2026, 6, 15).with(DayOfWeek.MONDAY)
+        val anchor = anchorMon.toEpochDay()
+        val mondays = setOf(1)
+        assertTrue(isScheduledDay(anchorMon, mondays, 2, anchor))              // week 0
+        assertFalse(isScheduledDay(anchorMon.plusDays(7), mondays, 2, anchor)) // week 1 (off)
+        assertTrue(isScheduledDay(anchorMon.plusDays(14), mondays, 2, anchor)) // week 2
+        assertFalse(isScheduledDay(anchorMon.minusDays(7), mondays, 2, anchor)) // before anchor
+    }
+
+    @Test fun intervalOne_behavesWeekly() {
+        val now = LocalDateTime.of(2026, 6, 15, 10, 0)
+        val weekly = calculateNextFireTime("09:00", now, zone, weekInterval = 1, anchorEpochDay = null)
+        assertEquals(now.toLocalDate().plusDays(1).atTime(9, 0), fireAt(weekly))
+    }
+
+    @Test fun formatRecurrence_labels() {
+        assertEquals("Every day", formatRecurrence(setOf(1, 2, 3, 4, 5, 6, 7), 1))
+        assertEquals("Every 2 weeks · Mon", formatRecurrence(setOf(1), 2))
     }
 }

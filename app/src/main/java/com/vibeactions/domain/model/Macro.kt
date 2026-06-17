@@ -21,7 +21,11 @@ data class Macro(
     /** Manual list ordering; lower sorts first. Ties fall back to newest-created-first. */
     val sortOrder: Int = 0,
     /** Allowed weekdays for a SCHEDULED macro (ISO 1=Mon..7=Sun). All seven = every day. */
-    val daysOfWeek: Set<Int> = setOf(1, 2, 3, 4, 5, 6, 7)
+    val daysOfWeek: Set<Int> = setOf(1, 2, 3, 4, 5, 6, 7),
+    /** Recurrence in weeks: 1 = every week, 2 = every other week, … */
+    val weekInterval: Int = 1,
+    /** First fire date (epoch day) anchoring the multi-week rhythm; null when [weekInterval] == 1. */
+    val anchorEpochDay: Long? = null
 ) {
     /** Stable positive Int request code for PendingIntent, derived from the UUID. */
     fun alarmRequestCode(): Int = (id.hashCode() and 0x7FFFFFFF)

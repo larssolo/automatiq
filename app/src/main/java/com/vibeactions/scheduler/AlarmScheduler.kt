@@ -22,7 +22,12 @@ class AlarmScheduler @Inject constructor(
 
     fun schedule(macro: Macro) {
         val time = macro.scheduledTime ?: return
-        val triggerAt = calculateNextFireTime(time, days = macro.daysOfWeek)
+        val triggerAt = calculateNextFireTime(
+            time,
+            days = macro.daysOfWeek,
+            weekInterval = macro.weekInterval,
+            anchorEpochDay = macro.anchorEpochDay
+        )
         val pi = pendingIntent(macro)
         // setAlarmClock fires at the exact wall-clock time and is exempt from Doze and battery
         // optimisation — the only reliable way to hit a daily time on stock + OEM Android. It does
