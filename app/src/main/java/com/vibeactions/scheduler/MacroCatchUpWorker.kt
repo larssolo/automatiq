@@ -29,7 +29,8 @@ class MacroCatchUpWorker @AssistedInject constructor(
             // Catch up only if today is an active scheduled day (weekday + week-interval/anchor) and
             // the time has passed.
             val passedToday = !nowTime.isBefore(time) &&
-                isScheduledDay(today, macro.daysOfWeek, macro.weekInterval, macro.anchorEpochDay)
+                isScheduledDay(today, macro.daysOfWeek, macro.weekInterval, macro.anchorEpochDay,
+                    macro.validUntilEpochDay)
             // Dedupe on the scheduled-fire marker (not lastTriggeredAt), so a manual tap today
             // doesn't suppress the catch-up of a missed scheduled fire.
             if (passedToday && !alreadySentToday(macro.lastScheduledFireAt, now)) {

@@ -15,7 +15,7 @@ private data class MacroDto(
     val lastScheduledFireAt: Long? = null, val sortOrder: Int = 0,
     val daysOfWeek: List<Int> = listOf(1, 2, 3, 4, 5, 6, 7),
     val weekInterval: Int = 1, val anchorEpochDay: Long? = null,
-    val cardColor: Long = 0L
+    val cardColor: Long = 0L, val validUntilEpochDay: Long? = null
 )
 
 private val json = Json { prettyPrint = true; ignoreUnknownKeys = true }
@@ -32,7 +32,7 @@ fun exportMacros(macros: List<Macro>): String =
                 createdAt = it.createdAt, lastScheduledFireAt = it.lastScheduledFireAt,
                 sortOrder = it.sortOrder, daysOfWeek = it.daysOfWeek.sorted(),
                 weekInterval = it.weekInterval, anchorEpochDay = it.anchorEpochDay,
-                cardColor = it.cardColor)
+                cardColor = it.cardColor, validUntilEpochDay = it.validUntilEpochDay)
         }
     )
 
@@ -49,5 +49,6 @@ fun importMacros(text: String): List<Macro> =
             lastStatus = it.lastStatus?.let { s -> MacroStatus.valueOf(s) }, createdAt = it.createdAt,
             lastScheduledFireAt = it.lastScheduledFireAt, sortOrder = it.sortOrder,
             daysOfWeek = it.daysOfWeek.toSet(), weekInterval = it.weekInterval,
-            anchorEpochDay = it.anchorEpochDay, cardColor = it.cardColor)
+            anchorEpochDay = it.anchorEpochDay, cardColor = it.cardColor,
+            validUntilEpochDay = it.validUntilEpochDay)
     }
