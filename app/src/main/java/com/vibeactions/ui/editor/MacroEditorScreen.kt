@@ -11,6 +11,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.vibeactions.domain.model.TriggerType
+import java.time.LocalDate
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -22,6 +23,8 @@ fun MacroEditorScreen(
     LaunchedEffect(macroId) { vm.load(macroId) }
     val s by vm.state.collectAsStateWithLifecycle()
     var showTime by remember { mutableStateOf(false) }
+    var showDate by remember { mutableStateOf(false) }
+    var intervalExpanded by remember { mutableStateOf(false) }
 
     Scaffold(topBar = {
         TopAppBar(
@@ -90,6 +93,47 @@ fun MacroEditorScreen(
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
+
+                ExposedDropdownMenuBox(
+                    expanded = intervalExpanded,
+                    onExpandedChange = { intervalExpanded = it }
+                ) {
+                    OutlinedTextField(
+                        value = intervalLabel(s.weekInterval),
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Repeat") },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = intervalExpanded) },
+                        modifier = Modifier.menuAnchor().fillMaxWidth()
+                    )
+                    ExposedDropdownMenu(
+                        expanded = intervalExpanded,
+                        onDismissRequest = { intervalExpanded = false }
+                    ) {
+                        (1..4).forEach { n ->
+                            DropdownMenuItem(
+                                text = { Text(intervalLabel(n)) },
+                                onClick = {
+                                    vm.update { st ->
+                                        st.copy(
+                                            weekInterval = n,
+                                            startEpochDay = if (n > 1 && st.startEpochDay == null)
+                                                LocalDate.now().toEpochDay() else st.startEpochDay
+                                        )
+                                    }
+                                    intervalExpanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+
+                if (s.weekInterval > 1) {
+                    val startDay = s.startEpochDay ?: LocalDate.now().toEpochDay()
+                    OutlinedButton(onClick = { showDate = true }, modifier = Modifier.fillMaxWidth()) {
+                        Text("Starts: ${LocalDate.ofEpochDay(startDay)}")
+                    }
+                }
             }
 
             OutlinedTextField(
@@ -130,4 +174,23 @@ fun MacroEditorScreen(
             text = { TimePicker(state = tps) }
         )
     }
+
+    if (showDate) {
+        val initMs = (s.startEpochDay ?: LocalDate.now().toEpochDay()) * 86_400_000L
+        val dps = rememberDatePickerState(initialSelectedDateMillis = initMs)
+        DatePickerDialog(
+            onDismissRequest = { showDate = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    dps.selectedDateMillis?.let { ms ->
+                        vm.update { it.copy(startEpochDay = ms / 86_400_000L) }
+                    }
+                    showDate = false
+                }) { Text("OK") }
+            },
+            dismissButton = { TextButton(onClick = { showDate = false }) { Text("Cancel") } }
+        ) { DatePicker(state = dps) }
+    }
 }
+
+private fun intervalLabel(n: Int): String = if (n <= 1) "Every week" else "Every $n weeks"

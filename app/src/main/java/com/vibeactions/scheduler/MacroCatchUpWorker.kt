@@ -6,6 +6,7 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.vibeactions.data.repository.MacroRepository
 import com.vibeactions.domain.alreadySentToday
+import com.vibeactions.util.isScheduledDay
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import java.time.LocalDate
@@ -22,11 +23,13 @@ class MacroCatchUpWorker @AssistedInject constructor(
     override suspend fun doWork(): Result {
         val now = System.currentTimeMillis()
         val nowTime = LocalTime.now()
-        val todayDow = LocalDate.now().dayOfWeek.value
+        val today = LocalDate.now()
         repo.getEnabledScheduled().forEach { macro ->
             val time = macro.scheduledTime?.let { LocalTime.parse(it) } ?: return@forEach
-            // Only catch up if today is an allowed weekday for this macro and the time has passed.
-            val passedToday = !nowTime.isBefore(time) && macro.daysOfWeek.contains(todayDow)
+            // Catch up only if today is an active scheduled day (weekday + week-interval/anchor) and
+            // the time has passed.
+            val passedToday = !nowTime.isBefore(time) &&
+                isScheduledDay(today, macro.daysOfWeek, macro.weekInterval, macro.anchorEpochDay)
             // Dedupe on the scheduled-fire marker (not lastTriggeredAt), so a manual tap today
             // doesn't suppress the catch-up of a missed scheduled fire.
             if (passedToday && !alreadySentToday(macro.lastScheduledFireAt, now)) {

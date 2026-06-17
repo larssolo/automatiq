@@ -20,5 +20,7 @@ data class MacroEntity(
     @ColumnInfo(name = "last_scheduled_fire_at") val lastScheduledFireAt: Long? = null,
     @ColumnInfo(name = "sort_order", defaultValue = "0") val sortOrder: Int = 0,
     /** Weekday bitmask: bit (day-1) set for ISO day 1=Mon..7=Sun. 127 = all days. */
-    @ColumnInfo(name = "days_of_week", defaultValue = "127") val daysOfWeek: Int = 127
+    @ColumnInfo(name = "days_of_week", defaultValue = "127") val daysOfWeek: Int = 127,
+    @ColumnInfo(name = "week_interval", defaultValue = "1") val weekInterval: Int = 1,
+    @ColumnInfo(name = "anchor_epoch_day") val anchorEpochDay: Long? = null
 )

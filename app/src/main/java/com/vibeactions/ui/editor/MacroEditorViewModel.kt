@@ -6,11 +6,13 @@ import com.vibeactions.data.repository.MacroRepository
 import com.vibeactions.domain.model.Macro
 import com.vibeactions.domain.model.TriggerType
 import com.vibeactions.domain.usecase.SaveMacroUseCase
+import com.vibeactions.util.firstScheduledDateOnOrAfter
 import com.vibeactions.util.isValidPhone
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.time.LocalDate
 import java.util.UUID
 import javax.inject.Inject
 
@@ -27,7 +29,9 @@ data class EditorState(
     val lastStatus: com.vibeactions.domain.model.MacroStatus? = null,
     val lastScheduledFireAt: Long? = null,
     val sortOrder: Int = 0,
-    val daysOfWeek: Set<Int> = setOf(1, 2, 3, 4, 5, 6, 7)
+    val daysOfWeek: Set<Int> = setOf(1, 2, 3, 4, 5, 6, 7),
+    val weekInterval: Int = 1,
+    val startEpochDay: Long? = null
 ) {
     val nameValid get() = name.isNotBlank()
     val phoneValid get() = isValidPhone(recipient)
@@ -50,7 +54,8 @@ class MacroEditorViewModel @Inject constructor(
             repo.getById(macroId)?.let { m ->
                 _state.value = EditorState(m.id, m.name, m.triggerType,
                     m.scheduledTime ?: "09:00", m.recipientNumber, m.messageBody, m.enabled, m.createdAt,
-                    m.lastTriggeredAt, m.lastStatus, m.lastScheduledFireAt, m.sortOrder, m.daysOfWeek)
+                    m.lastTriggeredAt, m.lastStatus, m.lastScheduledFireAt, m.sortOrder, m.daysOfWeek,
+                    m.weekInterval, m.anchorEpochDay)
             }
         }
     }
@@ -62,6 +67,14 @@ class MacroEditorViewModel @Inject constructor(
         if (!s.canSave) return
         val id = s.id ?: UUID.randomUUID().toString()
         _state.value = _state.value.copy(id = id)
+        val scheduled = s.triggerType == TriggerType.SCHEDULED
+        val interval = if (scheduled) s.weekInterval.coerceAtLeast(1) else 1
+        // Anchor the multi-week rhythm on the first actual fire (first allowed weekday on/after the
+        // chosen start date), so parity starts cleanly. Weekly macros need no anchor.
+        val anchor = if (scheduled && interval > 1) {
+            val start = s.startEpochDay?.let { LocalDate.ofEpochDay(it) } ?: LocalDate.now()
+            firstScheduledDateOnOrAfter(start, s.daysOfWeek).toEpochDay()
+        } else null
         val macro = Macro(
             id = id,
             name = s.name.trim(),
@@ -76,7 +89,9 @@ class MacroEditorViewModel @Inject constructor(
             lastStatus = s.lastStatus,
             lastScheduledFireAt = s.lastScheduledFireAt,
             sortOrder = s.sortOrder,
-            daysOfWeek = if (s.triggerType == TriggerType.SCHEDULED) s.daysOfWeek else setOf(1, 2, 3, 4, 5, 6, 7)
+            daysOfWeek = if (scheduled) s.daysOfWeek else setOf(1, 2, 3, 4, 5, 6, 7),
+            weekInterval = interval,
+            anchorEpochDay = anchor
         )
         viewModelScope.launch { save(macro); onDone() }
     }

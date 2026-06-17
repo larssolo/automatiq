@@ -25,3 +25,15 @@ val MIGRATION_2_3 = object : Migration(2, 3) {
         db.execSQL("ALTER TABLE macros ADD COLUMN days_of_week INTEGER NOT NULL DEFAULT 127")
     }
 }
+
+/**
+ * v3 → v4: adds `week_interval` (1 = weekly, 2 = every other week, …) and `anchor_epoch_day`
+ * (first-fire date anchoring the rhythm). Existing rows default to interval 1 / null anchor, i.e.
+ * unchanged weekly behaviour.
+ */
+val MIGRATION_3_4 = object : Migration(3, 4) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE macros ADD COLUMN week_interval INTEGER NOT NULL DEFAULT 1")
+        db.execSQL("ALTER TABLE macros ADD COLUMN anchor_epoch_day INTEGER")
+    }
+}
