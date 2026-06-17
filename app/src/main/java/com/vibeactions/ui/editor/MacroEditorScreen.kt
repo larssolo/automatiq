@@ -31,6 +31,7 @@ fun MacroEditorScreen(
     val s by vm.state.collectAsStateWithLifecycle()
     var showTime by remember { mutableStateOf(false) }
     var showDate by remember { mutableStateOf(false) }
+    var showExpiry by remember { mutableStateOf(false) }
     var intervalExpanded by remember { mutableStateOf(false) }
 
     Scaffold(topBar = {
@@ -147,6 +148,26 @@ fun MacroEditorScreen(
                         Text("Starts: ${LocalDate.ofEpochDay(startDay)}")
                     }
                 }
+
+                // Optional expiry: after this date the macro stops firing.
+                val expiry = s.validUntilEpochDay
+                if (expiry == null) {
+                    OutlinedButton(onClick = { showExpiry = true }, modifier = Modifier.fillMaxWidth()) {
+                        Text("Set expiry date (optional)")
+                    }
+                } else {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        OutlinedButton(onClick = { showExpiry = true }, modifier = Modifier.weight(1f)) {
+                            Text("Expires: ${LocalDate.ofEpochDay(expiry)}")
+                        }
+                        IconButton(onClick = { vm.update { it.copy(validUntilEpochDay = null) } }) {
+                            Icon(Icons.Default.Close, contentDescription = "Clear expiry")
+                        }
+                    }
+                }
             }
 
             Text("Recipients", style = MaterialTheme.typography.labelLarge)
@@ -236,6 +257,23 @@ fun MacroEditorScreen(
                 }) { Text("OK") }
             },
             dismissButton = { TextButton(onClick = { showDate = false }) { Text("Cancel") } }
+        ) { DatePicker(state = dps) }
+    }
+
+    if (showExpiry) {
+        val initMs = (s.validUntilEpochDay ?: LocalDate.now().toEpochDay()) * 86_400_000L
+        val dps = rememberDatePickerState(initialSelectedDateMillis = initMs)
+        DatePickerDialog(
+            onDismissRequest = { showExpiry = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    dps.selectedDateMillis?.let { ms ->
+                        vm.update { it.copy(validUntilEpochDay = ms / 86_400_000L) }
+                    }
+                    showExpiry = false
+                }) { Text("OK") }
+            },
+            dismissButton = { TextButton(onClick = { showExpiry = false }) { Text("Cancel") } }
         ) { DatePicker(state = dps) }
     }
 }

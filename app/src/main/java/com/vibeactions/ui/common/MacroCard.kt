@@ -71,8 +71,10 @@ fun MacroCard(
                     Column(Modifier.weight(1f)) {
                         Text(macro.scheduledTime ?: "--:--", fontFamily = JetBrainsMono,
                             color = OnSurface, fontSize = 20.sp)
-                        Text(formatRecurrence(macro.daysOfWeek, macro.weekInterval),
-                            color = OnSurfaceVariant, fontSize = 11.sp)
+                        val recurrence = formatRecurrence(macro.daysOfWeek, macro.weekInterval)
+                        val expiry = macro.validUntilEpochDay
+                            ?.let { " · until ${java.time.LocalDate.ofEpochDay(it)}" } ?: ""
+                        Text(recurrence + expiry, color = OnSurfaceVariant, fontSize = 11.sp)
                     }
                 } else {
                     FilledTonalButton(onClick = onTap) { Text("Send now") }

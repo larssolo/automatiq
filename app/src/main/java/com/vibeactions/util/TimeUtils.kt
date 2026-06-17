@@ -21,8 +21,10 @@ fun isScheduledDay(
     date: LocalDate,
     days: Set<Int>,
     weekInterval: Int = 1,
-    anchorEpochDay: Long? = null
+    anchorEpochDay: Long? = null,
+    validUntilEpochDay: Long? = null
 ): Boolean {
+    if (validUntilEpochDay != null && date.toEpochDay() > validUntilEpochDay) return false
     val allowed = if (days.isEmpty()) ALL_DAYS else days
     if (date.dayOfWeek.value !in allowed) return false
     val anchor = anchorEpochDay?.let { LocalDate.ofEpochDay(it) }
@@ -45,7 +47,8 @@ fun calculateNextFireTime(
     zone: ZoneId = ZoneId.systemDefault(),
     days: Set<Int> = ALL_DAYS,
     weekInterval: Int = 1,
-    anchorEpochDay: Long? = null
+    anchorEpochDay: Long? = null,
+    validUntilEpochDay: Long? = null
 ): Long {
     val target = LocalTime.parse(hhmm)
     val horizon = weekInterval.coerceAtLeast(1) * 7 + 7
@@ -53,7 +56,8 @@ fun calculateNextFireTime(
     for (i in 0..horizon) {
         val d = date.plusDays(i.toLong())
         val candidate = d.atTime(target)
-        if (candidate.isAfter(now) && isScheduledDay(d, days, weekInterval, anchorEpochDay)) {
+        if (candidate.isAfter(now) &&
+            isScheduledDay(d, days, weekInterval, anchorEpochDay, validUntilEpochDay)) {
             return candidate.atZone(zone).toInstant().toEpochMilli()
         }
     }

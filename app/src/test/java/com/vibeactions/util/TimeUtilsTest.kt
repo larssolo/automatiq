@@ -104,4 +104,20 @@ class TimeUtilsTest {
         assertEquals("Every day", formatRecurrence(setOf(1, 2, 3, 4, 5, 6, 7), 1))
         assertEquals("Every 2 weeks · Mon", formatRecurrence(setOf(1), 2))
     }
+
+    @Test fun validUntil_dayAfterExpiry_isNotScheduled() {
+        val day = LocalDate.of(2026, 6, 15)
+        // Expiry on the 15th: the 15th still fires, the 16th does not.
+        assertTrue(isScheduledDay(day, ALL_DAYS, validUntilEpochDay = day.toEpochDay()))
+        assertFalse(isScheduledDay(day.plusDays(1), ALL_DAYS, validUntilEpochDay = day.toEpochDay()))
+    }
+
+    @Test fun validUntil_pastExpiry_nextFireFallsBackBeyondExpiry() {
+        // After expiry the search finds no valid day; AlarmScheduler guards against arming this.
+        val now = LocalDateTime.of(2026, 6, 20, 8, 0)
+        val expired = LocalDate.of(2026, 6, 15).toEpochDay()
+        val fire = calculateNextFireTime("09:00", now, zone, validUntilEpochDay = expired)
+        // Fallback is tomorrow (past expiry) — caller must reject it.
+        assertTrue(fireAt(fire).toLocalDate().toEpochDay() > expired)
+    }
 }

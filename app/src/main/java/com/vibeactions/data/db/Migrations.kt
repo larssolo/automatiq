@@ -44,3 +44,10 @@ val MIGRATION_4_5 = object : Migration(4, 5) {
         db.execSQL("ALTER TABLE macros ADD COLUMN card_color INTEGER NOT NULL DEFAULT 0")
     }
 }
+
+/** v5 → v6: adds `valid_until_epoch_day` (inclusive expiry date). NULL = no expiry (unchanged behaviour). */
+val MIGRATION_5_6 = object : Migration(5, 6) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE macros ADD COLUMN valid_until_epoch_day INTEGER")
+    }
+}

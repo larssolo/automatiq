@@ -33,6 +33,7 @@ data class EditorState(
     val daysOfWeek: Set<Int> = setOf(1, 2, 3, 4, 5, 6, 7),
     val weekInterval: Int = 1,
     val startEpochDay: Long? = null,
+    val validUntilEpochDay: Long? = null,
     val cardColor: Long = randomCardColor()
 ) {
     val nameValid get() = name.isNotBlank()
@@ -60,7 +61,7 @@ class MacroEditorViewModel @Inject constructor(
                     m.scheduledTime ?: "09:00", m.recipients.ifEmpty { listOf("") }, m.messageBody,
                     m.enabled, m.createdAt,
                     m.lastTriggeredAt, m.lastStatus, m.lastScheduledFireAt, m.sortOrder, m.daysOfWeek,
-                    m.weekInterval, m.anchorEpochDay,
+                    m.weekInterval, m.anchorEpochDay, validUntilEpochDay = m.validUntilEpochDay,
                     cardColor = if (m.cardColor != 0L) m.cardColor else _state.value.cardColor)
             }
         }
@@ -98,7 +99,8 @@ class MacroEditorViewModel @Inject constructor(
             daysOfWeek = if (scheduled) s.daysOfWeek else setOf(1, 2, 3, 4, 5, 6, 7),
             weekInterval = interval,
             anchorEpochDay = anchor,
-            cardColor = s.cardColor
+            cardColor = s.cardColor,
+            validUntilEpochDay = if (scheduled) s.validUntilEpochDay else null
         )
         viewModelScope.launch { save(macro); onDone() }
     }
