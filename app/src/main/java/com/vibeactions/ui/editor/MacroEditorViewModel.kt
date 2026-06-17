@@ -22,7 +22,7 @@ data class EditorState(
     val name: String = "",
     val triggerType: TriggerType = TriggerType.SCHEDULED,
     val scheduledTime: String = "09:00",
-    val recipient: String = "",
+    val recipients: List<String> = listOf(""),
     val message: String = "",
     val enabled: Boolean = true,
     val createdAt: Long = System.currentTimeMillis(),
@@ -36,7 +36,9 @@ data class EditorState(
     val cardColor: Long = randomCardColor()
 ) {
     val nameValid get() = name.isNotBlank()
-    val phoneValid get() = isValidPhone(recipient)
+    /** Non-blank numbers (blanks are ignored on save); at least one, and every non-blank one valid. */
+    val cleanRecipients get() = recipients.map { it.trim() }.filter { it.isNotBlank() }
+    val phoneValid get() = cleanRecipients.isNotEmpty() && cleanRecipients.all { isValidPhone(it) }
     val messageValid get() = message.isNotBlank()
     val daysValid get() = triggerType != TriggerType.SCHEDULED || daysOfWeek.isNotEmpty()
     val canSave get() = nameValid && phoneValid && messageValid && daysValid
@@ -55,7 +57,8 @@ class MacroEditorViewModel @Inject constructor(
         viewModelScope.launch {
             repo.getById(macroId)?.let { m ->
                 _state.value = EditorState(m.id, m.name, m.triggerType,
-                    m.scheduledTime ?: "09:00", m.recipientNumber, m.messageBody, m.enabled, m.createdAt,
+                    m.scheduledTime ?: "09:00", m.recipients.ifEmpty { listOf("") }, m.messageBody,
+                    m.enabled, m.createdAt,
                     m.lastTriggeredAt, m.lastStatus, m.lastScheduledFireAt, m.sortOrder, m.daysOfWeek,
                     m.weekInterval, m.anchorEpochDay,
                     cardColor = if (m.cardColor != 0L) m.cardColor else _state.value.cardColor)
@@ -84,7 +87,7 @@ class MacroEditorViewModel @Inject constructor(
             triggerType = s.triggerType,
             scheduledTime = if (s.triggerType == TriggerType.SCHEDULED) s.scheduledTime else null,
             repeatDaily = true,
-            recipientNumber = s.recipient.trim(),
+            recipients = s.cleanRecipients,
             messageBody = s.message,
             enabled = s.enabled,
             createdAt = s.createdAt,

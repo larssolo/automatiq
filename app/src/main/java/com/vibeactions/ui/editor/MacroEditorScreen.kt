@@ -4,6 +4,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -13,6 +16,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.vibeactions.domain.model.TriggerType
+import com.vibeactions.util.TEMPLATE_TOKENS
+import com.vibeactions.util.isValidPhone
 import java.time.LocalDate
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -144,18 +149,52 @@ fun MacroEditorScreen(
                 }
             }
 
-            OutlinedTextField(
-                value = s.recipient, onValueChange = { v -> vm.update { it.copy(recipient = v) } },
-                label = { Text("Recipient number") },
-                isError = s.recipient.isNotEmpty() && !s.phoneValid,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-                singleLine = true, modifier = Modifier.fillMaxWidth()
-            )
+            Text("Recipients", style = MaterialTheme.typography.labelLarge)
+            s.recipients.forEachIndexed { index, number ->
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    OutlinedTextField(
+                        value = number,
+                        onValueChange = { v ->
+                            vm.update { st ->
+                                st.copy(recipients = st.recipients.toMutableList().also { it[index] = v })
+                            }
+                        },
+                        label = { Text("Number ${index + 1}") },
+                        isError = number.isNotBlank() && !isValidPhone(number),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                        singleLine = true, modifier = Modifier.weight(1f)
+                    )
+                    if (s.recipients.size > 1) {
+                        IconButton(onClick = {
+                            vm.update { st ->
+                                st.copy(recipients = st.recipients.filterIndexed { i, _ -> i != index })
+                            }
+                        }) { Icon(Icons.Default.Close, contentDescription = "Remove recipient") }
+                    }
+                }
+            }
+            TextButton(onClick = { vm.update { st -> st.copy(recipients = st.recipients + "") } }) {
+                Icon(Icons.Default.Add, contentDescription = null)
+                Spacer(Modifier.width(4.dp))
+                Text("Add recipient")
+            }
+            if (!s.phoneValid && s.recipients.any { it.isNotBlank() }) {
+                Text(
+                    "Enter at least one valid number",
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
 
             OutlinedTextField(
                 value = s.message, onValueChange = { v -> vm.update { it.copy(message = v) } },
                 label = { Text("Message") },
-                supportingText = { Text("${s.message.length} chars") },
+                supportingText = {
+                    Text("${s.message.length} chars · variables: ${TEMPLATE_TOKENS.joinToString(" ")}")
+                },
                 minLines = 3, modifier = Modifier.fillMaxWidth()
             )
 
