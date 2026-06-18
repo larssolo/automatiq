@@ -44,6 +44,7 @@ fun MacroEditorScreen(
     var showDate by remember { mutableStateOf(false) }
     var showExpiry by remember { mutableStateOf(false) }
     var intervalExpanded by remember { mutableStateOf(false) }
+    var triggerExpanded by remember { mutableStateOf(false) }
 
     Scaffold(topBar = {
         TopAppBar(
@@ -67,13 +68,31 @@ fun MacroEditorScreen(
                 singleLine = true, modifier = Modifier.fillMaxWidth()
             )
 
-            SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
-                TriggerType.entries.forEachIndexed { i, type ->
-                    SegmentedButton(
-                        selected = s.triggerType == type,
-                        onClick = { vm.update { it.copy(triggerType = type) } },
-                        shape = SegmentedButtonDefaults.itemShape(i, TriggerType.entries.size)
-                    ) { Text(triggerLabel(type)) }
+            ExposedDropdownMenuBox(
+                expanded = triggerExpanded,
+                onExpandedChange = { triggerExpanded = it }
+            ) {
+                OutlinedTextField(
+                    value = triggerLabel(s.triggerType),
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("Trigger") },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = triggerExpanded) },
+                    modifier = Modifier.menuAnchor().fillMaxWidth()
+                )
+                ExposedDropdownMenu(
+                    expanded = triggerExpanded,
+                    onDismissRequest = { triggerExpanded = false }
+                ) {
+                    TriggerType.entries.forEach { type ->
+                        DropdownMenuItem(
+                            text = { Text(triggerLabel(type)) },
+                            onClick = {
+                                vm.update { it.copy(triggerType = type) }
+                                triggerExpanded = false
+                            }
+                        )
+                    }
                 }
             }
 
