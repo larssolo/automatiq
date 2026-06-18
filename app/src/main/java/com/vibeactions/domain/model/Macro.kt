@@ -1,7 +1,10 @@
 package com.vibeactions.domain.model
 
-enum class TriggerType { SCHEDULED, MANUAL, INCOMING }
+enum class TriggerType { SCHEDULED, MANUAL, INCOMING, LOCATION }
 enum class MacroStatus { SUCCESS, FAILED, PENDING }
+
+/** Geofence transition for a LOCATION macro; values mirror Geofence.GEOFENCE_TRANSITION_*. */
+object GeofenceTransition { const val ENTER = 1; const val EXIT = 2 }
 
 data class Macro(
     val id: String,
@@ -34,7 +37,15 @@ data class Macro(
     /** INCOMING only: reply only when the sender matches (digits-normalised); null/blank = any sender. */
     val matchSender: String? = null,
     /** INCOMING only: reply only when the message contains this text (case-insensitive); null/blank = any. */
-    val matchKeyword: String? = null
+    val matchKeyword: String? = null,
+    /** LOCATION only: geofence centre latitude; null when not a location macro. */
+    val latitude: Double? = null,
+    /** LOCATION only: geofence centre longitude; null when not a location macro. */
+    val longitude: Double? = null,
+    /** LOCATION only: geofence radius in metres. */
+    val radiusMeters: Float? = null,
+    /** LOCATION only: [GeofenceTransition.ENTER] or [GeofenceTransition.EXIT]. */
+    val geofenceTransition: Int? = null
 ) {
     /** Stable positive Int request code for PendingIntent, derived from the UUID. */
     fun alarmRequestCode(): Int = (id.hashCode() and 0x7FFFFFFF)

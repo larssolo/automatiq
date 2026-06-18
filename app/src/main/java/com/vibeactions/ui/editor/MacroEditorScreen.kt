@@ -2,19 +2,30 @@ package com.vibeactions.ui.editor
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
+import com.vibeactions.domain.model.GeofenceTransition
 import com.vibeactions.domain.model.TriggerType
 import com.vibeactions.util.TEMPLATE_TOKENS
 import com.vibeactions.util.isValidPhone
@@ -170,6 +181,92 @@ fun MacroEditorScreen(
                 }
             }
 
+            if (s.triggerType == TriggerType.LOCATION) {
+                val ctx = LocalContext.current
+                val fused = remember { LocationServices.getFusedLocationProviderClient(ctx) }
+                fun fetchLocation() {
+                    try {
+                        fused.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, null)
+                            .addOnSuccessListener { loc ->
+                                if (loc != null) vm.update {
+                                    it.copy(latitude = loc.latitude, longitude = loc.longitude)
+                                }
+                            }
+                    } catch (e: SecurityException) { /* permission not granted */ }
+                }
+                val locPermLauncher = rememberLauncherForActivityResult(
+                    ActivityResultContracts.RequestPermission()
+                ) { granted -> if (granted) fetchLocation() }
+
+                OutlinedButton(
+                    onClick = {
+                        val granted = ContextCompat.checkSelfPermission(
+                            ctx, Manifest.permission.ACCESS_FINE_LOCATION
+                        ) == PackageManager.PERMISSION_GRANTED
+                        if (granted) fetchLocation()
+                        else locPermLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(Icons.Default.MyLocation, contentDescription = null)
+                    Spacer(Modifier.width(4.dp))
+                    Text(if (s.latitude != null) "Update to my location" else "Use my location now")
+                }
+                if (s.latitude != null && s.longitude != null) {
+                    Text(
+                        "Point: %.5f, %.5f".format(s.latitude, s.longitude),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                } else {
+                    Text(
+                        "No location set yet",
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+
+                Text("Radius: ${s.radiusMeters.toInt()} m", style = MaterialTheme.typography.labelLarge)
+                Slider(
+                    value = s.radiusMeters,
+                    onValueChange = { v -> vm.update { it.copy(radiusMeters = v) } },
+                    valueRange = 100f..2000f, steps = 18
+                )
+
+                SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+                    val options = listOf(
+                        GeofenceTransition.ENTER to "On arrival",
+                        GeofenceTransition.EXIT to "On departure"
+                    )
+                    options.forEachIndexed { i, (value, label) ->
+                        SegmentedButton(
+                            selected = s.geofenceTransition == value,
+                            onClick = { vm.update { it.copy(geofenceTransition = value) } },
+                            shape = SegmentedButtonDefaults.itemShape(i, options.size)
+                        ) { Text(label) }
+                    }
+                }
+
+                // Geofences only fire in the background with "Allow all the time" (Android 10+).
+                val bgGranted = Build.VERSION.SDK_INT < Build.VERSION_CODES.Q ||
+                    ContextCompat.checkSelfPermission(
+                        ctx, Manifest.permission.ACCESS_BACKGROUND_LOCATION
+                    ) == PackageManager.PERMISSION_GRANTED
+                val bgPermLauncher = rememberLauncherForActivityResult(
+                    ActivityResultContracts.RequestPermission()
+                ) { /* result reflected on next recomposition */ }
+                if (!bgGranted) {
+                    Text(
+                        "For this to work in the background, allow location \"all the time\".",
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                    TextButton(onClick = {
+                        bgPermLauncher.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+                    }) { Text("Allow background location") }
+                }
+            }
+
             if (s.triggerType == TriggerType.INCOMING) {
                 // Auto-reply: match on the incoming sender/keyword; reply goes back to the sender.
                 OutlinedTextField(
@@ -303,4 +400,5 @@ private fun triggerLabel(type: TriggerType): String = when (type) {
     TriggerType.SCHEDULED -> "Scheduled"
     TriggerType.MANUAL -> "Manual"
     TriggerType.INCOMING -> "Auto-reply"
+    TriggerType.LOCATION -> "Location"
 }

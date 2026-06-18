@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.vibeactions.domain.model.GeofenceTransition
 import com.vibeactions.domain.model.Macro
 import com.vibeactions.domain.model.TriggerType
 import com.vibeactions.ui.theme.*
@@ -86,6 +87,13 @@ fun MacroCard(
                                 color = OnSurfaceVariant, fontSize = 11.sp)
                         }
                     }
+                    TriggerType.LOCATION -> {
+                        Column(Modifier.weight(1f)) {
+                            Text("Location", fontFamily = JetBrainsMono, color = OnSurface, fontSize = 16.sp)
+                            Text(locationSummary(macro.geofenceTransition, macro.radiusMeters),
+                                color = OnSurfaceVariant, fontSize = 11.sp)
+                        }
+                    }
                     TriggerType.MANUAL -> {
                         FilledTonalButton(onClick = onTap) { Text("Send now") }
                         Spacer(Modifier.weight(1f))
@@ -107,6 +115,13 @@ private fun autoReplySummary(matchSender: String?, matchKeyword: String?): Strin
     val from = if (!matchSender.isNullOrBlank()) "from ${maskPhone(matchSender)}" else "from anyone"
     val on = if (!matchKeyword.isNullOrBlank()) " · \"${matchKeyword.trim()}\"" else ""
     return from + on
+}
+
+/** Short description of a location macro's trigger for the card, e.g. "On arrival · 200 m". */
+private fun locationSummary(transition: Int?, radiusMeters: Float?): String {
+    val on = if (transition == GeofenceTransition.EXIT) "On departure" else "On arrival"
+    val radius = radiusMeters?.let { " · ${it.toInt()} m" } ?: ""
+    return on + radius
 }
 
 @Composable

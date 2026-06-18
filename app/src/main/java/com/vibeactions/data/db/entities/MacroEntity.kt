@@ -26,5 +26,9 @@ data class MacroEntity(
     @ColumnInfo(name = "card_color", defaultValue = "0") val cardColor: Long = 0L,
     @ColumnInfo(name = "valid_until_epoch_day") val validUntilEpochDay: Long? = null,
     @ColumnInfo(name = "match_sender") val matchSender: String? = null,
-    @ColumnInfo(name = "match_keyword") val matchKeyword: String? = null
+    @ColumnInfo(name = "match_keyword") val matchKeyword: String? = null,
+    @ColumnInfo(name = "latitude") val latitude: Double? = null,
+    @ColumnInfo(name = "longitude") val longitude: Double? = null,
+    @ColumnInfo(name = "radius_meters") val radiusMeters: Float? = null,
+    @ColumnInfo(name = "geofence_transition") val geofenceTransition: Int? = null
 )

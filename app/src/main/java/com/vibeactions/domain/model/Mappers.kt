@@ -20,7 +20,9 @@ fun MacroEntity.toDomain() = Macro(
     lastScheduledFireAt = lastScheduledFireAt, sortOrder = sortOrder,
     daysOfWeek = daysOfWeek.toDaySet(), weekInterval = weekInterval, anchorEpochDay = anchorEpochDay,
     cardColor = cardColor, validUntilEpochDay = validUntilEpochDay,
-    matchSender = matchSender, matchKeyword = matchKeyword
+    matchSender = matchSender, matchKeyword = matchKeyword,
+    latitude = latitude, longitude = longitude, radiusMeters = radiusMeters,
+    geofenceTransition = geofenceTransition
 )
 
 fun Macro.toEntity() = MacroEntity(
@@ -30,7 +32,9 @@ fun Macro.toEntity() = MacroEntity(
     createdAt = createdAt, lastScheduledFireAt = lastScheduledFireAt, sortOrder = sortOrder,
     daysOfWeek = daysOfWeek.toDayMask(), weekInterval = weekInterval, anchorEpochDay = anchorEpochDay,
     cardColor = cardColor, validUntilEpochDay = validUntilEpochDay,
-    matchSender = matchSender, matchKeyword = matchKeyword
+    matchSender = matchSender, matchKeyword = matchKeyword,
+    latitude = latitude, longitude = longitude, radiusMeters = radiusMeters,
+    geofenceTransition = geofenceTransition
 )
 
 fun MacroLogEntity.toDomain() = MacroLog(
