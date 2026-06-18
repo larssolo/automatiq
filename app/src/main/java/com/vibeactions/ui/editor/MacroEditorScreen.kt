@@ -5,6 +5,7 @@ import androidx.compose.foundation.rememberScrollState
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
+import android.provider.ContactsContract
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.text.KeyboardOptions
@@ -13,6 +14,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.MyLocation
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -30,6 +32,9 @@ import com.vibeactions.domain.model.TriggerType
 import com.vibeactions.util.TEMPLATE_TOKENS
 import com.vibeactions.util.isValidPhone
 import java.time.LocalDate
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -40,11 +45,57 @@ fun MacroEditorScreen(
 ) {
     LaunchedEffect(macroId) { vm.load(macroId) }
     val s by vm.state.collectAsStateWithLifecycle()
+    val ctx = LocalContext.current
+    val scope = rememberCoroutineScope()
     var showTime by remember { mutableStateOf(false) }
     var showDate by remember { mutableStateOf(false) }
     var showExpiry by remember { mutableStateOf(false) }
     var intervalExpanded by remember { mutableStateOf(false) }
     var triggerExpanded by remember { mutableStateOf(false) }
+    // -1 = matchSender field; 0+ = recipient index
+    var pendingContactIndex by remember { mutableStateOf<Int?>(null) }
+
+    val contactPickerLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.PickContact()
+    ) { uri ->
+        val index = pendingContactIndex ?: return@rememberLauncherForActivityResult
+        pendingContactIndex = null
+        if (uri == null) return@rememberLauncherForActivityResult
+        scope.launch(Dispatchers.IO) {
+            val contactId = uri.lastPathSegment ?: return@launch
+            val cursor = ctx.contentResolver.query(
+                ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                arrayOf(ContactsContract.CommonDataKinds.Phone.NUMBER),
+                "${ContactsContract.CommonDataKinds.Phone.CONTACT_ID} = ?",
+                arrayOf(contactId),
+                "${ContactsContract.CommonDataKinds.Phone.IS_PRIMARY} DESC"
+            )
+            val number = cursor?.use { c -> if (c.moveToFirst()) c.getString(0) else null }
+                ?: return@launch
+            val cleaned = number.replace("\\s".toRegex(), "")
+            withContext(Dispatchers.Main) {
+                if (index == -1) {
+                    vm.update { it.copy(matchSender = cleaned) }
+                } else {
+                    vm.update { st ->
+                        st.copy(recipients = st.recipients.toMutableList()
+                            .also { list -> if (index < list.size) list[index] = cleaned })
+                    }
+                }
+            }
+        }
+    }
+    val contactPermLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted -> if (granted) contactPickerLauncher.launch(null) }
+
+    fun pickContact(index: Int) {
+        pendingContactIndex = index
+        val ok = ContextCompat.checkSelfPermission(ctx, Manifest.permission.READ_CONTACTS) ==
+            PackageManager.PERMISSION_GRANTED
+        if (ok) contactPickerLauncher.launch(null)
+        else contactPermLauncher.launch(Manifest.permission.READ_CONTACTS)
+    }
 
     Scaffold(topBar = {
         TopAppBar(
@@ -201,7 +252,6 @@ fun MacroEditorScreen(
             }
 
             if (s.triggerType == TriggerType.LOCATION) {
-                val ctx = LocalContext.current
                 val fused = remember { LocationServices.getFusedLocationProviderClient(ctx) }
                 fun fetchLocation() {
                     try {
@@ -293,6 +343,11 @@ fun MacroEditorScreen(
                     onValueChange = { v -> vm.update { it.copy(matchSender = v) } },
                     label = { Text("From sender (optional)") },
                     supportingText = { Text("Leave blank to reply to anyone") },
+                    trailingIcon = {
+                        IconButton(onClick = { pickContact(-1) }) {
+                            Icon(Icons.Default.Person, contentDescription = "Pick contact")
+                        }
+                    },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                     singleLine = true, modifier = Modifier.fillMaxWidth()
                 )
@@ -322,6 +377,9 @@ fun MacroEditorScreen(
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                             singleLine = true, modifier = Modifier.weight(1f)
                         )
+                        IconButton(onClick = { pickContact(index) }) {
+                            Icon(Icons.Default.Person, contentDescription = "Pick contact")
+                        }
                         if (s.recipients.size > 1) {
                             IconButton(onClick = {
                                 vm.update { st ->
