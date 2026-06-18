@@ -16,7 +16,9 @@ private data class MacroDto(
     val daysOfWeek: List<Int> = listOf(1, 2, 3, 4, 5, 6, 7),
     val weekInterval: Int = 1, val anchorEpochDay: Long? = null,
     val cardColor: Long = 0L, val validUntilEpochDay: Long? = null,
-    val matchSender: String? = null, val matchKeyword: String? = null
+    val matchSender: String? = null, val matchKeyword: String? = null,
+    val latitude: Double? = null, val longitude: Double? = null,
+    val radiusMeters: Float? = null, val geofenceTransition: Int? = null
 )
 
 private val json = Json { prettyPrint = true; ignoreUnknownKeys = true }
@@ -34,7 +36,9 @@ fun exportMacros(macros: List<Macro>): String =
                 sortOrder = it.sortOrder, daysOfWeek = it.daysOfWeek.sorted(),
                 weekInterval = it.weekInterval, anchorEpochDay = it.anchorEpochDay,
                 cardColor = it.cardColor, validUntilEpochDay = it.validUntilEpochDay,
-                matchSender = it.matchSender, matchKeyword = it.matchKeyword)
+                matchSender = it.matchSender, matchKeyword = it.matchKeyword,
+                latitude = it.latitude, longitude = it.longitude,
+                radiusMeters = it.radiusMeters, geofenceTransition = it.geofenceTransition)
         }
     )
 
@@ -53,5 +57,7 @@ fun importMacros(text: String): List<Macro> =
             daysOfWeek = it.daysOfWeek.toSet(), weekInterval = it.weekInterval,
             anchorEpochDay = it.anchorEpochDay, cardColor = it.cardColor,
             validUntilEpochDay = it.validUntilEpochDay,
-            matchSender = it.matchSender, matchKeyword = it.matchKeyword)
+            matchSender = it.matchSender, matchKeyword = it.matchKeyword,
+            latitude = it.latitude, longitude = it.longitude,
+            radiusMeters = it.radiusMeters, geofenceTransition = it.geofenceTransition)
     }

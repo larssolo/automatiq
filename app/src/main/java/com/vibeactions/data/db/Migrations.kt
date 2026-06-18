@@ -59,3 +59,13 @@ val MIGRATION_6_7 = object : Migration(6, 7) {
         db.execSQL("ALTER TABLE macros ADD COLUMN match_keyword TEXT")
     }
 }
+
+/** v7 → v8: adds geofence columns for LOCATION macros (lat/lng/radius/transition). NULL for others. */
+val MIGRATION_7_8 = object : Migration(7, 8) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE macros ADD COLUMN latitude REAL")
+        db.execSQL("ALTER TABLE macros ADD COLUMN longitude REAL")
+        db.execSQL("ALTER TABLE macros ADD COLUMN radius_meters REAL")
+        db.execSQL("ALTER TABLE macros ADD COLUMN geofence_transition INTEGER")
+    }
+}

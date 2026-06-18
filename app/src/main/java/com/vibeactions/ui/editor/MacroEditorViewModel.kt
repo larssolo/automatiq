@@ -3,6 +3,7 @@ package com.vibeactions.ui.editor
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vibeactions.data.repository.MacroRepository
+import com.vibeactions.domain.model.GeofenceTransition
 import com.vibeactions.domain.model.Macro
 import com.vibeactions.domain.model.TriggerType
 import com.vibeactions.domain.usecase.SaveMacroUseCase
@@ -36,6 +37,10 @@ data class EditorState(
     val validUntilEpochDay: Long? = null,
     val matchSender: String = "",
     val matchKeyword: String = "",
+    val latitude: Double? = null,
+    val longitude: Double? = null,
+    val radiusMeters: Float = 200f,
+    val geofenceTransition: Int = GeofenceTransition.ENTER,
     val cardColor: Long = randomCardColor()
 ) {
     val nameValid get() = name.isNotBlank()
@@ -46,7 +51,9 @@ data class EditorState(
     val daysValid get() = triggerType != TriggerType.SCHEDULED || daysOfWeek.isNotEmpty()
     /** Auto-reply macros reply to the incoming sender, so they need no recipient list. */
     val recipientsRequired get() = triggerType != TriggerType.INCOMING
-    val canSave get() = nameValid && messageValid && daysValid &&
+    /** Location macros need a chosen point. */
+    val locationValid get() = triggerType != TriggerType.LOCATION || (latitude != null && longitude != null)
+    val canSave get() = nameValid && messageValid && daysValid && locationValid &&
         (!recipientsRequired || phoneValid)
 }
 
@@ -68,6 +75,9 @@ class MacroEditorViewModel @Inject constructor(
                     m.lastTriggeredAt, m.lastStatus, m.lastScheduledFireAt, m.sortOrder, m.daysOfWeek,
                     m.weekInterval, m.anchorEpochDay, validUntilEpochDay = m.validUntilEpochDay,
                     matchSender = m.matchSender ?: "", matchKeyword = m.matchKeyword ?: "",
+                    latitude = m.latitude, longitude = m.longitude,
+                    radiusMeters = m.radiusMeters ?: 200f,
+                    geofenceTransition = m.geofenceTransition ?: GeofenceTransition.ENTER,
                     cardColor = if (m.cardColor != 0L) m.cardColor else _state.value.cardColor)
             }
         }
@@ -110,7 +120,11 @@ class MacroEditorViewModel @Inject constructor(
             matchSender = if (s.triggerType == TriggerType.INCOMING)
                 s.matchSender.trim().ifBlank { null } else null,
             matchKeyword = if (s.triggerType == TriggerType.INCOMING)
-                s.matchKeyword.trim().ifBlank { null } else null
+                s.matchKeyword.trim().ifBlank { null } else null,
+            latitude = if (s.triggerType == TriggerType.LOCATION) s.latitude else null,
+            longitude = if (s.triggerType == TriggerType.LOCATION) s.longitude else null,
+            radiusMeters = if (s.triggerType == TriggerType.LOCATION) s.radiusMeters else null,
+            geofenceTransition = if (s.triggerType == TriggerType.LOCATION) s.geofenceTransition else null
         )
         viewModelScope.launch { save(macro); onDone() }
     }
