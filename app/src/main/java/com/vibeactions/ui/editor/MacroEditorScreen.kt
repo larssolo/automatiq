@@ -19,6 +19,7 @@ import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Send
 import com.vibeactions.domain.model.AiSendMode
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -49,7 +50,8 @@ fun MacroEditorScreen(
     onDone: () -> Unit,
     vm: MacroEditorViewModel = hiltViewModel(),
     onDelete: (() -> Unit)? = null,
-    onCopy: (() -> Unit)? = null
+    onCopy: (() -> Unit)? = null,
+    onSend: (() -> Unit)? = null
 ) {
     LaunchedEffect(macroId) { vm.load(macroId) }
     val s by vm.state.collectAsStateWithLifecycle()
@@ -487,6 +489,15 @@ fun MacroEditorScreen(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("Enabled", modifier = Modifier.weight(1f))
                 Switch(checked = s.enabled, onCheckedChange = { v -> vm.update { it.copy(enabled = v) } })
+            }
+
+            if (macroId != null && onSend != null) {
+                HorizontalDivider()
+                FilledTonalButton(onClick = onSend, modifier = Modifier.fillMaxWidth()) {
+                    Icon(Icons.Default.Send, null, Modifier.size(16.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text(if (s.triggerType == TriggerType.MANUAL) "Send now" else "Send now (test)")
+                }
             }
 
             if (macroId != null && (onDelete != null || onCopy != null)) {

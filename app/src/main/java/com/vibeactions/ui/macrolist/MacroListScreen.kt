@@ -110,6 +110,13 @@ fun MacroListScreen(
                 },
                 onCopy = editingMacro?.let { macro ->
                     { vm.onCopy(macro); showEditor = false }
+                },
+                onSend = editingMacro?.let { macro ->
+                    {
+                        vm.onTrigger(macro)
+                        showEditor = false
+                        scope.launch { snackbar.showSnackbar("Sending ${macro.name}…") }
+                    }
                 }
             )
         }
