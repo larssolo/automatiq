@@ -8,6 +8,8 @@ import android.content.Intent
 import androidx.core.app.NotificationCompat
 import com.vibeactions.domain.model.Macro
 import com.vibeactions.domain.model.MacroStatus
+import com.vibeactions.scheduler.AiReplyActionReceiver
+import com.vibeactions.util.maskPhone
 import com.vibeactions.util.maskRecipients
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
@@ -64,6 +66,54 @@ class MacroNotificationManager @Inject constructor(
         return PendingIntent.getActivity(
             context, 1, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
+    }
+
+    /** Posts a notification with Send/Discard action buttons for APPROVE-mode AI replies. */
+    fun notifyAiApproval(macro: Macro, recipient: String, generatedBody: String) {
+        val notifId = ("ai_approve" + macro.id + recipient).hashCode() and 0x7FFFFFFF
+        val preview = if (generatedBody.length > 200) generatedBody.take(200) + "…" else generatedBody
+
+        val sendIntent = Intent(context, AiReplyActionReceiver::class.java).apply {
+            action = AiReplyActionReceiver.ACTION_AI_SEND
+            putExtra(AiReplyActionReceiver.EXTRA_MACRO_ID, macro.id)
+            putExtra(AiReplyActionReceiver.EXTRA_RECIPIENT, recipient)
+            putExtra(AiReplyActionReceiver.EXTRA_BODY, generatedBody)
+            putExtra(AiReplyActionReceiver.EXTRA_NOTIF_ID, notifId)
+        }
+        val sendPi = PendingIntent.getBroadcast(
+            context, ("ai_send" + macro.id + recipient).hashCode() and 0x7FFFFFFF, sendIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        val discardIntent = Intent(context, AiReplyActionReceiver::class.java).apply {
+            action = AiReplyActionReceiver.ACTION_AI_DISCARD
+            putExtra(AiReplyActionReceiver.EXTRA_NOTIF_ID, notifId)
+        }
+        val discardPi = PendingIntent.getBroadcast(
+            context, ("ai_discard" + macro.id + recipient).hashCode() and 0x7FFFFFFF, discardIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val builder = NotificationCompat.Builder(context, CHANNEL_ID)
+            .setSmallIcon(android.R.drawable.stat_notify_chat)
+            .setContentTitle("AI-svar klar til ${maskPhone(recipient)}")
+            .setContentText(preview)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(preview))
+            .setAutoCancel(false)
+            .addAction(0, "Send", sendPi)
+            .addAction(0, "Slet", discardPi)
+        manager.notify(notifId, builder.build())
+    }
+
+    /** Posts an informational notification after an AUTO-mode AI reply is sent (shows content). */
+    fun notifyAiSent(macro: Macro, recipient: String, sentBody: String) {
+        val preview = if (sentBody.length > 200) sentBody.take(200) + "…" else sentBody
+        val builder = NotificationCompat.Builder(context, CHANNEL_ID)
+            .setSmallIcon(android.R.drawable.stat_notify_chat)
+            .setContentTitle("AI-svar sendt til ${maskPhone(recipient)}")
+            .setContentText(preview)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(preview))
+            .setAutoCancel(true)
+        manager.notify(("ai_sent" + macro.id + recipient).hashCode() and 0x7FFFFFFF, builder.build())
     }
 
     companion object { const val CHANNEL_ID = "macro_actions" }

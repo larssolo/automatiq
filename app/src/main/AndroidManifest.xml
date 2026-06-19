@@ -45,6 +45,8 @@
 
         <receiver android:name=".scheduler.GeofenceReceiver" android:exported="false" />
 
+        <receiver android:name=".scheduler.AiReplyActionReceiver" android:exported="false" />
+
         <receiver
             android:name=".scheduler.BootReceiver"
             android:exported="true">

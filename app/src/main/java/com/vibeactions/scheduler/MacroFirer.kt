@@ -25,8 +25,16 @@ class MacroFirer @Inject constructor(
      * Sends the macro's SMS, logs, notifies, updates status, and (for scheduled+repeat) re-arms tomorrow.
      * [enforceOncePerDay] guards scheduled fires against alarm+worker double-send; manual taps pass false.
      * [overrideRecipient] (auto-reply) sends to that number instead of the macro's own recipient list.
+     * [overrideBody] when set, uses this text directly instead of expanding the macro's template.
+     * [suppressResultNotification] when true, skips posting the result notification.
      */
-    suspend fun fire(macroId: String, enforceOncePerDay: Boolean, overrideRecipient: String? = null) {
+    suspend fun fire(
+        macroId: String,
+        enforceOncePerDay: Boolean,
+        overrideRecipient: String? = null,
+        overrideBody: String? = null,
+        suppressResultNotification: Boolean = false
+    ) {
         val macro = macroRepo.getById(macroId) ?: return
         if (!macro.enabled) return
         val now = System.currentTimeMillis()
@@ -38,7 +46,7 @@ class MacroFirer @Inject constructor(
         val targets = overrideRecipient?.let { listOf(it) } ?: macro.recipients
         if (targets.isEmpty()) return
         // Expand {dato}/{tid}/{ugedag}/{navn} once, then send the same text to every recipient.
-        val body = expandTemplate(macro.messageBody, LocalDateTime.now(), macro.name)
+        val body = overrideBody ?: expandTemplate(macro.messageBody, LocalDateTime.now(), macro.name)
         // Send to every recipient; success only if all succeed, otherwise FAILED with a summary error.
         val failures = targets.mapNotNull { number ->
             sms.send(number, body).exceptionOrNull()?.let { number to it }
@@ -58,7 +66,7 @@ class MacroFirer @Inject constructor(
                 messagePreview = body.take(40), errorMessage = error
             )
         )
-        notifications.notifyResult(macro, status, error)
+        if (!suppressResultNotification) notifications.notifyResult(macro, status, error)
 
         if (macro.triggerType == TriggerType.SCHEDULED && macro.repeatDaily) {
             alarmScheduler.schedule(macro.copy(lastTriggeredAt = now, lastStatus = status))
