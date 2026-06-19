@@ -19,6 +19,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.vibeactions.ui.macrolist.MacroListViewModel
 import com.vibeactions.ui.theme.VibeActionsTheme
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @AndroidEntryPoint
@@ -51,7 +54,11 @@ class MacroWidgetConfigActivity : ComponentActivity() {
 
     private fun bind(widgetId: Int, macroId: String) {
         WidgetIds.put(this, macroId = macroId, widgetId = widgetId)
-        MacroWidgetProvider.renderWidget(this, AppWidgetManager.getInstance(this), widgetId)
+        val appContext = applicationContext
+        // Render the widget off the main thread (it reads the macro from Room), then close.
+        CoroutineScope(Dispatchers.IO).launch {
+            MacroWidgetProvider.renderWidget(appContext, AppWidgetManager.getInstance(appContext), widgetId)
+        }
         setResult(Activity.RESULT_OK,
             Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId))
         finish()

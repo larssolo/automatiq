@@ -19,7 +19,6 @@ import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -34,7 +33,16 @@ class MacroWidgetProvider : AppWidgetProvider() {
     }
 
     override fun onUpdate(context: Context, manager: AppWidgetManager, ids: IntArray) {
-        ids.forEach { renderWidget(context, manager, it) }
+        // Render off the main thread — the macro name comes from a Room read; runBlocking here
+        // would risk an ANR on slow storage.
+        val pending = goAsync()
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                ids.forEach { renderWidget(context, manager, it) }
+            } finally {
+                pending.finish()
+            }
+        }
     }
 
     override fun onDeleted(context: Context, ids: IntArray) {
@@ -73,12 +81,12 @@ class MacroWidgetProvider : AppWidgetProvider() {
     companion object {
         const val ACTION_TAP = "com.vibeactions.widget.ACTION_TAP"
 
-        fun renderWidget(context: Context, manager: AppWidgetManager, widgetId: Int) {
+        suspend fun renderWidget(context: Context, manager: AppWidgetManager, widgetId: Int) {
             val ep = EntryPointAccessors.fromApplication(context.applicationContext, WidgetEntryPoint::class.java)
             val macroId = WidgetIds.get(context, widgetId)
             val views = RemoteViews(context.packageName, R.layout.widget_macro)
             if (macroId != null) {
-                val macro = runBlocking { ep.macroRepository().getById(macroId) }
+                val macro = ep.macroRepository().getById(macroId)
                 views.setTextViewText(R.id.widget_name, macro?.name ?: "Macro")
                 val subtitle = macro?.lastTriggeredAt?.let {
                     "Last: " + SimpleDateFormat("dd/MM HH:mm", Locale.getDefault()).format(Date(it))
