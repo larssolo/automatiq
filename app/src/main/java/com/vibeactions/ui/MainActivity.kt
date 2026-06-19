@@ -8,6 +8,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
@@ -15,13 +16,17 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.core.content.ContextCompat
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.compose.*
-import androidx.navigation.navArgument
+import com.vibeactions.R
 import com.vibeactions.ui.common.PermissionBanner
 import com.vibeactions.ui.editor.MacroEditorScreen
 import com.vibeactions.ui.log.LogScreen
@@ -80,49 +85,72 @@ private fun AppRoot() {
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
+    // Editor sheet state — lifted here so the sheet covers the entire screen including the bottom nav
+    var showEditor by remember { mutableStateOf(false) }
+    var editorMacroId by remember { mutableStateOf<String?>(null) }
+
     val backStack by nav.currentBackStackEntryAsState()
     val route = backStack?.destination?.route
 
-    Scaffold(bottomBar = {
-        NavigationBar {
-            NavigationBarItem(
-                selected = route == "list", onClick = { nav.navigate("list") },
-                icon = { Icon(Icons.AutoMirrored.Filled.List, "Macros") }, label = { Text("Macros") })
-            NavigationBarItem(
-                selected = route == "log", onClick = { nav.navigate("log") },
-                icon = { Icon(Icons.AutoMirrored.Filled.List, "Log") }, label = { Text("Log") })
-            NavigationBarItem(
-                selected = route == "settings", onClick = { nav.navigate("settings") },
-                icon = { Icon(Icons.Default.Settings, "Settings") }, label = { Text("Settings") })
-        }
-    }) { p ->
-        NavHost(nav, startDestination = "list", modifier = Modifier.padding(p)) {
-            composable("list") {
-                MacroListScreen(
-                    onNew = { nav.navigate("editor") },
-                    onEdit = { id -> nav.navigate("editor?id=$id") },
-                    banner = {
-                        if (!smsGranted) {
-                            PermissionBanner(
-                                "SMS permission is required to send messages.",
-                                "Grant"
-                            ) {
-                                smsPermLauncher.launch(arrayOf(Manifest.permission.SEND_SMS))
+    Box(Modifier.fillMaxSize()) {
+        Image(
+            painter = painterResource(R.drawable.bg_main),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize()
+        )
+
+        Scaffold(
+            containerColor = Color.Transparent,
+            bottomBar = {
+                NavigationBar(containerColor = Color(0xCC121212)) {
+                    NavigationBarItem(
+                        selected = route == "list", onClick = { nav.navigate("list") },
+                        icon = { Icon(Icons.AutoMirrored.Filled.List, "Macros") }, label = { Text("Macros") })
+                    NavigationBarItem(
+                        selected = route == "log", onClick = { nav.navigate("log") },
+                        icon = { Icon(Icons.AutoMirrored.Filled.List, "Log") }, label = { Text("Log") })
+                    NavigationBarItem(
+                        selected = route == "settings", onClick = { nav.navigate("settings") },
+                        icon = { Icon(Icons.Default.Settings, "Settings") }, label = { Text("Settings") })
+                }
+            }
+        ) { p ->
+            NavHost(nav, startDestination = "list", modifier = Modifier.padding(p)) {
+                composable("list") {
+                    MacroListScreen(
+                        onNew = { editorMacroId = null; showEditor = true },
+                        onEdit = { id -> editorMacroId = id; showEditor = true },
+                        banner = {
+                            if (!smsGranted) {
+                                PermissionBanner(
+                                    "SMS permission is required to send messages.",
+                                    "Grant"
+                                ) {
+                                    smsPermLauncher.launch(arrayOf(Manifest.permission.SEND_SMS))
+                                }
                             }
                         }
-                    }
+                    )
+                }
+                composable("log") { LogScreen() }
+                composable("settings") { SettingsScreen() }
+            }
+        }
+
+        if (showEditor) {
+            val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+            ModalBottomSheet(
+                onDismissRequest = { showEditor = false },
+                sheetState = sheetState,
+                containerColor = Color(0xFF1C1C1E)
+            ) {
+                MacroEditorScreen(
+                    macroId = editorMacroId,
+                    vm = hiltViewModel(key = editorMacroId ?: "new"),
+                    onDone = { showEditor = false }
                 )
             }
-            composable("editor") { MacroEditorScreen(macroId = null, onDone = { nav.popBackStack() }) }
-            composable(
-                "editor?id={id}",
-                arguments = listOf(navArgument("id") { nullable = true; defaultValue = null })
-            ) { entry ->
-                MacroEditorScreen(macroId = entry.arguments?.getString("id"),
-                    onDone = { nav.popBackStack() })
-            }
-            composable("log") { LogScreen() }
-            composable("settings") { SettingsScreen() }
         }
     }
 }

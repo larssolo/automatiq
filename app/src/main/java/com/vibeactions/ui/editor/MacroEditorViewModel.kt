@@ -69,7 +69,7 @@ class MacroEditorViewModel @Inject constructor(
     val state = _state.asStateFlow()
 
     fun load(macroId: String?) {
-        if (macroId == null) return
+        if (macroId == null) { _state.value = EditorState(); return }
         viewModelScope.launch {
             repo.getById(macroId)?.let { m ->
                 _state.value = EditorState(m.id, m.name, m.triggerType,

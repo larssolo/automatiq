@@ -1,9 +1,10 @@
 package com.vibeactions.ui.macrolist
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.DragHandle
@@ -25,7 +26,7 @@ import com.vibeactions.ui.common.MacroCard
 import com.vibeactions.ui.theme.OnSurfaceVariant
 import kotlinx.coroutines.launch
 import sh.calvin.reorderable.ReorderableItem
-import sh.calvin.reorderable.rememberReorderableLazyListState
+import sh.calvin.reorderable.rememberReorderableLazyGridState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -39,17 +40,16 @@ fun MacroListScreen(
     val snackbar = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
-    // Local copy that the user drags; reordered live and persisted on drop. Re-synced whenever the
-    // database emits a new list (create/delete/toggle, and after a reorder is persisted).
     var ordered by remember { mutableStateOf(macros) }
     LaunchedEffect(macros) { ordered = macros }
 
-    val lazyListState = rememberLazyListState()
-    val reorderState = rememberReorderableLazyListState(lazyListState) { from, to ->
+    val gridState = rememberLazyGridState()
+    val reorderState = rememberReorderableLazyGridState(gridState) { from, to ->
         ordered = ordered.toMutableList().apply { add(to.index, removeAt(from.index)) }
     }
 
     Scaffold(
+        containerColor = androidx.compose.ui.graphics.Color.Transparent,
         snackbarHost = { SnackbarHost(snackbar) },
         floatingActionButton = {
             ExtendedFloatingActionButton(
@@ -59,18 +59,20 @@ fun MacroListScreen(
             )
         }
     ) { padding ->
-        Column(Modifier.padding(padding).fillMaxSize().padding(horizontal = 16.dp)) {
+        Column(Modifier.padding(padding).fillMaxSize().padding(horizontal = 8.dp)) {
             banner()
             if (ordered.isEmpty()) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("No macros yet.\nTap “New Macro” to create your first.",
+                    Text("No macros yet. Tap 'New Macro' to create your first.",
                         color = OnSurfaceVariant)
                 }
             } else {
-                LazyColumn(
-                    state = lazyListState,
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                    contentPadding = PaddingValues(vertical = 12.dp)
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(2),
+                    state = gridState,
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    contentPadding = PaddingValues(vertical = 8.dp)
                 ) {
                     items(ordered, key = { it.id }) { macro ->
                         ReorderableItem(reorderState, key = macro.id) { _ ->
@@ -83,7 +85,7 @@ fun MacroListScreen(
                                             .draggableHandle(
                                                 onDragStopped = { vm.onReorder(ordered.map(Macro::id)) }
                                             )
-                                            .padding(horizontal = 8.dp),
+                                            .padding(horizontal = 4.dp),
                                         contentAlignment = Alignment.Center
                                     ) {
                                         Icon(

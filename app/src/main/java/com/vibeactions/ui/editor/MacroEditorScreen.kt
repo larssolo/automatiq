@@ -1,6 +1,7 @@
 package com.vibeactions.ui.editor
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.rememberScrollState
 import android.Manifest
 import android.content.pm.PackageManager
@@ -101,13 +102,16 @@ fun MacroEditorScreen(
         else contactPermLauncher.launch(Manifest.permission.READ_CONTACTS)
     }
 
-    Scaffold(topBar = {
-        TopAppBar(
-            title = { Text(if (macroId == null) "New Macro" else "Edit Macro") },
-            navigationIcon = { TextButton(onClick = onDone) { Text("Cancel") } },
-            actions = { TextButton(enabled = s.canSave, onClick = { vm.save(onDone) }) { Text("Save") } }
-        )
-    }) { p ->
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(if (macroId == null) "New Macro" else "Edit Macro") },
+                navigationIcon = { TextButton(onClick = onDone) { Text("Cancel") } },
+                actions = { TextButton(enabled = s.canSave, onClick = { vm.save(onDone) }) { Text("Save") } }
+            )
+        },
+        contentWindowInsets = WindowInsets(0)
+    ) { p ->
         Column(
             Modifier
                 .padding(p)
