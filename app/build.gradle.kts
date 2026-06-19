@@ -63,4 +63,5 @@ dependencies {
     implementation(libs.play.services.location)
     debugImplementation(libs.compose.ui.tooling)
     testImplementation(libs.junit)
+    testImplementation(kotlin("test"))
 }
