@@ -12,9 +12,11 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material.icons.filled.Person
+import com.vibeactions.domain.model.AiSendMode
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -52,6 +54,8 @@ fun MacroEditorScreen(
     var showExpiry by remember { mutableStateOf(false) }
     var intervalExpanded by remember { mutableStateOf(false) }
     var triggerExpanded by remember { mutableStateOf(false) }
+    var aiModeExpanded by remember { mutableStateOf(false) }
+    var showAiCompose by remember { mutableStateOf(false) }
     // -1 = matchSender field; 0+ = recipient index
     var pendingContactIndex by remember { mutableStateOf<Int?>(null) }
 
@@ -358,6 +362,54 @@ fun MacroEditorScreen(
                     supportingText = { Text("Leave blank to reply to any message") },
                     singleLine = true, modifier = Modifier.fillMaxWidth()
                 )
+                HorizontalDivider()
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("AI-svar (Gemini)", modifier = Modifier.weight(1f))
+                    Switch(
+                        checked = s.aiReplyEnabled,
+                        onCheckedChange = { v -> vm.update { it.copy(aiReplyEnabled = v) } }
+                    )
+                }
+                if (s.aiReplyEnabled) {
+                    ExposedDropdownMenuBox(
+                        expanded = aiModeExpanded,
+                        onExpandedChange = { aiModeExpanded = it }
+                    ) {
+                        OutlinedTextField(
+                            value = if (s.aiSendMode == AiSendMode.AUTO)
+                                "Send automatisk og informer" else "Godkend inden afsendelse",
+                            onValueChange = {},
+                            readOnly = true,
+                            label = { Text("AI afsendelse") },
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = aiModeExpanded) },
+                            modifier = Modifier.menuAnchor().fillMaxWidth()
+                        )
+                        ExposedDropdownMenu(
+                            expanded = aiModeExpanded,
+                            onDismissRequest = { aiModeExpanded = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("Godkend inden afsendelse") },
+                                onClick = {
+                                    vm.update { it.copy(aiSendMode = AiSendMode.APPROVE) }
+                                    aiModeExpanded = false
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Send automatisk og informer") },
+                                onClick = {
+                                    vm.update { it.copy(aiSendMode = AiSendMode.AUTO) }
+                                    aiModeExpanded = false
+                                }
+                            )
+                        }
+                    }
+                    Text(
+                        "Besked-feltet nedenfor bruges som fallback hvis Gemini ikke svarer.",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
             } else {
                 Text("Recipients", style = MaterialTheme.typography.labelLarge)
                 s.recipients.forEachIndexed { index, number ->
@@ -411,6 +463,17 @@ fun MacroEditorScreen(
                 },
                 minLines = 3, modifier = Modifier.fillMaxWidth()
             )
+            Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
+                TextButton(onClick = { showAiCompose = true }) {
+                    Icon(
+                        Icons.Default.AutoAwesome,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(Modifier.width(4.dp))
+                    Text("AI-skriv", style = MaterialTheme.typography.labelMedium)
+                }
+            }
 
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("Enabled", modifier = Modifier.weight(1f))
@@ -468,6 +531,62 @@ fun MacroEditorScreen(
             },
             dismissButton = { TextButton(onClick = { showExpiry = false }) { Text("Cancel") } }
         ) { DatePicker(state = dps) }
+    }
+
+    if (showAiCompose) {
+        var aiPrompt by remember { mutableStateOf("") }
+        var aiLoading by remember { mutableStateOf(false) }
+        AlertDialog(
+            onDismissRequest = { if (!aiLoading) showAiCompose = false },
+            title = { Text("AI-skriv besked") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    if (aiLoading) {
+                        CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
+                        Text("Genererer…", style = MaterialTheme.typography.bodySmall)
+                    } else {
+                        OutlinedTextField(
+                            value = aiPrompt,
+                            onValueChange = { aiPrompt = it },
+                            label = { Text("Beskriv beskeden") },
+                            placeholder = { Text("fx: venlig reminder om møde kl. 14") },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    enabled = aiPrompt.isNotBlank() && !aiLoading,
+                    onClick = {
+                        val prefs = ctx.getSharedPreferences("ai_settings", android.content.Context.MODE_PRIVATE)
+                        val key = prefs.getString("gemini_api_key", "") ?: ""
+                        if (key.isBlank()) {
+                            android.widget.Toast.makeText(
+                                ctx, "Tilføj Gemini API-nøgle i Indstillinger", android.widget.Toast.LENGTH_SHORT
+                            ).show()
+                            showAiCompose = false
+                            return@TextButton
+                        }
+                        aiLoading = true
+                        val systemPrompt = prefs.getString("gemini_system_prompt", "") ?: ""
+                        scope.launch {
+                            val result = runCatching {
+                                com.vibeactions.util.geminiGenerate(key, systemPrompt, aiPrompt)
+                            }
+                            aiLoading = false
+                            result.getOrNull()?.let { generated ->
+                                vm.update { it.copy(message = generated) }
+                            }
+                            showAiCompose = false
+                        }
+                    }
+                ) { Text("Generer") }
+            },
+            dismissButton = {
+                TextButton(onClick = { if (!aiLoading) showAiCompose = false }) { Text("Annuller") }
+            }
+        )
     }
 }
 

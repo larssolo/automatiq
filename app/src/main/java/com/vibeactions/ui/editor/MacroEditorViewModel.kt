@@ -3,6 +3,7 @@ package com.vibeactions.ui.editor
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vibeactions.data.repository.MacroRepository
+import com.vibeactions.domain.model.AiSendMode
 import com.vibeactions.domain.model.GeofenceTransition
 import com.vibeactions.domain.model.Macro
 import com.vibeactions.domain.model.TriggerType
@@ -41,7 +42,9 @@ data class EditorState(
     val longitude: Double? = null,
     val radiusMeters: Float = 200f,
     val geofenceTransition: Int = GeofenceTransition.ENTER,
-    val cardColor: Long = randomCardColor()
+    val cardColor: Long = randomCardColor(),
+    val aiReplyEnabled: Boolean = false,
+    val aiSendMode: AiSendMode = AiSendMode.APPROVE
 ) {
     val nameValid get() = name.isNotBlank()
     /** Non-blank numbers (blanks are ignored on save); at least one, and every non-blank one valid. */
@@ -78,7 +81,9 @@ class MacroEditorViewModel @Inject constructor(
                     latitude = m.latitude, longitude = m.longitude,
                     radiusMeters = m.radiusMeters ?: 200f,
                     geofenceTransition = m.geofenceTransition ?: GeofenceTransition.ENTER,
-                    cardColor = if (m.cardColor != 0L) m.cardColor else _state.value.cardColor)
+                    cardColor = if (m.cardColor != 0L) m.cardColor else _state.value.cardColor,
+                    aiReplyEnabled = m.aiReplyEnabled,
+                    aiSendMode = m.aiSendMode)
             }
         }
     }
@@ -116,6 +121,8 @@ class MacroEditorViewModel @Inject constructor(
             weekInterval = interval,
             anchorEpochDay = anchor,
             cardColor = s.cardColor,
+            aiReplyEnabled = if (s.triggerType == TriggerType.INCOMING) s.aiReplyEnabled else false,
+            aiSendMode = s.aiSendMode,
             validUntilEpochDay = if (scheduled) s.validUntilEpochDay else null,
             matchSender = if (s.triggerType == TriggerType.INCOMING)
                 s.matchSender.trim().ifBlank { null } else null,
