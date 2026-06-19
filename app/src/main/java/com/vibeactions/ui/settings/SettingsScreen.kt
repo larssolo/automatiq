@@ -26,6 +26,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vibeactions.ui.theme.OnSurfaceVariant
 import com.vibeactions.ui.theme.Primary
+import com.vibeactions.util.geminiGenerate
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
@@ -39,6 +40,8 @@ fun SettingsScreen(vm: SettingsViewModel = hiltViewModel()) {
     var apiKey by remember { mutableStateOf(vm.getApiKey()) }
     var apiKeyVisible by remember { mutableStateOf(false) }
     var systemPrompt by remember { mutableStateOf(vm.getSystemPrompt()) }
+    var apiTestResult by remember { mutableStateOf<String?>(null) }
+    var apiTestLoading by remember { mutableStateOf(false) }
 
     val createDoc = rememberLauncherForActivityResult(
         ActivityResultContracts.CreateDocument("application/json")
@@ -142,14 +145,44 @@ fun SettingsScreen(vm: SettingsViewModel = hiltViewModel()) {
                 minLines = 2,
                 modifier = Modifier.fillMaxWidth()
             )
-            Button(
-                onClick = {
-                    vm.saveApiKey(apiKey)
-                    vm.saveSystemPrompt(systemPrompt)
-                    scope.launch { snackbar.showSnackbar("AI-indstillinger gemt") }
-                },
-                modifier = Modifier.fillMaxWidth()
-            ) { Text("Gem AI-indstillinger") }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Button(
+                    onClick = {
+                        vm.saveApiKey(apiKey)
+                        vm.saveSystemPrompt(systemPrompt)
+                        scope.launch { snackbar.showSnackbar("AI-indstillinger gemt") }
+                    },
+                    modifier = Modifier.weight(1f)
+                ) { Text("Gem") }
+                OutlinedButton(
+                    onClick = {
+                        vm.saveApiKey(apiKey)
+                        apiTestResult = null
+                        apiTestLoading = true
+                        scope.launch {
+                            val result = runCatching {
+                                geminiGenerate(apiKey.trim(), "", "Svar kun med ordet OK")
+                            }
+                            apiTestLoading = false
+                            apiTestResult = result.getOrNull()
+                                ?.let { "✅ Virker: $it" }
+                                ?: "❌ Fejl: ${result.exceptionOrNull()?.message}"
+                        }
+                    },
+                    enabled = apiKey.isNotBlank() && !apiTestLoading,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    if (apiTestLoading)
+                        CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp)
+                    else
+                        Text("Test nøgle")
+                }
+            }
+            apiTestResult?.let {
+                Text(it, style = MaterialTheme.typography.bodySmall,
+                    color = if (it.startsWith("✅")) androidx.compose.ui.graphics.Color(0xFF4CAF50)
+                            else MaterialTheme.colorScheme.error)
+            }
 
             Spacer(Modifier.height(24.dp))
 

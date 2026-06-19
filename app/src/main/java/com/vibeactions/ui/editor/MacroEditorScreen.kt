@@ -572,6 +572,7 @@ fun MacroEditorScreen(
     if (showAiCompose) {
         var aiPrompt by remember { mutableStateOf("") }
         var aiLoading by remember { mutableStateOf(false) }
+        var aiError by remember { mutableStateOf<String?>(null) }
         AlertDialog(
             onDismissRequest = { if (!aiLoading) showAiCompose = false },
             title = { Text("AI-skriv besked") },
@@ -583,11 +584,15 @@ fun MacroEditorScreen(
                     } else {
                         OutlinedTextField(
                             value = aiPrompt,
-                            onValueChange = { aiPrompt = it },
+                            onValueChange = { aiPrompt = it; aiError = null },
                             label = { Text("Beskriv beskeden") },
                             placeholder = { Text("fx: venlig reminder om møde kl. 14") },
                             modifier = Modifier.fillMaxWidth()
                         )
+                    }
+                    aiError?.let {
+                        Text(it, color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall)
                     }
                 }
             },
@@ -598,23 +603,24 @@ fun MacroEditorScreen(
                         val prefs = ctx.getSharedPreferences("ai_settings", android.content.Context.MODE_PRIVATE)
                         val key = prefs.getString("gemini_api_key", "") ?: ""
                         if (key.isBlank()) {
-                            android.widget.Toast.makeText(
-                                ctx, "Tilføj Gemini API-nøgle i Indstillinger", android.widget.Toast.LENGTH_SHORT
-                            ).show()
-                            showAiCompose = false
+                            aiError = "Ingen API-nøgle — tilføj den i Indstillinger"
                             return@TextButton
                         }
                         aiLoading = true
+                        aiError = null
                         val systemPrompt = prefs.getString("gemini_system_prompt", "") ?: ""
                         scope.launch {
                             val result = runCatching {
                                 com.vibeactions.util.geminiGenerate(key, systemPrompt, aiPrompt)
                             }
                             aiLoading = false
-                            result.getOrNull()?.let { generated ->
+                            val generated = result.getOrNull()
+                            if (generated != null) {
                                 vm.update { it.copy(message = generated) }
+                                showAiCompose = false
+                            } else {
+                                aiError = result.exceptionOrNull()?.message ?: "Ukendt fejl"
                             }
-                            showAiCompose = false
                         }
                     }
                 ) { Text("Generer") }
