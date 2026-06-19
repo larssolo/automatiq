@@ -2,7 +2,6 @@ package com.vibeactions.domain.model
 
 import com.vibeactions.data.db.entities.MacroEntity
 import com.vibeactions.data.db.entities.MacroLogEntity
-import com.vibeactions.domain.model.AiSendMode
 
 /** Bitmask (bit day-1 set) -> set of ISO day numbers 1..7. */
 fun Int.toDaySet(): Set<Int> = (1..7).filter { (this shr (it - 1)) and 1 == 1 }.toSet()
