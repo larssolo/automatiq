@@ -7,22 +7,17 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.DragHandle
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.vibeactions.domain.model.Macro
 import com.vibeactions.ui.common.MacroCard
+import com.vibeactions.ui.editor.MacroEditorScreen
 import com.vibeactions.ui.theme.OnSurfaceVariant
 import kotlinx.coroutines.launch
 import sh.calvin.reorderable.ReorderableItem
@@ -31,8 +26,6 @@ import sh.calvin.reorderable.rememberReorderableLazyGridState
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MacroListScreen(
-    onNew: () -> Unit,
-    onEdit: (String) -> Unit,
     banner: @Composable () -> Unit = {},
     vm: MacroListViewModel = hiltViewModel()
 ) {
@@ -43,17 +36,20 @@ fun MacroListScreen(
     var ordered by remember { mutableStateOf(macros) }
     LaunchedEffect(macros) { ordered = macros }
 
+    var showEditor by remember { mutableStateOf(false) }
+    var editorMacroId by remember { mutableStateOf<String?>(null) }
+
     val gridState = rememberLazyGridState()
     val reorderState = rememberReorderableLazyGridState(gridState) { from, to ->
         ordered = ordered.toMutableList().apply { add(to.index, removeAt(from.index)) }
     }
 
     Scaffold(
-        containerColor = androidx.compose.ui.graphics.Color.Transparent,
+        containerColor = Color.Transparent,
         snackbarHost = { SnackbarHost(snackbar) },
         floatingActionButton = {
             ExtendedFloatingActionButton(
-                onClick = onNew,
+                onClick = { editorMacroId = null; showEditor = true },
                 icon = { Icon(Icons.Default.Add, contentDescription = "New macro") },
                 text = { Text("New Macro") }
             )
@@ -78,44 +74,44 @@ fun MacroListScreen(
                         ReorderableItem(reorderState, key = macro.id) { _ ->
                             MacroCard(
                                 macro = macro,
-                                dragHandle = {
-                                    Box(
-                                        Modifier
-                                            .fillMaxHeight()
-                                            .draggableHandle(
-                                                onDragStopped = { vm.onReorder(ordered.map(Macro::id)) }
-                                            )
-                                            .padding(horizontal = 4.dp),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Icon(
-                                            Icons.Default.DragHandle,
-                                            contentDescription = "Reorder macro",
-                                            tint = OnSurfaceVariant
-                                        )
-                                    }
-                                },
-                                onToggle = { vm.onToggle(macro, it) },
-                                onTap = { vm.onTrigger(macro) },
-                                onEdit = { onEdit(macro.id) },
-                                onCopy = { vm.onCopy(macro) },
-                                onDelete = {
-                                    vm.onDelete(macro)
-                                    scope.launch {
-                                        val result = snackbar.showSnackbar(
-                                            message = "Macro deleted",
-                                            actionLabel = "Undo"
-                                        )
-                                        if (result == SnackbarResult.ActionPerformed) {
-                                            vm.onUndoDelete(macro)
-                                        }
-                                    }
-                                }
+                                onClick = { editorMacroId = macro.id; showEditor = true },
+                                modifier = Modifier.longPressDraggableHandle(
+                                    onDragStopped = { vm.onReorder(ordered.map(Macro::id)) }
+                                )
                             )
                         }
                     }
                 }
             }
+        }
+    }
+
+    if (showEditor) {
+        val editingMacro: Macro? = ordered.find { it.id == editorMacroId }
+        val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+        ModalBottomSheet(
+            onDismissRequest = { showEditor = false },
+            sheetState = sheetState,
+            containerColor = Color(0xFF1C1C1E)
+        ) {
+            MacroEditorScreen(
+                macroId = editorMacroId,
+                vm = hiltViewModel(key = editorMacroId ?: "new"),
+                onDone = { showEditor = false },
+                onDelete = editingMacro?.let { macro ->
+                    {
+                        vm.onDelete(macro)
+                        scope.launch {
+                            val result = snackbar.showSnackbar("Macro deleted", actionLabel = "Undo")
+                            if (result == SnackbarResult.ActionPerformed) vm.onUndoDelete(macro)
+                        }
+                        showEditor = false
+                    }
+                },
+                onCopy = editingMacro?.let { macro ->
+                    { vm.onCopy(macro); showEditor = false }
+                }
+            )
         }
     }
 }

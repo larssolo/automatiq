@@ -21,14 +21,12 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.core.content.ContextCompat
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.compose.*
 import com.vibeactions.R
 import com.vibeactions.ui.common.PermissionBanner
-import com.vibeactions.ui.editor.MacroEditorScreen
 import com.vibeactions.ui.log.LogScreen
 import com.vibeactions.ui.macrolist.MacroListScreen
 import com.vibeactions.ui.settings.SettingsScreen
@@ -67,9 +65,7 @@ private fun AppRoot() {
         val missing = perms.filter {
             ContextCompat.checkSelfPermission(context, it) != PackageManager.PERMISSION_GRANTED
         }
-        if (missing.isNotEmpty()) {
-            smsPermLauncher.launch(missing.toTypedArray())
-        }
+        if (missing.isNotEmpty()) smsPermLauncher.launch(missing.toTypedArray())
     }
 
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -85,10 +81,6 @@ private fun AppRoot() {
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
-    // Editor sheet state — lifted here so the sheet covers the entire screen including the bottom nav
-    var showEditor by remember { mutableStateOf(false) }
-    var editorMacroId by remember { mutableStateOf<String?>(null) }
-
     val backStack by nav.currentBackStackEntryAsState()
     val route = backStack?.destination?.route
 
@@ -99,7 +91,6 @@ private fun AppRoot() {
             contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize()
         )
-
         Scaffold(
             containerColor = Color.Transparent,
             bottomBar = {
@@ -119,37 +110,18 @@ private fun AppRoot() {
             NavHost(nav, startDestination = "list", modifier = Modifier.padding(p)) {
                 composable("list") {
                     MacroListScreen(
-                        onNew = { editorMacroId = null; showEditor = true },
-                        onEdit = { id -> editorMacroId = id; showEditor = true },
                         banner = {
                             if (!smsGranted) {
                                 PermissionBanner(
                                     "SMS permission is required to send messages.",
                                     "Grant"
-                                ) {
-                                    smsPermLauncher.launch(arrayOf(Manifest.permission.SEND_SMS))
-                                }
+                                ) { smsPermLauncher.launch(arrayOf(Manifest.permission.SEND_SMS)) }
                             }
                         }
                     )
                 }
                 composable("log") { LogScreen() }
                 composable("settings") { SettingsScreen() }
-            }
-        }
-
-        if (showEditor) {
-            val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-            ModalBottomSheet(
-                onDismissRequest = { showEditor = false },
-                sheetState = sheetState,
-                containerColor = Color(0xFF1C1C1E)
-            ) {
-                MacroEditorScreen(
-                    macroId = editorMacroId,
-                    vm = hiltViewModel(key = editorMacroId ?: "new"),
-                    onDone = { showEditor = false }
-                )
             }
         }
     }

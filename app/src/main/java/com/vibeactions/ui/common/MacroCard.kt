@@ -1,49 +1,42 @@
 package com.vibeactions.ui.common
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ContentCopy
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.vibeactions.domain.model.GeofenceTransition
 import com.vibeactions.domain.model.Macro
+import com.vibeactions.domain.model.MacroStatus
 import com.vibeactions.domain.model.TriggerType
 import com.vibeactions.ui.theme.*
 import com.vibeactions.util.formatRecurrence
 import com.vibeactions.util.maskPhone
-import com.vibeactions.util.maskRecipients
 
 @Composable
 fun MacroCard(
     macro: Macro,
-    onToggle: (Boolean) -> Unit,
-    onTap: () -> Unit,
-    onEdit: () -> Unit,
-    onCopy: () -> Unit,
-    onDelete: () -> Unit,
-    modifier: Modifier = Modifier,
-    dragHandle: @Composable () -> Unit = {}
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    val accent = if (macro.cardColor != 0L) Color(macro.cardColor) else Primary
+    val accent = if (macro.cardColor != 0L) androidx.compose.ui.graphics.Color(macro.cardColor) else Primary
+
     Row(
         modifier
             .fillMaxWidth()
-            .height(IntrinsicSize.Max)
+            .height(76.dp)
             .clip(RoundedCornerShape(12.dp))
             .background(Surface)
             .background(accent.copy(alpha = if (macro.cardColor != 0L) 0.07f else 0f))
+            .clickable { onClick() }
     ) {
         Box(
             Modifier
@@ -51,124 +44,83 @@ fun MacroCard(
                 .fillMaxHeight()
                 .background(if (macro.enabled) accent else Outline)
         )
-        Column(Modifier.weight(1f).padding(start = 16.dp, top = 12.dp, bottom = 12.dp, end = 4.dp)) {
-
-            // Header: name + recipient | status | overflow menu
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Column(Modifier.weight(1f)) {
-                    Text(macro.name, fontFamily = JetBrainsMono, fontWeight = FontWeight.Medium,
-                        color = OnSurface, fontSize = 16.sp)
-                    Spacer(Modifier.height(2.dp))
-                    Text(maskRecipients(macro.recipients), color = OnSurfaceVariant, fontSize = 13.sp)
+        Column(
+            Modifier
+                .weight(1f)
+                .fillMaxHeight()
+                .padding(horizontal = 12.dp),
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text(
+                macro.name,
+                fontFamily = JetBrainsMono,
+                fontWeight = FontWeight.Medium,
+                color = OnSurface,
+                fontSize = 15.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Spacer(Modifier.height(3.dp))
+            Text(
+                compactSummary(macro),
+                color = OnSurfaceVariant,
+                fontSize = 12.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+        Column(
+            Modifier
+                .fillMaxHeight()
+                .padding(end = 10.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.End
+        ) {
+            StatusDot(macro.lastStatus)
+            if (macro.triggerType == TriggerType.INCOMING && macro.aiReplyEnabled) {
+                Spacer(Modifier.height(4.dp))
+                Surface(color = accent.copy(alpha = 0.2f), shape = RoundedCornerShape(4.dp)) {
+                    Text(
+                        "AI",
+                        color = accent,
+                        fontSize = 9.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp)
+                    )
                 }
-                StatusBadge(macro.lastStatus)
-                MacroMenu(onEdit = onEdit, onCopy = onCopy, onDelete = onDelete)
-            }
-
-            Spacer(Modifier.height(10.dp))
-
-            // Footer: schedule (time + recurrence), auto-reply summary, or a Send action | enable switch
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                when (macro.triggerType) {
-                    TriggerType.SCHEDULED -> {
-                        Column(Modifier.weight(1f)) {
-                            Text(macro.scheduledTime ?: "--:--", fontFamily = JetBrainsMono,
-                                color = OnSurface, fontSize = 20.sp)
-                            val recurrence = formatRecurrence(macro.daysOfWeek, macro.weekInterval)
-                            val expiry = macro.validUntilEpochDay
-                                ?.let { " · until ${java.time.LocalDate.ofEpochDay(it)}" } ?: ""
-                            Text(recurrence + expiry, color = OnSurfaceVariant, fontSize = 11.sp)
-                        }
-                    }
-                    TriggerType.INCOMING -> {
-                        Column(Modifier.weight(1f)) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(6.dp)
-                            ) {
-                                Text("Auto-reply", fontFamily = JetBrainsMono,
-                                    color = OnSurface, fontSize = 16.sp)
-                                if (macro.aiReplyEnabled) {
-                                    Surface(
-                                        color = accent.copy(alpha = 0.2f),
-                                        shape = RoundedCornerShape(4.dp)
-                                    ) {
-                                        Text(
-                                            "AI",
-                                            color = accent,
-                                            fontSize = 10.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                                        )
-                                    }
-                                }
-                            }
-                            Text(
-                                autoReplySummary(macro.matchSender, macro.matchKeyword),
-                                color = OnSurfaceVariant, fontSize = 11.sp
-                            )
-                        }
-                    }
-                    TriggerType.LOCATION -> {
-                        Column(Modifier.weight(1f)) {
-                            Text("Location", fontFamily = JetBrainsMono, color = OnSurface, fontSize = 16.sp)
-                            Text(locationSummary(macro.geofenceTransition, macro.radiusMeters),
-                                color = OnSurfaceVariant, fontSize = 11.sp)
-                        }
-                    }
-                    TriggerType.MANUAL -> {
-                        FilledTonalButton(onClick = onTap) { Text("Send now") }
-                        Spacer(Modifier.weight(1f))
-                    }
-                }
-                Switch(
-                    checked = macro.enabled,
-                    onCheckedChange = onToggle,
-                    colors = SwitchDefaults.colors(checkedThumbColor = OnPrimary, checkedTrackColor = Primary)
-                )
             }
         }
-        dragHandle()
     }
-}
-
-/** Short description of an auto-reply macro's match conditions for the card. */
-private fun autoReplySummary(matchSender: String?, matchKeyword: String?): String {
-    val from = if (!matchSender.isNullOrBlank()) "from ${maskPhone(matchSender)}" else "from anyone"
-    val on = if (!matchKeyword.isNullOrBlank()) " · \"${matchKeyword.trim()}\"" else ""
-    return from + on
-}
-
-/** Short description of a location macro's trigger for the card, e.g. "On arrival · 200 m". */
-private fun locationSummary(transition: Int?, radiusMeters: Float?): String {
-    val on = if (transition == GeofenceTransition.EXIT) "On departure" else "On arrival"
-    val radius = radiusMeters?.let { " · ${it.toInt()} m" } ?: ""
-    return on + radius
 }
 
 @Composable
-private fun MacroMenu(onEdit: () -> Unit, onCopy: () -> Unit, onDelete: () -> Unit) {
-    var open by remember { mutableStateOf(false) }
-    Box {
-        IconButton(onClick = { open = true }) {
-            Icon(Icons.Default.MoreVert, contentDescription = "Macro actions", tint = OnSurfaceVariant)
-        }
-        DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
-            DropdownMenuItem(
-                text = { Text("Edit") },
-                leadingIcon = { Icon(Icons.Default.Edit, contentDescription = null) },
-                onClick = { open = false; onEdit() }
-            )
-            DropdownMenuItem(
-                text = { Text("Duplicate") },
-                leadingIcon = { Icon(Icons.Default.ContentCopy, contentDescription = null) },
-                onClick = { open = false; onCopy() }
-            )
-            DropdownMenuItem(
-                text = { Text("Delete") },
-                leadingIcon = { Icon(Icons.Default.Delete, contentDescription = null, tint = ErrorRed) },
-                onClick = { open = false; onDelete() }
-            )
-        }
+private fun StatusDot(status: MacroStatus?) {
+    val color = when (status) {
+        MacroStatus.SUCCESS -> androidx.compose.ui.graphics.Color(0xFF4CAF50)
+        MacroStatus.FAILED -> ErrorRed
+        else -> androidx.compose.ui.graphics.Color.Transparent
     }
+    Box(
+        Modifier
+            .size(7.dp)
+            .clip(RoundedCornerShape(50))
+            .background(color)
+    )
+}
+
+private fun compactSummary(macro: Macro): String = when (macro.triggerType) {
+    TriggerType.SCHEDULED -> buildString {
+        append(macro.scheduledTime ?: "--:--")
+        val days = formatRecurrence(macro.daysOfWeek, macro.weekInterval)
+        if (days.isNotBlank()) append(" · $days")
+    }
+    TriggerType.INCOMING -> buildString {
+        append("Auto-reply")
+        if (!macro.matchSender.isNullOrBlank()) append(" · ${maskPhone(macro.matchSender)}")
+    }
+    TriggerType.LOCATION -> buildString {
+        append(if (macro.geofenceTransition == GeofenceTransition.EXIT) "On departure" else "On arrival")
+        macro.radiusMeters?.let { append(" · ${it.toInt()} m") }
+    }
+    TriggerType.MANUAL -> "Manual trigger"
 }

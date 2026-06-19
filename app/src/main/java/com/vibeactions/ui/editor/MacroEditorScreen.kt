@@ -15,6 +15,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material.icons.filled.Person
 import com.vibeactions.domain.model.AiSendMode
@@ -32,6 +34,7 @@ import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.vibeactions.domain.model.GeofenceTransition
 import com.vibeactions.domain.model.TriggerType
+import com.vibeactions.ui.theme.ErrorRed
 import com.vibeactions.util.TEMPLATE_TOKENS
 import com.vibeactions.util.isValidPhone
 import java.time.LocalDate
@@ -44,7 +47,9 @@ import kotlinx.coroutines.withContext
 fun MacroEditorScreen(
     macroId: String?,
     onDone: () -> Unit,
-    vm: MacroEditorViewModel = hiltViewModel()
+    vm: MacroEditorViewModel = hiltViewModel(),
+    onDelete: (() -> Unit)? = null,
+    onCopy: (() -> Unit)? = null
 ) {
     LaunchedEffect(macroId) { vm.load(macroId) }
     val s by vm.state.collectAsStateWithLifecycle()
@@ -482,6 +487,33 @@ fun MacroEditorScreen(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("Enabled", modifier = Modifier.weight(1f))
                 Switch(checked = s.enabled, onCheckedChange = { v -> vm.update { it.copy(enabled = v) } })
+            }
+
+            if (macroId != null && (onDelete != null || onCopy != null)) {
+                HorizontalDivider()
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    if (onCopy != null) {
+                        OutlinedButton(onClick = onCopy, modifier = Modifier.weight(1f)) {
+                            Icon(Icons.Default.ContentCopy, null, Modifier.size(16.dp))
+                            Spacer(Modifier.width(6.dp))
+                            Text("Duplicate")
+                        }
+                    }
+                    if (onDelete != null) {
+                        Button(
+                            onClick = onDelete,
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.buttonColors(containerColor = ErrorRed)
+                        ) {
+                            Icon(Icons.Default.Delete, null, Modifier.size(16.dp))
+                            Spacer(Modifier.width(6.dp))
+                            Text("Delete")
+                        }
+                    }
+                }
             }
         }
     }
