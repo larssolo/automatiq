@@ -2,6 +2,7 @@ package com.vibeactions.domain.model
 
 enum class TriggerType { SCHEDULED, MANUAL, INCOMING, LOCATION }
 enum class MacroStatus { SUCCESS, FAILED, PENDING }
+enum class AiSendMode { APPROVE, AUTO }
 
 /** Geofence transition for a LOCATION macro; values mirror Geofence.GEOFENCE_TRANSITION_*. */
 object GeofenceTransition { const val ENTER = 1; const val EXIT = 2 }
@@ -45,7 +46,11 @@ data class Macro(
     /** LOCATION only: geofence radius in metres. */
     val radiusMeters: Float? = null,
     /** LOCATION only: [GeofenceTransition.ENTER] or [GeofenceTransition.EXIT]. */
-    val geofenceTransition: Int? = null
+    val geofenceTransition: Int? = null,
+    /** INCOMING only: when true, replies via Gemini AI instead of the fixed messageBody. */
+    val aiReplyEnabled: Boolean = false,
+    /** INCOMING only: APPROVE = notify user to confirm before send; AUTO = send immediately and inform. */
+    val aiSendMode: AiSendMode = AiSendMode.APPROVE
 ) {
     /** Stable positive Int request code for PendingIntent, derived from the UUID. */
     fun alarmRequestCode(): Int = (id.hashCode() and 0x7FFFFFFF)

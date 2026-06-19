@@ -2,6 +2,7 @@ package com.vibeactions.domain.model
 
 import com.vibeactions.data.db.entities.MacroEntity
 import com.vibeactions.data.db.entities.MacroLogEntity
+import com.vibeactions.domain.model.AiSendMode
 
 /** Bitmask (bit day-1 set) -> set of ISO day numbers 1..7. */
 fun Int.toDaySet(): Set<Int> = (1..7).filter { (this shr (it - 1)) and 1 == 1 }.toSet()
@@ -22,7 +23,9 @@ fun MacroEntity.toDomain() = Macro(
     cardColor = cardColor, validUntilEpochDay = validUntilEpochDay,
     matchSender = matchSender, matchKeyword = matchKeyword,
     latitude = latitude, longitude = longitude, radiusMeters = radiusMeters,
-    geofenceTransition = geofenceTransition
+    geofenceTransition = geofenceTransition,
+    aiReplyEnabled = aiReplyEnabled,
+    aiSendMode = AiSendMode.valueOf(aiSendMode)
 )
 
 fun Macro.toEntity() = MacroEntity(
@@ -34,7 +37,9 @@ fun Macro.toEntity() = MacroEntity(
     cardColor = cardColor, validUntilEpochDay = validUntilEpochDay,
     matchSender = matchSender, matchKeyword = matchKeyword,
     latitude = latitude, longitude = longitude, radiusMeters = radiusMeters,
-    geofenceTransition = geofenceTransition
+    geofenceTransition = geofenceTransition,
+    aiReplyEnabled = aiReplyEnabled,
+    aiSendMode = aiSendMode.name
 )
 
 fun MacroLogEntity.toDomain() = MacroLog(

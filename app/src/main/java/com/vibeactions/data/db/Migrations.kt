@@ -69,3 +69,13 @@ val MIGRATION_7_8 = object : Migration(7, 8) {
         db.execSQL("ALTER TABLE macros ADD COLUMN geofence_transition INTEGER")
     }
 }
+
+/** v8 → v9: adds AI reply fields for INCOMING macros.
+ *  ai_reply_enabled: 0 = off (existing macros unchanged).
+ *  ai_send_mode: 'APPROVE' = show notification before sending (safe default). */
+val MIGRATION_8_9 = object : Migration(8, 9) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE macros ADD COLUMN ai_reply_enabled INTEGER NOT NULL DEFAULT 0")
+        db.execSQL("ALTER TABLE macros ADD COLUMN ai_send_mode TEXT NOT NULL DEFAULT 'APPROVE'")
+    }
+}

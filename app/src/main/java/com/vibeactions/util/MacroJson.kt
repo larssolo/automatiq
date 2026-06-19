@@ -1,5 +1,6 @@
 package com.vibeactions.util
 
+import com.vibeactions.domain.model.AiSendMode
 import com.vibeactions.domain.model.Macro
 import com.vibeactions.domain.model.MacroStatus
 import com.vibeactions.domain.model.TriggerType
@@ -18,7 +19,9 @@ private data class MacroDto(
     val cardColor: Long = 0L, val validUntilEpochDay: Long? = null,
     val matchSender: String? = null, val matchKeyword: String? = null,
     val latitude: Double? = null, val longitude: Double? = null,
-    val radiusMeters: Float? = null, val geofenceTransition: Int? = null
+    val radiusMeters: Float? = null, val geofenceTransition: Int? = null,
+    val aiReplyEnabled: Boolean = false,
+    val aiSendMode: String = "APPROVE"
 )
 
 private val json = Json { prettyPrint = true; ignoreUnknownKeys = true }
@@ -38,7 +41,9 @@ fun exportMacros(macros: List<Macro>): String =
                 cardColor = it.cardColor, validUntilEpochDay = it.validUntilEpochDay,
                 matchSender = it.matchSender, matchKeyword = it.matchKeyword,
                 latitude = it.latitude, longitude = it.longitude,
-                radiusMeters = it.radiusMeters, geofenceTransition = it.geofenceTransition)
+                radiusMeters = it.radiusMeters, geofenceTransition = it.geofenceTransition,
+                aiReplyEnabled = it.aiReplyEnabled,
+                aiSendMode = it.aiSendMode.name)
         }
     )
 
@@ -59,5 +64,7 @@ fun importMacros(text: String): List<Macro> =
             validUntilEpochDay = it.validUntilEpochDay,
             matchSender = it.matchSender, matchKeyword = it.matchKeyword,
             latitude = it.latitude, longitude = it.longitude,
-            radiusMeters = it.radiusMeters, geofenceTransition = it.geofenceTransition)
+            radiusMeters = it.radiusMeters, geofenceTransition = it.geofenceTransition,
+            aiReplyEnabled = it.aiReplyEnabled,
+            aiSendMode = AiSendMode.valueOf(it.aiSendMode))
     }
