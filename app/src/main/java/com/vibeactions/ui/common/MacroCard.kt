@@ -82,9 +82,31 @@ fun MacroCard(
                     }
                     TriggerType.INCOMING -> {
                         Column(Modifier.weight(1f)) {
-                            Text("Auto-reply", fontFamily = JetBrainsMono, color = OnSurface, fontSize = 16.sp)
-                            Text(autoReplySummary(macro.matchSender, macro.matchKeyword),
-                                color = OnSurfaceVariant, fontSize = 11.sp)
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Text("Auto-reply", fontFamily = JetBrainsMono,
+                                    color = OnSurface, fontSize = 16.sp)
+                                if (macro.aiReplyEnabled) {
+                                    Surface(
+                                        color = accent.copy(alpha = 0.2f),
+                                        shape = RoundedCornerShape(4.dp)
+                                    ) {
+                                        Text(
+                                            "AI",
+                                            color = accent,
+                                            fontSize = 10.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                        )
+                                    }
+                                }
+                            }
+                            Text(
+                                autoReplySummary(macro.matchSender, macro.matchKeyword),
+                                color = OnSurfaceVariant, fontSize = 11.sp
+                            )
                         }
                     }
                     TriggerType.LOCATION -> {
