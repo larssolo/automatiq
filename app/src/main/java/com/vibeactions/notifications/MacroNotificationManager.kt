@@ -27,12 +27,18 @@ class MacroNotificationManager @Inject constructor(
         manager.createNotificationChannel(channel)
     }
 
-    fun notifyResult(macro: Macro, status: MacroStatus, error: String?) {
+    fun notifyResult(
+        macro: Macro,
+        status: MacroStatus,
+        error: String?,
+        recipients: List<String> = macro.recipients
+    ) {
         val title = if (status == MacroStatus.SUCCESS) "Sent: ${macro.name}" else "Failed: ${macro.name}"
+        val to = maskRecipients(recipients).ifBlank { "recipient" }
         val text = if (status == MacroStatus.SUCCESS)
-            "To ${maskRecipients(macro.recipients)}"
+            "To $to"
         else
-            "To ${maskRecipients(macro.recipients)} — ${error ?: "unknown error"}"
+            "To $to — ${error ?: "unknown error"}"
 
         val builder = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.stat_notify_chat)

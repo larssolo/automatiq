@@ -66,7 +66,7 @@ class MacroFirer @Inject constructor(
                 messagePreview = body.take(40), errorMessage = error
             )
         )
-        if (!suppressResultNotification) notifications.notifyResult(macro, status, error)
+        if (!suppressResultNotification) notifications.notifyResult(macro, status, error, targets)
 
         if (macro.triggerType == TriggerType.SCHEDULED && macro.repeatDaily) {
             alarmScheduler.schedule(macro.copy(lastTriggeredAt = now, lastStatus = status))

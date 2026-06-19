@@ -56,6 +56,26 @@ suspend fun geminiGenerate(apiKey: String, systemPrompt: String, userMessage: St
             doOutput = true
             outputStream.use { it.write(body.toByteArray()) }
         }
-        val responseText = conn.inputStream.bufferedReader().readText()
-        parseGeminiResponse(responseText)
+        try {
+            val code = conn.responseCode
+            if (code !in 200..299) {
+                // The real reason (e.g. "API key not valid") is in the error stream, not inputStream.
+                val errorText = conn.errorStream?.bufferedReader()?.use { it.readText() }.orEmpty()
+                error("HTTP $code: ${extractGeminiError(errorText).ifBlank { "ukendt fejl" }}")
+            }
+            parseGeminiResponse(conn.inputStream.bufferedReader().use { it.readText() })
+        } finally {
+            conn.disconnect()
+        }
     }
+
+/** Pulls the human-readable message out of a Gemini error JSON body, falling back to the raw text. */
+internal fun extractGeminiError(errorJson: String): String {
+    if (errorJson.isBlank()) return ""
+    return runCatching {
+        geminiJson.decodeFromString(GeminiErrorEnvelope.serializer(), errorJson).error?.message
+    }.getOrNull() ?: errorJson.take(200)
+}
+
+@Serializable internal data class GeminiErrorEnvelope(val error: GeminiErrorBody? = null)
+@Serializable internal data class GeminiErrorBody(val message: String? = null, val status: String? = null)
