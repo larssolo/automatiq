@@ -16,6 +16,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vibeactions.ui.theme.OnSurfaceVariant
 import com.vibeactions.ui.theme.Primary
@@ -29,6 +34,9 @@ fun SettingsScreen(vm: SettingsViewModel = hiltViewModel()) {
     val snackbar = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     var pendingExport by remember { mutableStateOf<String?>(null) }
+    var apiKey by remember { mutableStateOf(vm.getApiKey()) }
+    var apiKeyVisible by remember { mutableStateOf(false) }
+    var systemPrompt by remember { mutableStateOf(vm.getSystemPrompt()) }
 
     val createDoc = rememberLauncherForActivityResult(
         ActivityResultContracts.CreateDocument("application/json")
@@ -95,6 +103,47 @@ fun SettingsScreen(vm: SettingsViewModel = hiltViewModel()) {
                 modifier = Modifier.fillMaxWidth()) { Text("Export macros (JSON)") }
             OutlinedButton(onClick = { openDoc.launch(arrayOf("application/json")) },
                 modifier = Modifier.fillMaxWidth()) { Text("Import macros (JSON)") }
+
+            HorizontalDivider()
+            Text(
+                "AI (Gemini 2.0 Flash)",
+                style = MaterialTheme.typography.titleSmall,
+                modifier = Modifier.padding(vertical = 4.dp)
+            )
+            OutlinedTextField(
+                value = apiKey,
+                onValueChange = { apiKey = it },
+                label = { Text("Gemini API-nøgle") },
+                placeholder = { Text("Hent gratis på aistudio.google.com") },
+                visualTransformation = if (apiKeyVisible) VisualTransformation.None
+                    else PasswordVisualTransformation(),
+                trailingIcon = {
+                    IconButton(onClick = { apiKeyVisible = !apiKeyVisible }) {
+                        Icon(
+                            if (apiKeyVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                            contentDescription = if (apiKeyVisible) "Hide key" else "Show key"
+                        )
+                    }
+                },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
+            )
+            OutlinedTextField(
+                value = systemPrompt,
+                onValueChange = { systemPrompt = it },
+                label = { Text("Systemprompt (valgfri)") },
+                placeholder = { Text("Svar på dansk, hold det kort og venligt") },
+                minLines = 2,
+                modifier = Modifier.fillMaxWidth()
+            )
+            Button(
+                onClick = {
+                    vm.saveApiKey(apiKey)
+                    vm.saveSystemPrompt(systemPrompt)
+                    scope.launch { snackbar.showSnackbar("AI-indstillinger gemt") }
+                },
+                modifier = Modifier.fillMaxWidth()
+            ) { Text("Gem AI-indstillinger") }
 
             Spacer(Modifier.weight(1f))
 
