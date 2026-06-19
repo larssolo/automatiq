@@ -8,6 +8,8 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -64,7 +66,11 @@ fun SettingsScreen(vm: SettingsViewModel = hiltViewModel()) {
     Scaffold(topBar = { TopAppBar(title = { Text("Settings") }) },
         snackbarHost = { SnackbarHost(snackbar) }) { p ->
         Column(
-            Modifier.padding(p).fillMaxSize().padding(16.dp),
+            Modifier
+                .padding(p)
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
 
@@ -145,7 +151,7 @@ fun SettingsScreen(vm: SettingsViewModel = hiltViewModel()) {
                 modifier = Modifier.fillMaxWidth()
             ) { Text("Gem AI-indstillinger") }
 
-            Spacer(Modifier.weight(1f))
+            Spacer(Modifier.height(24.dp))
 
             Row(
                 modifier = Modifier
