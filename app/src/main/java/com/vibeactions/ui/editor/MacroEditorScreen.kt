@@ -39,12 +39,20 @@ import com.vibeactions.ui.theme.ErrorRed
 import com.vibeactions.ui.theme.OnSurface
 import com.vibeactions.ui.theme.OnSurfaceVariant
 import com.vibeactions.ui.theme.SurfaceVariant
+import com.vibeactions.util.geminiSuggest
 import com.vibeactions.util.TEMPLATE_TOKENS
 import com.vibeactions.util.isValidPhone
 import java.time.LocalDate
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+
+private sealed interface AiState {
+    object Idle : AiState
+    object Loading : AiState
+    data class Suggestions(val items: List<String>) : AiState
+    data class Err(val msg: String) : AiState
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -602,65 +610,107 @@ fun MacroEditorScreen(
 
     if (showAiCompose) {
         var aiPrompt by remember { mutableStateOf("") }
-        var aiLoading by remember { mutableStateOf(false) }
-        var aiError by remember { mutableStateOf<String?>(null) }
+        var aiStyle  by remember { mutableStateOf("") }
+        var aiState  by remember { mutableStateOf<AiState>(AiState.Idle) }
+
         AlertDialog(
-            onDismissRequest = { if (!aiLoading) showAiCompose = false },
-            title = { Text("AI-skriv besked") },
+            onDismissRequest = { if (aiState !is AiState.Loading) showAiCompose = false },
+            title = {
+                Text(if (aiState is AiState.Suggestions) "Vælg en besked" else "AI-skriv besked")
+            },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    if (aiLoading) {
-                        CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
-                        Text("Genererer…", style = MaterialTheme.typography.bodySmall)
-                    } else {
-                        OutlinedTextField(
-                            value = aiPrompt,
-                            onValueChange = { aiPrompt = it; aiError = null },
-                            label = { Text("Beskriv beskeden") },
-                            placeholder = { Text("fx: venlig reminder om møde kl. 14") },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
-                    aiError?.let {
-                        Text(it, color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodySmall)
+                    when (val st = aiState) {
+                        AiState.Idle -> {
+                            OutlinedTextField(
+                                value = aiPrompt,
+                                onValueChange = { aiPrompt = it },
+                                label = { Text("Beskriv beskeden") },
+                                placeholder = { Text("fx: venlig reminder om møde kl. 14") },
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                            OutlinedTextField(
+                                value = aiStyle,
+                                onValueChange = { aiStyle = it },
+                                label = { Text("Stil/tone (valgfri)") },
+                                placeholder = { Text("fx: kort og uformel, dansk") },
+                                singleLine = true,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+                        AiState.Loading -> {
+                            CircularProgressIndicator(Modifier.align(Alignment.CenterHorizontally))
+                            Text("Genererer forslag…", style = MaterialTheme.typography.bodySmall)
+                        }
+                        is AiState.Suggestions -> {
+                            st.items.forEach { suggestion ->
+                                Card(
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+                                    ),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Row(
+                                        Modifier.padding(12.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            suggestion,
+                                            modifier = Modifier.weight(1f),
+                                            style = MaterialTheme.typography.bodyMedium
+                                        )
+                                        Spacer(Modifier.width(8.dp))
+                                        FilledTonalButton(onClick = {
+                                            vm.update { it.copy(message = suggestion) }
+                                            showAiCompose = false
+                                        }) { Text("Vælg") }
+                                    }
+                                }
+                            }
+                        }
+                        is AiState.Err -> {
+                            Text(
+                                st.msg,
+                                color = MaterialTheme.colorScheme.error,
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
                     }
                 }
             },
             confirmButton = {
-                TextButton(
-                    enabled = aiPrompt.isNotBlank() && !aiLoading,
-                    onClick = {
-                        val prefs = ctx.getSharedPreferences("ai_settings", android.content.Context.MODE_PRIVATE)
-                        val key = prefs.getString("gemini_api_key", "") ?: ""
-                        if (key.isBlank()) {
-                            aiError = "Ingen API-nøgle — tilføj den i Indstillinger"
-                            return@TextButton
-                        }
-                        aiLoading = true
-                        aiError = null
-                        val systemPrompt = prefs.getString("gemini_system_prompt", "") ?: ""
-                        val model = prefs.getString("gemini_model", com.vibeactions.util.DEFAULT_GEMINI_MODEL)
-                            ?.ifBlank { com.vibeactions.util.DEFAULT_GEMINI_MODEL }
-                            ?: com.vibeactions.util.DEFAULT_GEMINI_MODEL
-                        scope.launch {
-                            val result = runCatching {
-                                com.vibeactions.util.geminiGenerate(key, systemPrompt, aiPrompt, model)
+                when (aiState) {
+                    AiState.Idle -> TextButton(
+                        enabled = aiPrompt.isNotBlank(),
+                        onClick = {
+                            val prefs = ctx.getSharedPreferences("ai_settings", android.content.Context.MODE_PRIVATE)
+                            val key = prefs.getString("gemini_api_key", "") ?: ""
+                            if (key.isBlank()) {
+                                aiState = AiState.Err("Ingen API-nøgle — tilføj i Indstillinger")
+                                return@TextButton
                             }
-                            aiLoading = false
-                            val generated = result.getOrNull()
-                            if (generated != null) {
-                                vm.update { it.copy(message = generated) }
-                                showAiCompose = false
-                            } else {
-                                aiError = result.exceptionOrNull()?.message ?: "Ukendt fejl"
+                            val model = prefs.getString("gemini_model", com.vibeactions.util.DEFAULT_GEMINI_MODEL)
+                                ?.ifBlank { com.vibeactions.util.DEFAULT_GEMINI_MODEL }
+                                ?: com.vibeactions.util.DEFAULT_GEMINI_MODEL
+                            aiState = AiState.Loading
+                            scope.launch {
+                                val result = runCatching { geminiSuggest(key, aiPrompt, aiStyle, model) }
+                                aiState = result.getOrNull()
+                                    ?.let { AiState.Suggestions(it) }
+                                    ?: AiState.Err(result.exceptionOrNull()?.message ?: "Ukendt fejl")
                             }
                         }
-                    }
-                ) { Text("Generer") }
+                    ) { Text("Generer") }
+                    is AiState.Suggestions, is AiState.Err -> TextButton(
+                        onClick = { aiState = AiState.Idle }
+                    ) { Text("Prøv igen") }
+                    AiState.Loading -> { /* ingen knap under loading */ }
+                }
             },
             dismissButton = {
-                TextButton(onClick = { if (!aiLoading) showAiCompose = false }) { Text("Annuller") }
+                TextButton(onClick = { if (aiState !is AiState.Loading) showAiCompose = false }) {
+                    Text("Annuller")
+                }
             }
         )
     }

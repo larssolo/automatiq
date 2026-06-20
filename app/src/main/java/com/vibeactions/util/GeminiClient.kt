@@ -32,7 +32,7 @@ internal data class GeminiRequest(
 
 @Serializable internal data class GeminiContent(val parts: List<GeminiPart>, val role: String? = null)
 @Serializable internal data class GeminiPart(val text: String)
-@Serializable internal data class GenConfig(val maxOutputTokens: Int = 160)
+@Serializable internal data class GenConfig(val maxOutputTokens: Int = 400)
 
 @Serializable
 internal data class GeminiResponse(val candidates: List<GeminiCandidate> = emptyList())
@@ -86,6 +86,35 @@ suspend fun geminiGenerate(
             conn.disconnect()
         }
     }
+
+/**
+ * Asks Gemini to generate exactly 3 short SMS variations and returns them as a list.
+ * A fixed built-in system prompt enforces the numbered format; [styleHint] is appended
+ * to guide tone (e.g. "kort og uformel, dansk").
+ */
+suspend fun geminiSuggest(
+    apiKey: String,
+    userMessage: String,
+    styleHint: String = "",
+    model: String = DEFAULT_GEMINI_MODEL
+): List<String> {
+    val style = if (styleHint.isNotBlank()) " Stil/tone: $styleHint." else ""
+    val systemPrompt = "Du er en SMS-assistent. Brugeren beskriver en besked de vil sende. " +
+        "Generér PRÆCIS 3 korte SMS-variationer på dansk (medmindre andet er angivet).$style " +
+        "Svar KUN med dette format — ingen introduktionstekst, ingen forklaring:\n" +
+        "1. [besked]\n2. [besked]\n3. [besked]"
+    val raw = geminiGenerate(apiKey, systemPrompt, userMessage, model)
+    return parseSuggestions(raw)
+}
+
+/** Splits a "1. …\n2. …\n3. …" response into individual strings. Falls back to a single-item list. */
+internal fun parseSuggestions(raw: String): List<String> {
+    val pattern = Regex("""^[1-9]\.\s*(.+)""")
+    val items = raw.lines().mapNotNull { line ->
+        pattern.find(line.trim())?.groupValues?.get(1)?.trim()
+    }
+    return items.ifEmpty { listOf(raw.trim()) }
+}
 
 /** Pulls the human-readable message out of a Gemini error JSON body, falling back to the raw text. */
 internal fun extractGeminiError(errorJson: String): String {
