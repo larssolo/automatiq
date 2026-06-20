@@ -25,11 +25,20 @@ fun LogScreen(vm: LogViewModel = hiltViewModel()) {
     var confirmClear by remember { mutableStateOf(false) }
     val fmt = remember { SimpleDateFormat("dd/MM HH:mm:ss", Locale.getDefault()) }
 
-    Scaffold(topBar = {
-        TopAppBar(title = { Text("Log") }, actions = {
-            TextButton(onClick = { confirmClear = true }) { Text("Clear") }
-        })
-    }) { p ->
+    Scaffold(
+        containerColor = androidx.compose.ui.graphics.Color.Transparent,
+        topBar = {
+            TopAppBar(
+                title = { Text("Log") },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = androidx.compose.ui.graphics.Color.Transparent
+                ),
+                actions = {
+                    TextButton(onClick = { confirmClear = true }) { Text("Clear") }
+                }
+            )
+        }
+    ) { p ->
         Column(Modifier.padding(p).padding(horizontal = 16.dp)) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 FilterChip(filter == null, { vm.setFilter(null) }, { Text("All") })

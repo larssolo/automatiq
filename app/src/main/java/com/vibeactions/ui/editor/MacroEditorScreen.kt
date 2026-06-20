@@ -110,9 +110,13 @@ fun MacroEditorScreen(
     }
 
     Scaffold(
+        containerColor = androidx.compose.ui.graphics.Color.Transparent,
         topBar = {
             TopAppBar(
                 title = { Text(if (macroId == null) "New Macro" else "Edit Macro") },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = androidx.compose.ui.graphics.Color.Transparent
+                ),
                 navigationIcon = { TextButton(onClick = onDone) { Text("Cancel") } },
                 actions = { TextButton(enabled = s.canSave, onClick = { vm.save(onDone) }) { Text("Save") } }
             )

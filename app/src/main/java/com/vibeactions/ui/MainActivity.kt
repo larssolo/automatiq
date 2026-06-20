@@ -87,7 +87,7 @@ private fun AppRoot() {
         Scaffold(
             containerColor = Color.Transparent,
             bottomBar = {
-                NavigationBar(containerColor = Color(0xCC121212)) {
+                NavigationBar(containerColor = Color(0xDE121212)) {
                     NavigationBarItem(
                         selected = route == "list", onClick = { nav.navigate("list") },
                         icon = { Icon(Icons.AutoMirrored.Filled.List, "Macros") }, label = { Text("Macros") })
