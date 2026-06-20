@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vibeactions.data.repository.MacroRepository
 import com.vibeactions.domain.usecase.SaveMacroUseCase
+import com.vibeactions.util.DEFAULT_GEMINI_MODEL
 import com.vibeactions.util.exportMacros
 import com.vibeactions.util.importMacros
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -26,6 +27,10 @@ class SettingsViewModel @Inject constructor(
     fun saveApiKey(key: String) { prefs.edit().putString("gemini_api_key", key.trim()).apply() }
     fun getSystemPrompt(): String = prefs.getString("gemini_system_prompt", "") ?: ""
     fun saveSystemPrompt(p: String) { prefs.edit().putString("gemini_system_prompt", p.trim()).apply() }
+    fun getModel(): String =
+        prefs.getString("gemini_model", DEFAULT_GEMINI_MODEL)?.ifBlank { DEFAULT_GEMINI_MODEL }
+            ?: DEFAULT_GEMINI_MODEL
+    fun saveModel(m: String) { prefs.edit().putString("gemini_model", m.trim()).apply() }
 
     fun export(onReady: (String) -> Unit) = viewModelScope.launch {
         onReady(exportMacros(repo.observeAll().first()))

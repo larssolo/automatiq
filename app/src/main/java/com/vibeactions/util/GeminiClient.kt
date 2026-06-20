@@ -7,8 +7,21 @@ import kotlinx.serialization.json.Json
 import java.net.HttpURLConnection
 import java.net.URL
 
-private const val GEMINI_ENDPOINT =
-    "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
+/** Default model. Configurable in Settings because free-tier availability varies by model/region. */
+const val DEFAULT_GEMINI_MODEL = "gemini-2.5-flash"
+
+/** Models offered in the Settings picker — all normally free-tier eligible (some may show quota 0
+ *  depending on the project/region, so the user can switch to one that works for their key). */
+val GEMINI_MODELS = listOf(
+    "gemini-2.5-flash",
+    "gemini-2.5-flash-lite",
+    "gemini-2.0-flash",
+    "gemini-2.0-flash-lite",
+    "gemini-1.5-flash"
+)
+
+private fun endpointFor(model: String) =
+    "https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent"
 
 @Serializable
 internal data class GeminiRequest(
@@ -39,7 +52,12 @@ internal fun parseGeminiResponse(responseJson: String): String {
  * Calls Gemini 2.0 Flash and returns the generated text.
  * Throws on network error or non-2xx HTTP status — callers should wrap in runCatching.
  */
-suspend fun geminiGenerate(apiKey: String, systemPrompt: String, userMessage: String): String =
+suspend fun geminiGenerate(
+    apiKey: String,
+    systemPrompt: String,
+    userMessage: String,
+    model: String = DEFAULT_GEMINI_MODEL
+): String =
     withContext(Dispatchers.IO) {
         val request = GeminiRequest(
             systemInstruction = if (systemPrompt.isNotBlank())
@@ -47,7 +65,7 @@ suspend fun geminiGenerate(apiKey: String, systemPrompt: String, userMessage: St
             contents = listOf(GeminiContent(parts = listOf(GeminiPart(userMessage))))
         )
         val body = geminiJson.encodeToString(GeminiRequest.serializer(), request)
-        val conn = URL("$GEMINI_ENDPOINT?key=$apiKey").openConnection() as HttpURLConnection
+        val conn = URL("${endpointFor(model)}?key=$apiKey").openConnection() as HttpURLConnection
         conn.apply {
             requestMethod = "POST"
             setRequestProperty("Content-Type", "application/json")

@@ -620,9 +620,12 @@ fun MacroEditorScreen(
                         aiLoading = true
                         aiError = null
                         val systemPrompt = prefs.getString("gemini_system_prompt", "") ?: ""
+                        val model = prefs.getString("gemini_model", com.vibeactions.util.DEFAULT_GEMINI_MODEL)
+                            ?.ifBlank { com.vibeactions.util.DEFAULT_GEMINI_MODEL }
+                            ?: com.vibeactions.util.DEFAULT_GEMINI_MODEL
                         scope.launch {
                             val result = runCatching {
-                                com.vibeactions.util.geminiGenerate(key, systemPrompt, aiPrompt)
+                                com.vibeactions.util.geminiGenerate(key, systemPrompt, aiPrompt, model)
                             }
                             aiLoading = false
                             val generated = result.getOrNull()

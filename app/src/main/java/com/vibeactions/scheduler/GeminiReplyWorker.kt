@@ -7,6 +7,7 @@ import androidx.work.WorkerParameters
 import com.vibeactions.data.repository.MacroRepository
 import com.vibeactions.domain.model.AiSendMode
 import com.vibeactions.notifications.MacroNotificationManager
+import com.vibeactions.util.DEFAULT_GEMINI_MODEL
 import com.vibeactions.util.geminiGenerate
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
@@ -43,7 +44,9 @@ class GeminiReplyWorker @AssistedInject constructor(
         }
 
         val systemPrompt = prefs.getString("gemini_system_prompt", "").orEmpty()
-        val generated = runCatching { geminiGenerate(apiKey, systemPrompt, body) }
+        val model = prefs.getString("gemini_model", DEFAULT_GEMINI_MODEL)
+            ?.ifBlank { DEFAULT_GEMINI_MODEL } ?: DEFAULT_GEMINI_MODEL
+        val generated = runCatching { geminiGenerate(apiKey, systemPrompt, body, model) }
             .getOrElse { macro.messageBody }
 
         when (macro.aiSendMode) {

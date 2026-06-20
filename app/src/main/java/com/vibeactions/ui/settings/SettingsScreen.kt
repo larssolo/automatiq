@@ -26,6 +26,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vibeactions.ui.theme.OnSurfaceVariant
 import com.vibeactions.ui.theme.Primary
+import com.vibeactions.util.GEMINI_MODELS
 import com.vibeactions.util.geminiGenerate
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -40,6 +41,8 @@ fun SettingsScreen(vm: SettingsViewModel = hiltViewModel()) {
     var apiKey by remember { mutableStateOf(vm.getApiKey()) }
     var apiKeyVisible by remember { mutableStateOf(false) }
     var systemPrompt by remember { mutableStateOf(vm.getSystemPrompt()) }
+    var model by remember { mutableStateOf(vm.getModel()) }
+    var modelExpanded by remember { mutableStateOf(false) }
     var apiTestResult by remember { mutableStateOf<String?>(null) }
     var apiTestLoading by remember { mutableStateOf(false) }
 
@@ -115,7 +118,7 @@ fun SettingsScreen(vm: SettingsViewModel = hiltViewModel()) {
 
             HorizontalDivider()
             Text(
-                "AI (Gemini 2.0 Flash)",
+                "AI (Gemini)",
                 style = MaterialTheme.typography.titleSmall,
                 modifier = Modifier.padding(vertical = 4.dp)
             )
@@ -145,11 +148,37 @@ fun SettingsScreen(vm: SettingsViewModel = hiltViewModel()) {
                 minLines = 2,
                 modifier = Modifier.fillMaxWidth()
             )
+            ExposedDropdownMenuBox(
+                expanded = modelExpanded,
+                onExpandedChange = { modelExpanded = it }
+            ) {
+                OutlinedTextField(
+                    value = model,
+                    onValueChange = { model = it },
+                    label = { Text("Model") },
+                    supportingText = { Text("Giver din nøgle 'quota 0'? Prøv en anden model.") },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = modelExpanded) },
+                    singleLine = true,
+                    modifier = Modifier.menuAnchor().fillMaxWidth()
+                )
+                ExposedDropdownMenu(
+                    expanded = modelExpanded,
+                    onDismissRequest = { modelExpanded = false }
+                ) {
+                    GEMINI_MODELS.forEach { m ->
+                        DropdownMenuItem(
+                            text = { Text(m) },
+                            onClick = { model = m; modelExpanded = false }
+                        )
+                    }
+                }
+            }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Button(
                     onClick = {
                         vm.saveApiKey(apiKey)
                         vm.saveSystemPrompt(systemPrompt)
+                        vm.saveModel(model)
                         scope.launch { snackbar.showSnackbar("AI-indstillinger gemt") }
                     },
                     modifier = Modifier.weight(1f)
@@ -157,11 +186,12 @@ fun SettingsScreen(vm: SettingsViewModel = hiltViewModel()) {
                 OutlinedButton(
                     onClick = {
                         vm.saveApiKey(apiKey)
+                        vm.saveModel(model)
                         apiTestResult = null
                         apiTestLoading = true
                         scope.launch {
                             val result = runCatching {
-                                geminiGenerate(apiKey.trim(), "", "Svar kun med ordet OK")
+                                geminiGenerate(apiKey.trim(), "", "Svar kun med ordet OK", model.trim())
                             }
                             apiTestLoading = false
                             apiTestResult = result.getOrNull()
