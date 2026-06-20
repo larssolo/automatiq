@@ -36,6 +36,9 @@ import com.google.android.gms.location.Priority
 import com.vibeactions.domain.model.GeofenceTransition
 import com.vibeactions.domain.model.TriggerType
 import com.vibeactions.ui.theme.ErrorRed
+import com.vibeactions.ui.theme.OnSurface
+import com.vibeactions.ui.theme.OnSurfaceVariant
+import com.vibeactions.ui.theme.SurfaceVariant
 import com.vibeactions.util.TEMPLATE_TOKENS
 import com.vibeactions.util.isValidPhone
 import java.time.LocalDate
@@ -171,7 +174,7 @@ fun MacroEditorScreen(
                     Text("Time: ${s.scheduledTime}")
                 }
 
-                Text("Repeat on", style = MaterialTheme.typography.labelLarge)
+                Text("Repeat on", style = MaterialTheme.typography.labelLarge, color = OnSurface)
                 // Single letters (Mon→Sun) so all seven fit across; fixed order disambiguates T/T, S/S.
                 val dayLabels = listOf("M", "T", "W", "T", "F", "S", "S")
                 Row(
@@ -382,7 +385,12 @@ fun MacroEditorScreen(
                     Text("AI-svar (Gemini)", modifier = Modifier.weight(1f))
                     Switch(
                         checked = s.aiReplyEnabled,
-                        onCheckedChange = { v -> vm.update { it.copy(aiReplyEnabled = v) } }
+                        onCheckedChange = { v -> vm.update { it.copy(aiReplyEnabled = v) } },
+                        colors = SwitchDefaults.colors(
+                            uncheckedTrackColor = SurfaceVariant,
+                            uncheckedThumbColor = OnSurfaceVariant,
+                            uncheckedBorderColor = OnSurfaceVariant
+                        )
                     )
                 }
                 if (s.aiReplyEnabled) {
@@ -426,7 +434,7 @@ fun MacroEditorScreen(
                     )
                 }
             } else {
-                Text("Recipients", style = MaterialTheme.typography.labelLarge)
+                Text("Recipients", style = MaterialTheme.typography.labelLarge, color = OnSurface)
                 s.recipients.forEachIndexed { index, number ->
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
@@ -492,7 +500,15 @@ fun MacroEditorScreen(
 
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("Enabled", modifier = Modifier.weight(1f))
-                Switch(checked = s.enabled, onCheckedChange = { v -> vm.update { it.copy(enabled = v) } })
+                Switch(
+                    checked = s.enabled,
+                    onCheckedChange = { v -> vm.update { it.copy(enabled = v) } },
+                    colors = SwitchDefaults.colors(
+                        uncheckedTrackColor = SurfaceVariant,
+                        uncheckedThumbColor = OnSurfaceVariant,
+                        uncheckedBorderColor = OnSurfaceVariant
+                    )
+                )
             }
 
             if (macroId != null && onSend != null) {

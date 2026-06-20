@@ -34,7 +34,7 @@ fun MacroCard(
             .fillMaxWidth()
             .height(76.dp)
             .clip(RoundedCornerShape(12.dp))
-            .background(Surface.copy(alpha = 0.85f))
+            .background(Surface.copy(alpha = 0.93f))
             .background(accent.copy(alpha = if (macro.cardColor != 0L) 0.07f else 0f))
             .clickable { onClick() }
     ) {
