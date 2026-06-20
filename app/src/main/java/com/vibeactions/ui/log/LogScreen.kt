@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -25,11 +26,16 @@ fun LogScreen(vm: LogViewModel = hiltViewModel()) {
     var confirmClear by remember { mutableStateOf(false) }
     val fmt = remember { SimpleDateFormat("dd/MM HH:mm:ss", Locale.getDefault()) }
 
-    Scaffold(topBar = {
-        TopAppBar(title = { Text("Log") }, actions = {
-            TextButton(onClick = { confirmClear = true }) { Text("Clear") }
-        })
-    }) { p ->
+    Scaffold(
+        containerColor = Color.Transparent,
+        topBar = {
+            TopAppBar(
+                containerColor = Color.Transparent,
+                title = { Text("Log") },
+                actions = { TextButton(onClick = { confirmClear = true }) { Text("Clear") } }
+            )
+        }
+    ) { p ->
         Column(Modifier.padding(p).padding(horizontal = 16.dp)) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 FilterChip(filter == null, { vm.setFilter(null) }, { Text("All") })

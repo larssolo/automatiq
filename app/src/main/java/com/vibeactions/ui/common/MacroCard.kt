@@ -42,7 +42,7 @@ fun MacroCard(
             .fillMaxWidth()
             .height(IntrinsicSize.Max)
             .clip(RoundedCornerShape(12.dp))
-            .background(Surface)
+            .background(Surface.copy(alpha = 0.85f))
             .background(accent.copy(alpha = if (macro.cardColor != 0L) 0.07f else 0f))
     ) {
         Box(

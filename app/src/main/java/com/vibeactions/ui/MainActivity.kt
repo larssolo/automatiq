@@ -15,7 +15,9 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import com.vibeactions.ui.common.ShaderGradientBackground
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -83,20 +85,25 @@ private fun AppRoot() {
     val backStack by nav.currentBackStackEntryAsState()
     val route = backStack?.destination?.route
 
-    Scaffold(bottomBar = {
-        NavigationBar {
-            NavigationBarItem(
-                selected = route == "list", onClick = { nav.navigate("list") },
-                icon = { Icon(Icons.AutoMirrored.Filled.List, "Macros") }, label = { Text("Macros") })
-            NavigationBarItem(
-                selected = route == "log", onClick = { nav.navigate("log") },
-                icon = { Icon(Icons.AutoMirrored.Filled.List, "Log") }, label = { Text("Log") })
-            NavigationBarItem(
-                selected = route == "settings", onClick = { nav.navigate("settings") },
-                icon = { Icon(Icons.Default.Settings, "Settings") }, label = { Text("Settings") })
-        }
-    }) { p ->
-        NavHost(nav, startDestination = "list", modifier = Modifier.padding(p)) {
+    Box(Modifier.fillMaxSize()) {
+        ShaderGradientBackground(Modifier.fillMaxSize())
+        Scaffold(
+            containerColor = Color.Transparent,
+            bottomBar = {
+                NavigationBar(containerColor = Color(0xDD0D0D0D)) {
+                    NavigationBarItem(
+                        selected = route == "list", onClick = { nav.navigate("list") },
+                        icon = { Icon(Icons.AutoMirrored.Filled.List, "Macros") }, label = { Text("Macros") })
+                    NavigationBarItem(
+                        selected = route == "log", onClick = { nav.navigate("log") },
+                        icon = { Icon(Icons.AutoMirrored.Filled.List, "Log") }, label = { Text("Log") })
+                    NavigationBarItem(
+                        selected = route == "settings", onClick = { nav.navigate("settings") },
+                        icon = { Icon(Icons.Default.Settings, "Settings") }, label = { Text("Settings") })
+                }
+            }
+        ) { p ->
+            NavHost(nav, startDestination = "list", modifier = Modifier.padding(p)) {
             composable("list") {
                 MacroListScreen(
                     onNew = { nav.navigate("editor") },
@@ -123,6 +130,7 @@ private fun AppRoot() {
             }
             composable("log") { LogScreen() }
             composable("settings") { SettingsScreen() }
+        }
         }
     }
 }

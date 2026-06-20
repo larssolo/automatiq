@@ -12,6 +12,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -53,8 +54,11 @@ fun SettingsScreen(vm: SettingsViewModel = hiltViewModel()) {
         }
     }
 
-    Scaffold(topBar = { TopAppBar(title = { Text("Settings") }) },
-        snackbarHost = { SnackbarHost(snackbar) }) { p ->
+    Scaffold(
+        containerColor = Color.Transparent,
+        topBar = { TopAppBar(containerColor = Color.Transparent, title = { Text("Settings") }) },
+        snackbarHost = { SnackbarHost(snackbar) }
+    ) { p ->
         Column(
             Modifier.padding(p).fillMaxSize().padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)

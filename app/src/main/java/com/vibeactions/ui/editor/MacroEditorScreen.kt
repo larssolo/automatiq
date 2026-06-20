@@ -19,6 +19,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -97,13 +98,17 @@ fun MacroEditorScreen(
         else contactPermLauncher.launch(Manifest.permission.READ_CONTACTS)
     }
 
-    Scaffold(topBar = {
-        TopAppBar(
-            title = { Text(if (macroId == null) "New Macro" else "Edit Macro") },
-            navigationIcon = { TextButton(onClick = onDone) { Text("Cancel") } },
-            actions = { TextButton(enabled = s.canSave, onClick = { vm.save(onDone) }) { Text("Save") } }
-        )
-    }) { p ->
+    Scaffold(
+        containerColor = Color.Transparent,
+        topBar = {
+            TopAppBar(
+                containerColor = Color.Transparent,
+                title = { Text(if (macroId == null) "New Macro" else "Edit Macro") },
+                navigationIcon = { TextButton(onClick = onDone) { Text("Cancel") } },
+                actions = { TextButton(enabled = s.canSave, onClick = { vm.save(onDone) }) { Text("Save") } }
+            )
+        }
+    ) { p ->
         Column(
             Modifier
                 .padding(p)
