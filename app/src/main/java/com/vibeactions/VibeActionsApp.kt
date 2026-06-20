@@ -18,5 +18,6 @@ class VibeActionsApp : Application(), Configuration.Provider {
         super.onCreate()
         notifications.ensureChannel()
         workScheduler.ensurePeriodicCatchUp()
+        com.vibeactions.ui.common.BackgroundSetting.load(this)
     }
 }

@@ -9,7 +9,9 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.draw.clip
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -26,12 +28,15 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vibeactions.ui.theme.OnSurfaceVariant
 import com.vibeactions.ui.theme.Primary
+import com.vibeactions.ui.common.BackgroundSetting
+import com.vibeactions.ui.common.GradientPreset
+import com.vibeactions.ui.common.ShaderGradientBackground
 import com.vibeactions.util.GEMINI_MODELS
 import com.vibeactions.util.geminiGenerate
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 fun SettingsScreen(vm: SettingsViewModel = hiltViewModel()) {
     val context = LocalContext.current
@@ -79,6 +84,30 @@ fun SettingsScreen(vm: SettingsViewModel = hiltViewModel()) {
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+
+            Text(
+                "Baggrund",
+                style = MaterialTheme.typography.titleSmall,
+                modifier = Modifier.padding(top = 4.dp)
+            )
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .height(110.dp)
+                    .clip(RoundedCornerShape(12.dp))
+            ) {
+                ShaderGradientBackground(BackgroundSetting.preset, Modifier.fillMaxSize())
+            }
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                GradientPreset.entries.forEach { p ->
+                    FilterChip(
+                        selected = BackgroundSetting.preset == p,
+                        onClick = { BackgroundSetting.set(context, p) },
+                        label = { Text(p.label) }
+                    )
+                }
+            }
+            HorizontalDivider()
 
             ListItem(
                 headlineContent = { Text("Exact alarm permission") },

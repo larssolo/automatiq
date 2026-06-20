@@ -8,7 +8,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
@@ -17,16 +16,15 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.compose.*
-import com.vibeactions.R
+import com.vibeactions.ui.common.BackgroundSetting
 import com.vibeactions.ui.common.PermissionBanner
+import com.vibeactions.ui.common.ShaderGradientBackground
 import com.vibeactions.ui.log.LogScreen
 import com.vibeactions.ui.macrolist.MacroListScreen
 import com.vibeactions.ui.settings.SettingsScreen
@@ -85,12 +83,7 @@ private fun AppRoot() {
     val route = backStack?.destination?.route
 
     Box(Modifier.fillMaxSize()) {
-        Image(
-            painter = painterResource(R.drawable.bg_main),
-            contentDescription = null,
-            contentScale = ContentScale.Crop,
-            modifier = Modifier.fillMaxSize()
-        )
+        ShaderGradientBackground(BackgroundSetting.preset, Modifier.fillMaxSize())
         Scaffold(
             containerColor = Color.Transparent,
             bottomBar = {
