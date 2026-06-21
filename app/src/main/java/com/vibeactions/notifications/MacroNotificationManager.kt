@@ -25,6 +25,15 @@ class MacroNotificationManager @Inject constructor(
         val channel = NotificationChannel(CHANNEL_ID, "Macro Actions", NotificationManager.IMPORTANCE_DEFAULT)
         channel.description = "Status of scheduled and manual SMS macros"
         manager.createNotificationChannel(channel)
+
+        // Separate high-importance channel so AI approval notifications pop up as heads-up and show
+        // their Send/Slet action buttons expanded — some OEM skins (e.g. MIUI) hide actions on
+        // default-importance, collapsed notifications.
+        val approval = NotificationChannel(
+            CHANNEL_APPROVAL, "AI-svar til godkendelse", NotificationManager.IMPORTANCE_HIGH
+        )
+        approval.description = "AI-genererede svar der venter på din godkendelse"
+        manager.createNotificationChannel(approval)
     }
 
     fun notifyResult(
@@ -99,14 +108,17 @@ class MacroNotificationManager @Inject constructor(
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        val builder = NotificationCompat.Builder(context, CHANNEL_ID)
+        val builder = NotificationCompat.Builder(context, CHANNEL_APPROVAL)
             .setSmallIcon(android.R.drawable.stat_notify_chat)
             .setContentTitle("AI-svar klar til ${maskPhone(recipient)}")
             .setContentText(preview)
             .setStyle(NotificationCompat.BigTextStyle().bigText(preview))
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setCategory(NotificationCompat.CATEGORY_MESSAGE)
+            .setContentIntent(openLogIntent())
             .setAutoCancel(false)
-            .addAction(0, "Send", sendPi)
-            .addAction(0, "Slet", discardPi)
+            .addAction(android.R.drawable.ic_menu_send, "Send", sendPi)
+            .addAction(android.R.drawable.ic_menu_delete, "Slet", discardPi)
         manager.notify(notifId, builder.build())
     }
 
@@ -122,5 +134,8 @@ class MacroNotificationManager @Inject constructor(
         manager.notify(("ai_sent" + macro.id + recipient).hashCode() and 0x7FFFFFFF, builder.build())
     }
 
-    companion object { const val CHANNEL_ID = "macro_actions" }
+    companion object {
+        const val CHANNEL_ID = "macro_actions"
+        const val CHANNEL_APPROVAL = "macro_approvals"
+    }
 }
