@@ -34,8 +34,6 @@ internal class GradientRenderer : GLSurfaceView.Renderer {
     private var width = 1f
     private var height = 1f
     private val startNanos = System.nanoTime()
-    private var lastFrameNanos = 0L
-    private val frameIntervalNanos = 1_000_000_000L / 30
 
     private val quad: FloatBuffer = ByteBuffer
         .allocateDirect(8 * 4)
@@ -65,13 +63,10 @@ internal class GradientRenderer : GLSurfaceView.Renderer {
     }
 
     override fun onDrawFrame(gl: GL10?) {
-        val now = System.nanoTime()
-        if (now - lastFrameNanos < frameIntervalNanos) return
-        lastFrameNanos = now
         GLES30.glClear(GLES30.GL_COLOR_BUFFER_BIT)
         if (program == 0) return
         GLES30.glUseProgram(program)
-        GLES30.glUniform1f(uTime, (now - startNanos) / 1_000_000_000f)
+        GLES30.glUniform1f(uTime, (System.nanoTime() - startNanos) / 1_000_000_000f)
         GLES30.glUniform2f(uResolution, width * 0.5f, height * 0.5f)
         val c = colors
         GLES30.glUniform3f(uColor1, c[0], c[1], c[2])
