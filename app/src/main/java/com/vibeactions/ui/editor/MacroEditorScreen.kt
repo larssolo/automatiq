@@ -390,7 +390,7 @@ fun MacroEditorScreen(
                 )
                 HorizontalDivider()
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("AI-svar (Gemini)", modifier = Modifier.weight(1f))
+                    Text("AI-svar (Gemini)", modifier = Modifier.weight(1f), color = OnSurface)
                     Switch(
                         checked = s.aiReplyEnabled,
                         onCheckedChange = { v -> vm.update { it.copy(aiReplyEnabled = v) } },
@@ -411,7 +411,7 @@ fun MacroEditorScreen(
                                 "Send automatisk og informer" else "Godkend inden afsendelse",
                             onValueChange = {},
                             readOnly = true,
-                            label = { Text("AI afsendelse") },
+                            label = { Text("AI afsendelse", color = OnSurface) },
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = aiModeExpanded) },
                             modifier = Modifier.menuAnchor().fillMaxWidth()
                         )
