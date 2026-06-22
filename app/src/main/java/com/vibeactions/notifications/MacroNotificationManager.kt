@@ -98,9 +98,21 @@ class MacroNotificationManager @Inject constructor(
             context, ("ai_discard" + macro.id + recipient).hashCode() and 0x7FFFFFFF, discardIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
+        // Tapping the body opens an in-app approve/edit dialog — the reliable path on OEM skins
+        // (MIUI) that collapse notifications and never render the Send/Slet action buttons.
+        val openIntent = Intent(context, com.vibeactions.ui.MainActivity::class.java).apply {
+            putExtra(com.vibeactions.ui.MainActivity.EXTRA_AI_ACTION, "approve")
+            putExtra(com.vibeactions.ui.MainActivity.EXTRA_MACRO_ID, macro.id)
+            putExtra(com.vibeactions.ui.MainActivity.EXTRA_RECIPIENT, recipient)
+            putExtra(com.vibeactions.ui.MainActivity.EXTRA_BODY, generatedBody)
+            putExtra(com.vibeactions.ui.MainActivity.EXTRA_NOTIF_ID, notifId)
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
+        }
+        val openPi = PendingIntent.getActivity(
+            context, ("ai_open" + macro.id + recipient).hashCode() and 0x7FFFFFFF, openIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
 
-        // Posted on the same channel as other macro notifications — a separate high-importance
-        // channel was suppressed by some OEM skins (MIUI), so the approval simply never appeared.
         val builder = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.stat_notify_chat)
             .setContentTitle("AI-svar klar til ${maskPhone(recipient)}")
@@ -108,8 +120,8 @@ class MacroNotificationManager @Inject constructor(
             .setStyle(NotificationCompat.BigTextStyle().bigText(preview))
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setCategory(NotificationCompat.CATEGORY_MESSAGE)
-            .setContentIntent(openLogIntent())
-            .setAutoCancel(false)
+            .setContentIntent(openPi)
+            .setAutoCancel(true)
             .addAction(android.R.drawable.ic_menu_send, "Send", sendPi)
             .addAction(android.R.drawable.ic_menu_delete, "Slet", discardPi)
         manager.notify(notifId, builder.build())

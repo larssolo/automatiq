@@ -1,6 +1,9 @@
 package com.vibeactions.ui
 
 import android.Manifest
+import android.app.NotificationManager
+import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -17,11 +20,13 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.compose.*
+import com.vibeactions.scheduler.AiReplyActionReceiver
 import com.vibeactions.ui.common.BackgroundSetting
 import com.vibeactions.ui.common.PermissionBanner
 import com.vibeactions.ui.common.ShaderGradientBackground
@@ -29,14 +34,106 @@ import com.vibeactions.ui.log.LogScreen
 import com.vibeactions.ui.macrolist.MacroListScreen
 import com.vibeactions.ui.settings.SettingsScreen
 import com.vibeactions.ui.theme.VibeActionsTheme
+import com.vibeactions.util.maskPhone
 import dagger.hilt.android.AndroidEntryPoint
+
+/** A pending AI auto-reply the user opened from a notification, awaiting approve/discard in-app. */
+data class AiApproval(val macroId: String, val recipient: String, val body: String, val notifId: Int)
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+    // Compose-observable so a notification tap while the app is already open updates the UI too.
+    private val pendingApproval = mutableStateOf<AiApproval?>(null)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContent { VibeActionsTheme { AppRoot() } }
+        pendingApproval.value = readApproval(intent)
+        setContent {
+            VibeActionsTheme {
+                AppRoot()
+                pendingApproval.value?.let { approval ->
+                    AiApprovalDialog(approval, onDone = { pendingApproval.value = null })
+                }
+            }
+        }
     }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        readApproval(intent)?.let { pendingApproval.value = it }
+    }
+
+    private fun readApproval(intent: Intent?): AiApproval? {
+        if (intent?.getStringExtra(EXTRA_AI_ACTION) != "approve") return null
+        val macroId = intent.getStringExtra(EXTRA_MACRO_ID) ?: return null
+        val recipient = intent.getStringExtra(EXTRA_RECIPIENT) ?: return null
+        val body = intent.getStringExtra(EXTRA_BODY) ?: return null
+        return AiApproval(macroId, recipient, body, intent.getIntExtra(EXTRA_NOTIF_ID, -1))
+    }
+
+    companion object {
+        const val EXTRA_AI_ACTION = "ai_action"
+        const val EXTRA_MACRO_ID = "macro_id"
+        const val EXTRA_RECIPIENT = "recipient"
+        const val EXTRA_BODY = "body"
+        const val EXTRA_NOTIF_ID = "notif_id"
+    }
+}
+
+/** In-app approval surface for AI auto-replies — reliable on OEM skins (MIUI) where notification
+ *  action buttons don't render. Lets the user edit the reply before sending. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun AiApprovalDialog(approval: AiApproval, onDone: () -> Unit) {
+    val context = LocalContext.current
+    var text by remember(approval) { mutableStateOf(approval.body) }
+
+    fun cancelNotification() {
+        if (approval.notifId != -1) {
+            context.getSystemService(NotificationManager::class.java)?.cancel(approval.notifId)
+        }
+    }
+
+    AlertDialog(
+        onDismissRequest = onDone,
+        title = { Text("Send AI-svar?") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    "Til ${maskPhone(approval.recipient)}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                OutlinedTextField(
+                    value = text,
+                    onValueChange = { text = it },
+                    label = { Text("Svar (kan redigeres)") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                enabled = text.isNotBlank(),
+                onClick = {
+                    context.sendBroadcast(
+                        Intent(context, AiReplyActionReceiver::class.java).apply {
+                            action = AiReplyActionReceiver.ACTION_AI_SEND
+                            putExtra(AiReplyActionReceiver.EXTRA_MACRO_ID, approval.macroId)
+                            putExtra(AiReplyActionReceiver.EXTRA_RECIPIENT, approval.recipient)
+                            putExtra(AiReplyActionReceiver.EXTRA_BODY, text)
+                            putExtra(AiReplyActionReceiver.EXTRA_NOTIF_ID, approval.notifId)
+                        }
+                    )
+                    onDone()
+                }
+            ) { Text("Send") }
+        },
+        dismissButton = {
+            TextButton(onClick = { cancelNotification(); onDone() }) { Text("Slet") }
+        }
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
