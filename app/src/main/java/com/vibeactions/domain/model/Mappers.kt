@@ -24,7 +24,8 @@ fun MacroEntity.toDomain() = Macro(
     latitude = latitude, longitude = longitude, radiusMeters = radiusMeters,
     geofenceTransition = geofenceTransition,
     aiReplyEnabled = aiReplyEnabled,
-    aiSendMode = AiSendMode.valueOf(aiSendMode)
+    aiSendMode = AiSendMode.valueOf(aiSendMode),
+    aiReplyInstruction = aiReplyInstruction
 )
 
 fun Macro.toEntity() = MacroEntity(
@@ -38,7 +39,8 @@ fun Macro.toEntity() = MacroEntity(
     latitude = latitude, longitude = longitude, radiusMeters = radiusMeters,
     geofenceTransition = geofenceTransition,
     aiReplyEnabled = aiReplyEnabled,
-    aiSendMode = aiSendMode.name
+    aiSendMode = aiSendMode.name,
+    aiReplyInstruction = aiReplyInstruction
 )
 
 fun MacroLogEntity.toDomain() = MacroLog(

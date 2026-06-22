@@ -21,7 +21,8 @@ private data class MacroDto(
     val latitude: Double? = null, val longitude: Double? = null,
     val radiusMeters: Float? = null, val geofenceTransition: Int? = null,
     val aiReplyEnabled: Boolean = false,
-    val aiSendMode: String = "APPROVE"
+    val aiSendMode: String = "APPROVE",
+    val aiReplyInstruction: String? = null
 )
 
 private val json = Json { prettyPrint = true; ignoreUnknownKeys = true }
@@ -43,7 +44,8 @@ fun exportMacros(macros: List<Macro>): String =
                 latitude = it.latitude, longitude = it.longitude,
                 radiusMeters = it.radiusMeters, geofenceTransition = it.geofenceTransition,
                 aiReplyEnabled = it.aiReplyEnabled,
-                aiSendMode = it.aiSendMode.name)
+                aiSendMode = it.aiSendMode.name,
+                aiReplyInstruction = it.aiReplyInstruction)
         }
     )
 
@@ -66,5 +68,6 @@ fun importMacros(text: String): List<Macro> =
             latitude = it.latitude, longitude = it.longitude,
             radiusMeters = it.radiusMeters, geofenceTransition = it.geofenceTransition,
             aiReplyEnabled = it.aiReplyEnabled,
-            aiSendMode = AiSendMode.valueOf(it.aiSendMode))
+            aiSendMode = AiSendMode.valueOf(it.aiSendMode),
+            aiReplyInstruction = it.aiReplyInstruction)
     }

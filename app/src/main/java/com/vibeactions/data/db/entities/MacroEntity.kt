@@ -32,5 +32,6 @@ data class MacroEntity(
     @ColumnInfo(name = "radius_meters") val radiusMeters: Float? = null,
     @ColumnInfo(name = "geofence_transition") val geofenceTransition: Int? = null,
     @ColumnInfo(name = "ai_reply_enabled", defaultValue = "0") val aiReplyEnabled: Boolean = false,
-    @ColumnInfo(name = "ai_send_mode", defaultValue = "APPROVE") val aiSendMode: String = "APPROVE"
+    @ColumnInfo(name = "ai_send_mode", defaultValue = "APPROVE") val aiSendMode: String = "APPROVE",
+    @ColumnInfo(name = "ai_reply_instruction") val aiReplyInstruction: String? = null
 )

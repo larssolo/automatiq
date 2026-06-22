@@ -44,7 +44,8 @@ data class EditorState(
     val geofenceTransition: Int = GeofenceTransition.ENTER,
     val cardColor: Long = randomCardColor(),
     val aiReplyEnabled: Boolean = false,
-    val aiSendMode: AiSendMode = AiSendMode.APPROVE
+    val aiSendMode: AiSendMode = AiSendMode.APPROVE,
+    val aiReplyInstruction: String = ""
 ) {
     val nameValid get() = name.isNotBlank()
     /** Non-blank numbers (blanks are ignored on save); at least one, and every non-blank one valid. */
@@ -83,7 +84,8 @@ class MacroEditorViewModel @Inject constructor(
                     geofenceTransition = m.geofenceTransition ?: GeofenceTransition.ENTER,
                     cardColor = if (m.cardColor != 0L) m.cardColor else _state.value.cardColor,
                     aiReplyEnabled = m.aiReplyEnabled,
-                    aiSendMode = m.aiSendMode)
+                    aiSendMode = m.aiSendMode,
+                    aiReplyInstruction = m.aiReplyInstruction ?: "")
             }
         }
     }
@@ -123,6 +125,8 @@ class MacroEditorViewModel @Inject constructor(
             cardColor = s.cardColor,
             aiReplyEnabled = if (s.triggerType == TriggerType.INCOMING) s.aiReplyEnabled else false,
             aiSendMode = s.aiSendMode,
+            aiReplyInstruction = if (s.triggerType == TriggerType.INCOMING && s.aiReplyEnabled)
+                s.aiReplyInstruction.trim().ifBlank { null } else null,
             validUntilEpochDay = if (scheduled) s.validUntilEpochDay else null,
             matchSender = if (s.triggerType == TriggerType.INCOMING)
                 s.matchSender.trim().ifBlank { null } else null,

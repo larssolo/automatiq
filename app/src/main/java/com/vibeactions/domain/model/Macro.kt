@@ -50,7 +50,9 @@ data class Macro(
     /** INCOMING only: when true, replies via Gemini AI instead of the fixed messageBody. */
     val aiReplyEnabled: Boolean = false,
     /** INCOMING only: APPROVE = notify user to confirm before send; AUTO = send immediately and inform. */
-    val aiSendMode: AiSendMode = AiSendMode.APPROVE
+    val aiSendMode: AiSendMode = AiSendMode.APPROVE,
+    /** INCOMING + AI only: per-macro instruction steering tone/length of the reply; null/blank = none. */
+    val aiReplyInstruction: String? = null
 ) {
     /** Stable positive Int request code for PendingIntent, derived from the UUID. */
     fun alarmRequestCode(): Int = (id.hashCode() and 0x7FFFFFFF)

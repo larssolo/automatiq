@@ -79,3 +79,11 @@ val MIGRATION_8_9 = object : Migration(8, 9) {
         db.execSQL("ALTER TABLE macros ADD COLUMN ai_send_mode TEXT NOT NULL DEFAULT 'APPROVE'")
     }
 }
+
+/** v9 → v10: adds `ai_reply_instruction` — a per-macro prompt steering the AI reply's tone/length.
+ *  NULL = use the global Settings system prompt (existing behaviour). */
+val MIGRATION_9_10 = object : Migration(9, 10) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE macros ADD COLUMN ai_reply_instruction TEXT")
+    }
+}

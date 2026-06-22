@@ -56,13 +56,15 @@ suspend fun geminiGenerate(
     apiKey: String,
     systemPrompt: String,
     userMessage: String,
-    model: String = DEFAULT_GEMINI_MODEL
+    model: String = DEFAULT_GEMINI_MODEL,
+    maxOutputTokens: Int = 400
 ): String =
     withContext(Dispatchers.IO) {
         val request = GeminiRequest(
             systemInstruction = if (systemPrompt.isNotBlank())
                 GeminiContent(parts = listOf(GeminiPart(systemPrompt))) else null,
-            contents = listOf(GeminiContent(parts = listOf(GeminiPart(userMessage))))
+            contents = listOf(GeminiContent(parts = listOf(GeminiPart(userMessage)))),
+            generationConfig = GenConfig(maxOutputTokens = maxOutputTokens)
         )
         val body = geminiJson.encodeToString(GeminiRequest.serializer(), request)
         val conn = URL("${endpointFor(model)}?key=$apiKey").openConnection() as HttpURLConnection

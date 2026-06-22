@@ -435,6 +435,16 @@ fun MacroEditorScreen(
                             )
                         }
                     }
+                    OutlinedTextField(
+                        value = s.aiReplyInstruction,
+                        onValueChange = { v -> vm.update { it.copy(aiReplyInstruction = v) } },
+                        label = { Text("Sådan skal AI'en svare (valgfri)") },
+                        placeholder = { Text("fx: Svar kort og venligt på dansk, maks. 1 sætning") },
+                        supportingText = {
+                            Text("Styrer tone og længde. Lad stå tom for at bruge systemprompten fra Indstillinger.")
+                        },
+                        minLines = 2, modifier = Modifier.fillMaxWidth()
+                    )
                     Text(
                         "Besked-feltet nedenfor bruges som fallback hvis Gemini ikke svarer.",
                         color = MaterialTheme.colorScheme.onSurfaceVariant,

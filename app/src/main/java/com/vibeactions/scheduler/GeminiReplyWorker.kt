@@ -43,11 +43,20 @@ class GeminiReplyWorker @AssistedInject constructor(
             return Result.success()
         }
 
-        val systemPrompt = prefs.getString("gemini_system_prompt", "").orEmpty()
         val model = prefs.getString("gemini_model", DEFAULT_GEMINI_MODEL)
             ?.ifBlank { DEFAULT_GEMINI_MODEL } ?: DEFAULT_GEMINI_MODEL
-        val generated = runCatching { geminiGenerate(apiKey, systemPrompt, body, model) }
-            .getOrElse { macro.messageBody }
+        // Per-macro instruction wins; otherwise fall back to the global Settings prompt.
+        val instruction = macro.aiReplyInstruction?.takeIf { it.isNotBlank() }
+            ?: prefs.getString("gemini_system_prompt", "")?.takeIf { it.isNotBlank() }
+        // A fixed wrapper keeps replies short and on-point (the AI otherwise rambles).
+        val systemPrompt = buildString {
+            append("Du skriver ÉT kort SMS-svar (højst 2 sætninger). ")
+            append("Svar KUN med selve beskeden — ingen indledning, ingen forklaring, ingen citater. ")
+            if (instruction != null) append("Sådan skal du svare: $instruction")
+        }
+        val generated = runCatching {
+            geminiGenerate(apiKey, systemPrompt, body, model, maxOutputTokens = 150)
+        }.getOrElse { macro.messageBody }
 
         when (macro.aiSendMode) {
             AiSendMode.APPROVE -> notifications.notifyAiApproval(macro, sender, generated)
