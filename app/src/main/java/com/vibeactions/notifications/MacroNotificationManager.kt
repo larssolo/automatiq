@@ -25,15 +25,6 @@ class MacroNotificationManager @Inject constructor(
         val channel = NotificationChannel(CHANNEL_ID, "Macro Actions", NotificationManager.IMPORTANCE_DEFAULT)
         channel.description = "Status of scheduled and manual SMS macros"
         manager.createNotificationChannel(channel)
-
-        // Separate high-importance channel so AI approval notifications pop up as heads-up and show
-        // their Send/Slet action buttons expanded — some OEM skins (e.g. MIUI) hide actions on
-        // default-importance, collapsed notifications.
-        val approval = NotificationChannel(
-            CHANNEL_APPROVAL, "AI-svar til godkendelse", NotificationManager.IMPORTANCE_HIGH
-        )
-        approval.description = "AI-genererede svar der venter på din godkendelse"
-        manager.createNotificationChannel(approval)
     }
 
     fun notifyResult(
@@ -108,7 +99,9 @@ class MacroNotificationManager @Inject constructor(
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        val builder = NotificationCompat.Builder(context, CHANNEL_APPROVAL)
+        // Posted on the same channel as other macro notifications — a separate high-importance
+        // channel was suppressed by some OEM skins (MIUI), so the approval simply never appeared.
+        val builder = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.stat_notify_chat)
             .setContentTitle("AI-svar klar til ${maskPhone(recipient)}")
             .setContentText(preview)
@@ -134,8 +127,5 @@ class MacroNotificationManager @Inject constructor(
         manager.notify(("ai_sent" + macro.id + recipient).hashCode() and 0x7FFFFFFF, builder.build())
     }
 
-    companion object {
-        const val CHANNEL_ID = "macro_actions"
-        const val CHANNEL_APPROVAL = "macro_approvals"
-    }
+    companion object { const val CHANNEL_ID = "macro_actions" }
 }
