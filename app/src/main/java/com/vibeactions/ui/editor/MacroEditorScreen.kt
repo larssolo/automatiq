@@ -375,7 +375,7 @@ fun MacroEditorScreen(
                     supportingText = { Text("Leave blank to reply to anyone") },
                     trailingIcon = {
                         IconButton(onClick = { pickContact(-1) }) {
-                            Icon(Icons.Default.Person, contentDescription = "Pick contact")
+                            Icon(Icons.Default.Person, contentDescription = "Pick contact", tint = OnSurface)
                         }
                     },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
@@ -471,7 +471,7 @@ fun MacroEditorScreen(
                             singleLine = true, modifier = Modifier.weight(1f)
                         )
                         IconButton(onClick = { pickContact(index) }) {
-                            Icon(Icons.Default.Person, contentDescription = "Pick contact")
+                            Icon(Icons.Default.Person, contentDescription = "Pick contact", tint = OnSurface)
                         }
                         if (s.recipients.size > 1) {
                             IconButton(onClick = {
@@ -517,7 +517,7 @@ fun MacroEditorScreen(
             }
 
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("Enabled", modifier = Modifier.weight(1f))
+                Text("Enabled", modifier = Modifier.weight(1f), color = OnSurface)
                 Switch(
                     checked = s.enabled,
                     onCheckedChange = { v -> vm.update { it.copy(enabled = v) } },
