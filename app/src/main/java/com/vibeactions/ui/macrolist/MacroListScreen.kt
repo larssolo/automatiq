@@ -44,6 +44,19 @@ fun MacroListScreen(
         ordered = ordered.toMutableList().apply { add(to.index, removeAt(from.index)) }
     }
 
+    // Shared action handlers — used by both the card long-press menu and the editor sheet.
+    fun deleteMacro(macro: Macro) {
+        vm.onDelete(macro)
+        scope.launch {
+            val result = snackbar.showSnackbar("Macro deleted", actionLabel = "Undo")
+            if (result == SnackbarResult.ActionPerformed) vm.onUndoDelete(macro)
+        }
+    }
+    fun sendMacro(macro: Macro) {
+        vm.onTrigger(macro)
+        scope.launch { snackbar.showSnackbar("Sending ${macro.name}…") }
+    }
+
     Scaffold(
         containerColor = Color.Transparent,
         snackbarHost = { SnackbarHost(snackbar) },
@@ -75,7 +88,10 @@ fun MacroListScreen(
                             MacroCard(
                                 macro = macro,
                                 onClick = { editorMacroId = macro.id; showEditor = true },
-                                modifier = Modifier.longPressDraggableHandle(
+                                onDelete = { deleteMacro(macro) },
+                                onCopy = { vm.onCopy(macro) },
+                                onSend = { sendMacro(macro) },
+                                dragHandleModifier = Modifier.draggableHandle(
                                     onDragStopped = { vm.onReorder(ordered.map(Macro::id)) }
                                 )
                             )
@@ -99,24 +115,13 @@ fun MacroListScreen(
                 vm = hiltViewModel(key = editorMacroId ?: "new"),
                 onDone = { showEditor = false },
                 onDelete = editingMacro?.let { macro ->
-                    {
-                        vm.onDelete(macro)
-                        scope.launch {
-                            val result = snackbar.showSnackbar("Macro deleted", actionLabel = "Undo")
-                            if (result == SnackbarResult.ActionPerformed) vm.onUndoDelete(macro)
-                        }
-                        showEditor = false
-                    }
+                    { deleteMacro(macro); showEditor = false }
                 },
                 onCopy = editingMacro?.let { macro ->
                     { vm.onCopy(macro); showEditor = false }
                 },
                 onSend = editingMacro?.let { macro ->
-                    {
-                        vm.onTrigger(macro)
-                        showEditor = false
-                        scope.launch { snackbar.showSnackbar("Sending ${macro.name}…") }
-                    }
+                    { sendMacro(macro); showEditor = false }
                 }
             )
         }
