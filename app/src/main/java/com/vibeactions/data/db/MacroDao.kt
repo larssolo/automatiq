@@ -30,8 +30,16 @@ interface MacroDao {
     @Query("UPDATE macros SET last_triggered_at = :at, last_status = :status WHERE id = :id")
     suspend fun updateStatus(id: String, at: Long, status: String)
 
-    @Query("UPDATE macros SET last_scheduled_fire_at = :at WHERE id = :id")
-    suspend fun updateScheduledFireAt(id: String, at: Long)
+    /**
+     * Atomically claim today's scheduled fire: stamps [at] only if no fire has been recorded since
+     * local midnight ([startOfDay]). Returns rows updated (1 = claimed by this caller, 0 = another
+     * path — alarm vs. catch-up — already claimed today). The atomicity prevents a double-send race.
+     */
+    @Query(
+        "UPDATE macros SET last_scheduled_fire_at = :at " +
+            "WHERE id = :id AND (last_scheduled_fire_at IS NULL OR last_scheduled_fire_at < :startOfDay)"
+    )
+    suspend fun claimScheduledFire(id: String, at: Long, startOfDay: Long): Int
 
     @Query("UPDATE macros SET sort_order = :order WHERE id = :id")
     suspend fun updateSortOrder(id: String, order: Int)

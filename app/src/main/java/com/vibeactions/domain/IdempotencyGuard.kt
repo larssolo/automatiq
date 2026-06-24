@@ -14,3 +14,8 @@ fun alreadySentToday(
     val today = Instant.ofEpochMilli(now).atZone(zone).toLocalDate()
     return last == today
 }
+
+/** Epoch-ms of local midnight (start of [now]'s calendar day in [zone]). Used as the threshold for
+ *  an atomic "claim today's scheduled fire" UPDATE so alarm + catch-up can't both send. */
+fun startOfDayMillis(now: Long, zone: ZoneId = ZoneId.systemDefault()): Long =
+    Instant.ofEpochMilli(now).atZone(zone).toLocalDate().atStartOfDay(zone).toInstant().toEpochMilli()

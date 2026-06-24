@@ -2,7 +2,7 @@ package com.vibeactions.scheduler
 
 import com.vibeactions.data.repository.MacroLogRepository
 import com.vibeactions.data.repository.MacroRepository
-import com.vibeactions.domain.alreadySentToday
+import com.vibeactions.domain.startOfDayMillis
 import com.vibeactions.domain.model.MacroLog
 import com.vibeactions.domain.model.MacroStatus
 import com.vibeactions.domain.model.TriggerType
@@ -39,8 +39,9 @@ class MacroFirer @Inject constructor(
         if (!macro.enabled) return
         val now = System.currentTimeMillis()
         // Scheduled fires (alarm + catch-up worker) dedupe on the scheduled-fire marker only, so a
-        // manual/widget tap earlier today does not consume the day's scheduled send.
-        if (enforceOncePerDay && alreadySentToday(macro.lastScheduledFireAt, now)) return
+        // manual/widget tap earlier today does not consume the day's scheduled send. The claim is an
+        // atomic check-and-set, so a simultaneous alarm + catch-up can't both pass the guard.
+        if (enforceOncePerDay && !macroRepo.tryClaimScheduledFire(macro.id, now, startOfDayMillis(now))) return
 
         // Auto-reply targets the incoming sender; everything else uses the macro's recipient list.
         val targets = overrideRecipient?.let { listOf(it) } ?: macro.recipients
@@ -59,14 +60,14 @@ class MacroFirer @Inject constructor(
         }
 
         macroRepo.updateStatus(macro.id, now, status)
-        if (enforceOncePerDay) macroRepo.updateScheduledFireAt(macro.id, now)
+        // The scheduled-fire marker was already stamped atomically by tryClaimScheduledFire above.
         logRepo.add(
             MacroLog(
                 macroId = macro.id, triggeredAt = now, status = status,
-                messagePreview = body.take(40), errorMessage = error
+                messagePreview = body, errorMessage = error
             )
         )
-        if (!suppressResultNotification) notifications.notifyResult(macro, status, error, targets)
+        if (!suppressResultNotification) notifications.notifyResult(macro, status, error, targets, body)
 
         if (macro.triggerType == TriggerType.SCHEDULED && macro.repeatDaily) {
             alarmScheduler.schedule(macro.copy(lastTriggeredAt = now, lastStatus = status))

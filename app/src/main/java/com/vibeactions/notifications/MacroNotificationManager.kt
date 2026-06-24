@@ -1,5 +1,6 @@
 package com.vibeactions.notifications
 
+import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -24,34 +25,62 @@ class MacroNotificationManager @Inject constructor(
     fun ensureChannel() {
         val channel = NotificationChannel(CHANNEL_ID, "Macro Actions", NotificationManager.IMPORTANCE_DEFAULT)
         channel.description = "Status of scheduled and manual SMS macros"
+        // Keep the message body off the lock screen: the result notification supplies a redacted
+        // public version (title only); the full text shows only once the device is unlocked.
+        channel.lockscreenVisibility = Notification.VISIBILITY_PRIVATE
         manager.createNotificationChannel(channel)
+        // Separate high-importance channel so AI-approval prompts surface as a heads-up. On Android 8+
+        // the channel importance — not the per-notification priority — governs heads-up behaviour.
+        val aiChannel = NotificationChannel(CHANNEL_ID_AI, "AI Replies", NotificationManager.IMPORTANCE_HIGH)
+        aiChannel.description = "AI-generated SMS replies awaiting approval"
+        manager.createNotificationChannel(aiChannel)
     }
 
     fun notifyResult(
         macro: Macro,
         status: MacroStatus,
         error: String?,
-        recipients: List<String> = macro.recipients
+        recipients: List<String> = macro.recipients,
+        sentBody: String = ""
     ) {
         val title = if (status == MacroStatus.SUCCESS) "Sent: ${macro.name}" else "Failed: ${macro.name}"
         val to = maskRecipients(recipients).ifBlank { "recipient" }
-        val text = if (status == MacroStatus.SUCCESS)
-            "To $to"
-        else
-            "To $to — ${error ?: "unknown error"}"
+        // Expanded content: who it went to plus the actual message, so tapping/expanding (after
+        // unlock) shows exactly what was sent. The body stays off the lock screen via the public
+        // version below.
+        val detail = buildString {
+            append("To $to")
+            if (status == MacroStatus.FAILED) append(" — ${error ?: "unknown error"}")
+            if (sentBody.isNotBlank()) append("\n\n").append(sentBody)
+        }
 
         val builder = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.stat_notify_chat)
             .setContentTitle(title)
-            .setContentText(text)
+            .setContentText("To $to")
+            .setStyle(NotificationCompat.BigTextStyle().bigText(detail))
+            .setContentIntent(openLogIntent())
+            .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
+            .setPublicVersion(redactedResult(title))
             .setAutoCancel(true)
 
         if (status == MacroStatus.FAILED) {
-            builder.addAction(0, "Retry", retryIntent(macro.id))
+            // Retry re-fires the macro via its own recipient list. Auto-reply (INCOMING) macros have
+            // no recipient list — they reply to the incoming sender — so retrying them does nothing;
+            // only offer Retry when the macro can re-fire on its own.
+            if (macro.recipients.isNotEmpty()) builder.addAction(0, "Retry", retryIntent(macro.id))
             builder.addAction(0, "View Log", openLogIntent())
         }
         manager.notify(macro.id.hashCode(), builder.build())
     }
+
+    /** Lock-screen-safe version of a result notification: title only, no recipient or message body. */
+    private fun redactedResult(title: String): Notification =
+        NotificationCompat.Builder(context, CHANNEL_ID)
+            .setSmallIcon(android.R.drawable.stat_notify_chat)
+            .setContentTitle(title)
+            .setAutoCancel(true)
+            .build()
 
     private fun retryIntent(macroId: String): PendingIntent {
         val intent = Intent(context, com.vibeactions.scheduler.MacroAlarmReceiver::class.java).apply {
@@ -113,7 +142,7 @@ class MacroNotificationManager @Inject constructor(
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        val builder = NotificationCompat.Builder(context, CHANNEL_ID)
+        val builder = NotificationCompat.Builder(context, CHANNEL_ID_AI)
             .setSmallIcon(android.R.drawable.stat_notify_chat)
             .setContentTitle("AI-svar klar til ${maskPhone(recipient)}")
             .setContentText(preview)
@@ -139,5 +168,8 @@ class MacroNotificationManager @Inject constructor(
         manager.notify(("ai_sent" + macro.id + recipient).hashCode() and 0x7FFFFFFF, builder.build())
     }
 
-    companion object { const val CHANNEL_ID = "macro_actions" }
+    companion object {
+        const val CHANNEL_ID = "macro_actions"
+        const val CHANNEL_ID_AI = "macro_ai"
+    }
 }

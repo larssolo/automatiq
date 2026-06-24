@@ -2,6 +2,7 @@ package com.vibeactions.domain
 
 import com.vibeactions.domain.model.Macro
 import com.vibeactions.domain.model.TriggerType
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -22,6 +23,24 @@ class IdempotencyGuardTest {
     @Test fun sentYesterday_isNotSentToday() {
         val yest = LocalDateTime.of(2026, 6, 14, 9, 0).atZone(zone).toInstant().toEpochMilli()
         assertFalse(alreadySentToday(yest, now, zone))
+    }
+
+    @Test fun startOfDay_isMidnightLocal() {
+        // 09:00 Copenhagen -> start of day is 00:00 the same date, in the same zone.
+        val expected = LocalDateTime.of(2026, 6, 15, 0, 0).atZone(zone).toInstant().toEpochMilli()
+        assertEquals(expected, startOfDayMillis(now, zone))
+    }
+
+    @Test fun startOfDay_marksScheduledFireFromTodayAsClaimed() {
+        // A fire recorded earlier today is >= start of day, so the day is already claimed.
+        val earlier = LocalDateTime.of(2026, 6, 15, 8, 0).atZone(zone).toInstant().toEpochMilli()
+        assertTrue(earlier >= startOfDayMillis(now, zone))
+    }
+
+    @Test fun startOfDay_marksYesterdayFireAsNotClaimed() {
+        // Yesterday's fire is < start of today, so today is still open to claim.
+        val yest = LocalDateTime.of(2026, 6, 14, 23, 59).atZone(zone).toInstant().toEpochMilli()
+        assertTrue(yest < startOfDayMillis(now, zone))
     }
 
     /**

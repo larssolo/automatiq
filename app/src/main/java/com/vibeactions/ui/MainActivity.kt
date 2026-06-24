@@ -44,13 +44,16 @@ data class AiApproval(val macroId: String, val recipient: String, val body: Stri
 class MainActivity : ComponentActivity() {
     // Compose-observable so a notification tap while the app is already open updates the UI too.
     private val pendingApproval = mutableStateOf<AiApproval?>(null)
+    // Route a notification (e.g. a result's "View Log"/tap) asks us to open, consumed once by AppRoot.
+    private val pendingNav = mutableStateOf<String?>(null)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         pendingApproval.value = readApproval(intent)
+        pendingNav.value = intent.getStringExtra(EXTRA_NAV)
         setContent {
             VibeActionsTheme {
-                AppRoot()
+                AppRoot(pendingNav.value, onNavConsumed = { pendingNav.value = null })
                 pendingApproval.value?.let { approval ->
                     AiApprovalDialog(approval, onDone = { pendingApproval.value = null })
                 }
@@ -62,6 +65,7 @@ class MainActivity : ComponentActivity() {
         super.onNewIntent(intent)
         setIntent(intent)
         readApproval(intent)?.let { pendingApproval.value = it }
+        intent.getStringExtra(EXTRA_NAV)?.let { pendingNav.value = it }
     }
 
     private fun readApproval(intent: Intent?): AiApproval? {
@@ -78,6 +82,7 @@ class MainActivity : ComponentActivity() {
         const val EXTRA_RECIPIENT = "recipient"
         const val EXTRA_BODY = "body"
         const val EXTRA_NOTIF_ID = "notif_id"
+        const val EXTRA_NAV = "nav"
     }
 }
 
@@ -138,9 +143,18 @@ private fun AiApprovalDialog(approval: AiApproval, onDone: () -> Unit) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun AppRoot() {
+private fun AppRoot(navTarget: String? = null, onNavConsumed: () -> Unit = {}) {
     val nav = rememberNavController()
     val context = LocalContext.current
+
+    // A notification asked us to open a specific tab (e.g. the Log). Navigate once, then clear it so
+    // it doesn't re-fire on recomposition or config change.
+    LaunchedEffect(navTarget) {
+        if (navTarget != null) {
+            nav.navigate(navTarget) { launchSingleTop = true }
+            onNavConsumed()
+        }
+    }
     var smsGranted by remember {
         mutableStateOf(
             ContextCompat.checkSelfPermission(context, Manifest.permission.SEND_SMS) ==

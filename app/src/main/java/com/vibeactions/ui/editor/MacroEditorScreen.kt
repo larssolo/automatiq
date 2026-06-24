@@ -4,9 +4,12 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.rememberScrollState
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.provider.ContactsContract
+import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.text.KeyboardOptions
@@ -347,22 +350,45 @@ fun MacroEditorScreen(
                 }
 
                 // Geofences only fire in the background with "Allow all the time" (Android 10+).
+                val fineGranted = ContextCompat.checkSelfPermission(
+                    ctx, Manifest.permission.ACCESS_FINE_LOCATION
+                ) == PackageManager.PERMISSION_GRANTED
                 val bgGranted = Build.VERSION.SDK_INT < Build.VERSION_CODES.Q ||
                     ContextCompat.checkSelfPermission(
                         ctx, Manifest.permission.ACCESS_BACKGROUND_LOCATION
                     ) == PackageManager.PERMISSION_GRANTED
+                // On Android 11+ background location can't be granted from an in-app dialog — the
+                // request is silently denied and the user must pick "Allow all the time" in Settings.
+                // Android 10 still allows the runtime dialog, so keep the launcher there.
                 val bgPermLauncher = rememberLauncherForActivityResult(
                     ActivityResultContracts.RequestPermission()
                 ) { /* result reflected on next recomposition */ }
                 if (!bgGranted) {
+                    val needsSettings = Build.VERSION.SDK_INT >= Build.VERSION_CODES.R
                     Text(
-                        "For this to work in the background, allow location \"all the time\".",
+                        when {
+                            !fineGranted -> "First allow location access above, then enable \"all the time\"."
+                            needsSettings -> "Open Settings and set location to \"Allow all the time\" so this fires in the background."
+                            else -> "For this to work in the background, allow location \"all the time\"."
+                        },
                         color = MaterialTheme.colorScheme.error,
                         style = MaterialTheme.typography.bodySmall
                     )
-                    TextButton(onClick = {
-                        bgPermLauncher.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
-                    }) { Text("Allow background location") }
+                    TextButton(
+                        enabled = fineGranted,
+                        onClick = {
+                            if (needsSettings) {
+                                ctx.startActivity(
+                                    Intent(
+                                        Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                                        Uri.fromParts("package", ctx.packageName, null)
+                                    ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                )
+                            } else {
+                                bgPermLauncher.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+                            }
+                        }
+                    ) { Text(if (needsSettings) "Open location settings" else "Allow background location") }
                 }
             }
 

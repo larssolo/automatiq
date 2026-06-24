@@ -8,6 +8,7 @@ import com.vibeactions.data.repository.MacroRepository
 import com.vibeactions.domain.model.AiSendMode
 import com.vibeactions.notifications.MacroNotificationManager
 import com.vibeactions.util.DEFAULT_GEMINI_MODEL
+import com.vibeactions.util.aiReplyDedupKey
 import com.vibeactions.util.geminiGenerate
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
@@ -61,6 +62,10 @@ class GeminiReplyWorker @AssistedInject constructor(
         when (macro.aiSendMode) {
             AiSendMode.APPROVE -> notifications.notifyAiApproval(macro, sender, generated)
             AiSendMode.AUTO -> {
+                // Claim this (macro, sender, message, day) before sending. If WorkManager re-runs a
+                // worker that died mid-flight, the retry carries identical inputData → identical key
+                // → the claim fails and we don't send the auto-reply twice.
+                if (!claimAutoSend(macroId, sender, body)) return Result.success()
                 firer.fire(
                     macroId, enforceOncePerDay = false,
                     overrideRecipient = sender, overrideBody = generated,
@@ -72,9 +77,30 @@ class GeminiReplyWorker @AssistedInject constructor(
         return Result.success()
     }
 
+    /** True if this auto-send was newly claimed; false if an earlier run already claimed it today.
+     *  Backed by SharedPreferences, pruned to the current day so it can't grow unbounded. */
+    private fun claimAutoSend(macroId: String, sender: String, body: String): Boolean {
+        val now = System.currentTimeMillis()
+        val key = aiReplyDedupKey(macroId, sender, body, now)
+        val todayToken = "|" + java.time.Instant.ofEpochMilli(now)
+            .atZone(java.time.ZoneId.systemDefault()).toLocalDate().toEpochDay() + "|"
+        val prefs = applicationContext.getSharedPreferences("ai_sent", Context.MODE_PRIVATE)
+        synchronized(claimLock) {
+            val current = prefs.getStringSet(KEY_SENT, emptySet()).orEmpty()
+            if (key in current) return false
+            // Keep only today's keys plus the new one.
+            val pruned = current.filter { todayToken in it }.toMutableSet().apply { add(key) }
+            prefs.edit().putStringSet(KEY_SENT, pruned).commit()
+            return true
+        }
+    }
+
     companion object {
         const val KEY_MACRO_ID = "macro_id"
         const val KEY_SENDER = "sender"
         const val KEY_BODY = "body"
+        private const val KEY_SENT = "sent_keys"
+        // Guards the read-modify-write of the SharedPreferences claim set across overlapping workers.
+        private val claimLock = Any()
     }
 }
