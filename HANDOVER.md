@@ -1,13 +1,13 @@
 # Overlevering — Automatiq (VibeActions)
 
-> Kopiér denne fil ind i en ny chattråd som kontekst. Sidst opdateret: 2026-06-24.
+> Kopiér denne fil ind i en ny chattråd som kontekst. Sidst opdateret: 2026-06-24 (long-press-menu).
 
 ## App
 
 **Automatiq** — native Kotlin/Compose Android-app til SMS-automatisering.
 - Pakke: `com.vibeactions`
 - Repo: `~/VibeActions`, remote `https://github.com/larssolo/automatiq.git`
-- Branch: `main` (op til dato med origin; HEAD = `e7e4f5d`)
+- Branch: `main` (op til dato med origin; HEAD = `cf1a955`)
 - Funktioner: planlagte SMS, AI auto-svar via Gemini, macro-knap-widgets, lokationstriggere.
 
 ## Tech stack
@@ -22,7 +22,13 @@
 ## Aktuel tilstand
 **Working tree er rent — alt committet og pushet.** Seneste commit `e7e4f5d` indeholder 6 bug-fixes + en notifikations-feature (se nedenfor). `./gradlew assembleDebug` bygger; alle unit-tests grønne. **On-device test udestår stadig.**
 
-## Seneste arbejde (commit e7e4f5d)
+## Seneste arbejde (commit cf1a955)
+**Long-press-menu på Action cards:**
+- Long-press på et makro-kort åbner en `DropdownMenu` med **Slet / Kopiér / Send nu** (`MacroCard.kt`, `combinedClickable`).
+- Omarrangering er flyttet fra long-press til et dedikeret **træk-håndtag-ikon** (⠿) på kortet (`Modifier.draggableHandle`).
+- Delte handlere `deleteMacro`/`sendMacro` (Undo- + "Sending…"-snackbar) i `MacroListScreen.kt` genbruges af både kort-menuen og editor-sheet'et. Ingen ViewModel/DB-ændringer.
+
+## Tidligere arbejde (commit e7e4f5d)
 **6 bug-fixes fra kodegennemgang:**
 1. Toggle af LOCATION-makro (af-/på i listen) registrerer nu geofencen korrekt — før blev den aldrig gen-armet ved gen-aktivering og lækkede ved deaktivering (`ToggleMacroUseCase` injicerer nu `GeofenceManager`).
 2. Background-location-flowet router til app-settings på Android 11+ (runtime-dialogen kan ikke give "Tillad altid" der) — `MacroEditorScreen`.
@@ -52,6 +58,8 @@ Mørk-på-mørk tekst rettes ved at tilføje eksplicit `color = OnSurface` til `
 - `notifications/MacroNotificationManager.kt` — kanaler `macro_actions` (privat, redacted public version) + `macro_ai` (high); `notifyResult`/`notifyAiApproval`/`notifyAiSent`
 - `ui/MainActivity.kt` — `AiApprovalDialog`, notification-routing via `EXTRA_NAV` + `onNewIntent` + `launchMode="singleTop"`
 - `ui/editor/MacroEditorScreen.kt` — Edit/New Macro; AI-skriv-dialog; background-location → settings på API 30+
+- `ui/common/MacroCard.kt` — kort i listen; tap = editor, long-press = handlingsmenu, ⠿ = træk-håndtag (reorder)
+- `ui/macrolist/MacroListScreen.kt` — grid + reorder; delte `deleteMacro`/`sendMacro`-handlere
 - `util/GeminiClient.kt` — `geminiGenerate(...)` og `geminiSuggest(...)` (3 forslag)
 
 ## Løste problemer (historik)
@@ -78,3 +86,4 @@ Mørk-på-mørk tekst rettes ved at tilføje eksplicit `color = OnSurface` til `
   - AI auto-svar-flowet (APPROVE + AUTO) på rigtig enhed
   - Notifikation: låseskærm viser kun "Sent: <navn>", fuld besked efter oplåsning, tryk åbner Loggen
   - LOCATION-makro: toggle af/på i listen registrerer/fjerner geofence; background-location via settings på Android 11+
+  - Long-press kort → menu (Slet/Kopiér/Send nu); træk i ⠿-håndtag omarrangerer
