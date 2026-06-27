@@ -38,10 +38,9 @@ import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.vibeactions.domain.model.GeofenceTransition
 import com.vibeactions.domain.model.TriggerType
+import com.vibeactions.ui.common.ThemedSwitch
 import com.vibeactions.ui.theme.ErrorRed
 import com.vibeactions.ui.theme.OnSurface
-import com.vibeactions.ui.theme.OnSurfaceVariant
-import com.vibeactions.ui.theme.SurfaceVariant
 import com.vibeactions.util.geminiSuggest
 import com.vibeactions.util.TEMPLATE_TOKENS
 import com.vibeactions.util.isValidPhone
@@ -417,14 +416,9 @@ fun MacroEditorScreen(
                 HorizontalDivider()
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text("AI-svar (Gemini)", modifier = Modifier.weight(1f), color = OnSurface)
-                    Switch(
+                    ThemedSwitch(
                         checked = s.aiReplyEnabled,
-                        onCheckedChange = { v -> vm.update { it.copy(aiReplyEnabled = v) } },
-                        colors = SwitchDefaults.colors(
-                            uncheckedTrackColor = SurfaceVariant,
-                            uncheckedThumbColor = OnSurfaceVariant,
-                            uncheckedBorderColor = OnSurfaceVariant
-                        )
+                        onCheckedChange = { v -> vm.update { it.copy(aiReplyEnabled = v) } }
                     )
                 }
                 if (s.aiReplyEnabled) {
@@ -544,14 +538,9 @@ fun MacroEditorScreen(
 
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("Enabled", modifier = Modifier.weight(1f), color = OnSurface)
-                Switch(
+                ThemedSwitch(
                     checked = s.enabled,
-                    onCheckedChange = { v -> vm.update { it.copy(enabled = v) } },
-                    colors = SwitchDefaults.colors(
-                        uncheckedTrackColor = SurfaceVariant,
-                        uncheckedThumbColor = OnSurfaceVariant,
-                        uncheckedBorderColor = OnSurfaceVariant
-                    )
+                    onCheckedChange = { v -> vm.update { it.copy(enabled = v) } }
                 )
             }
 
