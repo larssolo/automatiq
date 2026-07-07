@@ -18,6 +18,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -50,6 +51,7 @@ fun MacroCard(
         modifier
             .fillMaxWidth()
             .height(76.dp)
+            .alpha(if (macro.enabled) 1f else 0.55f)
             .clip(RoundedCornerShape(12.dp))
             .background(Surface.copy(alpha = 0.93f))
             .background(accent.copy(alpha = if (macro.cardColor != 0L) 0.07f else 0f))
