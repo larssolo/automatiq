@@ -91,6 +91,7 @@ fun MacroListScreen(
                                 onDelete = { deleteMacro(macro) },
                                 onCopy = { vm.onCopy(macro) },
                                 onSend = { sendMacro(macro) },
+                                onToggle = { enabled -> vm.onToggle(macro, enabled) },
                                 dragHandleModifier = Modifier.draggableHandle(
                                     onDragStopped = { vm.onReorder(ordered.map(Macro::id)) }
                                 )

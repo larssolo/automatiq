@@ -39,6 +39,7 @@ fun MacroCard(
     onDelete: () -> Unit,
     onCopy: () -> Unit,
     onSend: () -> Unit,
+    onToggle: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
     dragHandleModifier: Modifier = Modifier
 ) {
@@ -105,6 +106,15 @@ fun MacroCard(
                     )
                 }
             }
+        }
+        Box(
+            Modifier.fillMaxHeight().padding(end = 4.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            ThemedSwitch(
+                checked = macro.enabled,
+                onCheckedChange = onToggle
+            )
         }
         // Drag handle for reordering (long-press is now reserved for the actions menu).
         Box(
