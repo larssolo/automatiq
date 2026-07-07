@@ -7,3 +7,6 @@ local.properties
 captures/
 .externalNativeBuild/
 .cxx/
+
+# Superpowers brainstorming visual companion (local scratch, not shared)
+.superpowers/
