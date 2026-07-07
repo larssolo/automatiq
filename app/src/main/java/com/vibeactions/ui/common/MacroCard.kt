@@ -26,7 +26,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.vibeactions.domain.model.GeofenceTransition
 import com.vibeactions.domain.model.Macro
-import com.vibeactions.domain.model.MacroStatus
 import com.vibeactions.domain.model.TriggerType
 import com.vibeactions.ui.theme.*
 import com.vibeactions.util.formatRecurrence
@@ -95,9 +94,7 @@ fun MacroCard(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.End
         ) {
-            StatusDot(macro.lastStatus)
             if (macro.triggerType == TriggerType.INCOMING && macro.aiReplyEnabled) {
-                Spacer(Modifier.height(4.dp))
                 Surface(color = accent.copy(alpha = 0.2f), shape = RoundedCornerShape(4.dp)) {
                     Text(
                         "AI",
@@ -109,6 +106,7 @@ fun MacroCard(
                 }
             }
         }
+        Spacer(Modifier.width(8.dp))
         Box(
             Modifier.fillMaxHeight().padding(end = 4.dp),
             contentAlignment = Alignment.Center
@@ -152,21 +150,6 @@ fun MacroCard(
             }
         }
     }
-}
-
-@Composable
-private fun StatusDot(status: MacroStatus?) {
-    val color = when (status) {
-        MacroStatus.SUCCESS -> androidx.compose.ui.graphics.Color(0xFF4CAF50)
-        MacroStatus.FAILED -> ErrorRed
-        else -> androidx.compose.ui.graphics.Color.Transparent
-    }
-    Box(
-        Modifier
-            .size(7.dp)
-            .clip(RoundedCornerShape(50))
-            .background(color)
-    )
 }
 
 private fun compactSummary(macro: Macro): String = when (macro.triggerType) {
