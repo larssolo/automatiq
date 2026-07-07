@@ -28,14 +28,12 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vibeactions.ui.theme.OnSurfaceVariant
 import com.vibeactions.ui.theme.Primary
-import com.vibeactions.ui.common.BackgroundSetting
-import com.vibeactions.ui.common.GradientPreset
 import com.vibeactions.util.GEMINI_MODELS
 import com.vibeactions.util.geminiGenerate
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class, androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(vm: SettingsViewModel = hiltViewModel()) {
     val context = LocalContext.current
@@ -93,22 +91,6 @@ fun SettingsScreen(vm: SettingsViewModel = hiltViewModel()) {
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-
-            Text(
-                "Baggrund",
-                style = MaterialTheme.typography.titleSmall,
-                modifier = Modifier.padding(top = 4.dp)
-            )
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                GradientPreset.entries.forEach { p ->
-                    FilterChip(
-                        selected = BackgroundSetting.preset == p,
-                        onClick = { BackgroundSetting.set(context, p) },
-                        label = { Text(p.label) }
-                    )
-                }
-            }
-            HorizontalDivider()
 
             ListItem(
                 colors = ListItemDefaults.colors(
