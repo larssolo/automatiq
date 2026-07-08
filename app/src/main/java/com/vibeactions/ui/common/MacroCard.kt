@@ -135,7 +135,7 @@ fun MacroCard(
             DropdownMenu(
                 expanded = menuExpanded,
                 onDismissRequest = { menuExpanded = false },
-                offset = DpOffset(x = (-20).dp, y = 0.dp)
+                offset = DpOffset(x = (-50).dp, y = 0.dp)
             ) {
                 DropdownMenuItem(
                     text = { Text("Slet") },
