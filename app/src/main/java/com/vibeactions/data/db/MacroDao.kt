@@ -30,6 +30,10 @@ interface MacroDao {
     @Query("UPDATE macros SET last_triggered_at = :at, last_status = :status WHERE id = :id")
     suspend fun updateStatus(id: String, at: Long, status: String)
 
+    /** Status-only update for late radio-level failure reports (keeps last_triggered_at intact). */
+    @Query("UPDATE macros SET last_status = :status WHERE id = :id")
+    suspend fun updateLastStatus(id: String, status: String)
+
     /**
      * Atomically claim today's scheduled fire: stamps [at] only if no fire has been recorded since
      * local midnight ([startOfDay]). Returns rows updated (1 = claimed by this caller, 0 = another

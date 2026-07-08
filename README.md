@@ -4,7 +4,7 @@
 
 # Automatiq
 
-**On-device SMS automation for Android — scheduled, manual, auto-reply & location triggers.**
+**On-device SMS automation for Android — scheduled, manual, auto-reply & location triggers, with optional AI-generated replies.**
 
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.0.21-7F52FF?logo=kotlin&logoColor=white)](https://kotlinlang.org)
 [![Android](https://img.shields.io/badge/Android-8.0%2B-3DDC84?logo=android&logoColor=white)](https://developer.android.com)
@@ -17,9 +17,9 @@
 
 ## What it does
 
-Automatiq lets you define SMS macros — a name, one or more recipients, and a message — and fire them automatically. A macro can trigger on a **schedule**, on a **button tap**, as an **auto-reply** to an incoming SMS, or when you **arrive at / leave a place**.
+Automatiq lets you define SMS macros — a name, one or more recipients, and a message — and fire them automatically. A macro can trigger on a **schedule**, on a **button tap**, as an **auto-reply** to an incoming SMS, or when you **arrive at / leave a place**. Auto-replies can answer with a fixed text or with an **AI-generated reply** (Gemini) — either sent automatically or held for your approval.
 
-Everything runs on-device. No account, no server. The only feature that reaches outside the phone is the optional **location trigger**, which uses Google Play Services geofencing.
+Everything runs on-device. No account, no server. Only two optional features reach outside the phone: the **location trigger** (Google Play Services geofencing) and **AI replies** (Google's Gemini API, with your own free key).
 
 ```
 ┌─────────────────────────────────────────────────────────┐
@@ -30,7 +30,7 @@ Everything runs on-device. No account, no server. The only feature that reaches 
 └─────────────────────────────────────────────────────────┘
          ↓  AlarmManager (precise)
          ↓  WorkManager catch-up (resilience)
-         ↓  SmsManager → SMS delivered
+         ↓  SmsManager → radio sent receipt → log + status
 ```
 
 ---
@@ -41,7 +41,7 @@ Everything runs on-device. No account, no server. The only feature that reaches 
 |---|---|
 | ⏰ **Scheduled** | a set time arrives, on chosen weekdays, every N weeks — with an optional expiry date |
 | 👆 **Manual** | you tap the macro in the list or a home-screen widget |
-| 💬 **Auto-reply** | an incoming SMS matches an optional sender and/or keyword — replies to the sender |
+| 💬 **Auto-reply** | an incoming SMS matches an optional sender and/or keyword — replies to the sender with a fixed text or an AI-generated answer |
 | 📍 **Location** | you enter or leave a geofenced place (radius of your choosing) |
 
 ---
@@ -50,21 +50,50 @@ Everything runs on-device. No account, no server. The only feature that reaches 
 
 | | Feature |
 |---|---|
+| 🤖 | **AI auto-replies (Gemini)** — per macro: approve each reply before it goes out, or send automatically and get notified. An optional per-macro instruction steers tone and length |
+| ✨ | **AI compose** — describe the message in the editor and pick between three generated suggestions |
 | 👥 | **Multiple recipients** — one macro sends to a whole list of numbers |
 | 🔤 | **Message variables** — `{dato}` `{tid}` `{ugedag}` `{navn}` are filled in at send time |
 | ⏳ | **Expiry date** — a scheduled macro stops firing after a date you pick |
 | 💬 | **Auto-reply** — react to incoming SMS by sender/keyword, with a loop guard |
-| 📍 | **Location triggers** — arrive/depart a place, re-armed after reboot |
-| 🔁 | **Dual scheduling engine** — AlarmManager for precision + WorkManager catch-up so nothing is missed after Doze or reboot |
+| 📍 | **Location triggers** — arrive/depart a place, re-armed after reboot and app updates |
+| 🔁 | **Dual scheduling engine** — AlarmManager for precision + WorkManager catch-up, self-healing on every app start, so nothing is missed after Doze, reboot or an update |
 | 📅 | **Per-weekday control** — pick any combination of Mon–Sun per macro |
 | 🗓️ | **Every-N-weeks recurrence** — every week, every other week, every 3 or 4 weeks |
-| 🏠 | **Home-screen widget** — one widget per macro, tap to send, shows last status |
-| 🔔 | **Notifications** — result (success / failed) + one-tap retry on failure |
+| 🏠 | **Home-screen widget** — one widget per macro, tap to send; status stays in sync with scheduled and auto sends too |
+| 📬 | **Radio-level send status** — a sent receipt from the radio flips the log and notification to *failed* if the network dropped the message after dispatch |
+| 🔔 | **Notifications** — result (success / failed) + one-tap retry on failure; message content is kept off the lock screen |
+| ⏯️ | **Quick enable/disable** — long-press a card for Delete / Duplicate / Send now / Enable-Disable |
 | 📋 | **Execution log** — full chronological history per macro, filterable |
 | 📤 | **JSON export / import** — full backup and restore via system file picker |
 | ↕️ | **Drag-and-drop reorder** — visible drag handle on every card |
 | 🎨 | **Per-macro colours** — each card gets a random pastel accent |
 | 🔋 | **Battery-optimisation prompt** — guides you through the whitelist so alarms survive aggressive OEM killers |
+
+---
+
+## AI replies (Gemini)
+
+Auto-reply macros can hand the incoming message to Google's **Gemini** and reply with a generated answer. Two modes, chosen per macro:
+
+- **Approve before sending** (default) — a heads-up notification (or an in-app dialog) shows the generated reply; you can edit it, send it, or discard it.
+- **Send automatically & inform** — the reply goes out on its own and a notification tells you what was sent. A per-day dedup guard ensures a retried background job never sends the same reply twice.
+
+A per-macro instruction (e.g. *"Svar kort og venligt på dansk, maks. 1 sætning"*) steers the reply; otherwise the global system prompt from Settings is used. If the API is unreachable or no key is configured, the macro falls back to its fixed message text — auto-replies never silently fail.
+
+### Getting a free Gemini API key
+
+The AI features use Google's free tier — no credit card or billing account required:
+
+1. Go to **[aistudio.google.com](https://aistudio.google.com)** and sign in with any Google account.
+2. Click **"Get API key"** (in the left menu or top bar), then **"Create API key"**. Choose *Create API key in new project* if asked.
+3. Copy the key (it starts with `AIza…`).
+4. In Automatiq: **Settings → AI (Gemini)** → paste the key → tap **"Test nøgle"** to verify it works → **"Gem"**.
+
+Notes:
+
+- The free tier is rate-limited per model (roughly 10–15 requests/minute — plenty for SMS replies). If the key test reports **quota 0**, that model isn't free-tier-enabled for your project/region: just pick another model in the dropdown (e.g. `gemini-2.5-flash-lite` or `gemini-2.0-flash`).
+- The key is stored only on the device, sent to Google exclusively as a request header, never written to logs, and **excluded from Android cloud backups and device transfers**.
 
 ---
 
@@ -74,7 +103,7 @@ Everything runs on-device. No account, no server. The only feature that reaches 
 ┌──────────────────────────────────────────────────────────────────────┐
 │                            UI Layer                                  │
 │  MacroListScreen · MacroEditorScreen · LogScreen · SettingsScreen    │
-│  MacroCard · StatusBadge · PermissionBanner  (Jetpack Compose)      │
+│  MacroCard · ThemedSwitch · PermissionBanner  (Jetpack Compose)      │
 └────────────────────────────┬─────────────────────────────────────────┘
                              │ ViewModels (Hilt)
 ┌────────────────────────────▼─────────────────────────────────────────┐
@@ -87,20 +116,21 @@ Everything runs on-device. No account, no server. The only feature that reaches 
 │            Scheduler / Triggers       │ │         Data Layer           │
 │  AlarmScheduler · MacroAlarmReceiver  │ │  MacroRepository             │
 │  MacroCatchUpWorker · BootReceiver    │ │  MacroLogRepository          │
-│  SmsReplyReceiver  (auto-reply)       │ │  Room DB (v8)               │
+│  SmsReplyReceiver · GeminiReplyWorker │ │  Room DB (v10)              │
 │  GeofenceManager · GeofenceReceiver   │ │  MacroEntity · MacroLogEntity│
-│  MacroFirer  ←── single send path ────┼─┤  Migrations 1→…→8           │
+│  SmsSentReceiver  (radio receipts)    │ │  Migrations 1→…→10          │
+│  MacroFirer  ←── single send path ────┼─┤                              │
 └────────────┬──────────────────────────┘ └─────────────────────────────┘
              │
 ┌────────────▼─────────────────────────────────────────────────────────┐
 │                        System / Android                              │
-│  AlarmManager.setAlarmClock()  ·  WorkManager (periodic)            │
-│  SmsManager (multipart)  ·  Telephony SMS_RECEIVED                  │
-│  Play Services Geofencing  ·  AppWidgetProvider  ·  Notifications   │
+│  AlarmManager.setAlarmClock()  ·  WorkManager (periodic + expedited) │
+│  SmsManager (multipart + sent receipts) · Telephony SMS_RECEIVED     │
+│  Play Services Geofencing · Gemini API · AppWidgetProvider           │
 └──────────────────────────────────────────────────────────────────────┘
 ```
 
-`MacroFirer.fire()` is the one path every trigger funnels through — alarm, catch-up worker, manual tap, widget, auto-reply, and geofence all call it.
+`MacroFirer.fire()` is the one path every trigger funnels through — alarm, catch-up worker, manual tap, widget, auto-reply (fixed and AI), and geofence all call it.
 
 ### Scheduling engine
 
@@ -109,7 +139,13 @@ Scheduled sends use two complementary engines so they're never silently dropped:
 1. **`AlarmManager.setAlarmClock()`** — Doze-exempt exact alarm; fires precisely at the scheduled time.
 2. **`MacroCatchUpWorker`** — hourly WorkManager job that checks all enabled scheduled macros and sends any that weren't fired yet today.
 
-An idempotency guard (`alreadySentToday`, keyed on `macroId + yyyy-MM-dd`) ensures neither engine double-sends. A manual tap writes a separate `lastTriggeredAt` field so it never consumes the day's scheduled send slot. Weekday, every-N-weeks recurrence, and the expiry date are all evaluated by the shared `isScheduledDay` rule.
+An atomic claim (`claimScheduledFire`, a check-and-set UPDATE keyed on local midnight) ensures alarm and catch-up can never double-send. A manual tap writes a separate `lastTriggeredAt` field so it never consumes the day's scheduled send slot. Weekday, every-N-weeks recurrence, and the expiry date are all evaluated by the shared `isScheduledDay` rule.
+
+Alarms and geofences are silently cleared by Android on reboot **and on every app update** — `BootReceiver` handles both events (`BOOT_COMPLETED` + `MY_PACKAGE_REPLACED`), and the app additionally re-arms everything on each launch as a self-heal.
+
+### Send pipeline & delivery status
+
+"Handed to `SmsManager`" is not the same as "sent". Every dispatched SMS carries a **sent receipt** (`PendingIntent`) addressed to `SmsSentReceiver` with the log entry's id. The log row is created *before* sending; if the radio later reports a failure (no service, flight mode, SMS limit, …) the entry and the macro's status flip to **FAILED** with the radio's reason, a corrective notification is posted, and bound widgets refresh. Success receipts are no-ops — the dispatch path already finalized the entry.
 
 ---
 
@@ -124,6 +160,7 @@ An idempotency guard (`alreadySentToday`, keyed on `macroId + yyyy-MM-dd`) ensur
 | Database | Room | 2.6.1 |
 | Background | WorkManager | 2.9.1 |
 | Location | play-services-location | 21.3.0 |
+| AI | Gemini API via `HttpURLConnection` | — |
 | Serialization | kotlinx-serialization | 1.7.3 |
 | Drag-and-drop | sh.calvin.reorderable | 2.4.3 |
 | Build tools | AGP 8.7.3 · Gradle 8.9 · KSP 2.0.21-1.0.28 | |
@@ -138,12 +175,15 @@ An idempotency guard (`alreadySentToday`, keyed on `macroId + yyyy-MM-dd`) ensur
 |---|---|
 | `SEND_SMS` | Send the macro message |
 | `RECEIVE_SMS` | Detect incoming SMS for auto-reply macros |
+| `INTERNET` | Gemini API calls (AI replies / AI compose) — nothing else leaves the device |
 | `RECEIVE_BOOT_COMPLETED` | Re-register alarms and geofences after reboot |
 | `SCHEDULE_EXACT_ALARM` / `USE_EXACT_ALARM` | Precise fire time for scheduled macros |
 | `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` | Keep WorkManager running on aggressive OEM ROMs |
 | `ACCESS_FINE_LOCATION` / `ACCESS_BACKGROUND_LOCATION` | Geofence (location) triggers |
-| `POST_NOTIFICATIONS` | Show send-result and retry notifications |
+| `POST_NOTIFICATIONS` | Show send-result, AI-approval and retry notifications |
 | `READ_CONTACTS` | Contact picker in the editor |
+
+Privacy: phone numbers are always masked in notifications and the log; result notifications keep the message body off the lock screen (redacted public version); the Gemini key is excluded from backups.
 
 ---
 
@@ -156,7 +196,7 @@ An idempotency guard (`alreadySentToday`, keyed on `macroId + yyyy-MM-dd`) ensur
 ./gradlew assembleDebug
 
 # Run JVM unit tests
-./gradlew testDebugUnitTest
+./gradlew test
 
 # Install on connected device / emulator
 adb install -r app/build/outputs/apk/debug/app-debug.apk
@@ -168,7 +208,7 @@ The app is not distributed via the Play Store — it is sideloaded on a personal
 
 ## Database schema
 
-Room database at version **8**. All migrations are additive (`ADD COLUMN`) — upgrading from any prior install preserves existing macros.
+Room database at version **10**. All migrations are additive (`ADD COLUMN`) — upgrading from any prior install preserves existing macros.
 
 | Migration | Change |
 |---|---|
@@ -179,6 +219,8 @@ Room database at version **8**. All migrations are additive (`ADD COLUMN`) — u
 | 5 → 6 | `valid_until_epoch_day` (expiry date) |
 | 6 → 7 | `match_sender`, `match_keyword` (auto-reply) |
 | 7 → 8 | `latitude`, `longitude`, `radius_meters`, `geofence_transition` |
+| 8 → 9 | `ai_reply_enabled`, `ai_send_mode` (AI auto-replies) |
+| 9 → 10 | `ai_reply_instruction` (per-macro AI prompt) |
 
 ---
 
@@ -193,21 +235,23 @@ app/src/main/java/com/vibeactions/
 │   ├── model/         Macro, MacroLog, Mappers
 │   └── usecase/       Save, Delete, Toggle, Trigger, RescheduleAll
 ├── scheduler/         AlarmScheduler · MacroFirer · MacroCatchUpWorker
-│                      BootReceiver · SmsReplyReceiver (auto-reply)
+│                      BootReceiver · SmsReplyReceiver · GeminiReplyWorker
+│                      SmsSentReceiver (radio receipts) · AiReplyActionReceiver
 │                      GeofenceManager · GeofenceReceiver (location)
-├── sms/               SmsDispatcher (multipart-aware)
+├── sms/               SmsDispatcher (multipart-aware, arms sent receipts)
 ├── notifications/     MacroNotificationManager
-├── widget/            AppWidgetProvider, config activity, WidgetIds
+├── widget/            AppWidgetProvider, config activity, WidgetIds, WidgetRefresher
 ├── ui/
 │   ├── macrolist/     List screen + ViewModel
-│   ├── editor/        Editor screen + ViewModel
+│   ├── editor/        Editor screen + ViewModel (pure EditorState.toMacro)
 │   ├── log/           Log screen + ViewModel
-│   ├── settings/      Settings screen + ViewModel
-│   ├── common/        MacroCard, StatusBadge, PermissionBanner
+│   ├── settings/      Settings screen + ViewModel (AI settings, export/import)
+│   ├── common/        MacroCard, ThemedSwitch, PermissionBanner, gradients
 │   └── theme/         Color, Type, Theme
 ├── di/                Hilt modules
-└── util/              TimeUtils · PhoneUtils · MacroJson · IdempotencyGuard
-                       MessageTemplate · IncomingMatch · CardColors
+└── util/              TimeUtils · PhoneUtils · MacroJson · MessageTemplate
+                       IncomingMatch · GeminiClient · AiReplyDedup · SmsResult
+                       CardColors
 ```
 
 ---

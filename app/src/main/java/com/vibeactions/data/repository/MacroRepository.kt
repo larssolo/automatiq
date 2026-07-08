@@ -23,6 +23,10 @@ class MacroRepository @Inject constructor(private val dao: MacroDao) {
     suspend fun updateStatus(id: String, at: Long, status: MacroStatus) =
         dao.updateStatus(id, at, status.name)
 
+    /** Status-only update for late radio-level failure reports (keeps lastTriggeredAt intact). */
+    suspend fun updateLastStatus(id: String, status: MacroStatus) =
+        dao.updateLastStatus(id, status.name)
+
     /** Atomically claim today's scheduled fire; true if this caller won the claim (see DAO). */
     suspend fun tryClaimScheduledFire(id: String, at: Long, startOfDay: Long): Boolean =
         dao.claimScheduledFire(id, at, startOfDay) > 0

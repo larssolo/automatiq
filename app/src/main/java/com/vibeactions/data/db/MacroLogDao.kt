@@ -12,7 +12,14 @@ interface MacroLogDao {
     fun observeAll(): Flow<List<MacroLogEntity>>
 
     @Insert
-    suspend fun insert(log: MacroLogEntity)
+    suspend fun insert(log: MacroLogEntity): Long
+
+    /**
+     * Finalizes a log row's outcome. FAILED is terminal: a radio-level failure report (which can
+     * arrive at any time) must not be overwritten by the dispatch-level SUCCESS finalizer.
+     */
+    @Query("UPDATE macro_logs SET status = :status, error_message = :error WHERE id = :id AND status != 'FAILED'")
+    suspend fun updateResult(id: Long, status: String, error: String?)
 
     @Query("DELETE FROM macro_logs WHERE id NOT IN (SELECT id FROM macro_logs ORDER BY triggered_at DESC LIMIT :keep)")
     suspend fun prune(keep: Int = 500)
