@@ -61,6 +61,53 @@ data class EditorState(
         (!recipientsRequired || phoneValid)
 }
 
+/** Pure mapping from editor state to a saveable [Macro]; testable without Android. */
+fun EditorState.toMacro(id: String): Macro {
+    val scheduled = triggerType == TriggerType.SCHEDULED
+    val incoming = triggerType == TriggerType.INCOMING
+    val location = triggerType == TriggerType.LOCATION
+    val interval = if (scheduled) weekInterval.coerceAtLeast(1) else 1
+    // Anchor the multi-week rhythm on the first actual fire (first allowed weekday on/after the
+    // chosen start date), so parity starts cleanly. Weekly macros need no anchor.
+    val anchor = if (scheduled && interval > 1) {
+        val start = startEpochDay?.let { LocalDate.ofEpochDay(it) } ?: LocalDate.now()
+        firstScheduledDateOnOrAfter(start, daysOfWeek).toEpochDay()
+    } else null
+    return Macro(
+        id = id,
+        name = name.trim(),
+        triggerType = triggerType,
+        scheduledTime = if (scheduled) scheduledTime else null,
+        repeatDaily = true,
+        // Auto-reply macros answer the incoming sender. A recipient list left over from a previous
+        // trigger type must be dropped: the failed-send Retry action re-fires via macro.recipients
+        // and would resend the fixed body to numbers that no longer apply.
+        recipients = if (incoming) emptyList() else cleanRecipients,
+        messageBody = message,
+        enabled = enabled,
+        createdAt = createdAt,
+        lastTriggeredAt = lastTriggeredAt,
+        lastStatus = lastStatus,
+        lastScheduledFireAt = lastScheduledFireAt,
+        sortOrder = sortOrder,
+        daysOfWeek = if (scheduled) daysOfWeek else setOf(1, 2, 3, 4, 5, 6, 7),
+        weekInterval = interval,
+        anchorEpochDay = anchor,
+        cardColor = cardColor,
+        aiReplyEnabled = if (incoming) aiReplyEnabled else false,
+        aiSendMode = aiSendMode,
+        aiReplyInstruction = if (incoming && aiReplyEnabled)
+            aiReplyInstruction.trim().ifBlank { null } else null,
+        validUntilEpochDay = if (scheduled) validUntilEpochDay else null,
+        matchSender = if (incoming) matchSender.trim().ifBlank { null } else null,
+        matchKeyword = if (incoming) matchKeyword.trim().ifBlank { null } else null,
+        latitude = if (location) latitude else null,
+        longitude = if (location) longitude else null,
+        radiusMeters = if (location) radiusMeters else null,
+        geofenceTransition = if (location) geofenceTransition else null
+    )
+}
+
 @HiltViewModel
 class MacroEditorViewModel @Inject constructor(
     private val repo: MacroRepository,
@@ -97,46 +144,6 @@ class MacroEditorViewModel @Inject constructor(
         if (!s.canSave) return
         val id = s.id ?: UUID.randomUUID().toString()
         _state.value = _state.value.copy(id = id)
-        val scheduled = s.triggerType == TriggerType.SCHEDULED
-        val interval = if (scheduled) s.weekInterval.coerceAtLeast(1) else 1
-        // Anchor the multi-week rhythm on the first actual fire (first allowed weekday on/after the
-        // chosen start date), so parity starts cleanly. Weekly macros need no anchor.
-        val anchor = if (scheduled && interval > 1) {
-            val start = s.startEpochDay?.let { LocalDate.ofEpochDay(it) } ?: LocalDate.now()
-            firstScheduledDateOnOrAfter(start, s.daysOfWeek).toEpochDay()
-        } else null
-        val macro = Macro(
-            id = id,
-            name = s.name.trim(),
-            triggerType = s.triggerType,
-            scheduledTime = if (s.triggerType == TriggerType.SCHEDULED) s.scheduledTime else null,
-            repeatDaily = true,
-            recipients = s.cleanRecipients,
-            messageBody = s.message,
-            enabled = s.enabled,
-            createdAt = s.createdAt,
-            lastTriggeredAt = s.lastTriggeredAt,
-            lastStatus = s.lastStatus,
-            lastScheduledFireAt = s.lastScheduledFireAt,
-            sortOrder = s.sortOrder,
-            daysOfWeek = if (scheduled) s.daysOfWeek else setOf(1, 2, 3, 4, 5, 6, 7),
-            weekInterval = interval,
-            anchorEpochDay = anchor,
-            cardColor = s.cardColor,
-            aiReplyEnabled = if (s.triggerType == TriggerType.INCOMING) s.aiReplyEnabled else false,
-            aiSendMode = s.aiSendMode,
-            aiReplyInstruction = if (s.triggerType == TriggerType.INCOMING && s.aiReplyEnabled)
-                s.aiReplyInstruction.trim().ifBlank { null } else null,
-            validUntilEpochDay = if (scheduled) s.validUntilEpochDay else null,
-            matchSender = if (s.triggerType == TriggerType.INCOMING)
-                s.matchSender.trim().ifBlank { null } else null,
-            matchKeyword = if (s.triggerType == TriggerType.INCOMING)
-                s.matchKeyword.trim().ifBlank { null } else null,
-            latitude = if (s.triggerType == TriggerType.LOCATION) s.latitude else null,
-            longitude = if (s.triggerType == TriggerType.LOCATION) s.longitude else null,
-            radiusMeters = if (s.triggerType == TriggerType.LOCATION) s.radiusMeters else null,
-            geofenceTransition = if (s.triggerType == TriggerType.LOCATION) s.geofenceTransition else null
-        )
-        viewModelScope.launch { save(macro); onDone() }
+        viewModelScope.launch { save(s.toMacro(id)); onDone() }
     }
 }

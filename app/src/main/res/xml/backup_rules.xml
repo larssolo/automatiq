@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 11 and below (full-backup-content). The Gemini API key lives in ai_settings and must
+     never leave the device; ai_sent is a device-local dedup cache with no value on restore. -->
+<full-backup-content>
+    <exclude domain="sharedpref" path="ai_settings.xml" />
+    <exclude domain="sharedpref" path="ai_sent.xml" />
+</full-backup-content>

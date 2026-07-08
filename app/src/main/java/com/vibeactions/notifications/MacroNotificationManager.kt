@@ -9,6 +9,7 @@ import android.content.Intent
 import androidx.core.app.NotificationCompat
 import com.vibeactions.domain.model.Macro
 import com.vibeactions.domain.model.MacroStatus
+import com.vibeactions.domain.model.TriggerType
 import com.vibeactions.scheduler.AiReplyActionReceiver
 import com.vibeactions.util.maskPhone
 import com.vibeactions.util.maskRecipients
@@ -65,10 +66,13 @@ class MacroNotificationManager @Inject constructor(
             .setAutoCancel(true)
 
         if (status == MacroStatus.FAILED) {
-            // Retry re-fires the macro via its own recipient list. Auto-reply (INCOMING) macros have
-            // no recipient list — they reply to the incoming sender — so retrying them does nothing;
-            // only offer Retry when the macro can re-fire on its own.
-            if (macro.recipients.isNotEmpty()) builder.addAction(0, "Retry", retryIntent(macro.id))
+            // Retry re-fires the macro via its own recipient list, so it only makes sense when the
+            // macro can re-fire on its own. Auto-reply (INCOMING) macros reply to the incoming
+            // sender — a retry would target a recipient list that never applies (possibly stale
+            // numbers from a previous trigger type), so they never get the action.
+            if (macro.recipients.isNotEmpty() && macro.triggerType != TriggerType.INCOMING) {
+                builder.addAction(0, "Retry", retryIntent(macro.id))
+            }
             builder.addAction(0, "View Log", openLogIntent())
         }
         manager.notify(macro.id.hashCode(), builder.build())

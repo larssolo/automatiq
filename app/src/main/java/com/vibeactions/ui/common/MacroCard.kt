@@ -9,6 +9,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DragHandle
+import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -39,6 +41,7 @@ fun MacroCard(
     onDelete: () -> Unit,
     onCopy: () -> Unit,
     onSend: () -> Unit,
+    onToggle: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
     dragHandleModifier: Modifier = Modifier
 ) {
@@ -136,6 +139,16 @@ fun MacroCard(
                     text = { Text("Send nu") },
                     leadingIcon = { Icon(Icons.Default.Send, contentDescription = null) },
                     onClick = { menuExpanded = false; onSend() }
+                )
+                DropdownMenuItem(
+                    text = { Text(if (macro.enabled) "Deaktivér" else "Aktivér") },
+                    leadingIcon = {
+                        Icon(
+                            if (macro.enabled) Icons.Default.Pause else Icons.Default.PlayArrow,
+                            contentDescription = null
+                        )
+                    },
+                    onClick = { menuExpanded = false; onToggle(!macro.enabled) }
                 )
             }
         }

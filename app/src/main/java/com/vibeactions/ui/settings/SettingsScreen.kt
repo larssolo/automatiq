@@ -66,8 +66,12 @@ fun SettingsScreen(vm: SettingsViewModel = hiltViewModel()) {
         if (uri != null) {
             scope.launch(Dispatchers.IO) {
                 val text = context.contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() }
-                if (text != null) vm.import(text) { count ->
-                    scope.launch { snackbar.showSnackbar("Imported $count macros") }
+                if (text != null) vm.import(text) { result ->
+                    val message = result.fold(
+                        onSuccess = { "Imported $it macros" },
+                        onFailure = { "Import failed: ${it.message?.take(80) ?: "invalid file"}" }
+                    )
+                    scope.launch { snackbar.showSnackbar(message) }
                 }
             }
         }

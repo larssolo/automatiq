@@ -36,9 +36,10 @@ class SettingsViewModel @Inject constructor(
         onReady(exportMacros(repo.observeAll().first()))
     }
 
-    fun import(json: String, onDone: (Int) -> Unit) = viewModelScope.launch {
-        val macros = runCatching { importMacros(json) }.getOrDefault(emptyList())
-        macros.forEach { save(it) }
-        onDone(macros.size)
+    /** Imports macros from JSON; the result carries the count or the parse failure for the UI. */
+    fun import(json: String, onDone: (Result<Int>) -> Unit) = viewModelScope.launch {
+        val result = runCatching { importMacros(json) }
+        result.getOrNull()?.forEach { save(it) }
+        onDone(result.map { it.size })
     }
 }

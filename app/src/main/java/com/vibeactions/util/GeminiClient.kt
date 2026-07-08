@@ -67,10 +67,12 @@ suspend fun geminiGenerate(
             generationConfig = GenConfig(maxOutputTokens = maxOutputTokens)
         )
         val body = geminiJson.encodeToString(GeminiRequest.serializer(), request)
-        val conn = URL("${endpointFor(model)}?key=$apiKey").openConnection() as HttpURLConnection
+        // Key travels as a header, not a query param — URLs end up in logs and proxies.
+        val conn = URL(endpointFor(model)).openConnection() as HttpURLConnection
         conn.apply {
             requestMethod = "POST"
             setRequestProperty("Content-Type", "application/json")
+            setRequestProperty("x-goog-api-key", apiKey)
             connectTimeout = 10_000
             readTimeout = 15_000
             doOutput = true
