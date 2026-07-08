@@ -51,9 +51,9 @@ class GeminiReplyWorker @AssistedInject constructor(
             ?: prefs.getString("gemini_system_prompt", "")?.takeIf { it.isNotBlank() }
         // A fixed wrapper keeps replies short and on-point (the AI otherwise rambles).
         val systemPrompt = buildString {
-            append("Du skriver ÉT kort SMS-svar (højst 2 sætninger). ")
-            append("Svar KUN med selve beskeden — ingen indledning, ingen forklaring, ingen citater. ")
-            if (instruction != null) append("Sådan skal du svare: $instruction")
+            append("You write ONE short SMS reply (at most 2 sentences). ")
+            append("Reply ONLY with the message itself — no preamble, no explanation, no quotes. ")
+            if (instruction != null) append("Reply like this: $instruction")
         }
         val generated = runCatching {
             geminiGenerate(apiKey, systemPrompt, body, model, maxOutputTokens = 150)

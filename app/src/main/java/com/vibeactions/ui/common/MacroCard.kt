@@ -131,22 +131,22 @@ fun MacroCard(
                 offset = DpOffset(x = (-45).dp, y = 0.dp)
             ) {
                 DropdownMenuItem(
-                    text = { Text("Slet") },
+                    text = { Text("Delete") },
                     leadingIcon = { Icon(Icons.Default.Delete, contentDescription = null) },
                     onClick = { menuExpanded = false; onDelete() }
                 )
                 DropdownMenuItem(
-                    text = { Text("Kopiér") },
+                    text = { Text("Copy") },
                     leadingIcon = { Icon(Icons.Default.ContentCopy, contentDescription = null) },
                     onClick = { menuExpanded = false; onCopy() }
                 )
                 DropdownMenuItem(
-                    text = { Text("Send nu") },
+                    text = { Text("Send now") },
                     leadingIcon = { Icon(Icons.Default.Send, contentDescription = null) },
                     onClick = { menuExpanded = false; onSend() }
                 )
                 DropdownMenuItem(
-                    text = { Text(if (macro.enabled) "Deaktivér" else "Aktivér") },
+                    text = { Text(if (macro.enabled) "Disable" else "Enable") },
                     leadingIcon = {
                         Icon(
                             if (macro.enabled) Icons.Default.Pause else Icons.Default.PlayArrow,

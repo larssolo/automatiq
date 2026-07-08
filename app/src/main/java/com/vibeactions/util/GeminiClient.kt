@@ -83,7 +83,7 @@ suspend fun geminiGenerate(
             if (code !in 200..299) {
                 // The real reason (e.g. "API key not valid") is in the error stream, not inputStream.
                 val errorText = conn.errorStream?.bufferedReader()?.use { it.readText() }.orEmpty()
-                error("HTTP $code: ${extractGeminiError(errorText).ifBlank { "ukendt fejl" }}")
+                error("HTTP $code: ${extractGeminiError(errorText).ifBlank { "unknown error" }}")
             }
             parseGeminiResponse(conn.inputStream.bufferedReader().use { it.readText() })
         } finally {
@@ -94,7 +94,7 @@ suspend fun geminiGenerate(
 /**
  * Asks Gemini to generate exactly 3 short SMS variations and returns them as a list.
  * A fixed built-in system prompt enforces the numbered format; [styleHint] is appended
- * to guide tone (e.g. "kort og uformel, dansk").
+ * to guide tone (e.g. "short and casual").
  */
 suspend fun geminiSuggest(
     apiKey: String,
@@ -102,11 +102,11 @@ suspend fun geminiSuggest(
     styleHint: String = "",
     model: String = DEFAULT_GEMINI_MODEL
 ): List<String> {
-    val style = if (styleHint.isNotBlank()) " Stil/tone: $styleHint." else ""
-    val systemPrompt = "Du er en SMS-assistent. Brugeren beskriver en besked de vil sende. " +
-        "Generér PRÆCIS 3 korte SMS-variationer på dansk (medmindre andet er angivet).$style " +
-        "Svar KUN med dette format — ingen introduktionstekst, ingen forklaring:\n" +
-        "1. [besked]\n2. [besked]\n3. [besked]"
+    val style = if (styleHint.isNotBlank()) " Style/tone: $styleHint." else ""
+    val systemPrompt = "You are an SMS assistant. The user describes a message they want to send. " +
+        "Generate EXACTLY 3 short SMS variations in English (unless another language is specified).$style " +
+        "Reply ONLY in this format — no introduction, no explanation:\n" +
+        "1. [message]\n2. [message]\n3. [message]"
     val raw = geminiGenerate(apiKey, systemPrompt, userMessage, model)
     return parseSuggestions(raw)
 }

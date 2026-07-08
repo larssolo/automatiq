@@ -101,18 +101,18 @@ private fun AiApprovalDialog(approval: AiApproval, onDone: () -> Unit) {
 
     AlertDialog(
         onDismissRequest = onDone,
-        title = { Text("Send AI-svar?") },
+        title = { Text("Send AI reply?") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
-                    "Til ${maskPhone(approval.recipient)}",
+                    "To ${maskPhone(approval.recipient)}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 OutlinedTextField(
                     value = text,
                     onValueChange = { text = it },
-                    label = { Text("Svar (kan redigeres)") },
+                    label = { Text("Reply (editable)") },
                     modifier = Modifier.fillMaxWidth()
                 )
             }
@@ -135,7 +135,7 @@ private fun AiApprovalDialog(approval: AiApproval, onDone: () -> Unit) {
             ) { Text("Send") }
         },
         dismissButton = {
-            TextButton(onClick = { cancelNotification(); onDone() }) { Text("Slet") }
+            TextButton(onClick = { cancelNotification(); onDone() }) { Text("Discard") }
         }
     )
 }

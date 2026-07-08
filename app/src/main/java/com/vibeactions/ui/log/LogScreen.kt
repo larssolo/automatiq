@@ -60,7 +60,7 @@ fun LogScreen(vm: LogViewModel = hiltViewModel()) {
                         }
                         Text(log.messagePreview ?: "", color = OnSurface, fontSize = 13.sp)
                         log.errorMessage?.let { Text(it, color = ErrorRed, fontSize = 12.sp) }
-                        HorizontalDivider(color = Outline)
+                        HorizontalDivider(color = OutlineVariant)
                     }
                 }
             }

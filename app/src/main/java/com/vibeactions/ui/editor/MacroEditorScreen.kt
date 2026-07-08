@@ -415,7 +415,7 @@ fun MacroEditorScreen(
                 )
                 HorizontalDivider()
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("AI-svar (Gemini)", modifier = Modifier.weight(1f), color = OnSurface)
+                    Text("AI reply (Gemini)", modifier = Modifier.weight(1f), color = OnSurface)
                     ThemedSwitch(
                         checked = s.aiReplyEnabled,
                         onCheckedChange = { v -> vm.update { it.copy(aiReplyEnabled = v) } }
@@ -428,10 +428,10 @@ fun MacroEditorScreen(
                     ) {
                         OutlinedTextField(
                             value = if (s.aiSendMode == AiSendMode.AUTO)
-                                "Send automatisk og informer" else "Godkend inden afsendelse",
+                                "Send automatically and notify" else "Approve before sending",
                             onValueChange = {},
                             readOnly = true,
-                            label = { Text("AI afsendelse", color = OnSurface) },
+                            label = { Text("AI sending", color = OnSurface) },
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = aiModeExpanded) },
                             modifier = Modifier.menuAnchor().fillMaxWidth()
                         )
@@ -440,14 +440,14 @@ fun MacroEditorScreen(
                             onDismissRequest = { aiModeExpanded = false }
                         ) {
                             DropdownMenuItem(
-                                text = { Text("Godkend inden afsendelse") },
+                                text = { Text("Approve before sending") },
                                 onClick = {
                                     vm.update { it.copy(aiSendMode = AiSendMode.APPROVE) }
                                     aiModeExpanded = false
                                 }
                             )
                             DropdownMenuItem(
-                                text = { Text("Send automatisk og informer") },
+                                text = { Text("Send automatically and notify") },
                                 onClick = {
                                     vm.update { it.copy(aiSendMode = AiSendMode.AUTO) }
                                     aiModeExpanded = false
@@ -458,15 +458,15 @@ fun MacroEditorScreen(
                     OutlinedTextField(
                         value = s.aiReplyInstruction,
                         onValueChange = { v -> vm.update { it.copy(aiReplyInstruction = v) } },
-                        label = { Text("Sådan skal AI'en svare (valgfri)") },
-                        placeholder = { Text("fx: Svar kort og venligt på dansk, maks. 1 sætning") },
+                        label = { Text("How the AI should reply (optional)") },
+                        placeholder = { Text("e.g.: Reply short and friendly, max 1 sentence") },
                         supportingText = {
-                            Text("Styrer tone og længde. Lad stå tom for at bruge systemprompten fra Indstillinger.")
+                            Text("Controls tone and length. Leave blank to use the system prompt from Settings.")
                         },
                         minLines = 2, modifier = Modifier.fillMaxWidth()
                     )
                     Text(
-                        "Besked-feltet nedenfor bruges som fallback hvis Gemini ikke svarer.",
+                        "The message field below is used as a fallback if Gemini doesn't respond.",
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         style = MaterialTheme.typography.bodySmall
                     )
@@ -641,7 +641,7 @@ fun MacroEditorScreen(
         AlertDialog(
             onDismissRequest = { if (aiState !is AiState.Loading) showAiCompose = false },
             title = {
-                Text(if (aiState is AiState.Suggestions) "Vælg en besked" else "AI-skriv besked")
+                Text(if (aiState is AiState.Suggestions) "Choose a message" else "AI-write message")
             },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -650,22 +650,22 @@ fun MacroEditorScreen(
                             OutlinedTextField(
                                 value = aiPrompt,
                                 onValueChange = { aiPrompt = it },
-                                label = { Text("Beskriv beskeden") },
-                                placeholder = { Text("fx: venlig reminder om møde kl. 14") },
+                                label = { Text("Describe the message") },
+                                placeholder = { Text("e.g.: friendly reminder about the 2pm meeting") },
                                 modifier = Modifier.fillMaxWidth()
                             )
                             OutlinedTextField(
                                 value = aiStyle,
                                 onValueChange = { aiStyle = it },
-                                label = { Text("Stil/tone (valgfri)") },
-                                placeholder = { Text("fx: kort og uformel, dansk") },
+                                label = { Text("Style/tone (optional)") },
+                                placeholder = { Text("e.g.: short and casual") },
                                 singleLine = true,
                                 modifier = Modifier.fillMaxWidth()
                             )
                         }
                         AiState.Loading -> {
                             CircularProgressIndicator(Modifier.align(Alignment.CenterHorizontally))
-                            Text("Genererer forslag…", style = MaterialTheme.typography.bodySmall)
+                            Text("Generating suggestions…", style = MaterialTheme.typography.bodySmall)
                         }
                         is AiState.Suggestions -> {
                             st.items.forEach { suggestion ->
@@ -688,7 +688,7 @@ fun MacroEditorScreen(
                                         FilledTonalButton(onClick = {
                                             vm.update { it.copy(message = suggestion) }
                                             showAiCompose = false
-                                        }) { Text("Vælg") }
+                                        }) { Text("Choose") }
                                     }
                                 }
                             }
@@ -711,7 +711,7 @@ fun MacroEditorScreen(
                             val prefs = ctx.getSharedPreferences("ai_settings", android.content.Context.MODE_PRIVATE)
                             val key = prefs.getString("gemini_api_key", "") ?: ""
                             if (key.isBlank()) {
-                                aiState = AiState.Err("Ingen API-nøgle — tilføj i Indstillinger")
+                                aiState = AiState.Err("No API key — add one in Settings")
                                 return@TextButton
                             }
                             val model = prefs.getString("gemini_model", com.vibeactions.util.DEFAULT_GEMINI_MODEL)
@@ -722,19 +722,19 @@ fun MacroEditorScreen(
                                 val result = runCatching { geminiSuggest(key, aiPrompt, aiStyle, model) }
                                 aiState = result.getOrNull()
                                     ?.let { AiState.Suggestions(it) }
-                                    ?: AiState.Err(result.exceptionOrNull()?.message ?: "Ukendt fejl")
+                                    ?: AiState.Err(result.exceptionOrNull()?.message ?: "Unknown error")
                             }
                         }
-                    ) { Text("Generer") }
+                    ) { Text("Generate") }
                     is AiState.Suggestions, is AiState.Err -> TextButton(
                         onClick = { aiState = AiState.Idle }
-                    ) { Text("Prøv igen") }
-                    AiState.Loading -> { /* ingen knap under loading */ }
+                    ) { Text("Try again") }
+                    AiState.Loading -> { /* no button while loading */ }
                 }
             },
             dismissButton = {
                 TextButton(onClick = { if (aiState !is AiState.Loading) showAiCompose = false }) {
-                    Text("Annuller")
+                    Text("Cancel")
                 }
             }
         )

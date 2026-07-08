@@ -26,6 +26,7 @@ import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.vibeactions.ui.theme.OnSurface
 import com.vibeactions.ui.theme.OnSurfaceVariant
 import com.vibeactions.ui.theme.Primary
 import com.vibeactions.ui.common.BackgroundSetting
@@ -98,12 +99,12 @@ fun SettingsScreen(vm: SettingsViewModel = hiltViewModel()) {
         ) {
 
             Text(
-                "Udseende",
+                "Appearance",
                 style = MaterialTheme.typography.titleSmall,
                 modifier = Modifier.padding(top = 4.dp)
             )
             Text(
-                "Farvetone: ${BackgroundSetting.hue.toInt()}°",
+                "Hue: ${BackgroundSetting.hue.toInt()}°",
                 style = MaterialTheme.typography.bodySmall,
                 color = OnSurfaceVariant
             )
@@ -113,7 +114,7 @@ fun SettingsScreen(vm: SettingsViewModel = hiltViewModel()) {
                 valueRange = 0f..360f
             )
             Text(
-                "Mætning: ${(BackgroundSetting.saturation * 100).toInt()}%",
+                "Saturation: ${(BackgroundSetting.saturation * 100).toInt()}%",
                 style = MaterialTheme.typography.bodySmall,
                 color = OnSurfaceVariant
             )
@@ -123,7 +124,7 @@ fun SettingsScreen(vm: SettingsViewModel = hiltViewModel()) {
                 valueRange = 0f..2f
             )
             Text(
-                "Card-gennemsigtighed: ${(BackgroundSetting.cardOpacity * 100).toInt()}%",
+                "Card opacity: ${(BackgroundSetting.cardOpacity * 100).toInt()}%",
                 style = MaterialTheme.typography.bodySmall,
                 color = OnSurfaceVariant
             )
@@ -183,13 +184,14 @@ fun SettingsScreen(vm: SettingsViewModel = hiltViewModel()) {
             Text(
                 "AI (Gemini)",
                 style = MaterialTheme.typography.titleSmall,
+                color = OnSurface,
                 modifier = Modifier.padding(vertical = 4.dp)
             )
             OutlinedTextField(
                 value = apiKey,
                 onValueChange = { apiKey = it },
-                label = { Text("Gemini API-nøgle") },
-                placeholder = { Text("Hent gratis på aistudio.google.com") },
+                label = { Text("Gemini API key") },
+                placeholder = { Text("Get one free at aistudio.google.com") },
                 visualTransformation = if (apiKeyVisible) VisualTransformation.None
                     else PasswordVisualTransformation(),
                 trailingIcon = {
@@ -206,8 +208,8 @@ fun SettingsScreen(vm: SettingsViewModel = hiltViewModel()) {
             OutlinedTextField(
                 value = systemPrompt,
                 onValueChange = { systemPrompt = it },
-                label = { Text("Systemprompt (valgfri)") },
-                placeholder = { Text("Svar på dansk, hold det kort og venligt") },
+                label = { Text("System prompt (optional)") },
+                placeholder = { Text("Reply in a friendly tone, keep it short") },
                 minLines = 2,
                 modifier = Modifier.fillMaxWidth()
             )
@@ -219,7 +221,7 @@ fun SettingsScreen(vm: SettingsViewModel = hiltViewModel()) {
                     value = model,
                     onValueChange = { model = it },
                     label = { Text("Model") },
-                    supportingText = { Text("Giver din nøgle 'quota 0'? Prøv en anden model.") },
+                    supportingText = { Text("Getting 'quota 0' with your key? Try a different model.") },
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = modelExpanded) },
                     singleLine = true,
                     modifier = Modifier.menuAnchor().fillMaxWidth()
@@ -242,10 +244,10 @@ fun SettingsScreen(vm: SettingsViewModel = hiltViewModel()) {
                         vm.saveApiKey(apiKey)
                         vm.saveSystemPrompt(systemPrompt)
                         vm.saveModel(model)
-                        scope.launch { snackbar.showSnackbar("AI-indstillinger gemt") }
+                        scope.launch { snackbar.showSnackbar("AI settings saved") }
                     },
                     modifier = Modifier.weight(1f)
-                ) { Text("Gem") }
+                ) { Text("Save") }
                 OutlinedButton(
                     onClick = {
                         vm.saveApiKey(apiKey)
@@ -254,12 +256,12 @@ fun SettingsScreen(vm: SettingsViewModel = hiltViewModel()) {
                         apiTestLoading = true
                         scope.launch {
                             val result = runCatching {
-                                geminiGenerate(apiKey.trim(), "", "Svar kun med ordet OK", model.trim())
+                                geminiGenerate(apiKey.trim(), "", "Reply with only the word OK", model.trim())
                             }
                             apiTestLoading = false
                             apiTestResult = result.getOrNull()
-                                ?.let { "✅ Virker: $it" }
-                                ?: "❌ Fejl: ${result.exceptionOrNull()?.message}"
+                                ?.let { "✅ Works: $it" }
+                                ?: "❌ Error: ${result.exceptionOrNull()?.message}"
                         }
                     },
                     enabled = apiKey.isNotBlank() && !apiTestLoading,
@@ -268,7 +270,7 @@ fun SettingsScreen(vm: SettingsViewModel = hiltViewModel()) {
                     if (apiTestLoading)
                         CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp)
                     else
-                        Text("Test nøgle")
+                        Text("Test key")
                 }
             }
             apiTestResult?.let {

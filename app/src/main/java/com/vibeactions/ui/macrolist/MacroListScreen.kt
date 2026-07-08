@@ -5,6 +5,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
@@ -60,19 +61,21 @@ fun MacroListScreen(
     Scaffold(
         containerColor = Color.Transparent,
         snackbarHost = { SnackbarHost(snackbar) },
+        floatingActionButtonPosition = FabPosition.Center,
         floatingActionButton = {
-            ExtendedFloatingActionButton(
+            FloatingActionButton(
                 onClick = { editorMacroId = null; showEditor = true },
-                icon = { Icon(Icons.Default.Add, contentDescription = "New macro") },
-                text = { Text("New Macro") }
-            )
+                shape = CircleShape
+            ) {
+                Icon(Icons.Default.Add, contentDescription = "New macro")
+            }
         }
     ) { padding ->
         Column(Modifier.padding(padding).fillMaxSize().padding(horizontal = 8.dp)) {
             banner()
             if (ordered.isEmpty()) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("No macros yet. Tap 'New Macro' to create your first.",
+                    Text("No macros yet. Tap + to create your first.",
                         color = OnSurfaceVariant)
                 }
             } else {
@@ -81,7 +84,7 @@ fun MacroListScreen(
                     state = gridState,
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    contentPadding = PaddingValues(vertical = 8.dp)
+                    contentPadding = PaddingValues(top = 8.dp, bottom = 96.dp)
                 ) {
                     items(ordered, key = { it.id }) { macro ->
                         ReorderableItem(reorderState, key = macro.id) { _ ->

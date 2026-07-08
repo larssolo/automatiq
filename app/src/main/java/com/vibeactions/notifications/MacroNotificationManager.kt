@@ -132,7 +132,7 @@ class MacroNotificationManager @Inject constructor(
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
         // Tapping the body opens an in-app approve/edit dialog — the reliable path on OEM skins
-        // (MIUI) that collapse notifications and never render the Send/Slet action buttons.
+        // (MIUI) that collapse notifications and never render the Send/Discard action buttons.
         val openIntent = Intent(context, com.vibeactions.ui.MainActivity::class.java).apply {
             putExtra(com.vibeactions.ui.MainActivity.EXTRA_AI_ACTION, "approve")
             putExtra(com.vibeactions.ui.MainActivity.EXTRA_MACRO_ID, macro.id)
@@ -148,7 +148,7 @@ class MacroNotificationManager @Inject constructor(
 
         val builder = NotificationCompat.Builder(context, CHANNEL_ID_AI)
             .setSmallIcon(android.R.drawable.stat_notify_chat)
-            .setContentTitle("AI-svar klar til ${maskPhone(recipient)}")
+            .setContentTitle("AI reply ready for ${maskPhone(recipient)}")
             .setContentText(preview)
             .setStyle(NotificationCompat.BigTextStyle().bigText(preview))
             .setPriority(NotificationCompat.PRIORITY_HIGH)
@@ -156,7 +156,7 @@ class MacroNotificationManager @Inject constructor(
             .setContentIntent(openPi)
             .setAutoCancel(true)
             .addAction(android.R.drawable.ic_menu_send, "Send", sendPi)
-            .addAction(android.R.drawable.ic_menu_delete, "Slet", discardPi)
+            .addAction(android.R.drawable.ic_menu_delete, "Discard", discardPi)
         manager.notify(notifId, builder.build())
     }
 
@@ -165,7 +165,7 @@ class MacroNotificationManager @Inject constructor(
         val preview = if (sentBody.length > 200) sentBody.take(200) + "…" else sentBody
         val builder = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.stat_notify_chat)
-            .setContentTitle("AI-svar sendt til ${maskPhone(recipient)}")
+            .setContentTitle("AI reply sent to ${maskPhone(recipient)}")
             .setContentText(preview)
             .setStyle(NotificationCompat.BigTextStyle().bigText(preview))
             .setAutoCancel(true)
