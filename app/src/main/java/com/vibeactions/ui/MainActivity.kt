@@ -27,9 +27,8 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.compose.*
 import com.vibeactions.scheduler.AiReplyActionReceiver
-import com.vibeactions.ui.common.BackgroundSetting
 import com.vibeactions.ui.common.PermissionBanner
-import com.vibeactions.ui.common.ShaderGradientBackground
+import com.vibeactions.ui.common.StaticBackground
 import com.vibeactions.ui.log.LogScreen
 import com.vibeactions.ui.macrolist.MacroListScreen
 import com.vibeactions.ui.settings.SettingsScreen
@@ -194,7 +193,7 @@ private fun AppRoot(navTarget: String? = null, onNavConsumed: () -> Unit = {}) {
     val route = backStack?.destination?.route
 
     Box(Modifier.fillMaxSize()) {
-        ShaderGradientBackground(BackgroundSetting.preset, Modifier.fillMaxSize())
+        StaticBackground(Modifier.fillMaxSize())
         Scaffold(
             containerColor = Color.Transparent,
             bottomBar = {

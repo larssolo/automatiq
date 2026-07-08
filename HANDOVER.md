@@ -1,6 +1,6 @@
 # Overlevering — Automatiq (VibeActions)
 
-> Kopiér denne fil ind i en ny chattråd som kontekst. Sidst opdateret: 2026-07-08 (fase 1 + fase 2).
+> Kopiér denne fil ind i en ny chattråd som kontekst. Sidst opdateret: 2026-07-08 (fase 1 + fase 2 + statisk baggrund/UI-polish).
 
 ## App
 
@@ -25,9 +25,26 @@
 - Byg: `JAVA_HOME=C:/Users/ls/.jdks/jdk-17.0.19+10 ./gradlew assembleDebug` / `./gradlew test`
 
 ## Aktuel tilstand
-**Working tree indeholder fase 1- og fase 2-ændringerne (se nedenfor) — ucommittet.** `./gradlew test` er grøn (55 tests, heraf 10 nye); `./gradlew assembleDebug` bygger. README er omskrevet (AI-funktioner, leveringsstatus, Gemini API-nøgle-guide, DB v10). **On-device test udestår stadig.**
+**Working tree indeholder fase 1-, 2- og 3-ændringerne (se nedenfor) — ucommittet.** `./gradlew test` er grøn (61 tests); `./gradlew assembleDebug` bygger (APK ~19,5 MB — steg fra det indlejrede baggrundsbillede). README er omskrevet (AI-funktioner, leveringsstatus, Gemini API-nøgle-guide, DB v10, ny baggrundsfeature). **On-device test udestår stadig.**
 
-## Seneste arbejde (fase 2 — leveringsstatus + widget-sync, 2026-07-08)
+## Seneste arbejde (fase 3 — statisk baggrund + UI-polish, 2026-07-08)
+Brugerønske: fjern den animerede OpenGL-gradient-baggrund og dens presets, erstat med et statisk billede, og giv brugeren kontrol over Hue/Saturation på baggrunden og gennemsigtighed på kortene. Plus tre mindre UI-rettelser fra en tidligere runde (kort fylder skærmbredden, long-press-menu flyttet, "normale" switch-knapper) — se historik nedenfor.
+
+1. **Fjernet:** `GradientBackground.kt` (GradientPreset-enum), `GradientShaders.kt` (GLSL-shaderkilde), `ShaderGradientBackground.kt` (GLES30 `GLSurfaceView`-renderer). Ingen build.gradle-ændring krævet (GLES30 var en del af Android-SDK'et, ikke en separat dependency).
+2. **Nyt statisk billede:** `res/drawable-nodpi/bg_static.webp` (bruger leverede filen, ~290 KB). `drawable-nodpi` så billedet ikke skaleres pr. densitet — det er allerede en fuldskærms-baggrund.
+3. **`ui/common/StaticBackground.kt`** (nyt) — `Image(painterResource(R.drawable.bg_static), contentScale = Crop, colorFilter = ...)`; farvefilteret bygges af en ren hue-rotation-matrix + en satureringsmatrix, komponeret via `combineColorMatrices` (testdrevet i `util/ColorMatrixMath.kt` / `ColorMatrixMathTest`, 6 tests — matematikken er bevidst holdt fri af Compose-typer så den kan JVM-testes uden Robolectric).
+4. **`ui/common/BackgroundSetting.kt`** omskrevet — samme objektnavn/`load(context)`-signatur som før (så `VibeActionsApp.onCreate` ikke skulle ændres), men holder nu `hue: Float` (0–360°), `saturation: Float` (0–2, 1 = uændret) og `cardOpacity: Float` (0–1) som `mutableFloatStateOf`, persisteret i `"ui_settings"` under `bg_hue`/`bg_saturation`/`card_opacity`.
+5. **Settings → "Udseende":** preset-chips erstattet af tre `Slider`e (Farvetone, Mætning, Card-gennemsigtighed) der skriver direkte til `BackgroundSetting`.
+6. **`MacroCard.kt`:** hardcodet `Surface.copy(alpha = 0.93f)` erstattet af `Surface.copy(alpha = BackgroundSetting.cardOpacity)`.
+
+**TDD-noter:** `ColorMatrixMathTest` (6 tests) verificerer identitets-egenskaber (`combine(IDENTITY, M) == M` og omvendt, `hue(0°) == hue(360°) == identity`, `saturation(1) == identity`, `saturation(0)`-rækker matcher Rec.601-luma-vægte 0.213/0.715/0.072). Skrevet først, sås fejle (`NotImplementedError`), derefter implementeret.
+
+## Tidligere arbejde (UI-polish, samme dag)
+- Makro-listens grid gik fra 2 til 1 kolonne (`GridCells.Fixed(1)` i `MacroListScreen.kt`) — kort fylder nu skærmbredden.
+- Long-press-menuen på kortet flyttet 45dp mod venstre (`DropdownMenu(offset = DpOffset((-45).dp, 0.dp))` i `MacroCard.kt`).
+- `ThemedSwitch.kt` skrevet om fra en Canvas-tegnet squiggle-SVG-animation til en normal glidende toggle: hvid rund thumb, track grøn (`Primary`) når checked, gul (`Amber`) når unchecked. Bruges i editoren til "Enabled" og "AI-svar (Gemini)".
+
+## Tidligere arbejde (fase 2 — leveringsstatus + widget-sync, 2026-07-08)
 1. **Radio-niveau afsendelsesstatus:** Hver SMS armeres nu med en sent-kvittering (`PendingIntent` → ny `scheduler/SmsSentReceiver`). Log-rækken indsættes FØR afsendelse (PENDING) så kvitteringen kan adressere den; dispatch-stien finaliserer til SUCCESS/FAILED som før, og en senere radiofejl (ingen dækning, flytilstand, SMS-grænse …) flipper log + makrostatus til FAILED, poster korrigerende notifikation og opdaterer widgets. FAILED er terminal i `MacroLogDao.updateResult` (`AND status != 'FAILED'`), så en sen fejlkvittering ikke overskrives. Fejlkode→tekst-mapping er ren (`util/SmsResult.kt`, testdrevet i `SmsResultTest`).
 2. **Widget-sync:** Ny `widget/WidgetRefresher` + `WidgetIds.widgetsFor(macroId)` (omvendt opslag). `MacroFirer.fire()` slutter med `widgets.refreshFor(macroId)`, så widget-undertitlen "Last: …" også opdateres ved planlagte/auto-afsendelser.
 3. **README omskrevet:** AI-sektion med guide til gratis Gemini-nøgle (aistudio.google.com), leveringsstatus-pipeline, DB-skema v10, opdateret features/arkitektur/permissions.
@@ -91,13 +108,15 @@ Mørk-på-mørk tekst rettes ved at tilføje eksplicit `color = OnSurface` til `
 - Bruger taler dansk
 
 ## Næste skridt
-- **Fase 1 + 2 skal committes** når brugeren siger til.
+- **Fase 1 + 2 + 3 skal committes** når brugeren siger til.
 - **On-device test udestår** — verificér især:
+  - Baggrund: Hue/Saturation-sliders i Settings opdaterer billedet live; card-gennemsigtighed-slideren rammer synligt fra transparent til opak
   - Efter en app-opdatering (installér ny build ovenpå): planlagte alarmer fyrer stadig uden reboot
   - AI auto-svar-flowet (APPROVE + AUTO) på rigtig enhed — inkl. at nøglen stadig virker efter header-ændringen ("Test nøgle" i Indstillinger)
   - Leveringsstatus: send med flytilstand slået til lige efter dispatch → log/notifikation skal flippe til FAILED med "radio off"
   - Widget: planlagt/auto-afsendelse opdaterer widget-undertitlen uden tap
   - Notifikation: låseskærm viser kun "Sent: <navn>", fuld besked efter oplåsning, tryk åbner Loggen
   - LOCATION-makro: geofence re-armes ved app-start og opdatering
-  - Long-press kort → menu (Slet/Kopiér/Send nu/Aktivér-Deaktivér); træk i ⠿-håndtag omarrangerer
-- **Fase 3:** dependency-bump (Compose BOM, targetSdk 35) + `Result.retry()` for transiente Gemini-fejl
+  - Long-press kort → menu (Slet/Kopiér/Send nu/Aktivér-Deaktivér, nu 45dp mod venstre); træk i ⠿-håndtag omarrangerer
+  - Switch-knapperne (Enabled, AI-svar) ligner en normal slider, grøn/gul
+- **Fremtidigt:** dependency-bump (Compose BOM, targetSdk 35) + `Result.retry()` for transiente Gemini-fejl

@@ -29,13 +29,12 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.vibeactions.ui.theme.OnSurfaceVariant
 import com.vibeactions.ui.theme.Primary
 import com.vibeactions.ui.common.BackgroundSetting
-import com.vibeactions.ui.common.GradientPreset
 import com.vibeactions.util.GEMINI_MODELS
 import com.vibeactions.util.geminiGenerate
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class, androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(vm: SettingsViewModel = hiltViewModel()) {
     val context = LocalContext.current
@@ -99,19 +98,40 @@ fun SettingsScreen(vm: SettingsViewModel = hiltViewModel()) {
         ) {
 
             Text(
-                "Baggrund",
+                "Udseende",
                 style = MaterialTheme.typography.titleSmall,
                 modifier = Modifier.padding(top = 4.dp)
             )
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                GradientPreset.entries.forEach { p ->
-                    FilterChip(
-                        selected = BackgroundSetting.preset == p,
-                        onClick = { BackgroundSetting.set(context, p) },
-                        label = { Text(p.label) }
-                    )
-                }
-            }
+            Text(
+                "Farvetone: ${BackgroundSetting.hue.toInt()}°",
+                style = MaterialTheme.typography.bodySmall,
+                color = OnSurfaceVariant
+            )
+            Slider(
+                value = BackgroundSetting.hue,
+                onValueChange = { v -> BackgroundSetting.setHue(context, v) },
+                valueRange = 0f..360f
+            )
+            Text(
+                "Mætning: ${(BackgroundSetting.saturation * 100).toInt()}%",
+                style = MaterialTheme.typography.bodySmall,
+                color = OnSurfaceVariant
+            )
+            Slider(
+                value = BackgroundSetting.saturation,
+                onValueChange = { v -> BackgroundSetting.setSaturation(context, v) },
+                valueRange = 0f..2f
+            )
+            Text(
+                "Card-gennemsigtighed: ${(BackgroundSetting.cardOpacity * 100).toInt()}%",
+                style = MaterialTheme.typography.bodySmall,
+                color = OnSurfaceVariant
+            )
+            Slider(
+                value = BackgroundSetting.cardOpacity,
+                onValueChange = { v -> BackgroundSetting.setCardOpacity(context, v) },
+                valueRange = 0f..1f
+            )
             HorizontalDivider()
 
             ListItem(

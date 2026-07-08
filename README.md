@@ -64,6 +64,7 @@ Everything runs on-device. No account, no server. Only two optional features rea
 | 📬 | **Radio-level send status** — a sent receipt from the radio flips the log and notification to *failed* if the network dropped the message after dispatch |
 | 🔔 | **Notifications** — result (success / failed) + one-tap retry on failure; message content is kept off the lock screen |
 | ⏯️ | **Quick enable/disable** — long-press a card for Delete / Duplicate / Send now / Enable-Disable |
+| 🖼️ | **Themeable background** — a static image with hue and saturation sliders in Settings, plus a card-opacity slider |
 | 📋 | **Execution log** — full chronological history per macro, filterable |
 | 📤 | **JSON export / import** — full backup and restore via system file picker |
 | ↕️ | **Drag-and-drop reorder** — visible drag handle on every card |
@@ -246,12 +247,12 @@ app/src/main/java/com/vibeactions/
 │   ├── editor/        Editor screen + ViewModel (pure EditorState.toMacro)
 │   ├── log/           Log screen + ViewModel
 │   ├── settings/      Settings screen + ViewModel (AI settings, export/import)
-│   ├── common/        MacroCard, ThemedSwitch, PermissionBanner, gradients
+│   ├── common/        MacroCard, ThemedSwitch, PermissionBanner, StaticBackground
 │   └── theme/         Color, Type, Theme
 ├── di/                Hilt modules
 └── util/              TimeUtils · PhoneUtils · MacroJson · MessageTemplate
                        IncomingMatch · GeminiClient · AiReplyDedup · SmsResult
-                       CardColors
+                       ColorMatrixMath · CardColors
 ```
 
 ---
