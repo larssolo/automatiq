@@ -52,7 +52,7 @@ fun LogScreen(vm: LogViewModel = hiltViewModel()) {
                     Column(Modifier.fillMaxWidth()) {
                         Row {
                             Text(log.status.name,
-                                color = if (log.status == MacroStatus.SUCCESS) Primary else ErrorRed,
+                                color = if (log.status == MacroStatus.SUCCESS) com.vibeactions.ui.common.ThemeSettings.accentColor else ErrorRed,
                                 fontWeight = FontWeight.Medium, fontSize = 13.sp,
                                 modifier = Modifier.weight(1f))
                             Text(fmt.format(Date(log.triggeredAt)),

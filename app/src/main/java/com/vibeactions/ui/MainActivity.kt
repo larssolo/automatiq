@@ -32,6 +32,8 @@ import androidx.navigation.compose.*
 import com.vibeactions.R
 import com.vibeactions.scheduler.AiReplyActionReceiver
 import com.vibeactions.ui.common.PermissionBanner
+import com.vibeactions.ui.common.ThemeSettings
+import com.vibeactions.ui.common.rememberHueSaturationColorFilter
 import com.vibeactions.ui.log.LogScreen
 import com.vibeactions.ui.macrolist.MacroListScreen
 import com.vibeactions.ui.settings.SettingsScreen
@@ -200,6 +202,10 @@ private fun AppRoot(navTarget: String? = null, onNavConsumed: () -> Unit = {}) {
             painter = painterResource(R.drawable.app_background),
             contentDescription = null,
             contentScale = ContentScale.Crop,
+            colorFilter = rememberHueSaturationColorFilter(
+                ThemeSettings.backgroundHue,
+                ThemeSettings.backgroundSaturation
+            ),
             modifier = Modifier.fillMaxSize()
         )
         Scaffold(

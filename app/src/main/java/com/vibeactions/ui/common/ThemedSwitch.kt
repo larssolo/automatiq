@@ -1,39 +1,34 @@
 package com.vibeactions.ui.common
 
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.StrokeJoin
-import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.vibeactions.ui.theme.OnPrimary
-import com.vibeactions.ui.theme.OnSurface
-import com.vibeactions.ui.theme.Primary
-import com.vibeactions.ui.theme.SurfaceVariant
 
 /**
- * A capsule toggle styled after the Uiverse "switch" by SelfMadeSystem.
+ * An iOS-style capsule toggle: a dark pill that animates to [ThemeSettings.accentColor] with a
+ * white knob sliding left -> right. Ported from a styled-components switch and themed
+ * to the app's green accent.
  *
- * The original has no sliding thumb: a stroked line sits inside a fat rounded pill
- * and flips vertically (scaleY(-1)) when toggled. This recreates that in Compose and
- * adapts it to the app theme — gray pill when off, [Primary] green when on — so the
- * colour shift plus the flipping squiggle clearly communicate state.
+ * 300ms ease (FastOutSlowIn ≈ cubic-bezier(0.4, 0, 0.2, 1)) on both the knob position
+ * and the track colour.
  */
 @Composable
 fun ThemedSwitch(
@@ -41,27 +36,17 @@ fun ThemedSwitch(
     onCheckedChange: ((Boolean) -> Unit)?,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    width: Dp = 60.dp,
-    height: Dp = 30.dp,
 ) {
-    // 1f = off (squiggle one way), -1f = on (flipped). Springy to echo the bouncy CSS ease.
-    val flip by animateFloatAsState(
-        targetValue = if (checked) -1f else 1f,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessLow,
-        ),
-        label = "flip",
+    // Track 51x29, knob 26 -> knob travels from 2.dp (off) to 24.dp (on).
+    val knobOffset by animateDpAsState(
+        targetValue = if (checked) 24.dp else 2.dp,
+        animationSpec = tween(durationMillis = 300),
+        label = "knob",
     )
     val trackColor by animateColorAsState(
-        targetValue = if (checked) Primary else SurfaceVariant,
-        animationSpec = tween(durationMillis = 450),
+        targetValue = if (checked) ThemeSettings.accentColor else TrackOff,
+        animationSpec = tween(durationMillis = 300),
         label = "track",
-    )
-    val iconColor by animateColorAsState(
-        targetValue = if (checked) OnPrimary else OnSurface,
-        animationSpec = tween(durationMillis = 450),
-        label = "icon",
     )
 
     val interaction = remember { MutableInteractionSource() }
@@ -78,42 +63,23 @@ fun ThemedSwitch(
         Modifier
     }
 
-    val alpha = if (enabled) 1f else 0.4f
-
-    Canvas(
+    Box(
         modifier = modifier
             .then(toggleModifier)
-            .size(width = width, height = height)
-            .clip(RoundedCornerShape(percent = 50)),
+            .size(width = 51.dp, height = 29.dp)
+            .clip(RoundedCornerShape(percent = 50))
+            .background(if (enabled) trackColor else trackColor.copy(alpha = 0.4f)),
     ) {
-        // Fat rounded pill (clip already rounds the corners).
-        drawRect(color = trackColor.copy(alpha = trackColor.alpha * alpha))
-
-        // Stroked squiggle, centred, spanning the middle ~55% of the pill.
-        val inset = size.width * 0.225f
-        val xL = inset
-        val xR = size.width - inset
-        val span = xR - xL
-        val cy = size.height / 2f
-        val amp = size.height * 0.20f * flip
-
-        val path = Path().apply {
-            moveTo(xL, cy)
-            cubicTo(
-                xL + span / 3f, cy - amp * 2f,
-                xL + span * 2f / 3f, cy + amp * 2f,
-                xR, cy,
-            )
-        }
-
-        drawPath(
-            path = path,
-            color = iconColor.copy(alpha = iconColor.alpha * alpha),
-            style = Stroke(
-                width = size.height * 0.16f,
-                cap = StrokeCap.Round,
-                join = StrokeJoin.Round,
-            ),
+        Box(
+            modifier = Modifier
+                .align(Alignment.CenterStart)
+                .offset(x = knobOffset)
+                .size(26.dp)
+                .shadow(elevation = 3.dp, shape = CircleShape, clip = false)
+                .clip(CircleShape)
+                .background(Color(0xFFE3E3E3)),
         )
     }
 }
+
+private val TrackOff = Color(0xFF39393D)

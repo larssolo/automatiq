@@ -44,7 +44,7 @@ fun MacroCard(
     modifier: Modifier = Modifier,
     dragHandleModifier: Modifier = Modifier
 ) {
-    val accent = if (macro.cardColor != 0L) androidx.compose.ui.graphics.Color(macro.cardColor) else Primary
+    val accent = if (macro.cardColor != 0L) androidx.compose.ui.graphics.Color(macro.cardColor) else ThemeSettings.accentColor
     var menuExpanded by remember { mutableStateOf(false) }
 
     Row(

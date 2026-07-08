@@ -26,12 +26,13 @@ import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.vibeactions.ui.common.ThemeSettings
 import com.vibeactions.ui.theme.OnSurfaceVariant
-import com.vibeactions.ui.theme.Primary
 import com.vibeactions.util.GEMINI_MODELS
 import com.vibeactions.util.geminiGenerate
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -131,6 +132,60 @@ fun SettingsScreen(vm: SettingsViewModel = hiltViewModel()) {
                     }) { Text("Open") }
                 }
             )
+            HorizontalDivider()
+            Text(
+                "Background",
+                style = MaterialTheme.typography.titleSmall,
+                modifier = Modifier.padding(top = 4.dp)
+            )
+            Text(
+                "Hue: ${ThemeSettings.backgroundHue.roundToInt()}°",
+                color = OnSurfaceVariant,
+                fontSize = 12.sp
+            )
+            Slider(
+                value = ThemeSettings.backgroundHue,
+                onValueChange = { ThemeSettings.setBackgroundHue(context, it) },
+                valueRange = -180f..180f
+            )
+            Text(
+                "Saturation: ${(ThemeSettings.backgroundSaturation * 100).roundToInt()}%",
+                color = OnSurfaceVariant,
+                fontSize = 12.sp
+            )
+            Slider(
+                value = ThemeSettings.backgroundSaturation,
+                onValueChange = { ThemeSettings.setBackgroundSaturation(context, it) },
+                valueRange = 0f..2f
+            )
+
+            HorizontalDivider()
+            Text(
+                "Accent Color",
+                style = MaterialTheme.typography.titleSmall,
+                modifier = Modifier.padding(top = 4.dp)
+            )
+            Text(
+                "Hue: ${ThemeSettings.accentHue.roundToInt()}°",
+                color = OnSurfaceVariant,
+                fontSize = 12.sp
+            )
+            Slider(
+                value = ThemeSettings.accentHue,
+                onValueChange = { ThemeSettings.setAccentHue(context, it) },
+                valueRange = 0f..360f
+            )
+            Text(
+                "Saturation: ${(ThemeSettings.accentSaturation * 100).roundToInt()}%",
+                color = OnSurfaceVariant,
+                fontSize = 12.sp
+            )
+            Slider(
+                value = ThemeSettings.accentSaturation,
+                onValueChange = { ThemeSettings.setAccentSaturation(context, it) },
+                valueRange = 0f..1f
+            )
+
             HorizontalDivider()
             Button(onClick = { vm.export { json -> pendingExport = json; createDoc.launch("automatiq-macros.json") } },
                 modifier = Modifier.fillMaxWidth()) { Text("Export macros (JSON)") }
@@ -250,7 +305,7 @@ fun SettingsScreen(vm: SettingsViewModel = hiltViewModel()) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text("Claude & ", color = OnSurfaceVariant, fontSize = 13.sp, textAlign = TextAlign.Center)
-                Text("www.larssohl.dk", color = Primary, fontSize = 13.sp, textAlign = TextAlign.Center)
+                Text("www.larssohl.dk", color = ThemeSettings.accentColor, fontSize = 13.sp, textAlign = TextAlign.Center)
             }
         }
     }
