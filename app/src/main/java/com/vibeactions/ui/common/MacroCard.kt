@@ -28,9 +28,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.vibeactions.domain.model.GeofenceTransition
 import com.vibeactions.domain.model.Macro
-import com.vibeactions.domain.model.MacroStatus
 import com.vibeactions.domain.model.TriggerType
 import com.vibeactions.ui.theme.*
+import com.vibeactions.util.accentColorFor
 import com.vibeactions.util.formatRecurrence
 import com.vibeactions.util.maskPhone
 
@@ -46,7 +46,7 @@ fun MacroCard(
     modifier: Modifier = Modifier,
     dragHandleModifier: Modifier = Modifier
 ) {
-    val accent = if (macro.cardColor != 0L) androidx.compose.ui.graphics.Color(macro.cardColor) else Primary
+    val accent = androidx.compose.ui.graphics.Color(accentColorFor(macro))
     var menuExpanded by remember { mutableStateOf(false) }
 
     Row(
@@ -55,7 +55,7 @@ fun MacroCard(
             .height(76.dp)
             .clip(RoundedCornerShape(12.dp))
             .background(Surface.copy(alpha = BackgroundSetting.cardOpacity))
-            .background(accent.copy(alpha = if (macro.cardColor != 0L) 0.07f else 0f))
+            .background(accent.copy(alpha = 0.07f))
             .combinedClickable(onClick = onClick, onLongClick = { menuExpanded = true })
     ) {
         Box(
@@ -89,16 +89,14 @@ fun MacroCard(
                 overflow = TextOverflow.Ellipsis
             )
         }
-        Column(
-            Modifier
-                .fillMaxHeight()
-                .padding(vertical = 6.dp),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.End
-        ) {
-            StatusDot(macro.lastStatus)
-            if (macro.triggerType == TriggerType.INCOMING && macro.aiReplyEnabled) {
-                Spacer(Modifier.height(4.dp))
+        if (macro.triggerType == TriggerType.INCOMING && macro.aiReplyEnabled) {
+            Column(
+                Modifier
+                    .fillMaxHeight()
+                    .padding(vertical = 6.dp),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.End
+            ) {
                 Surface(color = accent.copy(alpha = 0.2f), shape = RoundedCornerShape(4.dp)) {
                     Text(
                         "AI",
@@ -160,20 +158,6 @@ fun MacroCard(
     }
 }
 
-@Composable
-private fun StatusDot(status: MacroStatus?) {
-    val color = when (status) {
-        MacroStatus.SUCCESS -> androidx.compose.ui.graphics.Color(0xFF4CAF50)
-        MacroStatus.FAILED -> ErrorRed
-        else -> androidx.compose.ui.graphics.Color.Transparent
-    }
-    Box(
-        Modifier
-            .size(7.dp)
-            .clip(RoundedCornerShape(50))
-            .background(color)
-    )
-}
 
 private fun compactSummary(macro: Macro): String = when (macro.triggerType) {
     TriggerType.SCHEDULED -> buildString {

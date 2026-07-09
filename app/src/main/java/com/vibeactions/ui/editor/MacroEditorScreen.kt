@@ -1,8 +1,12 @@
 package com.vibeactions.ui.editor
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -17,6 +21,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
@@ -28,6 +33,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -41,6 +47,7 @@ import com.vibeactions.domain.model.TriggerType
 import com.vibeactions.ui.common.ThemedSwitch
 import com.vibeactions.ui.theme.ErrorRed
 import com.vibeactions.ui.theme.OnSurface
+import com.vibeactions.util.CardColorPalette
 import com.vibeactions.util.geminiSuggest
 import com.vibeactions.util.TEMPLATE_TOKENS
 import com.vibeactions.util.isValidPhone
@@ -150,6 +157,38 @@ fun MacroEditorScreen(
                 label = { Text("Name") }, isError = s.name.isNotEmpty() && !s.nameValid,
                 singleLine = true, modifier = Modifier.fillMaxWidth()
             )
+
+            Column {
+                Text("Widget color", style = MaterialTheme.typography.labelLarge, color = OnSurface)
+                Spacer(Modifier.height(8.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    CardColorPalette.forEach { swatch ->
+                        val selected = s.cardColor == swatch
+                        Box(
+                            Modifier
+                                .size(32.dp)
+                                .clip(CircleShape)
+                                .background(androidx.compose.ui.graphics.Color(swatch))
+                                .border(
+                                    width = if (selected) 2.dp else 0.dp,
+                                    color = if (selected) OnSurface else androidx.compose.ui.graphics.Color.Transparent,
+                                    shape = CircleShape
+                                )
+                                .clickable { vm.update { it.copy(cardColor = swatch) } },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (selected) {
+                                Icon(
+                                    Icons.Default.Check,
+                                    contentDescription = "Selected",
+                                    tint = androidx.compose.ui.graphics.Color(0xFF1A1A1A),
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+            }
 
             ExposedDropdownMenuBox(
                 expanded = triggerExpanded,

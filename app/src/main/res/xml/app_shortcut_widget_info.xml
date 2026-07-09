@@ -3,7 +3,7 @@
     android:minWidth="40dp" android:minHeight="40dp"
     android:targetCellWidth="1" android:targetCellHeight="1"
     android:updatePeriodMillis="0"
-    android:initialLayout="@layout/widget_macro"
-    android:configure="com.vibeactions.widget.MacroWidgetConfigActivity"
+    android:initialLayout="@layout/widget_app_shortcut"
+    android:configure="com.vibeactions.widget.AppShortcutConfigActivity"
     android:resizeMode="horizontal|vertical"
     android:widgetCategory="home_screen" />

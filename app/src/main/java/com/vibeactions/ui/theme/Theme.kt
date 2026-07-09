@@ -14,7 +14,7 @@ private val DarkColors = darkColorScheme(
     surfaceVariant = SurfaceVariant,
     onSurfaceVariant = OnSurfaceVariant,
     error = ErrorRed,
-    outline = Outline,
+    outline = OutlineVariant,
     outlineVariant = OutlineVariant
 )
 

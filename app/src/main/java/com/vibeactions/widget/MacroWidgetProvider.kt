@@ -5,6 +5,7 @@ import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
 import android.content.Context
 import android.content.Intent
+import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.widget.RemoteViews
@@ -12,6 +13,7 @@ import android.widget.Toast
 import com.vibeactions.R
 import com.vibeactions.data.repository.MacroRepository
 import com.vibeactions.domain.model.MacroStatus
+import com.vibeactions.util.accentColorFor
 import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
@@ -19,9 +21,6 @@ import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 class MacroWidgetProvider : AppWidgetProvider() {
 
@@ -47,6 +46,22 @@ class MacroWidgetProvider : AppWidgetProvider() {
 
     override fun onDeleted(context: Context, ids: IntArray) {
         ids.forEach { WidgetIds.remove(context, it) }
+    }
+
+    // Fires when the user drags a widget's resize handles — re-render so it can switch between
+    // the icon+text layout and the icon-only compact badge for the new size.
+    override fun onAppWidgetOptionsChanged(
+        context: Context, manager: AppWidgetManager, widgetId: Int, newOptions: Bundle
+    ) {
+        super.onAppWidgetOptionsChanged(context, manager, widgetId, newOptions)
+        val pending = goAsync()
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                renderWidget(context, manager, widgetId)
+            } finally {
+                pending.finish()
+            }
+        }
     }
 
     override fun onReceive(context: Context, intent: Intent) {
@@ -81,17 +96,28 @@ class MacroWidgetProvider : AppWidgetProvider() {
     companion object {
         const val ACTION_TAP = "com.vibeactions.widget.ACTION_TAP"
 
+        /** Below this width there's no room for readable text — fall back to an icon-only badge. */
+        private const val COMPACT_WIDTH_THRESHOLD_DP = 90
+
         suspend fun renderWidget(context: Context, manager: AppWidgetManager, widgetId: Int) {
             val ep = EntryPointAccessors.fromApplication(context.applicationContext, WidgetEntryPoint::class.java)
             val macroId = WidgetIds.get(context, widgetId)
-            val views = RemoteViews(context.packageName, R.layout.widget_macro)
+            val width = manager.getAppWidgetOptions(widgetId)
+                .getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, Int.MAX_VALUE)
+            val compact = width < COMPACT_WIDTH_THRESHOLD_DP
+            val views = RemoteViews(
+                context.packageName,
+                if (compact) R.layout.widget_macro_compact else R.layout.widget_macro
+            )
             if (macroId != null) {
                 val macro = ep.macroRepository().getById(macroId)
-                views.setTextViewText(R.id.widget_name, macro?.name ?: "Macro")
-                val subtitle = macro?.lastTriggeredAt?.let {
-                    "Last: " + SimpleDateFormat("dd/MM HH:mm", Locale.getDefault()).format(Date(it))
-                } ?: "Tap to send"
-                views.setTextViewText(R.id.widget_subtitle, subtitle)
+                if (compact) {
+                    macro?.let { views.setInt(R.id.widget_compact_bg, "setColorFilter", accentColorFor(it).toInt()) }
+                } else {
+                    macro?.let { views.setInt(R.id.widget_icon, "setColorFilter", accentColorFor(it).toInt()) }
+                    views.setTextViewText(R.id.widget_name, macro?.name ?: "Macro")
+                    views.setTextViewText(R.id.widget_subtitle, "Tap to send")
+                }
 
                 val tapIntent = Intent(context, MacroWidgetProvider::class.java).apply {
                     action = ACTION_TAP
