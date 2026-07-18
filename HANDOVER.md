@@ -2,6 +2,27 @@
 
 > Kopiér denne fil ind i en ny chattråd som kontekst. Sidst opdateret: 2026-07-18 (fase 5: 8 nye funktioner).
 
+## Seneste arbejde (fase 6 — quick wins + ubesvaret opkald + organisk UI, 2026-07-18)
+
+Fuld kodegennemgang (dom: solid; 5 småfejl fundet, se nedenfor) fulgt af implementering. Byggemiljø: brugerens Mac (denne fase er lavet i `automatiq-main`-mappen, en zip-kopi af main uden git). **100 grønne JVM-tests** (fra 85). `assembleDebug` bygger.
+
+**Nye funktioner:**
+1. **Widget-undertekst "Last: 14:32 ✓"** — `util/WidgetSubtitle.kt` (ren, testdrevet); viser tid (i dag) eller kort dato, ✓/✗ efter status. Genopretter featuren som var regresseret til statisk "Tap to send".
+2. **Synlig send-knap på makrokortet** — accent-farvet send-ikon før drag-håndtaget; skjult for reply-typer (INCOMING/MISSED_CALL, ingen modtagerliste). Long-press-menuen har stadig "Send now".
+3. **Quiet hours udskyder i stedet for at droppe** — `scheduler/DeferredReplyWorker` (unik pr. (kind, modpart), REPLACE = én besked ved vinduets slutning, svarer på det seneste); `util/QuietHours.minutesUntilQuietEnd` (testdrevet). Matching/throttle/AI-dispatch udtrukket fra SmsReplyReceiver til **`scheduler/IncomingReplyRouter`** (delt af SMS-receiver, opkalds-receiver og deferred worker).
+4. **`{afsender}`-token** — `SENDER_TOKEN` i MessageTemplate; expandTemplate tager valgfri sender (= overrideRecipient i MacroFirer, dvs. modparten ved auto-svar/mistet opkald); uudfyldt ved scheduled/manual. Editor-hint viser tokenet kun for reply-typer.
+5. **Ubesvaret opkald-trigger (MISSED_CALL)** — nyt TriggerType (ingen DB-migration nødvendig, kolonnen er tekst). `util/CallState.kt`: ren state-machine (RINGING→IDLE uden OFFHOOK = mistet; afvist tæller med — bevidst; nummer huskes på tværs af dobbelt-broadcast; state persisteres i prefs da processen kan dø under lange opkald). `scheduler/CallStateReceiver` (manifest-receiver — PHONE_STATE er protected broadcast og undtaget implicit-broadcast-reglerne). Genbruger matchSender som opkaldsfilter (`callerMatches`). Nye permissions: READ_PHONE_STATE + READ_CALL_LOG (uden call log redacter Android nummeret → intet at svare til; editor beder om begge når triggeren vælges). Quiet hours udskyder også disse.
+
+**Organisk UI-pass (fase B, /frontend-design):** retning "bio-terminal" — terminal-DNA'et (mono, matrix-grøn) + liv:
+- `StaticBackground` + `AuroraOverlay`: tre drivende radiale glows (Primary/teal `#42D1CA`/Amber, alpha 4-9%, 52-73s cyklusser) — pauses automatisk når UI ikke er synligt.
+- `MacroCard`: asymmetriske "leaf-cut"-hjørner (`LeafShape` 18/6/18/6), accent-gradient i stedet for flad tint, fjeder-skala ved tryk (spring 0.965), "vein"-kanten ånder (alpha 0.45→1, 3.6s) når makroen er aktiv.
+- `MacroListScreen`: wordmark-header "automatiq" med pulserende status-dot (+ "N of M live"), pill-formet søgefelt, blob-FAB (26/14/26/14), varmere tomtilstande ("Nothing automated yet." / "Tap + and teach your phone its first trick.").
+- `MainActivity`: bundnav med leaf-klippede tophjørner, egne ikoner pr. fane (Bolt/History/Tune — før brugte Macros og Log samme ikon), grønne selected-farver.
+- `LogScreen`: tomtilstand ("All quiet."), mono statuslinje+timestamps, blødere divider (Outline 45% i stedet for lys OutlineVariant), varmere clear-dialog.
+- `Type.kt`: titleSmall → JetBrains Mono (sektionsoverskrifter i Settings/Health får terminal-accent).
+
+**Kendte småfejl fra gennemgangen som IKKE er rettet endnu:** (a) `GeofenceManager.addOnFailureListener` notificerer altid, ignorerer notifyOnFailure → kan spamme ved app-start med OS-lokation slået fra; (b) alfanumerisk afsender-check (`none { isDigit }`) slipper "DHL2u" igennem; (c) versionCode/-Name bumpes aldrig (stadig 1/"1.0"); (d) `MacroEditorScreen.kt` er ~950 linjer i én composable — bør splittes; (e) ~110 hardcodede engelske UI-strenge (kun app_name i strings.xml) — ingen lokalisering mulig.
+
 ## Seneste arbejde (fase 5 — 8 nye funktioner, 2026-07-18)
 
 Bygger på brugerønske om 8 funktionsforslag. DB bumpet **10 → 12** (MIGRATION_10_11: `trigger_on_connect`/`trigger_target`/`trigger_target_label` på macros; MIGRATION_11_12: `delivery_status` på macro_logs). Ren logik testdækket: **85 grønne JVM-tests** (QuietHours, BackupJson, StateTrigger, delivery-status-mapping, nye felter). Android-lagene (service, receivers, Compose-skærme) kunne ikke kompileres her — **byg `assembleDebug` lokalt før release.**

@@ -217,7 +217,7 @@ fun SettingsScreen(vm: SettingsViewModel = hiltViewModel(), onOpenHealth: () -> 
                 Column(Modifier.weight(1f)) {
                     Text("Pause auto-replies at night", color = OnSurface)
                     Text(
-                        "Incoming auto-replies (incl. AI) are held during the window. Scheduled and manual sends still go through.",
+                        "Auto-replies (incl. AI and missed-call texts) wait out the window and are sent right after it ends. Scheduled and manual sends still go through.",
                         style = MaterialTheme.typography.bodySmall,
                         color = OnSurfaceVariant
                     )

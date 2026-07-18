@@ -40,6 +40,7 @@ class HealthViewModel @Inject constructor(
                     TriggerType.CHARGING -> MacroHealth(m.name, "On charging", null)
                     TriggerType.BLUETOOTH -> MacroHealth(m.name, "On Bluetooth", null)
                     TriggerType.WIFI -> MacroHealth(m.name, "On Wi-Fi", null)
+                    TriggerType.MISSED_CALL -> MacroHealth(m.name, "Missed call", null)
                 }
             }
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())

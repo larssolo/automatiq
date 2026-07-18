@@ -1,6 +1,6 @@
 package com.vibeactions.domain.model
 
-enum class TriggerType { SCHEDULED, MANUAL, INCOMING, LOCATION, CHARGING, BLUETOOTH, WIFI }
+enum class TriggerType { SCHEDULED, MANUAL, INCOMING, LOCATION, CHARGING, BLUETOOTH, WIFI, MISSED_CALL }
 enum class MacroStatus { SUCCESS, FAILED, PENDING }
 enum class AiSendMode { APPROVE, AUTO }
 
@@ -42,7 +42,7 @@ data class Macro(
     val cardColor: Long = 0L,
     /** Last day (epoch day) the macro may fire on, inclusive; null = no expiry. */
     val validUntilEpochDay: Long? = null,
-    /** INCOMING only: reply only when the sender matches (digits-normalised); null/blank = any sender. */
+    /** INCOMING/MISSED_CALL: reply only when the sender/caller matches (digits-normalised); null/blank = any. */
     val matchSender: String? = null,
     /** INCOMING only: reply only when the message contains this text (case-insensitive); null/blank = any. */
     val matchKeyword: String? = null,

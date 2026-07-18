@@ -61,8 +61,9 @@ data class EditorState(
     val phoneValid get() = cleanRecipients.isNotEmpty() && cleanRecipients.all { isValidPhone(it) }
     val messageValid get() = message.isNotBlank()
     val daysValid get() = triggerType != TriggerType.SCHEDULED || daysOfWeek.isNotEmpty()
-    /** Auto-reply macros reply to the incoming sender, so they need no recipient list. */
-    val recipientsRequired get() = triggerType != TriggerType.INCOMING
+    /** Reply macros (auto-reply / missed call) answer the other party, so no recipient list. */
+    val recipientsRequired get() =
+        triggerType != TriggerType.INCOMING && triggerType != TriggerType.MISSED_CALL
     /** Location macros need a chosen point. */
     val locationValid get() = triggerType != TriggerType.LOCATION || (latitude != null && longitude != null)
     val canSave get() = nameValid && messageValid && daysValid && locationValid &&
@@ -73,6 +74,9 @@ data class EditorState(
 fun EditorState.toMacro(id: String): Macro {
     val scheduled = triggerType == TriggerType.SCHEDULED
     val incoming = triggerType == TriggerType.INCOMING
+    // Reply macros (auto-reply / missed call) answer the other party: no recipient list, and the
+    // sender filter applies. Keyword matching and AI only make sense for SMS (there is a message).
+    val reply = incoming || triggerType == TriggerType.MISSED_CALL
     val location = triggerType == TriggerType.LOCATION
     val interval = if (scheduled) weekInterval.coerceAtLeast(1) else 1
     // Anchor the multi-week rhythm on the first actual fire (first allowed weekday on/after the
@@ -90,7 +94,7 @@ fun EditorState.toMacro(id: String): Macro {
         // Auto-reply macros answer the incoming sender. A recipient list left over from a previous
         // trigger type must be dropped: the failed-send Retry action re-fires via macro.recipients
         // and would resend the fixed body to numbers that no longer apply.
-        recipients = if (incoming) emptyList() else cleanRecipients,
+        recipients = if (reply) emptyList() else cleanRecipients,
         messageBody = message,
         enabled = enabled,
         createdAt = createdAt,
@@ -112,7 +116,7 @@ fun EditorState.toMacro(id: String): Macro {
         triggerTargetLabel = if (triggerType == TriggerType.BLUETOOTH || triggerType == TriggerType.WIFI)
             triggerTargetLabel.trim().ifBlank { null } else null,
         validUntilEpochDay = if (scheduled) validUntilEpochDay else null,
-        matchSender = if (incoming) matchSender.trim().ifBlank { null } else null,
+        matchSender = if (reply) matchSender.trim().ifBlank { null } else null,
         matchKeyword = if (incoming) matchKeyword.trim().ifBlank { null } else null,
         latitude = if (location) latitude else null,
         longitude = if (location) longitude else null,

@@ -51,6 +51,7 @@ import com.vibeactions.ui.theme.OnSurface
 import com.vibeactions.util.CardColorPalette
 import com.vibeactions.util.expandTemplate
 import com.vibeactions.util.geminiSuggest
+import com.vibeactions.util.SENDER_TOKEN
 import com.vibeactions.util.TEMPLATE_TOKENS
 import com.vibeactions.util.isValidPhone
 import java.time.LocalDate
@@ -123,6 +124,20 @@ fun MacroEditorScreen(
     val contactPermLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { granted -> if (granted) contactPickerLauncher.launch(null) }
+
+    val phonePermLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { }
+    // Missed-call macros need call-state access, and READ_CALL_LOG for the caller's number
+    // (without it Android redacts the number and there is no one to text back).
+    LaunchedEffect(s.triggerType) {
+        if (s.triggerType == TriggerType.MISSED_CALL) {
+            val missing = listOf(
+                Manifest.permission.READ_PHONE_STATE, Manifest.permission.READ_CALL_LOG
+            ).filter { ContextCompat.checkSelfPermission(ctx, it) != PackageManager.PERMISSION_GRANTED }
+            if (missing.isNotEmpty()) phonePermLauncher.launch(missing.toTypedArray())
+        }
+    }
 
     fun pickContact(index: Int) {
         pendingContactIndex = index
@@ -522,6 +537,23 @@ fun MacroEditorScreen(
                 )
             }
 
+            if (s.triggerType == TriggerType.MISSED_CALL) {
+                // Missed-call auto-text: the reply goes to whoever you didn't pick up for.
+                OutlinedTextField(
+                    value = s.matchSender,
+                    onValueChange = { v -> vm.update { it.copy(matchSender = v) } },
+                    label = { Text("From caller (optional)") },
+                    supportingText = { Text("Leave blank to text every missed caller back") },
+                    trailingIcon = {
+                        IconButton(onClick = { pickContact(-1) }) {
+                            Icon(Icons.Default.Person, contentDescription = "Pick contact", tint = OnSurface)
+                        }
+                    },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                    singleLine = true, modifier = Modifier.fillMaxWidth()
+                )
+            }
+
             if (s.triggerType == TriggerType.INCOMING) {
                 // Auto-reply: match on the incoming sender/keyword; reply goes back to the sender.
                 OutlinedTextField(
@@ -649,15 +681,24 @@ fun MacroEditorScreen(
 
             OutlinedTextField(
                 value = s.message, onValueChange = { v -> vm.update { it.copy(message = v) } },
-                label = { Text(if (s.triggerType == TriggerType.INCOMING) "Reply message" else "Message") },
+                label = {
+                    Text(
+                        if (s.triggerType == TriggerType.INCOMING ||
+                            s.triggerType == TriggerType.MISSED_CALL) "Reply message" else "Message"
+                    )
+                },
                 supportingText = {
-                    Text("${s.message.length} chars · variables: ${TEMPLATE_TOKENS.joinToString(" ")}")
+                    // Reply macros additionally get {afsender} — the other party's number.
+                    val tokens = if (s.triggerType == TriggerType.INCOMING ||
+                        s.triggerType == TriggerType.MISSED_CALL)
+                        TEMPLATE_TOKENS + SENDER_TOKEN else TEMPLATE_TOKENS
+                    Text("${s.message.length} chars · variables: ${tokens.joinToString(" ")}")
                 },
                 minLines = 3, modifier = Modifier.fillMaxWidth()
             )
             // Live preview: show the message with {dato}/{tid}/{ugedag}/{navn} filled in, so the
             // user can see exactly what will be sent before saving. Only shown when a token is used.
-            if (TEMPLATE_TOKENS.any { s.message.contains(it) }) {
+            if ((TEMPLATE_TOKENS + SENDER_TOKEN).any { s.message.contains(it) }) {
                 val preview = remember(s.message, s.name) {
                     expandTemplate(s.message, LocalDateTime.now(), s.name.ifBlank { "macro" })
                 }
@@ -904,4 +945,5 @@ private fun triggerLabel(type: TriggerType): String = when (type) {
     TriggerType.CHARGING -> "On charging"
     TriggerType.BLUETOOTH -> "On Bluetooth"
     TriggerType.WIFI -> "On Wi-Fi"
+    TriggerType.MISSED_CALL -> "Missed call"
 }

@@ -17,6 +17,19 @@ class MessageTemplateTest {
         assertEquals("hej {foo} verden", expandTemplate("hej {foo} verden", now, "X"))
     }
 
+    @Test fun expandsSenderTokenWhenSenderKnown() {
+        assertEquals(
+            "Saa ringer jeg til +4512345678",
+            expandTemplate("Saa ringer jeg til {afsender}", now, "X", sender = "+4512345678")
+        )
+    }
+
+    @Test fun leavesSenderTokenWithoutSender() {
+        // Scheduled/manual sends have no other party; the token stays visible rather than
+        // expanding to something misleading.
+        assertEquals("hej {afsender}", expandTemplate("hej {afsender}", now, "X"))
+    }
+
     @Test fun noTokensIsUnchanged() {
         assertEquals("bare tekst", expandTemplate("bare tekst", now, "X"))
     }

@@ -17,6 +17,15 @@ fun isWithinQuietHours(minuteOfDay: Int, startMin: Int, endMin: Int): Boolean {
 fun isWithinQuietHours(now: LocalTime, startMin: Int, endMin: Int): Boolean =
     isWithinQuietHours(now.hour * 60 + now.minute, startMin, endMin)
 
+/**
+ * Minutes from [minuteOfDay] until the quiet window ends, or 0 when outside the window (or the
+ * window is empty). Used to delay a deferred auto-reply to just after the window closes.
+ */
+fun minutesUntilQuietEnd(minuteOfDay: Int, startMin: Int, endMin: Int): Int {
+    if (!isWithinQuietHours(minuteOfDay, startMin, endMin)) return 0
+    return ((endMin - minuteOfDay) + 1440) % 1440
+}
+
 /** Formats a minute-of-day (0..1439) as "HH:mm". */
 fun formatMinuteOfDay(minuteOfDay: Int): String {
     val m = ((minuteOfDay % 1440) + 1440) % 1440

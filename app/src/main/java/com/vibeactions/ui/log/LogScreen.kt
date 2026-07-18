@@ -5,7 +5,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -84,7 +86,18 @@ fun LogScreen(vm: LogViewModel = hiltViewModel()) {
                 }
             }
             Spacer(Modifier.height(12.dp))
-            LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            if (logs.isEmpty()) {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("All quiet.", fontFamily = JetBrainsMono, fontSize = 16.sp, color = OnSurface)
+                        Spacer(Modifier.height(6.dp))
+                        Text(
+                            "Everything Automatiq sends will land here.",
+                            color = OnSurfaceVariant, fontSize = 13.sp
+                        )
+                    }
+                }
+            } else LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 items(logs, key = { it.log.id }) { row ->
                     val log = row.log
                     Column(Modifier.fillMaxWidth()) {
@@ -100,10 +113,12 @@ fun LogScreen(vm: LogViewModel = hiltViewModel()) {
                                     MacroStatus.PENDING -> Amber
                                     MacroStatus.FAILED -> ErrorRed
                                 },
+                                fontFamily = JetBrainsMono,
                                 fontWeight = FontWeight.Medium, fontSize = 13.sp,
                                 maxLines = 1, overflow = TextOverflow.Ellipsis,
                                 modifier = Modifier.weight(1f))
                             Text(fmt.format(Date(log.triggeredAt)),
+                                fontFamily = JetBrainsMono,
                                 color = OnSurfaceVariant, fontSize = 12.sp)
                         }
                         Text(log.messagePreview ?: "", color = OnSurface, fontSize = 13.sp)
@@ -115,7 +130,7 @@ fun LogScreen(vm: LogViewModel = hiltViewModel()) {
                                 Text("Not delivered", color = ErrorRed, fontSize = 12.sp)
                             null -> {}
                         }
-                        HorizontalDivider(color = OutlineVariant)
+                        HorizontalDivider(color = Outline.copy(alpha = 0.45f))
                     }
                 }
             }
@@ -128,7 +143,7 @@ fun LogScreen(vm: LogViewModel = hiltViewModel()) {
             confirmButton = { TextButton(onClick = { vm.clear(); confirmClear = false }) { Text("Clear") } },
             dismissButton = { TextButton(onClick = { confirmClear = false }) { Text("Cancel") } },
             title = { Text("Clear log?") },
-            text = { Text("This deletes all log entries.") }
+            text = { Text("This wipes the whole history. Your macros stay untouched.") }
         )
     }
 }

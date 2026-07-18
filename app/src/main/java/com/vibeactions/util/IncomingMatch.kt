@@ -27,3 +27,7 @@ fun incomingMatches(macro: Macro, sender: String, body: String): Boolean {
         body.contains(macro.matchKeyword.trim(), ignoreCase = true)
     return senderOk && keywordOk
 }
+
+/** Whether a MISSED_CALL macro should text [number] back; a blank filter matches any caller. */
+fun callerMatches(macro: Macro, number: String): Boolean =
+    macro.matchSender.isNullOrBlank() || senderMatches(macro.matchSender, number)

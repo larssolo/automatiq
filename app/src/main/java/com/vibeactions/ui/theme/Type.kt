@@ -4,6 +4,7 @@ import androidx.compose.material3.Typography
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
 import com.vibeactions.R
 
 val DmSans = FontFamily(
@@ -20,6 +21,10 @@ val AppTypography = Typography().run {
         bodyLarge = bodyLarge.copy(fontFamily = DmSans),
         bodyMedium = bodyMedium.copy(fontFamily = DmSans),
         titleMedium = titleMedium.copy(fontFamily = DmSans, fontWeight = FontWeight.Medium),
+        // Section headers in mono: the app's terminal accent, threaded through every screen.
+        titleSmall = titleSmall.copy(
+            fontFamily = JetBrainsMono, fontWeight = FontWeight.Medium, letterSpacing = 0.3.sp
+        ),
         labelLarge = labelLarge.copy(fontFamily = DmSans)
     )
 }

@@ -13,12 +13,17 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.List
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Bolt
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import com.vibeactions.ui.theme.OnSurfaceVariant
+import com.vibeactions.ui.theme.Primary
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
@@ -208,16 +213,32 @@ private fun AppRoot(navTarget: String? = null, onNavConsumed: () -> Unit = {}) {
         Scaffold(
             containerColor = Color.Transparent,
             bottomBar = {
-                NavigationBar(containerColor = Color(0xDE121212)) {
+                // Leaf-cut top corners echo the cards; each tab gets its own icon.
+                NavigationBar(
+                    containerColor = Color(0xDE121212),
+                    modifier = Modifier.clip(
+                        RoundedCornerShape(topStart = 22.dp, topEnd = 8.dp)
+                    )
+                ) {
+                    val navColors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = Primary,
+                        selectedTextColor = Primary,
+                        indicatorColor = Primary.copy(alpha = 0.16f),
+                        unselectedIconColor = OnSurfaceVariant,
+                        unselectedTextColor = OnSurfaceVariant
+                    )
                     NavigationBarItem(
                         selected = route == "list", onClick = { navigateTab("list") },
-                        icon = { Icon(Icons.AutoMirrored.Filled.List, "Macros") }, label = { Text("Macros") })
+                        icon = { Icon(Icons.Default.Bolt, "Macros") }, label = { Text("Macros") },
+                        colors = navColors)
                     NavigationBarItem(
                         selected = route == "log", onClick = { navigateTab("log") },
-                        icon = { Icon(Icons.AutoMirrored.Filled.List, "Log") }, label = { Text("Log") })
+                        icon = { Icon(Icons.Default.History, "Log") }, label = { Text("Log") },
+                        colors = navColors)
                     NavigationBarItem(
                         selected = route == "settings", onClick = { navigateTab("settings") },
-                        icon = { Icon(Icons.Default.Settings, "Settings") }, label = { Text("Settings") })
+                        icon = { Icon(Icons.Default.Tune, "Settings") }, label = { Text("Settings") },
+                        colors = navColors)
                 }
             }
         ) { p ->
@@ -227,7 +248,7 @@ private fun AppRoot(navTarget: String? = null, onNavConsumed: () -> Unit = {}) {
                         banner = {
                             if (!smsGranted) {
                                 PermissionBanner(
-                                    "SMS permission is required to send messages.",
+                                    "Automatiq needs SMS access before it can send anything.",
                                     "Grant"
                                 ) { smsPermLauncher.launch(arrayOf(Manifest.permission.SEND_SMS)) }
                             }

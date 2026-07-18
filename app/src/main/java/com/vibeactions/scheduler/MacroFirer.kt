@@ -52,7 +52,10 @@ class MacroFirer @Inject constructor(
         if (enforceOncePerDay && !macroRepo.tryClaimScheduledFire(macro.id, now, startOfDayMillis(now))) return null
 
         // Expand {dato}/{tid}/{ugedag}/{navn} once, then send the same text to every recipient.
-        val body = overrideBody ?: expandTemplate(macro.messageBody, LocalDateTime.now(), macro.name)
+        // For reply fires (auto-reply / missed call) the override recipient IS the other party,
+        // which is what {afsender} should expand to.
+        val body = overrideBody
+            ?: expandTemplate(macro.messageBody, LocalDateTime.now(), macro.name, overrideRecipient)
         // The log row is created before sending so each SMS can carry a sent receipt addressing it:
         // a radio-level failure later flips this entry (and the macro status) to FAILED.
         val logId = logRepo.add(

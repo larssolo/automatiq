@@ -17,6 +17,11 @@
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
 
     <!-- Device-state triggers (CHARGING/BLUETOOTH/WIFI) monitored by TriggerMonitorService. -->
+    <!-- Missed-call auto-reply: call state to detect the ring, call log so Android delivers the
+         caller's number (redacted without it on API 28+). -->
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.permission.READ_CALL_LOG" />
+
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
@@ -64,6 +69,14 @@
         </receiver>
 
         <receiver android:name=".scheduler.GeofenceReceiver" android:exported="false" />
+
+        <!-- Missed-call auto-reply. PHONE_STATE is a protected system broadcast (only the OS can
+             send it) and exempt from implicit-broadcast restrictions, so a manifest receiver works. -->
+        <receiver android:name=".scheduler.CallStateReceiver" android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.PHONE_STATE" />
+            </intent-filter>
+        </receiver>
 
         <receiver android:name=".scheduler.SmsSentReceiver" android:exported="false" />
 

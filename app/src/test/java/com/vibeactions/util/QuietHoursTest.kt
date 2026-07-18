@@ -38,6 +38,20 @@ class QuietHoursTest {
         assertFalse(isWithinQuietHours(12 * 60, 8 * 60, 8 * 60))
     }
 
+    @Test fun minutesUntilQuietEnd_insideWrappingWindow() {
+        assertEquals(480, minutesUntilQuietEnd(23 * 60, start, end)) // 23:00 -> 07:00
+        assertEquals(1, minutesUntilQuietEnd(6 * 60 + 59, start, end))
+    }
+
+    @Test fun minutesUntilQuietEnd_outsideWindowIsZero() {
+        assertEquals(0, minutesUntilQuietEnd(12 * 60, start, end))
+        assertEquals(0, minutesUntilQuietEnd(12 * 60, 0, 0)) // empty window
+    }
+
+    @Test fun minutesUntilQuietEnd_nonWrappingWindow() {
+        assertEquals(420, minutesUntilQuietEnd(10 * 60, 9 * 60, 17 * 60))
+    }
+
     @Test fun formatMinuteOfDay_pads() {
         assertEquals("07:00", formatMinuteOfDay(7 * 60))
         assertEquals("22:05", formatMinuteOfDay(22 * 60 + 5))

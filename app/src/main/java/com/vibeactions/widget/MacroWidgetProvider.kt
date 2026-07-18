@@ -10,6 +10,7 @@ import android.widget.RemoteViews
 import com.vibeactions.R
 import com.vibeactions.data.repository.MacroRepository
 import com.vibeactions.util.accentColorFor
+import com.vibeactions.util.widgetSubtitle
 import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
@@ -84,7 +85,12 @@ class MacroWidgetProvider : AppWidgetProvider() {
                 } else {
                     macro?.let { views.setInt(R.id.widget_icon, "setColorFilter", accentColorFor(it).toInt()) }
                     views.setTextViewText(R.id.widget_name, macro?.name ?: "Macro")
-                    views.setTextViewText(R.id.widget_subtitle, "Tap to send")
+                    // "Last: 14:32 (mark)" once the macro has fired; WidgetRefresher re-renders
+                    // after every fire so scheduled/auto sends update this too.
+                    views.setTextViewText(
+                        R.id.widget_subtitle,
+                        widgetSubtitle(macro?.lastTriggeredAt, macro?.lastStatus)
+                    )
                 }
 
                 val tapIntent = Intent(context, WidgetTapReceiver::class.java).apply {

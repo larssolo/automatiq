@@ -1,8 +1,19 @@
 package com.vibeactions.ui.common
 
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -11,6 +22,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DragHandle
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -21,6 +33,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.DpOffset
@@ -33,6 +47,11 @@ import com.vibeactions.ui.theme.*
 import com.vibeactions.util.accentColorFor
 import com.vibeactions.util.formatRecurrence
 import com.vibeactions.util.maskPhone
+
+/** Asymmetric "leaf-cut" corners — the app's organic signature shape. */
+private val LeafShape = RoundedCornerShape(
+    topStart = 18.dp, topEnd = 6.dp, bottomEnd = 18.dp, bottomStart = 6.dp
+)
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -49,20 +68,50 @@ fun MacroCard(
     val accent = androidx.compose.ui.graphics.Color(accentColorFor(macro))
     var menuExpanded by remember { mutableStateOf(false) }
 
+    // Organic press physics: the card gives slightly under the finger and springs back.
+    val interaction = remember { MutableInteractionSource() }
+    val pressed by interaction.collectIsPressedAsState()
+    val pressScale by animateFloatAsState(
+        targetValue = if (pressed) 0.965f else 1f,
+        animationSpec = spring(dampingRatio = 0.45f, stiffness = 420f),
+        label = "cardPress"
+    )
+
     Row(
         modifier
             .fillMaxWidth()
             .height(76.dp)
-            .clip(RoundedCornerShape(12.dp))
+            .graphicsLayer { scaleX = pressScale; scaleY = pressScale }
+            .clip(LeafShape)
             .background(Surface.copy(alpha = BackgroundSetting.cardOpacity))
-            .background(accent.copy(alpha = 0.07f))
-            .combinedClickable(onClick = onClick, onLongClick = { menuExpanded = true })
+            // Accent light falls off across the card instead of tinting it flat.
+            .background(
+                Brush.horizontalGradient(
+                    listOf(accent.copy(alpha = 0.13f), accent.copy(alpha = 0.02f))
+                )
+            )
+            .combinedClickable(
+                interactionSource = interaction,
+                indication = LocalIndication.current,
+                onClick = onClick,
+                onLongClick = { menuExpanded = true }
+            )
     ) {
+        // The vein: a living accent edge that breathes while the macro is armed.
+        val veinColor = if (macro.enabled) {
+            val breath = rememberInfiniteTransition(label = "vein")
+            val veinAlpha by breath.animateFloat(
+                0.45f, 1f,
+                infiniteRepeatable(tween(3600, easing = FastOutSlowInEasing), RepeatMode.Reverse),
+                label = "veinAlpha"
+            )
+            accent.copy(alpha = veinAlpha)
+        } else Outline
         Box(
             Modifier
                 .width(4.dp)
                 .fillMaxHeight()
-                .background(if (macro.enabled) accent else Outline)
+                .background(veinColor)
         )
         Column(
             Modifier
@@ -104,6 +153,20 @@ fun MacroCard(
                         fontSize = 9.sp,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp)
+                    )
+                }
+            }
+        }
+        // One-tap manual send. Reply macros (auto-reply / missed call) have no recipient list
+        // of their own, so a manual send has no target — the button is hidden for those.
+        if (macro.triggerType != TriggerType.INCOMING && macro.triggerType != TriggerType.MISSED_CALL) {
+            Box(Modifier.fillMaxHeight(), contentAlignment = Alignment.Center) {
+                IconButton(onClick = onSend) {
+                    Icon(
+                        Icons.AutoMirrored.Filled.Send,
+                        contentDescription = "Send now",
+                        tint = accent,
+                        modifier = Modifier.size(19.dp)
                     )
                 }
             }
@@ -174,6 +237,10 @@ private fun compactSummary(macro: Macro): String = when (macro.triggerType) {
         macro.radiusMeters?.let { append(" · ${it.toInt()} m") }
     }
     TriggerType.MANUAL -> "Manual trigger"
+    TriggerType.MISSED_CALL -> buildString {
+        append("Missed call")
+        if (!macro.matchSender.isNullOrBlank()) append(" · ${maskPhone(macro.matchSender)}")
+    }
     TriggerType.CHARGING -> if (macro.triggerOnConnect) "When plugged in" else "When unplugged"
     TriggerType.BLUETOOTH -> buildString {
         append(if (macro.triggerOnConnect) "BT connect" else "BT disconnect")

@@ -48,6 +48,19 @@ class EditorStateToMacroTest {
         assertNull(state.toMacro("id-1").anchorEpochDay)
     }
 
+    @Test fun missedCall_clearsRecipientsKeepsCallerFilterDropsKeywordAndAi() {
+        val state = EditorState(
+            name = "Callback", triggerType = TriggerType.MISSED_CALL,
+            recipients = listOf("+4512345678"), message = "Jeg ringer tilbage",
+            matchSender = "+45 87 65 43 21", matchKeyword = "hello", aiReplyEnabled = true
+        )
+        val macro = state.toMacro("id-1")
+        assertTrue(macro.recipients.isEmpty())
+        assertEquals("+45 87 65 43 21", macro.matchSender)
+        assertNull(macro.matchKeyword)      // keyword needs a message body; calls have none
+        assertEquals(false, macro.aiReplyEnabled)
+    }
+
     @Test fun incoming_blankMatchFieldsBecomeNull() {
         val state = EditorState(
             name = "Auto", triggerType = TriggerType.INCOMING,
