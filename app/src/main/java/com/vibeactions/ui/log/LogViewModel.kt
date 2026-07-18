@@ -3,6 +3,7 @@ package com.vibeactions.ui.log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vibeactions.data.repository.MacroLogRepository
+import com.vibeactions.data.repository.MacroRepository
 import com.vibeactions.domain.model.MacroLog
 import com.vibeactions.domain.model.MacroStatus
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -10,16 +11,22 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+/** A log entry joined with the (current) name of the macro that produced it. */
+data class LogRow(val log: MacroLog, val macroName: String?)
+
 @HiltViewModel
 class LogViewModel @Inject constructor(
-    private val repo: MacroLogRepository
+    private val repo: MacroLogRepository,
+    macroRepo: MacroRepository
 ) : ViewModel() {
     private val filter = MutableStateFlow<MacroStatus?>(null)
     val statusFilter: StateFlow<MacroStatus?> = filter
 
-    val logs: StateFlow<List<MacroLog>> =
-        combine(repo.observeAll(), filter) { list, f ->
-            if (f == null) list else list.filter { it.status == f }
+    val logs: StateFlow<List<LogRow>> =
+        combine(repo.observeAll(), macroRepo.observeAll(), filter) { list, macros, f ->
+            val names = macros.associate { it.id to it.name }
+            list.filter { f == null || it.status == f }
+                .map { LogRow(it, names[it.macroId]) }
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     fun setFilter(status: MacroStatus?) { filter.value = status }

@@ -1,6 +1,26 @@
 # Overlevering — Automatiq (VibeActions)
 
-> Kopiér denne fil ind i en ny chattråd som kontekst. Sidst opdateret: 2026-07-08 (fase 1 + fase 2 + statisk baggrund/UI-polish).
+> Kopiér denne fil ind i en ny chattråd som kontekst. Sidst opdateret: 2026-07-18 (fase 4: kodegennemgang + robusthed/sikkerhed).
+
+## Seneste arbejde (fase 4 — fuld kodegennemgang, 2026-07-18)
+
+Fuld gennemgang af appen; rettelser (tests: 68 grønne, 7 nye):
+
+1. **Sikkerhed: widget-tap flyttet til ikke-eksporteret receiver.** `MacroWidgetProvider` (eksporteret, krævet af launcheren) håndterede selv `ACTION_TAP` → enhver co-installeret app kunne fyre en makro (= sende SMS) med et broadcast. Ny `widget/WidgetTapReceiver` (exported=false) håndterer tap; provider renderer kun.
+2. **Fremtidig startdato affyrede dagligt:** `calculateNextFireTime` scannede kun `interval*7+7` dage frem fra i dag; et anker længere ude ramte "i morgen"-fallbacken → alarm fyrede hver dag før startdatoen. Scanner nu fra ankeret når det ligger i fremtiden (testdrevet).
+3. **Crash-loop via import:** håndredigeret importfil med ugyldig `scheduledTime` crashede `rescheduleAll` ved hver appstart (LocalTime.parse). Import afviser nu ugyldige tider med fejlbesked; `AlarmScheduler`/`MacroCatchUpWorker` parser defensivt (`parseHhMmOrNull`).
+4. **Tidszone-/klokkeskift:** `BootReceiver` lytter nu også på `TIMEZONE_CHANGED`, `TIME_SET` og `SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED` og re-armer.
+5. **Ny makro efter dagens tidspunkt:** catch-up-workeren "indhentede" en affyring som aldrig var misset (makroen fandtes ikke på tidspunktet). Nye/duplikerede SCHEDULED-makroer stempler `lastScheduledFireAt` når dagens tid er passeret (`consumedFireStampForNewMacro`, testdrevet).
+6. **Radio-FAILED vs. dispatch-SUCCESS race:** `MacroFirer` finaliserer nu loggen først, læser rækken tilbage (FAILED er terminal) og spejler den endelige status på makro + notifikation. `fire()` returnerer `FireResult`.
+7. **AI AUTO:** (a) dedup-nøglen bruger nu et event-id mintet pr. indgående SMS — identisk besked nr. 2 samme dag får igen svar, mens worker-retry stadig deduperes; (b) "AI reply sent"-notifikation postes kun ved reel succes, ellers fejlnotifikation.
+8. **Dobbelttryk på "Send"** i AI-godkendelsesnotifikationen kunne dobbeltsende → 5s dedup i `AiReplyActionReceiver`.
+9. **Alfanumeriske afsendere** (DHL, banker) kan ikke modtage SMS → auto-svar springes over.
+10. **Evig PENDING i loggen:** rækker forældreløse efter procesdød markeres FAILED af catch-up-workeren (`failStalePending`, >10 min).
+11. **Engangs-makroer (repeatDaily=false, kun via import)** re-armeredes dagligt af appstart/catch-up → filtreres nu efter første affyring.
+12. **Widgets opdateres ved omdøb/slet** (`SaveMacroUseCase`/`DeleteMacroUseCase` kalder `WidgetRefresher`).
+13. **UI:** bundnav stabler ikke længere destinationer (popUpTo+restoreState); loggen viser makronavn pr. række og PENDING i gul; Settings deep-linker direkte til exact-alarm-toggle og batteridialog; "AI-skriv" → "AI write"; claim af dagens scheduled fire forbruges ikke længere af makroer uden modtagere; `GeminiClient` lækker ikke forbindelsen ved skrivefejl.
+
+**Byggenote:** ændringerne i ren logik er verificeret med 68 grønne JVM-tests; Android-lagene (manifest, receivers, Compose) kunne ikke kompileres i dette miljø (Android-SDK-download blokeret) — byg `assembleDebug` lokalt før release.
 
 ## App
 

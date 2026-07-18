@@ -7,6 +7,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -48,12 +49,23 @@ fun LogScreen(vm: LogViewModel = hiltViewModel()) {
             }
             Spacer(Modifier.height(12.dp))
             LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                items(logs, key = { it.id }) { log ->
+                items(logs, key = { it.log.id }) { row ->
+                    val log = row.log
                     Column(Modifier.fillMaxWidth()) {
                         Row {
-                            Text(log.status.name,
-                                color = if (log.status == MacroStatus.SUCCESS) Primary else ErrorRed,
+                            Text(
+                                buildString {
+                                    append(log.status.name)
+                                    append(" · ")
+                                    append(row.macroName ?: "(deleted macro)")
+                                },
+                                color = when (log.status) {
+                                    MacroStatus.SUCCESS -> Primary
+                                    MacroStatus.PENDING -> Amber
+                                    MacroStatus.FAILED -> ErrorRed
+                                },
                                 fontWeight = FontWeight.Medium, fontSize = 13.sp,
+                                maxLines = 1, overflow = TextOverflow.Ellipsis,
                                 modifier = Modifier.weight(1f))
                             Text(fmt.format(Date(log.triggeredAt)),
                                 color = OnSurfaceVariant, fontSize = 12.sp)

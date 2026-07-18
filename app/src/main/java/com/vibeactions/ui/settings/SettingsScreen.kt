@@ -144,7 +144,13 @@ fun SettingsScreen(vm: SettingsViewModel = hiltViewModel()) {
                 trailingContent = {
                     TextButton(onClick = {
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                            context.startActivity(Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM))
+                            // Deep-link straight to this app's toggle instead of the full app list.
+                            context.startActivity(
+                                Intent(
+                                    Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM,
+                                    Uri.parse("package:${context.packageName}")
+                                )
+                            )
                         }
                     }) { Text("Open") }
                 }
@@ -157,7 +163,14 @@ fun SettingsScreen(vm: SettingsViewModel = hiltViewModel()) {
                 supportingContent = { Text("Whitelist Automatiq so alarms are not delayed") },
                 trailingContent = {
                     TextButton(onClick = {
-                        context.startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))
+                        // One-tap allow dialog (permission is declared) instead of making the user
+                        // hunt for the app in the systemwide optimisation list.
+                        context.startActivity(
+                            Intent(
+                                Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
+                                Uri.parse("package:${context.packageName}")
+                            )
+                        )
                     }) { Text("Open") }
                 }
             )
