@@ -8,13 +8,16 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.OutOfQuotaPolicy
 import androidx.work.WorkManager
 import androidx.work.workDataOf
+import com.vibeactions.data.AppSettings
 import com.vibeactions.data.repository.MacroRepository
 import com.vibeactions.domain.model.TriggerType
 import com.vibeactions.util.incomingMatches
+import com.vibeactions.util.isWithinQuietHours
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.time.LocalTime
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 
@@ -38,6 +41,14 @@ class SmsReplyReceiver : BroadcastReceiver() {
         // Alphanumeric sender IDs (DHL, banks, OTP gateways) cannot receive SMS — replying would
         // just produce a radio failure (and, for AI macros, a wasted Gemini call).
         if (sender.none { it.isDigit() }) return
+        // Quiet hours: pause ALL auto-replies (including AI approval prompts) during the window, so
+        // the phone stays silent at night. Scheduled/manual sends are unaffected.
+        if (AppSettings.quietHoursEnabled(context) && isWithinQuietHours(
+                LocalTime.now(),
+                AppSettings.quietStartMinute(context),
+                AppSettings.quietEndMinute(context)
+            )
+        ) return
 
         val pending = goAsync()
         CoroutineScope(Dispatchers.IO).launch {

@@ -8,6 +8,8 @@ import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -39,6 +41,12 @@ fun MacroListScreen(
 
     var showEditor by remember { mutableStateOf(false) }
     var editorMacroId by remember { mutableStateOf<String?>(null) }
+    var query by remember { mutableStateOf("") }
+    // Filter for display; reordering is disabled while searching (dragging a filtered subset would
+    // scramble the persisted order), so the drag handle only appears on the full, unfiltered list.
+    val searching = query.isNotBlank()
+    val visible = if (searching) ordered.filter { it.name.contains(query.trim(), ignoreCase = true) }
+        else ordered
 
     val gridState = rememberLazyGridState()
     val reorderState = rememberReorderableLazyGridState(gridState) { from, to ->
@@ -73,10 +81,31 @@ fun MacroListScreen(
     ) { padding ->
         Column(Modifier.padding(padding).fillMaxSize().padding(horizontal = 8.dp)) {
             banner()
+            if (ordered.isNotEmpty()) {
+                OutlinedTextField(
+                    value = query,
+                    onValueChange = { query = it },
+                    placeholder = { Text("Search macros") },
+                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                    trailingIcon = {
+                        if (searching) {
+                            IconButton(onClick = { query = "" }) {
+                                Icon(Icons.Default.Close, contentDescription = "Clear search")
+                            }
+                        }
+                    },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+                )
+            }
             if (ordered.isEmpty()) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text("No macros yet. Tap + to create your first.",
                         color = OnSurfaceVariant)
+                }
+            } else if (visible.isEmpty()) {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text("No macros match \"${query.trim()}\".", color = OnSurfaceVariant)
                 }
             } else {
                 LazyVerticalGrid(
@@ -86,7 +115,7 @@ fun MacroListScreen(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     contentPadding = PaddingValues(top = 8.dp, bottom = 96.dp)
                 ) {
-                    items(ordered, key = { it.id }) { macro ->
+                    items(visible, key = { it.id }) { macro ->
                         ReorderableItem(reorderState, key = macro.id) { _ ->
                             MacroCard(
                                 macro = macro,
@@ -95,7 +124,9 @@ fun MacroListScreen(
                                 onCopy = { vm.onCopy(macro) },
                                 onSend = { sendMacro(macro) },
                                 onToggle = { enabled -> vm.onToggle(macro, enabled) },
-                                dragHandleModifier = Modifier.draggableHandle(
+                                // No drag while searching — reordering a filtered subset would
+                                // corrupt the saved order.
+                                dragHandleModifier = if (searching) Modifier else Modifier.draggableHandle(
                                     onDragStopped = { vm.onReorder(ordered.map(Macro::id)) }
                                 )
                             )

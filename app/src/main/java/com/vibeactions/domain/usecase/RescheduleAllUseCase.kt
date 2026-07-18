@@ -4,12 +4,14 @@ import com.vibeactions.data.repository.MacroRepository
 import com.vibeactions.domain.model.TriggerType
 import com.vibeactions.scheduler.AlarmScheduler
 import com.vibeactions.scheduler.GeofenceManager
+import com.vibeactions.scheduler.TriggerMonitor
 import javax.inject.Inject
 
 class RescheduleAllUseCase @Inject constructor(
     private val repo: MacroRepository,
     private val alarmScheduler: AlarmScheduler,
-    private val geofenceManager: GeofenceManager
+    private val geofenceManager: GeofenceManager,
+    private val triggerMonitor: TriggerMonitor
 ) {
     suspend operator fun invoke() {
         // One-shot macros (repeatDaily=false, only creatable via import) must not be re-armed
@@ -19,5 +21,7 @@ class RescheduleAllUseCase @Inject constructor(
             .forEach { alarmScheduler.schedule(it) }
         // Geofences don't survive a reboot — re-register every enabled LOCATION macro.
         repo.getEnabledByTrigger(TriggerType.LOCATION).forEach { geofenceManager.register(it) }
+        // Start the device-state monitor if any CHARGING/BLUETOOTH/WIFI macro is enabled.
+        triggerMonitor.sync()
     }
 }

@@ -12,6 +12,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.vibeactions.domain.model.DeliveryStatus
 import com.vibeactions.domain.model.MacroStatus
 import com.vibeactions.ui.theme.*
 import java.text.SimpleDateFormat
@@ -23,8 +24,12 @@ import java.util.Locale
 fun LogScreen(vm: LogViewModel = hiltViewModel()) {
     val logs by vm.logs.collectAsStateWithLifecycle()
     val filter by vm.statusFilter.collectAsStateWithLifecycle()
+    val macroOptions by vm.macroOptions.collectAsStateWithLifecycle()
+    val selectedMacroId by vm.selectedMacroId.collectAsStateWithLifecycle()
     var confirmClear by remember { mutableStateOf(false) }
+    var macroMenuExpanded by remember { mutableStateOf(false) }
     val fmt = remember { SimpleDateFormat("dd/MM HH:mm:ss", Locale.getDefault()) }
+    val selectedMacroName = macroOptions.firstOrNull { it.first == selectedMacroId }?.second
 
     Scaffold(
         containerColor = androidx.compose.ui.graphics.Color.Transparent,
@@ -45,6 +50,37 @@ fun LogScreen(vm: LogViewModel = hiltViewModel()) {
                 FilterChip(filter == null, { vm.setFilter(null) }, { Text("All") })
                 MacroStatus.entries.forEach { s ->
                     FilterChip(filter == s, { vm.setFilter(s) }, { Text(s.name) })
+                }
+            }
+            if (macroOptions.isNotEmpty()) {
+                Spacer(Modifier.height(8.dp))
+                ExposedDropdownMenuBox(
+                    expanded = macroMenuExpanded,
+                    onExpandedChange = { macroMenuExpanded = it }
+                ) {
+                    OutlinedTextField(
+                        value = selectedMacroName ?: "All macros",
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Macro") },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = macroMenuExpanded) },
+                        modifier = Modifier.menuAnchor().fillMaxWidth()
+                    )
+                    ExposedDropdownMenu(
+                        expanded = macroMenuExpanded,
+                        onDismissRequest = { macroMenuExpanded = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("All macros") },
+                            onClick = { vm.setMacroFilter(null); macroMenuExpanded = false }
+                        )
+                        macroOptions.forEach { (id, name) ->
+                            DropdownMenuItem(
+                                text = { Text(name) },
+                                onClick = { vm.setMacroFilter(id); macroMenuExpanded = false }
+                            )
+                        }
+                    }
                 }
             }
             Spacer(Modifier.height(12.dp))
@@ -72,6 +108,13 @@ fun LogScreen(vm: LogViewModel = hiltViewModel()) {
                         }
                         Text(log.messagePreview ?: "", color = OnSurface, fontSize = 13.sp)
                         log.errorMessage?.let { Text(it, color = ErrorRed, fontSize = 12.sp) }
+                        when (log.deliveryStatus) {
+                            DeliveryStatus.DELIVERED ->
+                                Text("Delivered ✓✓", color = Primary, fontSize = 12.sp)
+                            DeliveryStatus.FAILED ->
+                                Text("Not delivered", color = ErrorRed, fontSize = 12.sp)
+                            null -> {}
+                        }
                         HorizontalDivider(color = OutlineVariant)
                     }
                 }

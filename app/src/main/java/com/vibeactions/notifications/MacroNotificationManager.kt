@@ -160,6 +160,21 @@ class MacroNotificationManager @Inject constructor(
         manager.notify(notifId, builder.build())
     }
 
+    /** Warns that a LOCATION macro's geofence couldn't be registered, so it silently won't fire —
+     *  otherwise the user assumes the macro is active. */
+    fun notifyGeofenceError(macro: Macro, reason: String?) {
+        val detail = "\"${macro.name}\" won't fire: ${reason ?: "the location trigger couldn't be registered"}. " +
+            "Open the macro and set location access to \"Allow all the time\"."
+        val builder = NotificationCompat.Builder(context, CHANNEL_ID)
+            .setSmallIcon(android.R.drawable.stat_sys_warning)
+            .setContentTitle("Location macro not active: ${macro.name}")
+            .setContentText(reason ?: "Couldn't register the location trigger")
+            .setStyle(NotificationCompat.BigTextStyle().bigText(detail))
+            .setContentIntent(openLogIntent())
+            .setAutoCancel(true)
+        manager.notify(("geofence_err" + macro.id).hashCode(), builder.build())
+    }
+
     /** Posts an informational notification after an AUTO-mode AI reply is sent (shows content). */
     fun notifyAiSent(macro: Macro, recipient: String, sentBody: String) {
         val preview = if (sentBody.length > 200) sentBody.take(200) + "…" else sentBody

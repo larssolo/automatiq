@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
+import com.vibeactions.data.AppSettings
 import com.vibeactions.data.repository.MacroLogRepository
 import com.vibeactions.data.repository.MacroRepository
 import com.vibeactions.domain.alreadySentToday
@@ -45,6 +46,8 @@ class MacroCatchUpWorker @AssistedInject constructor(
                 firer.fire(macro.id, enforceOncePerDay = true)
             }
         }
+        // Record that the periodic self-heal ran, so the Health screen can show it's alive.
+        AppSettings.setLastCatchUpAt(applicationContext, now)
         return Result.success()
     }
 

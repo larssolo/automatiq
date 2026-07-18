@@ -25,6 +25,14 @@ interface MacroLogDao {
     suspend fun updateResult(id: Long, status: String, error: String?)
 
     /**
+     * Records the carrier's delivery report. A FAILED report is terminal (a later part's DELIVERED
+     * must not mask it), so this updates unless the row is already FAILED — for a multipart message,
+     * any failed part leaves the whole entry FAILED.
+     */
+    @Query("UPDATE macro_logs SET delivery_status = :status WHERE id = :id AND delivery_status IS NOT 'FAILED'")
+    suspend fun updateDelivery(id: Long, status: String)
+
+    /**
      * Fails PENDING rows older than [cutoff]. A row is inserted as PENDING before dispatch and
      * finalized right after — one still PENDING long after its trigger time was orphaned by the
      * process dying mid-send and would otherwise sit as "PENDING" in the log forever.

@@ -29,6 +29,7 @@ import androidx.navigation.compose.*
 import com.vibeactions.scheduler.AiReplyActionReceiver
 import com.vibeactions.ui.common.PermissionBanner
 import com.vibeactions.ui.common.StaticBackground
+import com.vibeactions.ui.health.HealthScreen
 import com.vibeactions.ui.log.LogScreen
 import com.vibeactions.ui.macrolist.MacroListScreen
 import com.vibeactions.ui.settings.SettingsScreen
@@ -234,7 +235,8 @@ private fun AppRoot(navTarget: String? = null, onNavConsumed: () -> Unit = {}) {
                     )
                 }
                 composable("log") { LogScreen() }
-                composable("settings") { SettingsScreen() }
+                composable("settings") { SettingsScreen(onOpenHealth = { nav.navigate("health") }) }
+                composable("health") { HealthScreen() }
             }
         }
     }

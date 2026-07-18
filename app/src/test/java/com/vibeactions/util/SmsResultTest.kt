@@ -1,5 +1,6 @@
 package com.vibeactions.util
 
+import com.vibeactions.domain.model.DeliveryStatus
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -30,5 +31,20 @@ class SmsResultTest {
     @Test fun unknownCode_fallsBackWithCodeNumber() {
         val text = smsResultErrorText(42)
         assertTrue("expected code in message, got: $text", text!!.contains("42"))
+    }
+
+    @Test fun deliveryReport_successStatus_isDelivered() {
+        assertEquals(DeliveryStatus.DELIVERED, deliveryStatusForReport(0x00))
+        assertEquals(DeliveryStatus.DELIVERED, deliveryStatusForReport(0x1F))
+    }
+
+    @Test fun deliveryReport_permanentError_isFailed() {
+        assertEquals(DeliveryStatus.FAILED, deliveryStatusForReport(0x40))
+        assertEquals(DeliveryStatus.FAILED, deliveryStatusForReport(0x62))
+    }
+
+    @Test fun deliveryReport_temporaryStatus_isPendingNull() {
+        assertNull(deliveryStatusForReport(0x20))
+        assertNull(deliveryStatusForReport(0x3F))
     }
 }

@@ -1,6 +1,7 @@
 package com.vibeactions.data.repository
 
 import com.vibeactions.data.db.MacroLogDao
+import com.vibeactions.domain.model.DeliveryStatus
 import com.vibeactions.domain.model.MacroLog
 import com.vibeactions.domain.model.MacroStatus
 import com.vibeactions.domain.model.toDomain
@@ -25,6 +26,10 @@ class MacroLogRepository @Inject constructor(private val dao: MacroLogDao) {
 
     suspend fun updateResult(id: Long, status: MacroStatus, error: String?) =
         dao.updateResult(id, status.name, error)
+
+    /** Records a carrier delivery report for a sent SMS (FAILED is terminal; see DAO). */
+    suspend fun updateDelivery(id: Long, status: DeliveryStatus) =
+        dao.updateDelivery(id, status.name)
 
     /** Marks PENDING rows older than [cutoff] as FAILED (orphaned by a mid-send process death). */
     suspend fun failStalePending(cutoff: Long) =

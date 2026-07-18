@@ -87,3 +87,23 @@ val MIGRATION_9_10 = object : Migration(9, 10) {
         db.execSQL("ALTER TABLE macros ADD COLUMN ai_reply_instruction TEXT")
     }
 }
+
+/** v10 → v11: adds state-trigger config for CHARGING/BLUETOOTH/WIFI macros.
+ *  trigger_on_connect: 1 = fire on connect/arrive, 0 = on disconnect/leave (default 1).
+ *  trigger_target: BLUETOOTH device address / WIFI SSID to match; NULL = any.
+ *  trigger_target_label: human-readable label for the target. */
+val MIGRATION_10_11 = object : Migration(10, 11) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE macros ADD COLUMN trigger_on_connect INTEGER NOT NULL DEFAULT 1")
+        db.execSQL("ALTER TABLE macros ADD COLUMN trigger_target TEXT")
+        db.execSQL("ALTER TABLE macros ADD COLUMN trigger_target_label TEXT")
+    }
+}
+
+/** v11 → v12: adds `delivery_status` to macro_logs — the carrier's SMS delivery report
+ *  ('DELIVERED'/'FAILED'), or NULL when no report was received (unchanged for existing rows). */
+val MIGRATION_11_12 = object : Migration(11, 12) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE macro_logs ADD COLUMN delivery_status TEXT")
+    }
+}

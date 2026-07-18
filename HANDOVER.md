@@ -1,6 +1,22 @@
 # Overlevering — Automatiq (VibeActions)
 
-> Kopiér denne fil ind i en ny chattråd som kontekst. Sidst opdateret: 2026-07-18 (fase 4: kodegennemgang + robusthed/sikkerhed).
+> Kopiér denne fil ind i en ny chattråd som kontekst. Sidst opdateret: 2026-07-18 (fase 5: 8 nye funktioner).
+
+## Seneste arbejde (fase 5 — 8 nye funktioner, 2026-07-18)
+
+Bygger på brugerønske om 8 funktionsforslag. DB bumpet **10 → 12** (MIGRATION_10_11: `trigger_on_connect`/`trigger_target`/`trigger_target_label` på macros; MIGRATION_11_12: `delivery_status` på macro_logs). Ren logik testdækket: **85 grønne JVM-tests** (QuietHours, BackupJson, StateTrigger, delivery-status-mapping, nye felter). Android-lagene (service, receivers, Compose-skærme) kunne ikke kompileres her — **byg `assembleDebug` lokalt før release.**
+
+1. **Leveringskvitteringer** — `SmsDispatcher` armerer nu også en delivery-`PendingIntent` → ny `scheduler/SmsDeliveredReceiver` sætter `delivery_status` (DELIVERED/FAILED, FAILED terminal for multipart). Loggen viser "Delivered ✓✓" / "Not delivered". GSM TP-Status→outcome er ren (`util/SmsResult.deliveryStatusForReport`, testdrevet). Mange operatører sender aldrig rapport → status forbliver ukendt (vises ikke).
+2. **Health-skærm** — `ui/health/HealthScreen` + `HealthViewModel`. System-status (exact alarms, batteri-optimering, notifikationer, sidste catch-up) med "Fix"-genveje + næste-affyringstid pr. aktiv makro. Nås fra Settings → "Health check" (nav-rute `health`). Catch-up-workeren skriver `AppSettings.lastCatchUpAt`.
+3. **Quiet hours** — global (`data/AppSettings`, prefs "app_settings"). `SmsReplyReceiver` springer ALLE auto-svar over (inkl. AI-godkendelse) i vinduet. Vindue-logik med midnats-wrap er ren (`util/QuietHours.isWithinQuietHours`, testdrevet). UI i Settings med tidsvælgere.
+4. **State-triggere (CHARGING/BLUETOOTH/WIFI)** — nye `TriggerType`-værdier + felter (`triggerOnConnect`, `triggerTarget`, `triggerTargetLabel`). Forgrundstjeneste `scheduler/TriggerMonitorService` (foregroundServiceType=specialUse) registrerer runtime-receivers (power/BT ACL) + `ConnectivityManager.NetworkCallback` (Wi-Fi). `scheduler/TriggerMonitor.sync()` starter/stopper tjenesten når enabled state-makroer findes; kaldes fra Save/Delete/Toggle/RescheduleAll. Matchning ren (`util/StateTrigger.stateTriggerMatches`, testdrevet). Editor: connect/disconnect-vælger, BT paired-device-dropdown (kræver BLUETOOTH_CONNECT), Wi-Fi SSID-felt. Nye tilladelser i manifest.
+5. **Beskedforhåndsvisning** — editoren viser `expandTemplate(...)` (tokens udfyldt "lige nu") når beskeden indeholder en `{token}`.
+6. **Geofence-fejl synlige** — `GeofenceManager.register(macro, notifyOnFailure)` poster `notifyGeofenceError`-notifikation ved permission-manglende/Play-Services-fejl (kun ved eksplicit save/toggle, ikke ved app-start-masse-registrering).
+7. **Fuld backup** — `util/BackupJson` (macros + settings-map, bagudkompatibel med gammelt macro-only array). Settings samles/genskabes i `SettingsViewModel` (system prompt, model, udseende, quiet hours; API-nøgle kun ved opt-in). Round-trip testdrevet.
+8. **Søgning/filter** — søgefelt i makrolisten (drag deaktiveret under søgning); per-makro-dropdown-filter i loggen (nu 4-vejs combine i `LogViewModel`).
+
+**Vigtige nye/ændrede filer:** `data/AppSettings.kt`, `scheduler/{SmsDeliveredReceiver,TriggerMonitorService,TriggerMonitor}.kt`, `ui/health/*`, `util/{QuietHours,BackupJson,StateTrigger}.kt`, `data/db/Migrations.kt` (v10→12), `sms/SmsDispatcher.kt` (delivery), alle 4 use-cases (triggerMonitor.sync), `MacroFirer.fire()` returnerer nu `FireResult?`.
+
 
 ## Seneste arbejde (fase 4 — fuld kodegennemgang, 2026-07-18)
 

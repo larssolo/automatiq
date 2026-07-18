@@ -6,6 +6,7 @@ import com.vibeactions.data.repository.MacroRepository
 import com.vibeactions.domain.model.AiSendMode
 import com.vibeactions.domain.model.GeofenceTransition
 import com.vibeactions.domain.model.Macro
+import com.vibeactions.domain.model.STATE_TRIGGERS
 import com.vibeactions.domain.model.TriggerType
 import com.vibeactions.domain.usecase.SaveMacroUseCase
 import com.vibeactions.util.consumedFireStampForNewMacro
@@ -46,7 +47,13 @@ data class EditorState(
     val cardColor: Long = randomCardColor(),
     val aiReplyEnabled: Boolean = false,
     val aiSendMode: AiSendMode = AiSendMode.APPROVE,
-    val aiReplyInstruction: String = ""
+    val aiReplyInstruction: String = "",
+    /** State triggers (CHARGING/BLUETOOTH/WIFI): fire on connect (true) or disconnect (false). */
+    val triggerOnConnect: Boolean = true,
+    /** BLUETOOTH device address / WIFI SSID to match; blank = any. */
+    val triggerTarget: String = "",
+    /** Human label for [triggerTarget] (e.g. the Bluetooth device name). */
+    val triggerTargetLabel: String = ""
 ) {
     val nameValid get() = name.isNotBlank()
     /** Non-blank numbers (blanks are ignored on save); at least one, and every non-blank one valid. */
@@ -99,6 +106,11 @@ fun EditorState.toMacro(id: String): Macro {
         aiSendMode = aiSendMode,
         aiReplyInstruction = if (incoming && aiReplyEnabled)
             aiReplyInstruction.trim().ifBlank { null } else null,
+        triggerOnConnect = if (triggerType in STATE_TRIGGERS) triggerOnConnect else true,
+        triggerTarget = if (triggerType == TriggerType.BLUETOOTH || triggerType == TriggerType.WIFI)
+            triggerTarget.trim().ifBlank { null } else null,
+        triggerTargetLabel = if (triggerType == TriggerType.BLUETOOTH || triggerType == TriggerType.WIFI)
+            triggerTargetLabel.trim().ifBlank { null } else null,
         validUntilEpochDay = if (scheduled) validUntilEpochDay else null,
         matchSender = if (incoming) matchSender.trim().ifBlank { null } else null,
         matchKeyword = if (incoming) matchKeyword.trim().ifBlank { null } else null,
@@ -133,7 +145,10 @@ class MacroEditorViewModel @Inject constructor(
                     cardColor = if (m.cardColor != 0L) m.cardColor else _state.value.cardColor,
                     aiReplyEnabled = m.aiReplyEnabled,
                     aiSendMode = m.aiSendMode,
-                    aiReplyInstruction = m.aiReplyInstruction ?: "")
+                    aiReplyInstruction = m.aiReplyInstruction ?: "",
+                    triggerOnConnect = m.triggerOnConnect,
+                    triggerTarget = m.triggerTarget ?: "",
+                    triggerTargetLabel = m.triggerTargetLabel ?: "")
             }
         }
     }

@@ -18,6 +18,10 @@ class MacroRepository @Inject constructor(private val dao: MacroDao) {
     suspend fun getEnabledScheduled(): List<Macro> = dao.getEnabledScheduled().map { it.toDomain() }
     suspend fun getEnabledByTrigger(type: TriggerType): List<Macro> =
         dao.getEnabledByTrigger(type.name).map { it.toDomain() }
+
+    /** True if any enabled macro uses a device-state trigger (CHARGING/BLUETOOTH/WIFI), i.e. the
+     *  foreground monitor service needs to run. */
+    suspend fun hasEnabledStateTriggers(): Boolean = dao.countEnabledStateTriggers() > 0
     suspend fun upsert(macro: Macro) = dao.upsert(macro.toEntity())
     suspend fun delete(macro: Macro) = dao.delete(macro.toEntity())
     suspend fun updateStatus(id: String, at: Long, status: MacroStatus) =
