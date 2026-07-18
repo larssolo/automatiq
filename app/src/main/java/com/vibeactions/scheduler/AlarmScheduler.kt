@@ -7,6 +7,7 @@ import android.content.Intent
 import android.os.Build
 import com.vibeactions.domain.model.Macro
 import com.vibeactions.util.calculateNextFireTime
+import com.vibeactions.util.parseHhMmOrNull
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.time.Instant
 import java.time.ZoneId
@@ -24,6 +25,9 @@ class AlarmScheduler @Inject constructor(
 
     fun schedule(macro: Macro) {
         val time = macro.scheduledTime ?: return
+        // A malformed time (possible via a hand-edited import file) must not throw here: this runs
+        // on every app start via rescheduleAll, and a throw would be a permanent crash loop.
+        if (parseHhMmOrNull(time) == null) return
         val triggerAt = calculateNextFireTime(
             time,
             days = macro.daysOfWeek,

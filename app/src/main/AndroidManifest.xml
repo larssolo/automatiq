@@ -68,6 +68,9 @@
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
                 <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+                <action android:name="android.intent.action.TIME_SET" />
+                <action android:name="android.app.action.SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED" />
             </intent-filter>
         </receiver>
 
@@ -89,12 +92,15 @@
             android:exported="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-                <action android:name="com.vibeactions.widget.ACTION_TAP" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/macro_widget_info" />
         </receiver>
+
+        <!-- Widget taps send an SMS, so they are handled by a non-exported receiver: the exported
+             provider above must not expose a broadcast that other apps could use to fire macros. -->
+        <receiver android:name=".widget.WidgetTapReceiver" android:exported="false" />
 
         <activity
             android:name=".widget.MacroWidgetConfigActivity"

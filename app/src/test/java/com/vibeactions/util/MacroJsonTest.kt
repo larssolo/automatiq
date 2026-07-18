@@ -6,6 +6,7 @@ import com.vibeactions.domain.model.MacroStatus
 import com.vibeactions.domain.model.TriggerType
 import org.junit.Assert.assertEquals
 import org.junit.Test
+import kotlin.test.assertFailsWith
 
 class MacroJsonTest {
     @Test fun roundTripPreservesAllFields() {
@@ -29,5 +30,14 @@ class MacroJsonTest {
         val json = exportMacros(macros)
         val restored = importMacros(json)
         assertEquals(macros, restored)
+    }
+
+    @Test fun importRejectsMalformedScheduledTime() {
+        // A hand-edited file with a garbage time must fail the import cleanly — once saved it
+        // would break scheduling on every app start.
+        val bad = """[{"id":"x","name":"Bad","triggerType":"SCHEDULED","scheduledTime":"9 o'clock",
+            "repeatDaily":true,"recipients":["+4512345678"],"messageBody":"Hej","enabled":true,
+            "lastTriggeredAt":null,"lastStatus":null,"createdAt":1}]"""
+        assertFailsWith<IllegalArgumentException> { importMacros(bad) }
     }
 }

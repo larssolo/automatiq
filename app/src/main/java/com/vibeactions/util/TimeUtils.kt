@@ -53,16 +53,49 @@ fun calculateNextFireTime(
     val target = LocalTime.parse(hhmm)
     val horizon = weekInterval.coerceAtLeast(1) * 7 + 7
     val date = now.toLocalDate()
+    // A future anchor (start date) means nothing may fire until then. Scan from the anchor in that
+    // case: scanning from today would find no valid day inside the horizon and hit the tomorrow
+    // fallback below — arming (and firing) the macro daily before its start date.
+    val anchor = anchorEpochDay?.let { LocalDate.ofEpochDay(it) }
+    val scanStart = if (anchor != null && anchor.isAfter(date)) anchor else date
     for (i in 0..horizon) {
-        val d = date.plusDays(i.toLong())
+        val d = scanStart.plusDays(i.toLong())
         val candidate = d.atTime(target)
         if (candidate.isAfter(now) &&
             isScheduledDay(d, days, weekInterval, anchorEpochDay, validUntilEpochDay)) {
             return candidate.atZone(zone).toInstant().toEpochMilli()
         }
     }
-    // Unreachable for a non-empty allowed set; fall back to tomorrow.
+    // Only reachable when the macro's expiry has passed; callers must reject a fire past expiry.
     return date.plusDays(1).atTime(target).atZone(zone).toInstant().toEpochMilli()
+}
+
+/** Parses "HH:mm" leniently, returning null instead of throwing on malformed input (e.g. a
+ *  hand-edited import file). Callers skip scheduling rather than crash — see importMacros. */
+fun parseHhMmOrNull(hhmm: String): LocalTime? = runCatching { LocalTime.parse(hhmm) }.getOrNull()
+
+/**
+ * For a macro being created (or duplicated) right now: an epoch-ms stamp that consumes today's
+ * scheduled fire when today's occurrence has already passed, else null. Without this the hourly
+ * catch-up worker treats the pre-creation occurrence as "missed" and sends immediately — but the
+ * macro didn't exist at its fire time, so there was nothing to miss. The alarm path agrees: it
+ * arms the NEXT occurrence after now.
+ */
+fun consumedFireStampForNewMacro(
+    hhmm: String?,
+    days: Set<Int>,
+    weekInterval: Int = 1,
+    anchorEpochDay: Long? = null,
+    validUntilEpochDay: Long? = null,
+    now: LocalDateTime = LocalDateTime.now(),
+    zone: ZoneId = ZoneId.systemDefault()
+): Long? {
+    val time = hhmm?.let { parseHhMmOrNull(it) } ?: return null
+    val today = now.toLocalDate()
+    val passedToday = !now.toLocalTime().isBefore(time)
+    return if (passedToday &&
+        isScheduledDay(today, days, weekInterval, anchorEpochDay, validUntilEpochDay))
+        now.atZone(zone).toInstant().toEpochMilli() else null
 }
 
 /** First allowed weekday on or after [date] (ignores interval) — used to anchor a recurrence. */

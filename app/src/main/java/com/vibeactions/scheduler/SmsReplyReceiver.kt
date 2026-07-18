@@ -35,6 +35,9 @@ class SmsReplyReceiver : BroadcastReceiver() {
         val sender = messages.firstOrNull()?.displayOriginatingAddress ?: return
         val body = messages.joinToString("") { it.messageBody ?: "" }
         if (body.isBlank()) return
+        // Alphanumeric sender IDs (DHL, banks, OTP gateways) cannot receive SMS — replying would
+        // just produce a radio failure (and, for AI macros, a wasted Gemini call).
+        if (sender.none { it.isDigit() }) return
 
         val pending = goAsync()
         CoroutineScope(Dispatchers.IO).launch {
@@ -51,13 +54,17 @@ class SmsReplyReceiver : BroadcastReceiver() {
 
                         if (macro.aiReplyEnabled) {
                             // Hand off to a worker — the Gemini call can take longer than a
-                            // BroadcastReceiver may safely stay alive.
+                            // BroadcastReceiver may safely stay alive. The event id identifies THIS
+                            // incoming SMS: a WorkManager retry re-carries it (dedup works), while a
+                            // later identical message mints a new id (and is answered again).
                             val work = OneTimeWorkRequestBuilder<GeminiReplyWorker>()
                                 .setInputData(
                                     workDataOf(
                                         GeminiReplyWorker.KEY_MACRO_ID to macro.id,
                                         GeminiReplyWorker.KEY_SENDER to sender,
-                                        GeminiReplyWorker.KEY_BODY to body
+                                        GeminiReplyWorker.KEY_BODY to body,
+                                        GeminiReplyWorker.KEY_EVENT_ID to
+                                            java.util.UUID.randomUUID().toString()
                                     )
                                 )
                                 .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)

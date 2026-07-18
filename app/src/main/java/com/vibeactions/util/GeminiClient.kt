@@ -69,16 +69,18 @@ suspend fun geminiGenerate(
         val body = geminiJson.encodeToString(GeminiRequest.serializer(), request)
         // Key travels as a header, not a query param — URLs end up in logs and proxies.
         val conn = URL(endpointFor(model)).openConnection() as HttpURLConnection
-        conn.apply {
-            requestMethod = "POST"
-            setRequestProperty("Content-Type", "application/json")
-            setRequestProperty("x-goog-api-key", apiKey)
-            connectTimeout = 10_000
-            readTimeout = 15_000
-            doOutput = true
-            outputStream.use { it.write(body.toByteArray()) }
-        }
+        // The finally must also cover the write phase: a connect/write failure would otherwise
+        // leak the connection.
         try {
+            conn.apply {
+                requestMethod = "POST"
+                setRequestProperty("Content-Type", "application/json")
+                setRequestProperty("x-goog-api-key", apiKey)
+                connectTimeout = 10_000
+                readTimeout = 15_000
+                doOutput = true
+                outputStream.use { it.write(body.toByteArray()) }
+            }
             val code = conn.responseCode
             if (code !in 200..299) {
                 // The real reason (e.g. "API key not valid") is in the error stream, not inputStream.

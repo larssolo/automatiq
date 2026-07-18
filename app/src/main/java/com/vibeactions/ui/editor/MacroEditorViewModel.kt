@@ -8,6 +8,7 @@ import com.vibeactions.domain.model.GeofenceTransition
 import com.vibeactions.domain.model.Macro
 import com.vibeactions.domain.model.TriggerType
 import com.vibeactions.domain.usecase.SaveMacroUseCase
+import com.vibeactions.util.consumedFireStampForNewMacro
 import com.vibeactions.util.firstScheduledDateOnOrAfter
 import com.vibeactions.util.isValidPhone
 import com.vibeactions.util.randomCardColor
@@ -142,8 +143,22 @@ class MacroEditorViewModel @Inject constructor(
     fun save(onDone: () -> Unit) {
         val s = _state.value
         if (!s.canSave) return
+        val isNew = s.id == null
         val id = s.id ?: UUID.randomUUID().toString()
         _state.value = _state.value.copy(id = id)
-        viewModelScope.launch { save(s.toMacro(id)); onDone() }
+        viewModelScope.launch {
+            var macro = s.toMacro(id)
+            // A brand-new macro created after today's fire time missed nothing — consume today's
+            // scheduled fire so the catch-up worker doesn't send it immediately on creation.
+            if (isNew && macro.triggerType == TriggerType.SCHEDULED) {
+                macro = macro.copy(
+                    lastScheduledFireAt = consumedFireStampForNewMacro(
+                        macro.scheduledTime, macro.daysOfWeek, macro.weekInterval,
+                        macro.anchorEpochDay, macro.validUntilEpochDay
+                    )
+                )
+            }
+            save(macro); onDone()
+        }
     }
 }

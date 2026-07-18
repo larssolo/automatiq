@@ -29,6 +29,8 @@ class MacroFirer @Inject constructor(
      * [overrideRecipient] (auto-reply) sends to that number instead of the macro's own recipient list.
      * [overrideBody] when set, uses this text directly instead of expanding the macro's template.
      * [suppressResultNotification] when true, skips posting the result notification.
+     * Returns the outcome, or null when the fire was skipped (macro missing/disabled, no recipients,
+     * or another path already claimed today's scheduled send).
      */
     suspend fun fire(
         macroId: String,
@@ -36,18 +38,19 @@ class MacroFirer @Inject constructor(
         overrideRecipient: String? = null,
         overrideBody: String? = null,
         suppressResultNotification: Boolean = false
-    ) {
-        val macro = macroRepo.getById(macroId) ?: return
-        if (!macro.enabled) return
+    ): FireResult? {
+        val macro = macroRepo.getById(macroId) ?: return null
+        if (!macro.enabled) return null
         val now = System.currentTimeMillis()
+        // Auto-reply targets the incoming sender; everything else uses the macro's recipient list.
+        // Checked before the claim below: an unsendable macro must not consume the day's send.
+        val targets = overrideRecipient?.let { listOf(it) } ?: macro.recipients
+        if (targets.isEmpty()) return null
         // Scheduled fires (alarm + catch-up worker) dedupe on the scheduled-fire marker only, so a
         // manual/widget tap earlier today does not consume the day's scheduled send. The claim is an
         // atomic check-and-set, so a simultaneous alarm + catch-up can't both pass the guard.
-        if (enforceOncePerDay && !macroRepo.tryClaimScheduledFire(macro.id, now, startOfDayMillis(now))) return
+        if (enforceOncePerDay && !macroRepo.tryClaimScheduledFire(macro.id, now, startOfDayMillis(now))) return null
 
-        // Auto-reply targets the incoming sender; everything else uses the macro's recipient list.
-        val targets = overrideRecipient?.let { listOf(it) } ?: macro.recipients
-        if (targets.isEmpty()) return
         // Expand {dato}/{tid}/{ugedag}/{navn} once, then send the same text to every recipient.
         val body = overrideBody ?: expandTemplate(macro.messageBody, LocalDateTime.now(), macro.name)
         // The log row is created before sending so each SMS can carry a sent receipt addressing it:
@@ -69,15 +72,27 @@ class MacroFirer @Inject constructor(
             else -> "${failures.size}/${targets.size} failed: " + failures.first().second.message
         }
 
-        macroRepo.updateStatus(macro.id, now, status)
-        // The scheduled-fire marker was already stamped atomically by tryClaimScheduledFire above.
+        // Finalize the log first, then read it back: a fast radio failure receipt may already have
+        // flipped the row to FAILED (terminal in updateResult), and the macro status and
+        // notification must mirror that final outcome — not report SUCCESS for a dropped send.
         logRepo.updateResult(logId, status, error)
-        if (!suppressResultNotification) notifications.notifyResult(macro, status, error, targets, body)
+        val finalLog = logRepo.get(logId)
+        val finalStatus = finalLog?.status ?: status
+        val finalError = finalLog?.errorMessage ?: error
+        macroRepo.updateStatus(macro.id, now, finalStatus)
+        // If the receipt won the race, SmsSentReceiver already posted a corrective notification.
+        if (!suppressResultNotification && finalStatus == status) {
+            notifications.notifyResult(macro, finalStatus, finalError, targets, body)
+        }
 
         if (macro.triggerType == TriggerType.SCHEDULED && macro.repeatDaily) {
-            alarmScheduler.schedule(macro.copy(lastTriggeredAt = now, lastStatus = status))
+            alarmScheduler.schedule(macro.copy(lastTriggeredAt = now, lastStatus = finalStatus))
         }
         // Keep bound home-screen widgets' "Last: …" subtitle in sync for scheduled/auto fires too.
         widgets.refreshFor(macro.id)
+        return FireResult(finalStatus, finalError)
     }
 }
+
+/** Outcome of a completed fire: the final status and, for failures, a short human-readable reason. */
+data class FireResult(val status: MacroStatus, val error: String?)

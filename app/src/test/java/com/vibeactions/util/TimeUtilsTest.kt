@@ -112,6 +112,47 @@ class TimeUtilsTest {
         assertFalse(isScheduledDay(day.plusDays(1), ALL_DAYS, validUntilEpochDay = day.toEpochDay()))
     }
 
+    @Test fun futureAnchor_neverFiresBeforeStartDate() {
+        // Biweekly Monday macro whose start date is months away: the next fire must be the anchor
+        // Monday itself — not the "tomorrow" fallback that made pre-start macros fire daily.
+        val now = LocalDateTime.of(2026, 6, 15, 8, 0) // a Monday
+        val anchorMon = LocalDate.of(2026, 9, 14)     // a Monday, 13 weeks ahead
+        val fire = calculateNextFireTime("09:00", now, zone,
+            days = setOf(1), weekInterval = 2, anchorEpochDay = anchorMon.toEpochDay())
+        assertEquals(anchorMon.atTime(9, 0), fireAt(fire))
+    }
+
+    @Test fun futureAnchor_weeklyAlsoStartsAtAnchor() {
+        val now = LocalDateTime.of(2026, 6, 15, 8, 0)
+        val anchor = LocalDate.of(2026, 7, 20) // a Monday, 5 weeks ahead
+        val fire = calculateNextFireTime("09:00", now, zone,
+            days = setOf(1), weekInterval = 2, anchorEpochDay = anchor.toEpochDay())
+        assertEquals(anchor.atTime(9, 0), fireAt(fire))
+    }
+
+    @Test fun newMacro_timeAlreadyPassedToday_consumesTodaysFire() {
+        val now = LocalDateTime.of(2026, 6, 15, 10, 0)
+        val stamp = consumedFireStampForNewMacro("09:00", ALL_DAYS, now = now, zone = zone)
+        assertEquals(now.atZone(zone).toInstant().toEpochMilli(), stamp)
+    }
+
+    @Test fun newMacro_timeStillAheadToday_noStamp() {
+        val now = LocalDateTime.of(2026, 6, 15, 8, 0)
+        assertEquals(null, consumedFireStampForNewMacro("09:00", ALL_DAYS, now = now, zone = zone))
+    }
+
+    @Test fun newMacro_todayNotAScheduledDay_noStamp() {
+        val now = LocalDateTime.of(2026, 6, 15, 10, 0) // a Monday
+        assertEquals(null, consumedFireStampForNewMacro("09:00", setOf(2), now = now, zone = zone))
+    }
+
+    @Test fun parseHhMmOrNull_acceptsValidRejectsGarbage() {
+        assertEquals(java.time.LocalTime.of(9, 5), parseHhMmOrNull("09:05"))
+        assertEquals(null, parseHhMmOrNull("9 o'clock"))
+        assertEquals(null, parseHhMmOrNull(""))
+        assertEquals(null, parseHhMmOrNull("25:00"))
+    }
+
     @Test fun validUntil_pastExpiry_nextFireFallsBackBeyondExpiry() {
         // After expiry the search finds no valid day; AlarmScheduler guards against arming this.
         val now = LocalDateTime.of(2026, 6, 20, 8, 0)

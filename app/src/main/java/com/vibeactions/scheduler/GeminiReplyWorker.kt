@@ -32,6 +32,8 @@ class GeminiReplyWorker @AssistedInject constructor(
         val macroId = inputData.getString(KEY_MACRO_ID) ?: return Result.failure()
         val sender = inputData.getString(KEY_SENDER) ?: return Result.failure()
         val body = inputData.getString(KEY_BODY) ?: return Result.failure()
+        // Fallback for jobs enqueued by an older app version whose inputData had no event id.
+        val eventId = inputData.getString(KEY_EVENT_ID) ?: body.hashCode().toString()
 
         val macro = repo.getById(macroId) ?: return Result.success()
         if (!macro.enabled) return Result.success()
@@ -62,16 +64,22 @@ class GeminiReplyWorker @AssistedInject constructor(
         when (macro.aiSendMode) {
             AiSendMode.APPROVE -> notifications.notifyAiApproval(macro, sender, generated)
             AiSendMode.AUTO -> {
-                // Claim this (macro, sender, message, day) before sending. If WorkManager re-runs a
+                // Claim this (macro, sender, event, day) before sending. If WorkManager re-runs a
                 // worker that died mid-flight, the retry carries identical inputData → identical key
                 // → the claim fails and we don't send the auto-reply twice.
-                if (!claimAutoSend(macroId, sender, body)) return Result.success()
-                firer.fire(
+                if (!claimAutoSend(macroId, sender, eventId)) return Result.success()
+                val result = firer.fire(
                     macroId, enforceOncePerDay = false,
                     overrideRecipient = sender, overrideBody = generated,
                     suppressResultNotification = true
                 )
-                notifications.notifyAiSent(macro, sender, generated)
+                // Only announce success when the send actually succeeded; a failed send would
+                // otherwise be reported as "AI reply sent" with no failure notice at all.
+                if (result?.status == com.vibeactions.domain.model.MacroStatus.SUCCESS) {
+                    notifications.notifyAiSent(macro, sender, generated)
+                } else if (result != null) {
+                    notifications.notifyResult(macro, result.status, result.error, listOf(sender), generated)
+                }
             }
         }
         return Result.success()
@@ -79,9 +87,9 @@ class GeminiReplyWorker @AssistedInject constructor(
 
     /** True if this auto-send was newly claimed; false if an earlier run already claimed it today.
      *  Backed by SharedPreferences, pruned to the current day so it can't grow unbounded. */
-    private fun claimAutoSend(macroId: String, sender: String, body: String): Boolean {
+    private fun claimAutoSend(macroId: String, sender: String, eventId: String): Boolean {
         val now = System.currentTimeMillis()
-        val key = aiReplyDedupKey(macroId, sender, body, now)
+        val key = aiReplyDedupKey(macroId, sender, eventId, now)
         val todayToken = "|" + java.time.Instant.ofEpochMilli(now)
             .atZone(java.time.ZoneId.systemDefault()).toLocalDate().toEpochDay() + "|"
         val prefs = applicationContext.getSharedPreferences("ai_sent", Context.MODE_PRIVATE)
@@ -99,6 +107,7 @@ class GeminiReplyWorker @AssistedInject constructor(
         const val KEY_MACRO_ID = "macro_id"
         const val KEY_SENDER = "sender"
         const val KEY_BODY = "body"
+        const val KEY_EVENT_ID = "event_id"
         private const val KEY_SENT = "sent_keys"
         // Guards the read-modify-write of the SharedPreferences claim set across overlapping workers.
         private val claimLock = Any()

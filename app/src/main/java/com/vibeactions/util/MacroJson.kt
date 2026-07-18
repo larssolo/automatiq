@@ -53,6 +53,11 @@ fun importMacros(text: String): List<Macro> =
     json.decodeFromString(
         kotlinx.serialization.builtins.ListSerializer(MacroDto.serializer()), text
     ).map {
+        // Reject a malformed time up front (hand-edited file): once persisted it would crash
+        // scheduling on every app start. Throwing here surfaces as a clean import error instead.
+        require(it.scheduledTime == null || parseHhMmOrNull(it.scheduledTime) != null) {
+            "invalid scheduledTime \"${it.scheduledTime}\" for macro \"${it.name}\""
+        }
         Macro(
             id = it.id, name = it.name, triggerType = TriggerType.valueOf(it.triggerType),
             scheduledTime = it.scheduledTime, repeatDaily = it.repeatDaily,

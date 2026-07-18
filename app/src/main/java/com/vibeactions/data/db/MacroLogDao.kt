@@ -11,6 +11,9 @@ interface MacroLogDao {
     @Query("SELECT * FROM macro_logs ORDER BY triggered_at DESC")
     fun observeAll(): Flow<List<MacroLogEntity>>
 
+    @Query("SELECT * FROM macro_logs WHERE id = :id")
+    suspend fun getById(id: Long): MacroLogEntity?
+
     @Insert
     suspend fun insert(log: MacroLogEntity): Long
 
@@ -20,6 +23,14 @@ interface MacroLogDao {
      */
     @Query("UPDATE macro_logs SET status = :status, error_message = :error WHERE id = :id AND status != 'FAILED'")
     suspend fun updateResult(id: Long, status: String, error: String?)
+
+    /**
+     * Fails PENDING rows older than [cutoff]. A row is inserted as PENDING before dispatch and
+     * finalized right after — one still PENDING long after its trigger time was orphaned by the
+     * process dying mid-send and would otherwise sit as "PENDING" in the log forever.
+     */
+    @Query("UPDATE macro_logs SET status = 'FAILED', error_message = :error WHERE status = 'PENDING' AND triggered_at < :cutoff")
+    suspend fun failStalePending(cutoff: Long, error: String)
 
     @Query("DELETE FROM macro_logs WHERE id NOT IN (SELECT id FROM macro_logs ORDER BY triggered_at DESC LIMIT :keep)")
     suspend fun prune(keep: Int = 500)
