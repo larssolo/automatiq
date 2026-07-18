@@ -4,7 +4,7 @@
 
 # Automatiq
 
-**On-device SMS automation for Android — scheduled, manual, auto-reply & location triggers, with optional AI-generated replies.**
+**On-device SMS automation for Android — scheduled, manual, auto-reply, missed-call, location & device-state triggers, with optional AI-generated replies.**
 
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.0.21-7F52FF?logo=kotlin&logoColor=white)](https://kotlinlang.org)
 [![Android](https://img.shields.io/badge/Android-8.0%2B-3DDC84?logo=android&logoColor=white)](https://developer.android.com)
@@ -17,7 +17,7 @@
 
 ## What it does
 
-Automatiq lets you define SMS macros — a name, one or more recipients, and a message — and fire them automatically. A macro can trigger on a **schedule**, on a **button tap**, as an **auto-reply** to an incoming SMS, or when you **arrive at / leave a place**. Auto-replies can answer with a fixed text or with an **AI-generated reply** (Gemini) — either sent automatically or held for your approval.
+Automatiq lets you define SMS macros — a name, one or more recipients, and a message — and fire them automatically. A macro can trigger on a **schedule**, on a **button tap**, as an **auto-reply** to an incoming SMS, when you **miss (or decline) a call**, when you **arrive at / leave a place**, or on a **device state change** — plugging in the charger, connecting a Bluetooth device or a Wi-Fi network. Auto-replies can answer with a fixed text or with an **AI-generated reply** (Gemini) — either sent automatically or held for your approval.
 
 Everything runs on-device. No account, no server. Only two optional features reach outside the phone: the **location trigger** (Google Play Services geofencing) and **AI replies** (Google's Gemini API, with your own free key).
 
@@ -43,6 +43,8 @@ Everything runs on-device. No account, no server. Only two optional features rea
 | 👆 **Manual** | you tap the macro in the list or a home-screen widget |
 | 💬 **Auto-reply** | an incoming SMS matches an optional sender and/or keyword — replies to the sender with a fixed text or an AI-generated answer |
 | 📍 **Location** | you enter or leave a geofenced place (radius of your choosing) |
+| 📵 **Missed call** | a call rings out or is declined — texts the caller back, with an optional caller filter |
+| 🔌 **Charging / Bluetooth / Wi-Fi** | the phone is plugged in/unplugged, or connects/disconnects a chosen Bluetooth device or Wi-Fi network |
 
 ---
 
@@ -53,20 +55,25 @@ Everything runs on-device. No account, no server. Only two optional features rea
 | 🤖 | **AI auto-replies (Gemini)** — per macro: approve each reply before it goes out, or send automatically and get notified. An optional per-macro instruction steers tone and length |
 | ✨ | **AI compose** — describe the message in the editor and pick between three generated suggestions |
 | 👥 | **Multiple recipients** — one macro sends to a whole list of numbers |
-| 🔤 | **Message variables** — `{dato}` `{tid}` `{ugedag}` `{navn}` are filled in at send time |
+| 🔤 | **Message variables** — `{dato}` `{tid}` `{ugedag}` `{navn}` are filled in at send time; reply macros also get `{afsender}` (the other party's number) |
 | ⏳ | **Expiry date** — a scheduled macro stops firing after a date you pick |
 | 💬 | **Auto-reply** — react to incoming SMS by sender/keyword, with a loop guard |
 | 📍 | **Location triggers** — arrive/depart a place, re-armed after reboot and app updates |
 | 🔁 | **Dual scheduling engine** — AlarmManager for precision + WorkManager catch-up, self-healing on every app start, so nothing is missed after Doze, reboot or an update |
 | 📅 | **Per-weekday control** — pick any combination of Mon–Sun per macro |
 | 🗓️ | **Every-N-weeks recurrence** — every week, every other week, every 3 or 4 weeks |
-| 🏠 | **Home-screen widget** — one widget per macro, tap to send; status stays in sync with scheduled and auto sends too |
+| 🏠 | **Home-screen widgets** — one widget per macro, tap to send; the subtitle shows the last send ("Last: 14:32 ✓") and stays in sync with scheduled and auto sends. A separate app-shortcut widget launches any app with one tap |
 | 📬 | **Radio-level send status** — a sent receipt from the radio flips the log and notification to *failed* if the network dropped the message after dispatch |
+| ✓✓ | **Delivery receipts** — when the carrier reports delivery, the log shows "Delivered ✓✓" (or "Not delivered") |
+| 🌙 | **Quiet hours** — auto-replies received in the window aren't dropped but answered right after it ends: one reply per person, to their latest message |
+| 📵 | **Missed-call auto-text** — "I'll call you back" to anyone you couldn't pick up for; declined calls count too |
+| 🩺 | **Health screen** — exact-alarm, battery and notification status with one-tap fixes, plus each macro's next fire time |
+| 🔍 | **Search & log filters** — find macros by name; filter the log by status and by macro |
 | 🔔 | **Notifications** — result (success / failed) + one-tap retry on failure; message content is kept off the lock screen |
-| ⏯️ | **Quick enable/disable** — long-press a card for Delete / Duplicate / Send now / Enable-Disable |
-| 🖼️ | **Themeable background** — a static image with hue and saturation sliders in Settings, plus a card-opacity slider |
+| ⏯️ | **Quick actions** — a one-tap send button on every card; long-press for Delete / Duplicate / Send now / Enable-Disable |
+| 🖼️ | **Living dark UI** — a static background with hue/saturation and card-opacity sliders, topped by a slow aurora of drifting accent glows; cards breathe while armed |
 | 📋 | **Execution log** — full chronological history per macro, filterable |
-| 📤 | **JSON export / import** — full backup and restore via system file picker |
+| 📤 | **JSON export / import** — full backup of macros *and* settings (API key only if you opt in) via system file picker; legacy macro-only files still import |
 | ↕️ | **Drag-and-drop reorder** — visible drag handle on every card |
 | 🎨 | **Per-macro colours** — each card gets a random pastel accent |
 | 🔋 | **Battery-optimisation prompt** — guides you through the whitelist so alarms survive aggressive OEM killers |
@@ -114,12 +121,15 @@ Notes:
 └────────────┬───────────────────────────────────────┬─────────────────┘
              │                                       │
 ┌────────────▼─────────────────────────┐ ┌───────────▼─────────────────┐
-│            Scheduler / Triggers       │ │         Data Layer           │
+│          Scheduler / Triggers         │ │          Data Layer          │
 │  AlarmScheduler · MacroAlarmReceiver  │ │  MacroRepository             │
 │  MacroCatchUpWorker · BootReceiver    │ │  MacroLogRepository          │
-│  SmsReplyReceiver · GeminiReplyWorker │ │  Room DB (v10)              │
-│  GeofenceManager · GeofenceReceiver   │ │  MacroEntity · MacroLogEntity│
-│  SmsSentReceiver  (radio receipts)    │ │  Migrations 1→…→10          │
+│  SmsReplyReceiver · IncomingRouter    │ │  Room DB (v12)               │
+│  GeminiReplyWorker · DeferredReplyWkr │ │  MacroEntity · MacroLogEntity│
+│  CallStateReceiver  (missed calls)    │ │  AppSettings (quiet hours)   │
+│  TriggerMonitorService (state trig.)  │ │  Migrations 1→…→12           │
+│  GeofenceManager · GeofenceReceiver   │ │                              │
+│  SmsSentReceiver · SmsDeliveredRecv   │ │                              │
 │  MacroFirer  ←── single send path ────┼─┤                              │
 └────────────┬──────────────────────────┘ └─────────────────────────────┘
              │
@@ -131,7 +141,7 @@ Notes:
 └──────────────────────────────────────────────────────────────────────┘
 ```
 
-`MacroFirer.fire()` is the one path every trigger funnels through — alarm, catch-up worker, manual tap, widget, auto-reply (fixed and AI), and geofence all call it.
+`MacroFirer.fire()` is the one path every trigger funnels through — alarm, catch-up worker, manual tap, widget, auto-reply (fixed and AI), missed call, device-state trigger, and geofence all call it.
 
 ### Scheduling engine
 
@@ -147,6 +157,10 @@ Alarms and geofences are silently cleared by Android on reboot **and on every ap
 ### Send pipeline & delivery status
 
 "Handed to `SmsManager`" is not the same as "sent". Every dispatched SMS carries a **sent receipt** (`PendingIntent`) addressed to `SmsSentReceiver` with the log entry's id. The log row is created *before* sending; if the radio later reports a failure (no service, flight mode, SMS limit, …) the entry and the macro's status flip to **FAILED** with the radio's reason, a corrective notification is posted, and bound widgets refresh. Success receipts are no-ops — the dispatch path already finalized the entry.
+
+Each SMS also requests a **delivery report**. When the carrier sends one, the log entry gains a delivery status — shown as *"Delivered ✓✓"* or *"Not delivered"*. Many carriers never report anything; the status then simply stays unknown.
+
+**Quiet hours** pause every auto-reply — fixed, AI, and missed-call texts — during a nightly window you pick in Settings. Held replies are not lost: `DeferredReplyWorker` answers each person's latest message right after the window ends, one reply per person per night.
 
 ---
 
@@ -183,6 +197,11 @@ Alarms and geofences are silently cleared by Android on reboot **and on every ap
 | `ACCESS_FINE_LOCATION` / `ACCESS_BACKGROUND_LOCATION` | Geofence (location) triggers |
 | `POST_NOTIFICATIONS` | Show send-result, AI-approval and retry notifications |
 | `READ_CONTACTS` | Contact picker in the editor |
+| `READ_PHONE_STATE` | Detect ringing/ended calls for missed-call macros |
+| `READ_CALL_LOG` | Android only reveals the caller's number to apps holding this — required to text a missed caller back |
+| `BLUETOOTH_CONNECT` | Match a specific Bluetooth device in state-trigger macros |
+| `ACCESS_NETWORK_STATE` / `ACCESS_WIFI_STATE` | Detect Wi-Fi connect/disconnect (and the SSID) for state triggers |
+| `FOREGROUND_SERVICE` (+ `SPECIAL_USE`) | The state-trigger monitor runs as a minimal foreground service, only while a charging/Bluetooth/Wi-Fi macro is enabled |
 
 Privacy: phone numbers are always masked in notifications and the log; result notifications keep the message body off the lock screen (redacted public version); the Gemini key is excluded from backups.
 
@@ -209,7 +228,7 @@ The app is not distributed via the Play Store — it is sideloaded on a personal
 
 ## Database schema
 
-Room database at version **10**. All migrations are additive (`ADD COLUMN`) — upgrading from any prior install preserves existing macros.
+Room database at version **12**. All migrations are additive (`ADD COLUMN`) — upgrading from any prior install preserves existing macros.
 
 | Migration | Change |
 |---|---|
@@ -222,6 +241,8 @@ Room database at version **10**. All migrations are additive (`ADD COLUMN`) — 
 | 7 → 8 | `latitude`, `longitude`, `radius_meters`, `geofence_transition` |
 | 8 → 9 | `ai_reply_enabled`, `ai_send_mode` (AI auto-replies) |
 | 9 → 10 | `ai_reply_instruction` (per-macro AI prompt) |
+| 10 → 11 | `trigger_on_connect`, `trigger_target`, `trigger_target_label` (state triggers) |
+| 11 → 12 | `delivery_status` on `macro_logs` (carrier delivery reports) |
 
 ---
 
@@ -230,14 +251,18 @@ Room database at version **10**. All migrations are additive (`ADD COLUMN`) — 
 ```
 app/src/main/java/com/vibeactions/
 ├── data/
+│   ├── AppSettings    Quiet hours + app prefs (SharedPreferences)
 │   ├── db/            Room entities, DAOs, Migrations, AppDatabase
 │   └── repository/    MacroRepository, MacroLogRepository
 ├── domain/
 │   ├── model/         Macro, MacroLog, Mappers
 │   └── usecase/       Save, Delete, Toggle, Trigger, RescheduleAll
 ├── scheduler/         AlarmScheduler · MacroFirer · MacroCatchUpWorker
-│                      BootReceiver · SmsReplyReceiver · GeminiReplyWorker
-│                      SmsSentReceiver (radio receipts) · AiReplyActionReceiver
+│                      BootReceiver · SmsReplyReceiver · IncomingReplyRouter
+│                      GeminiReplyWorker · DeferredReplyWorker (quiet hours)
+│                      CallStateReceiver (missed calls) · AiReplyActionReceiver
+│                      SmsSentReceiver · SmsDeliveredReceiver (receipts)
+│                      TriggerMonitorService · TriggerMonitor (state triggers)
 │                      GeofenceManager · GeofenceReceiver (location)
 ├── sms/               SmsDispatcher (multipart-aware, arms sent receipts)
 ├── notifications/     MacroNotificationManager
@@ -247,12 +272,14 @@ app/src/main/java/com/vibeactions/
 │   ├── editor/        Editor screen + ViewModel (pure EditorState.toMacro)
 │   ├── log/           Log screen + ViewModel
 │   ├── settings/      Settings screen + ViewModel (AI settings, export/import)
+│   ├── health/        Health screen + ViewModel (system status, next fires)
 │   ├── common/        MacroCard, ThemedSwitch, PermissionBanner, StaticBackground
 │   └── theme/         Color, Type, Theme
 ├── di/                Hilt modules
-└── util/              TimeUtils · PhoneUtils · MacroJson · MessageTemplate
-                       IncomingMatch · GeminiClient · AiReplyDedup · SmsResult
-                       ColorMatrixMath · CardColors
+└── util/              TimeUtils · PhoneUtils · MacroJson · BackupJson
+                       MessageTemplate · IncomingMatch · GeminiClient
+                       AiReplyDedup · SmsResult · QuietHours · StateTrigger
+                       CallState · WidgetSubtitle · ColorMatrixMath · CardColors
 ```
 
 ---
