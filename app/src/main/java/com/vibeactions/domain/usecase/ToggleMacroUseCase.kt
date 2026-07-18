@@ -5,12 +5,14 @@ import com.vibeactions.domain.model.Macro
 import com.vibeactions.domain.model.TriggerType
 import com.vibeactions.scheduler.AlarmScheduler
 import com.vibeactions.scheduler.GeofenceManager
+import com.vibeactions.scheduler.TriggerMonitor
 import javax.inject.Inject
 
 class ToggleMacroUseCase @Inject constructor(
     private val repo: MacroRepository,
     private val alarmScheduler: AlarmScheduler,
-    private val geofenceManager: GeofenceManager
+    private val geofenceManager: GeofenceManager,
+    private val triggerMonitor: TriggerMonitor
 ) {
     suspend operator fun invoke(macro: Macro, enabled: Boolean) {
         val updated = macro.copy(enabled = enabled)
@@ -23,9 +25,11 @@ class ToggleMacroUseCase @Inject constructor(
         if (enabled) {
             when (updated.triggerType) {
                 TriggerType.SCHEDULED -> alarmScheduler.schedule(updated)
-                TriggerType.LOCATION -> geofenceManager.register(updated)
-                else -> Unit // INCOMING/MANUAL need no scheduling; the receiver checks enabled at fire time.
+                TriggerType.LOCATION -> geofenceManager.register(updated, notifyOnFailure = true)
+                else -> Unit // INCOMING/MANUAL/state triggers need no per-macro arming here.
             }
         }
+        // Enabling/disabling a CHARGING/BLUETOOTH/WIFI macro starts/stops the monitor service.
+        triggerMonitor.sync()
     }
 }

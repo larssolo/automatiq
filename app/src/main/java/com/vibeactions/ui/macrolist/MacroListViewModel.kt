@@ -7,7 +7,9 @@ import com.vibeactions.domain.model.Macro
 import com.vibeactions.domain.usecase.DeleteMacroUseCase
 import com.vibeactions.domain.usecase.SaveMacroUseCase
 import com.vibeactions.domain.usecase.ToggleMacroUseCase
+import com.vibeactions.domain.model.TriggerType
 import com.vibeactions.domain.usecase.TriggerMacroUseCase
+import com.vibeactions.util.consumedFireStampForNewMacro
 import com.vibeactions.util.randomCardColor
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
@@ -42,7 +44,13 @@ class MacroListViewModel @Inject constructor(
                 name = macro.name + " (copy)",
                 lastTriggeredAt = null,
                 lastStatus = null,
-                lastScheduledFireAt = null,
+                // Like a new macro: if today's fire time already passed, consume it so the
+                // catch-up worker doesn't send the fresh copy immediately.
+                lastScheduledFireAt = if (macro.triggerType == TriggerType.SCHEDULED)
+                    consumedFireStampForNewMacro(
+                        macro.scheduledTime, macro.daysOfWeek, macro.weekInterval,
+                        macro.anchorEpochDay, macro.validUntilEpochDay
+                    ) else null,
                 createdAt = System.currentTimeMillis(),
                 cardColor = randomCardColor()
             )

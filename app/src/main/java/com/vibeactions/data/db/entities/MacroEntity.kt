@@ -33,5 +33,8 @@ data class MacroEntity(
     @ColumnInfo(name = "geofence_transition") val geofenceTransition: Int? = null,
     @ColumnInfo(name = "ai_reply_enabled", defaultValue = "0") val aiReplyEnabled: Boolean = false,
     @ColumnInfo(name = "ai_send_mode", defaultValue = "APPROVE") val aiSendMode: String = "APPROVE",
-    @ColumnInfo(name = "ai_reply_instruction") val aiReplyInstruction: String? = null
+    @ColumnInfo(name = "ai_reply_instruction") val aiReplyInstruction: String? = null,
+    @ColumnInfo(name = "trigger_on_connect", defaultValue = "1") val triggerOnConnect: Boolean = true,
+    @ColumnInfo(name = "trigger_target") val triggerTarget: String? = null,
+    @ColumnInfo(name = "trigger_target_label") val triggerTargetLabel: String? = null
 )

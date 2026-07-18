@@ -12,28 +12,30 @@ class AiReplyDedupTest {
         LocalDateTime.of(y, mo, d, h, 0).atZone(zone).toInstant().toEpochMilli()
 
     @Test fun sameInputsSameDay_sameKey() {
-        // A WorkManager retry re-runs with identical inputData, so the key must be stable.
-        val a = aiReplyDedupKey("m1", "+4512345678", "Hej", at(2026, 6, 15, 9), zone)
-        val b = aiReplyDedupKey("m1", "+4512345678", "Hej", at(2026, 6, 15, 9), zone)
+        // A WorkManager retry re-runs with identical inputData (same eventId), so the key must be stable.
+        val a = aiReplyDedupKey("m1", "+4512345678", "evt-1", at(2026, 6, 15, 9), zone)
+        val b = aiReplyDedupKey("m1", "+4512345678", "evt-1", at(2026, 6, 15, 9), zone)
         assertEquals(a, b)
     }
 
     @Test fun senderNormalisedToDigits_sameKey() {
-        val a = aiReplyDedupKey("m1", "+45 12 34 56 78", "Hej", at(2026, 6, 15, 9), zone)
-        val b = aiReplyDedupKey("m1", "4512345678", "Hej", at(2026, 6, 15, 9), zone)
+        val a = aiReplyDedupKey("m1", "+45 12 34 56 78", "evt-1", at(2026, 6, 15, 9), zone)
+        val b = aiReplyDedupKey("m1", "4512345678", "evt-1", at(2026, 6, 15, 9), zone)
         assertEquals(a, b)
     }
 
-    @Test fun differentBody_differentKey() {
-        val a = aiReplyDedupKey("m1", "+4512345678", "Hej", at(2026, 6, 15, 9), zone)
-        val b = aiReplyDedupKey("m1", "+4512345678", "Davs", at(2026, 6, 15, 9), zone)
+    @Test fun differentEvent_differentKey() {
+        // A second (even textually identical) incoming SMS mints a new eventId — it is a new
+        // conversation turn and must not be suppressed by the retry dedup.
+        val a = aiReplyDedupKey("m1", "+4512345678", "evt-1", at(2026, 6, 15, 9), zone)
+        val b = aiReplyDedupKey("m1", "+4512345678", "evt-2", at(2026, 6, 15, 9), zone)
         assertNotEquals(a, b)
     }
 
     @Test fun sameInputsDifferentDay_differentKey() {
-        // Scoped per day so an identical message next week is not wrongly suppressed.
-        val a = aiReplyDedupKey("m1", "+4512345678", "Hej", at(2026, 6, 15, 9), zone)
-        val b = aiReplyDedupKey("m1", "+4512345678", "Hej", at(2026, 6, 16, 9), zone)
+        // Scoped per day so the claim store can prune itself to the current day's keys.
+        val a = aiReplyDedupKey("m1", "+4512345678", "evt-1", at(2026, 6, 15, 9), zone)
+        val b = aiReplyDedupKey("m1", "+4512345678", "evt-1", at(2026, 6, 16, 9), zone)
         assertNotEquals(a, b)
     }
 }

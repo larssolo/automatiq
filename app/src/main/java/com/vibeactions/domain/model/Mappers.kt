@@ -25,7 +25,10 @@ fun MacroEntity.toDomain() = Macro(
     geofenceTransition = geofenceTransition,
     aiReplyEnabled = aiReplyEnabled,
     aiSendMode = AiSendMode.valueOf(aiSendMode),
-    aiReplyInstruction = aiReplyInstruction
+    aiReplyInstruction = aiReplyInstruction,
+    triggerOnConnect = triggerOnConnect,
+    triggerTarget = triggerTarget,
+    triggerTargetLabel = triggerTargetLabel
 )
 
 fun Macro.toEntity() = MacroEntity(
@@ -40,15 +43,20 @@ fun Macro.toEntity() = MacroEntity(
     geofenceTransition = geofenceTransition,
     aiReplyEnabled = aiReplyEnabled,
     aiSendMode = aiSendMode.name,
-    aiReplyInstruction = aiReplyInstruction
+    aiReplyInstruction = aiReplyInstruction,
+    triggerOnConnect = triggerOnConnect,
+    triggerTarget = triggerTarget,
+    triggerTargetLabel = triggerTargetLabel
 )
 
 fun MacroLogEntity.toDomain() = MacroLog(
     id = id, macroId = macroId, triggeredAt = triggeredAt,
-    status = MacroStatus.valueOf(status), messagePreview = messagePreview, errorMessage = errorMessage
+    status = MacroStatus.valueOf(status), messagePreview = messagePreview, errorMessage = errorMessage,
+    deliveryStatus = deliveryStatus?.let { DeliveryStatus.valueOf(it) }
 )
 
 fun MacroLog.toEntity() = MacroLogEntity(
     id = id, macroId = macroId, triggeredAt = triggeredAt, status = status.name,
-    messagePreview = messagePreview, errorMessage = errorMessage
+    messagePreview = messagePreview, errorMessage = errorMessage,
+    deliveryStatus = deliveryStatus?.name
 )

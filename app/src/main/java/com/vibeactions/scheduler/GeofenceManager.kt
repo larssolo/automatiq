@@ -11,6 +11,7 @@ import com.google.android.gms.location.GeofencingRequest
 import com.google.android.gms.location.LocationServices
 import com.vibeactions.domain.model.GeofenceTransition
 import com.vibeactions.domain.model.Macro
+import com.vibeactions.notifications.MacroNotificationManager
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -18,7 +19,8 @@ import javax.inject.Singleton
 /** Registers/removes geofences for LOCATION macros via Play Services. No-ops without permission. */
 @Singleton
 class GeofenceManager @Inject constructor(
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
+    private val notifications: MacroNotificationManager
 ) {
     private val client = LocationServices.getGeofencingClient(context)
 
@@ -26,11 +28,20 @@ class GeofenceManager @Inject constructor(
         ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) ==
             PackageManager.PERMISSION_GRANTED
 
-    fun register(macro: Macro) {
+    /**
+     * (Re)registers the macro's geofence. [notifyOnFailure] posts a warning notification when the
+     * fence can't be armed (permission off / Play Services error) so a LOCATION macro doesn't
+     * silently stop firing; it is true for explicit user actions (save/enable) and false for the
+     * bulk app-start/boot re-registration, which would otherwise notify on every launch.
+     */
+    fun register(macro: Macro, notifyOnFailure: Boolean = false) {
         val lat = macro.latitude ?: return
         val lng = macro.longitude ?: return
         val radius = macro.radiusMeters ?: return
-        if (!hasLocationPermission()) return
+        if (!hasLocationPermission()) {
+            if (notifyOnFailure) notifications.notifyGeofenceError(macro, "location permission is off")
+            return
+        }
         val transition = macro.geofenceTransition ?: GeofenceTransition.ENTER
         val geofence = Geofence.Builder()
             .setRequestId(macro.id)
@@ -44,8 +55,13 @@ class GeofenceManager @Inject constructor(
             .build()
         try {
             client.addGeofences(request, pendingIntent())
+                .addOnFailureListener { e ->
+                    // A Play Services failure (e.g. location off at OS level) is always worth
+                    // surfacing — otherwise the macro appears active but never fires.
+                    notifications.notifyGeofenceError(macro, e.localizedMessage)
+                }
         } catch (e: SecurityException) {
-            // Location permission revoked between the check and the call — ignore.
+            if (notifyOnFailure) notifications.notifyGeofenceError(macro, "location permission is off")
         }
     }
 

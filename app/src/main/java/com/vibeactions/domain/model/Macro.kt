@@ -1,8 +1,15 @@
 package com.vibeactions.domain.model
 
-enum class TriggerType { SCHEDULED, MANUAL, INCOMING, LOCATION }
+enum class TriggerType { SCHEDULED, MANUAL, INCOMING, LOCATION, CHARGING, BLUETOOTH, WIFI }
 enum class MacroStatus { SUCCESS, FAILED, PENDING }
 enum class AiSendMode { APPROVE, AUTO }
+
+/** Radio delivery-report outcome for a sent SMS; null = the carrier reported nothing. */
+enum class DeliveryStatus { DELIVERED, FAILED }
+
+/** Trigger types whose firing depends on a device state change (power/Bluetooth/Wi-Fi) monitored by
+ *  the foreground [com.vibeactions.scheduler.TriggerMonitorService] rather than an alarm or geofence. */
+val STATE_TRIGGERS = setOf(TriggerType.CHARGING, TriggerType.BLUETOOTH, TriggerType.WIFI)
 
 /** Geofence transition for a LOCATION macro; values mirror Geofence.GEOFENCE_TRANSITION_*. */
 object GeofenceTransition { const val ENTER = 1; const val EXIT = 2 }
@@ -52,7 +59,13 @@ data class Macro(
     /** INCOMING only: APPROVE = notify user to confirm before send; AUTO = send immediately and inform. */
     val aiSendMode: AiSendMode = AiSendMode.APPROVE,
     /** INCOMING + AI only: per-macro instruction steering tone/length of the reply; null/blank = none. */
-    val aiReplyInstruction: String? = null
+    val aiReplyInstruction: String? = null,
+    /** State triggers (CHARGING/BLUETOOTH/WIFI): fire on connect/arrive (true) or disconnect/leave (false). */
+    val triggerOnConnect: Boolean = true,
+    /** BLUETOOTH: device MAC address (or WIFI: SSID) to match; null/blank = any device/network. */
+    val triggerTarget: String? = null,
+    /** BLUETOOTH/WIFI: human-readable label for [triggerTarget] shown in the UI (e.g. the device name). */
+    val triggerTargetLabel: String? = null
 ) {
     /** Stable positive Int request code for PendingIntent, derived from the UUID. */
     fun alarmRequestCode(): Int = (id.hashCode() and 0x7FFFFFFF)

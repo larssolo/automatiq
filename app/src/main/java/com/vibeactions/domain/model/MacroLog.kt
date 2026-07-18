@@ -6,5 +6,7 @@ data class MacroLog(
     val triggeredAt: Long,
     val status: MacroStatus,
     val messagePreview: String?,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    /** Radio delivery-report outcome, when the carrier sent one; null = no report received. */
+    val deliveryStatus: DeliveryStatus? = null
 )

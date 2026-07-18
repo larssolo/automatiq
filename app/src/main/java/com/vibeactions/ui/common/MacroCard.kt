@@ -174,4 +174,13 @@ private fun compactSummary(macro: Macro): String = when (macro.triggerType) {
         macro.radiusMeters?.let { append(" · ${it.toInt()} m") }
     }
     TriggerType.MANUAL -> "Manual trigger"
+    TriggerType.CHARGING -> if (macro.triggerOnConnect) "When plugged in" else "When unplugged"
+    TriggerType.BLUETOOTH -> buildString {
+        append(if (macro.triggerOnConnect) "BT connect" else "BT disconnect")
+        macro.triggerTargetLabel?.takeIf { it.isNotBlank() }?.let { append(" · $it") }
+    }
+    TriggerType.WIFI -> buildString {
+        append(if (macro.triggerOnConnect) "Wi-Fi connect" else "Wi-Fi disconnect")
+        macro.triggerTargetLabel?.takeIf { it.isNotBlank() }?.let { append(" · $it") }
+    }
 }

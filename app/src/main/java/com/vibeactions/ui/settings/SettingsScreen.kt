@@ -26,18 +26,21 @@ import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.vibeactions.data.AppSettings
 import com.vibeactions.ui.theme.OnSurface
 import com.vibeactions.ui.theme.OnSurfaceVariant
 import com.vibeactions.ui.theme.Primary
 import com.vibeactions.ui.common.BackgroundSetting
+import com.vibeactions.ui.common.ThemedSwitch
 import com.vibeactions.util.GEMINI_MODELS
+import com.vibeactions.util.formatMinuteOfDay
 import com.vibeactions.util.geminiGenerate
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsScreen(vm: SettingsViewModel = hiltViewModel()) {
+fun SettingsScreen(vm: SettingsViewModel = hiltViewModel(), onOpenHealth: () -> Unit = {}) {
     val context = LocalContext.current
     val snackbar = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
@@ -49,6 +52,12 @@ fun SettingsScreen(vm: SettingsViewModel = hiltViewModel()) {
     var modelExpanded by remember { mutableStateOf(false) }
     var apiTestResult by remember { mutableStateOf<String?>(null) }
     var apiTestLoading by remember { mutableStateOf(false) }
+    var quietEnabled by remember { mutableStateOf(AppSettings.quietHoursEnabled(context)) }
+    var quietStart by remember { mutableStateOf(AppSettings.quietStartMinute(context)) }
+    var quietEnd by remember { mutableStateOf(AppSettings.quietEndMinute(context)) }
+    var showQuietStart by remember { mutableStateOf(false) }
+    var showQuietEnd by remember { mutableStateOf(false) }
+    var includeKeyInBackup by remember { mutableStateOf(false) }
 
     val createDoc = rememberLauncherForActivityResult(
         ActivityResultContracts.CreateDocument("application/json")
@@ -66,7 +75,7 @@ fun SettingsScreen(vm: SettingsViewModel = hiltViewModel()) {
         if (uri != null) {
             scope.launch(Dispatchers.IO) {
                 val text = context.contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() }
-                if (text != null) vm.import(text) { result ->
+                if (text != null) vm.importBackup(text) { result ->
                     val message = result.fold(
                         onSuccess = { "Imported $it macros" },
                         onFailure = { "Import failed: ${it.message?.take(80) ?: "invalid file"}" }
@@ -144,7 +153,13 @@ fun SettingsScreen(vm: SettingsViewModel = hiltViewModel()) {
                 trailingContent = {
                     TextButton(onClick = {
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                            context.startActivity(Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM))
+                            // Deep-link straight to this app's toggle instead of the full app list.
+                            context.startActivity(
+                                Intent(
+                                    Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM,
+                                    Uri.parse("package:${context.packageName}")
+                                )
+                            )
                         }
                     }) { Text("Open") }
                 }
@@ -157,7 +172,14 @@ fun SettingsScreen(vm: SettingsViewModel = hiltViewModel()) {
                 supportingContent = { Text("Whitelist Automatiq so alarms are not delayed") },
                 trailingContent = {
                     TextButton(onClick = {
-                        context.startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))
+                        // One-tap allow dialog (permission is declared) instead of making the user
+                        // hunt for the app in the systemwide optimisation list.
+                        context.startActivity(
+                            Intent(
+                                Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
+                                Uri.parse("package:${context.packageName}")
+                            )
+                        )
                     }) { Text("Open") }
                 }
             )
@@ -174,11 +196,75 @@ fun SettingsScreen(vm: SettingsViewModel = hiltViewModel()) {
                     }) { Text("Open") }
                 }
             )
+            ListItem(
+                colors = ListItemDefaults.colors(
+                    containerColor = androidx.compose.ui.graphics.Color.Transparent
+                ),
+                headlineContent = { Text("Health check") },
+                supportingContent = { Text("Next fire times + permission status") },
+                trailingContent = {
+                    TextButton(onClick = onOpenHealth) { Text("Open") }
+                }
+            )
             HorizontalDivider()
-            Button(onClick = { vm.export { json -> pendingExport = json; createDoc.launch("automatiq-macros.json") } },
-                modifier = Modifier.fillMaxWidth()) { Text("Export macros (JSON)") }
+            Text(
+                "Quiet hours",
+                style = MaterialTheme.typography.titleSmall,
+                color = OnSurface,
+                modifier = Modifier.padding(top = 4.dp)
+            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text("Pause auto-replies at night", color = OnSurface)
+                    Text(
+                        "Incoming auto-replies (incl. AI) are held during the window. Scheduled and manual sends still go through.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = OnSurfaceVariant
+                    )
+                }
+                Spacer(Modifier.width(8.dp))
+                ThemedSwitch(
+                    checked = quietEnabled,
+                    onCheckedChange = { quietEnabled = it; AppSettings.setQuietHoursEnabled(context, it) }
+                )
+            }
+            if (quietEnabled) {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedButton(onClick = { showQuietStart = true }, modifier = Modifier.weight(1f)) {
+                        Text("From ${formatMinuteOfDay(quietStart)}")
+                    }
+                    OutlinedButton(onClick = { showQuietEnd = true }, modifier = Modifier.weight(1f)) {
+                        Text("To ${formatMinuteOfDay(quietEnd)}")
+                    }
+                }
+            }
+
+            HorizontalDivider()
+            Button(
+                onClick = {
+                    vm.exportBackup(includeKeyInBackup) { json ->
+                        pendingExport = json; createDoc.launch("automatiq-backup.json")
+                    }
+                },
+                modifier = Modifier.fillMaxWidth()
+            ) { Text("Export backup (macros + settings)") }
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text("Include API key in backup", color = OnSurface)
+                    Text(
+                        "Off by default — the backup file would then contain your Gemini key in plain text.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = OnSurfaceVariant
+                    )
+                }
+                Spacer(Modifier.width(8.dp))
+                ThemedSwitch(
+                    checked = includeKeyInBackup,
+                    onCheckedChange = { includeKeyInBackup = it }
+                )
+            }
             OutlinedButton(onClick = { openDoc.launch(arrayOf("application/json")) },
-                modifier = Modifier.fillMaxWidth()) { Text("Import macros (JSON)") }
+                modifier = Modifier.fillMaxWidth()) { Text("Import backup / macros") }
 
             HorizontalDivider()
             Text(
@@ -297,5 +383,40 @@ fun SettingsScreen(vm: SettingsViewModel = hiltViewModel()) {
                 Text("www.larssohl.dk", color = Primary, fontSize = 13.sp, textAlign = TextAlign.Center)
             }
         }
+    }
+
+    if (showQuietStart) {
+        val tps = rememberTimePickerState(
+            initialHour = quietStart / 60, initialMinute = quietStart % 60, is24Hour = true
+        )
+        AlertDialog(
+            onDismissRequest = { showQuietStart = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    quietStart = tps.hour * 60 + tps.minute
+                    AppSettings.setQuietWindow(context, quietStart, quietEnd)
+                    showQuietStart = false
+                }) { Text("OK") }
+            },
+            dismissButton = { TextButton(onClick = { showQuietStart = false }) { Text("Cancel") } },
+            text = { TimePicker(state = tps) }
+        )
+    }
+    if (showQuietEnd) {
+        val tps = rememberTimePickerState(
+            initialHour = quietEnd / 60, initialMinute = quietEnd % 60, is24Hour = true
+        )
+        AlertDialog(
+            onDismissRequest = { showQuietEnd = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    quietEnd = tps.hour * 60 + tps.minute
+                    AppSettings.setQuietWindow(context, quietStart, quietEnd)
+                    showQuietEnd = false
+                }) { Text("OK") }
+            },
+            dismissButton = { TextButton(onClick = { showQuietEnd = false }) { Text("Cancel") } },
+            text = { TimePicker(state = tps) }
+        )
     }
 }

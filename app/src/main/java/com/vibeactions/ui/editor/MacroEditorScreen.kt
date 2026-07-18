@@ -43,15 +43,18 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.vibeactions.domain.model.GeofenceTransition
+import com.vibeactions.domain.model.STATE_TRIGGERS
 import com.vibeactions.domain.model.TriggerType
 import com.vibeactions.ui.common.ThemedSwitch
 import com.vibeactions.ui.theme.ErrorRed
 import com.vibeactions.ui.theme.OnSurface
 import com.vibeactions.util.CardColorPalette
+import com.vibeactions.util.expandTemplate
 import com.vibeactions.util.geminiSuggest
 import com.vibeactions.util.TEMPLATE_TOKENS
 import com.vibeactions.util.isValidPhone
 import java.time.LocalDate
+import java.time.LocalDateTime
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -430,6 +433,95 @@ fun MacroEditorScreen(
                 }
             }
 
+            if (s.triggerType in STATE_TRIGGERS) {
+                val onLabel: String
+                val offLabel: String
+                when (s.triggerType) {
+                    TriggerType.CHARGING -> { onLabel = "When plugged in"; offLabel = "When unplugged" }
+                    else -> { onLabel = "On connect"; offLabel = "On disconnect" }
+                }
+                SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+                    val options = listOf(true to onLabel, false to offLabel)
+                    options.forEachIndexed { i, (value, label) ->
+                        SegmentedButton(
+                            selected = s.triggerOnConnect == value,
+                            onClick = { vm.update { it.copy(triggerOnConnect = value) } },
+                            shape = SegmentedButtonDefaults.itemShape(i, options.size)
+                        ) { Text(label) }
+                    }
+                }
+
+                if (s.triggerType == TriggerType.BLUETOOTH) {
+                    var btMenu by remember { mutableStateOf(false) }
+                    var bonded by remember { mutableStateOf<List<Pair<String, String>>>(emptyList()) }
+                    fun loadBonded() {
+                        bonded = runCatching {
+                            val mgr = ctx.getSystemService(android.bluetooth.BluetoothManager::class.java)
+                            mgr?.adapter?.bondedDevices
+                                ?.map { (it.name ?: it.address) to it.address } ?: emptyList()
+                        }.getOrDefault(emptyList())
+                        btMenu = true
+                    }
+                    val btPermLauncher = rememberLauncherForActivityResult(
+                        ActivityResultContracts.RequestPermission()
+                    ) { granted -> if (granted) loadBonded() }
+                    Text(
+                        if (s.triggerTarget.isBlank()) "Any Bluetooth device"
+                        else "Device: ${s.triggerTargetLabel.ifBlank { s.triggerTarget }}",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                    Box {
+                        OutlinedButton(
+                            onClick = {
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                                    val ok = ContextCompat.checkSelfPermission(
+                                        ctx, Manifest.permission.BLUETOOTH_CONNECT
+                                    ) == PackageManager.PERMISSION_GRANTED
+                                    if (ok) loadBonded()
+                                    else btPermLauncher.launch(Manifest.permission.BLUETOOTH_CONNECT)
+                                } else loadBonded()
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        ) { Text("Choose paired device") }
+                        DropdownMenu(expanded = btMenu, onDismissRequest = { btMenu = false }) {
+                            DropdownMenuItem(
+                                text = { Text("Any device") },
+                                onClick = {
+                                    vm.update { it.copy(triggerTarget = "", triggerTargetLabel = "") }
+                                    btMenu = false
+                                }
+                            )
+                            bonded.forEach { (name, address) ->
+                                DropdownMenuItem(
+                                    text = { Text(name) },
+                                    onClick = {
+                                        vm.update { it.copy(triggerTarget = address, triggerTargetLabel = name) }
+                                        btMenu = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+
+                if (s.triggerType == TriggerType.WIFI) {
+                    OutlinedTextField(
+                        value = s.triggerTarget,
+                        onValueChange = { v -> vm.update { it.copy(triggerTarget = v, triggerTargetLabel = v) } },
+                        label = { Text("Wi-Fi network (SSID)") },
+                        supportingText = { Text("Leave blank for any network. A disconnect can't match a specific SSID.") },
+                        singleLine = true, modifier = Modifier.fillMaxWidth()
+                    )
+                }
+
+                Text(
+                    "While enabled, a quiet \"watching for triggers\" notification keeps this working in the background.",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+
             if (s.triggerType == TriggerType.INCOMING) {
                 // Auto-reply: match on the incoming sender/keyword; reply goes back to the sender.
                 OutlinedTextField(
@@ -563,6 +655,28 @@ fun MacroEditorScreen(
                 },
                 minLines = 3, modifier = Modifier.fillMaxWidth()
             )
+            // Live preview: show the message with {dato}/{tid}/{ugedag}/{navn} filled in, so the
+            // user can see exactly what will be sent before saving. Only shown when a token is used.
+            if (TEMPLATE_TOKENS.any { s.message.contains(it) }) {
+                val preview = remember(s.message, s.name) {
+                    expandTemplate(s.message, LocalDateTime.now(), s.name.ifBlank { "macro" })
+                }
+                Surface(
+                    color = MaterialTheme.colorScheme.surfaceVariant,
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(Modifier.padding(12.dp)) {
+                        Text(
+                            "Preview (right now)",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(Modifier.height(4.dp))
+                        Text(preview, style = MaterialTheme.typography.bodyMedium, color = OnSurface)
+                    }
+                }
+            }
             Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
                 TextButton(onClick = { showAiCompose = true }) {
                     Icon(
@@ -571,7 +685,7 @@ fun MacroEditorScreen(
                         modifier = Modifier.size(16.dp)
                     )
                     Spacer(Modifier.width(4.dp))
-                    Text("AI-skriv", style = MaterialTheme.typography.labelMedium)
+                    Text("AI write", style = MaterialTheme.typography.labelMedium)
                 }
             }
 
@@ -787,4 +901,7 @@ private fun triggerLabel(type: TriggerType): String = when (type) {
     TriggerType.MANUAL -> "Manual"
     TriggerType.INCOMING -> "Auto-reply"
     TriggerType.LOCATION -> "Location"
+    TriggerType.CHARGING -> "On charging"
+    TriggerType.BLUETOOTH -> "On Bluetooth"
+    TriggerType.WIFI -> "On Wi-Fi"
 }

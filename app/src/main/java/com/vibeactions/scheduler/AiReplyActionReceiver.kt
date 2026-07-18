@@ -8,6 +8,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -24,6 +25,13 @@ class AiReplyActionReceiver : BroadcastReceiver() {
         val macroId = intent.getStringExtra(EXTRA_MACRO_ID) ?: return
         val recipient = intent.getStringExtra(EXTRA_RECIPIENT) ?: return
         val body = intent.getStringExtra(EXTRA_BODY) ?: return
+
+        // A notification action button doesn't dismiss on tap, so a quick double-tap on "Send"
+        // delivers two broadcasts before the cancel above lands — swallow the duplicate.
+        val now = System.currentTimeMillis()
+        val key = "$macroId|$recipient|${body.hashCode()}"
+        recentSends.entries.removeAll { now - it.value > DOUBLE_TAP_WINDOW_MS }
+        if (recentSends.putIfAbsent(key, now) != null) return
 
         val pending = goAsync()
         CoroutineScope(Dispatchers.IO).launch {
@@ -43,5 +51,8 @@ class AiReplyActionReceiver : BroadcastReceiver() {
         const val EXTRA_RECIPIENT = "recipient"
         const val EXTRA_BODY = "body"
         const val EXTRA_NOTIF_ID = "notif_id"
+        private const val DOUBLE_TAP_WINDOW_MS = 5_000L
+        // Thread-safe: two taps can dispatch overlapping onReceive calls.
+        private val recentSends = ConcurrentHashMap<String, Long>()
     }
 }

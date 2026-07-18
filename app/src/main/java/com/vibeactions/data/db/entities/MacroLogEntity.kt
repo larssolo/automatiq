@@ -11,5 +11,6 @@ data class MacroLogEntity(
     @ColumnInfo(name = "triggered_at") val triggeredAt: Long,
     val status: String,
     @ColumnInfo(name = "message_preview") val messagePreview: String?,
-    @ColumnInfo(name = "error_message") val errorMessage: String?
+    @ColumnInfo(name = "error_message") val errorMessage: String?,
+    @ColumnInfo(name = "delivery_status") val deliveryStatus: String? = null
 )

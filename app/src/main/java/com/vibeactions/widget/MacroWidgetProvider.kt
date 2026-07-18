@@ -6,13 +6,9 @@ import android.appwidget.AppWidgetProvider
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.widget.RemoteViews
-import android.widget.Toast
 import com.vibeactions.R
 import com.vibeactions.data.repository.MacroRepository
-import com.vibeactions.domain.model.MacroStatus
 import com.vibeactions.util.accentColorFor
 import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.EntryPoint
@@ -22,13 +18,16 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
+/**
+ * Renders the macro widgets. Taps are handled by the non-exported [WidgetTapReceiver] — this
+ * provider must stay exported for the launcher, so it deliberately holds no tap/fire logic.
+ */
 class MacroWidgetProvider : AppWidgetProvider() {
 
     @EntryPoint
     @InstallIn(SingletonComponent::class)
     interface WidgetEntryPoint {
         fun macroRepository(): MacroRepository
-        fun firer(): com.vibeactions.scheduler.MacroFirer
     }
 
     override fun onUpdate(context: Context, manager: AppWidgetManager, ids: IntArray) {
@@ -64,38 +63,7 @@ class MacroWidgetProvider : AppWidgetProvider() {
         }
     }
 
-    override fun onReceive(context: Context, intent: Intent) {
-        super.onReceive(context, intent)
-        if (intent.action == ACTION_TAP) {
-            val widgetId = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, -1)
-            val macroId = WidgetIds.get(context, widgetId) ?: return
-            val ep = EntryPointAccessors.fromApplication(context.applicationContext, WidgetEntryPoint::class.java)
-            val pending = goAsync()
-            CoroutineScope(Dispatchers.IO).launch {
-                try {
-                    ep.firer().fire(macroId, enforceOncePerDay = false)
-                    renderWidget(context, AppWidgetManager.getInstance(context), widgetId)
-                    val macro = ep.macroRepository().getById(macroId)
-                    if (macro != null) {
-                        val msg = if (macro.lastStatus == MacroStatus.SUCCESS) {
-                            "Sent: ${macro.name}"
-                        } else {
-                            "Failed: ${macro.name}"
-                        }
-                        Handler(Looper.getMainLooper()).post {
-                            Toast.makeText(context.applicationContext, msg, Toast.LENGTH_SHORT).show()
-                        }
-                    }
-                } finally {
-                    pending.finish()
-                }
-            }
-        }
-    }
-
     companion object {
-        const val ACTION_TAP = "com.vibeactions.widget.ACTION_TAP"
-
         /** Below this width there's no room for readable text — fall back to an icon-only badge. */
         private const val COMPACT_WIDTH_THRESHOLD_DP = 90
 
@@ -119,8 +87,8 @@ class MacroWidgetProvider : AppWidgetProvider() {
                     views.setTextViewText(R.id.widget_subtitle, "Tap to send")
                 }
 
-                val tapIntent = Intent(context, MacroWidgetProvider::class.java).apply {
-                    action = ACTION_TAP
+                val tapIntent = Intent(context, WidgetTapReceiver::class.java).apply {
+                    action = WidgetTapReceiver.ACTION_TAP
                     putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId)
                 }
                 val pi = PendingIntent.getBroadcast(

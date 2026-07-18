@@ -29,6 +29,7 @@ import androidx.navigation.compose.*
 import com.vibeactions.scheduler.AiReplyActionReceiver
 import com.vibeactions.ui.common.PermissionBanner
 import com.vibeactions.ui.common.StaticBackground
+import com.vibeactions.ui.health.HealthScreen
 import com.vibeactions.ui.log.LogScreen
 import com.vibeactions.ui.macrolist.MacroListScreen
 import com.vibeactions.ui.settings.SettingsScreen
@@ -192,6 +193,16 @@ private fun AppRoot(navTarget: String? = null, onNavConsumed: () -> Unit = {}) {
     val backStack by nav.currentBackStackEntryAsState()
     val route = backStack?.destination?.route
 
+    // Tab-style navigation: don't stack a new copy of the destination on every tap — pop back to
+    // the start destination and keep at most one instance of each tab on the stack.
+    fun navigateTab(target: String) {
+        nav.navigate(target) {
+            popUpTo(nav.graph.startDestinationId) { saveState = true }
+            launchSingleTop = true
+            restoreState = true
+        }
+    }
+
     Box(Modifier.fillMaxSize()) {
         StaticBackground(Modifier.fillMaxSize())
         Scaffold(
@@ -199,13 +210,13 @@ private fun AppRoot(navTarget: String? = null, onNavConsumed: () -> Unit = {}) {
             bottomBar = {
                 NavigationBar(containerColor = Color(0xDE121212)) {
                     NavigationBarItem(
-                        selected = route == "list", onClick = { nav.navigate("list") },
+                        selected = route == "list", onClick = { navigateTab("list") },
                         icon = { Icon(Icons.AutoMirrored.Filled.List, "Macros") }, label = { Text("Macros") })
                     NavigationBarItem(
-                        selected = route == "log", onClick = { nav.navigate("log") },
+                        selected = route == "log", onClick = { navigateTab("log") },
                         icon = { Icon(Icons.AutoMirrored.Filled.List, "Log") }, label = { Text("Log") })
                     NavigationBarItem(
-                        selected = route == "settings", onClick = { nav.navigate("settings") },
+                        selected = route == "settings", onClick = { navigateTab("settings") },
                         icon = { Icon(Icons.Default.Settings, "Settings") }, label = { Text("Settings") })
                 }
             }
@@ -224,7 +235,8 @@ private fun AppRoot(navTarget: String? = null, onNavConsumed: () -> Unit = {}) {
                     )
                 }
                 composable("log") { LogScreen() }
-                composable("settings") { SettingsScreen() }
+                composable("settings") { SettingsScreen(onOpenHealth = { nav.navigate("health") }) }
+                composable("health") { HealthScreen() }
             }
         }
     }

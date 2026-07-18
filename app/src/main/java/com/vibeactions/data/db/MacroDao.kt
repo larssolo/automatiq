@@ -21,6 +21,9 @@ interface MacroDao {
     @Query("SELECT * FROM macros WHERE enabled = 1 AND trigger_type = :type")
     suspend fun getEnabledByTrigger(type: String): List<MacroEntity>
 
+    @Query("SELECT COUNT(*) FROM macros WHERE enabled = 1 AND trigger_type IN ('CHARGING', 'BLUETOOTH', 'WIFI')")
+    suspend fun countEnabledStateTriggers(): Int
+
     @Upsert
     suspend fun upsert(macro: MacroEntity)
 
