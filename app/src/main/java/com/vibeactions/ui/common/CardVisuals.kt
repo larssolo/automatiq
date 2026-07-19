@@ -11,18 +11,19 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.vibeactions.ui.theme.Outline
 
 /** Asymmetric "leaf-cut" corners — the app's organic signature shape (cards, folder cards). */
 val LeafShape = RoundedCornerShape(
     topStart = 18.dp, topEnd = 6.dp, bottomEnd = 18.dp, bottomStart = 6.dp
 )
 
-/** The "vein": a living accent edge that breathes while the card's subject is active/armed;
- *  rests as a static outline otherwise. */
+/** The "vein": a living accent edge that breathes while the card's subject is active/armed.
+ *  DESIGN RULE: every card always carries its own accent tone on this edge — full strength and
+ *  breathing while active, faded (35%) but still tinted at rest. Never neutral gray: two idle
+ *  cards must still be tellable apart by their edge color. */
 @Composable
 fun breathingVeinColor(accent: Color, alive: Boolean): Color {
-    if (!alive) return Outline
+    if (!alive) return accent.copy(alpha = 0.35f)
     val breath = rememberInfiniteTransition(label = "vein")
     val a by breath.animateFloat(
         0.45f, 1f,

@@ -21,12 +21,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Outline
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.sp
 import com.vibeactions.R
 import com.vibeactions.domain.model.Folder
@@ -36,9 +42,9 @@ import com.vibeactions.ui.theme.OnSurfaceVariant
 import com.vibeactions.ui.theme.Surface
 
 /**
- * Accordion folder card. The switch (and tapping the card) expands/collapses the folder —
- * green = open, amber = closed. Long-press = Enable/Disable all members, Rename, Delete;
- * the bulk enable/disable lives in that menu, mirroring the macro card's menu toggle.
+ * Accordion folder card with a physical folder silhouette: a raised accent tab over the top-left
+ * ([FolderTabShape]) makes folders unmistakable next to the flat macro cards. Tap (or the chevron
+ * button) expands/collapses; long-press = Enable/Disable all members, Rename, Delete.
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -57,11 +63,11 @@ fun FolderCard(
     val accent = Color(folder.cardColor)
     var menuExpanded by remember { mutableStateOf(false) }
 
-    Row(
+    Column(
         modifier
             .fillMaxWidth()
-            .height(76.dp)
-            .clip(LeafShape)
+            .height(88.dp)
+            .clip(FolderTabShape)
             .background(Surface.copy(alpha = BackgroundSetting.cardOpacity))
             .background(
                 Brush.horizontalGradient(
@@ -70,6 +76,15 @@ fun FolderCard(
             )
             .combinedClickable(onClick = onClick, onLongClick = { menuExpanded = true })
     ) {
+        // The raised tab: a plain accent strip — the clip's silhouette cuts its rounded top-left
+        // corner and slanted right edge, so it reads as a physical folder's tab.
+        Box(
+            Modifier
+                .fillMaxWidth(TAB_WIDTH_FRACTION)
+                .height(TAB_HEIGHT)
+                .background(accent.copy(alpha = 0.45f))
+        )
+        Row(Modifier.fillMaxWidth().weight(1f)) {
         val vein = breathingVeinColor(accent, activeCount > 0)
         Box(Modifier.width(4.dp).fillMaxHeight().background(vein))
 
@@ -148,6 +163,42 @@ fun FolderCard(
                     onClick = { menuExpanded = false; onDelete() }
                 )
             }
+        }
+        }
+    }
+}
+
+private const val TAB_WIDTH_FRACTION = 0.38f
+private val TAB_HEIGHT = 12.dp
+
+/**
+ * Physical folder silhouette: a rounded tab raised over the top-left, a slanted tab edge down to
+ * the body, then the app's leaf-cut corner language on the body (6dp top-end/bottom-start, 18dp
+ * bottom-end). The tab width matches the accent strip FolderCard draws under the clip.
+ */
+private object FolderTabShape : Shape {
+    override fun createOutline(size: Size, layoutDirection: LayoutDirection, density: Density): Outline {
+        with(density) {
+            val tabH = TAB_HEIGHT.toPx()
+            val tabW = size.width * TAB_WIDTH_FRACTION
+            val slant = 16.dp.toPx()
+            val rTab = 8.dp.toPx()
+            val rSmall = 6.dp.toPx()
+            val rBig = 18.dp.toPx()
+            val path = Path().apply {
+                moveTo(0f, rTab)
+                quadraticBezierTo(0f, 0f, rTab, 0f)
+                lineTo(tabW - slant, 0f)
+                lineTo(tabW, tabH)
+                lineTo(size.width - rSmall, tabH)
+                quadraticBezierTo(size.width, tabH, size.width, tabH + rSmall)
+                lineTo(size.width, size.height - rBig)
+                quadraticBezierTo(size.width, size.height, size.width - rBig, size.height)
+                lineTo(rSmall, size.height)
+                quadraticBezierTo(0f, size.height, 0f, size.height - rSmall)
+                close()
+            }
+            return Outline.Generic(path)
         }
     }
 }

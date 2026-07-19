@@ -15,6 +15,11 @@ Adversarial kodegennemgang (to review-agenter) af mapper- + mistet-opkald/deferr
 
 **UI-ønsker fra brugeren (efter on-device test):** X-ikoner (fjern modtager / ryd udløb / ryd søgning) fik eksplicit `tint = OnSurface` (var sort-på-sort). **FolderCard lavet om:** switchen åbner/lukker nu mappen (samme callback som tap på kortet), chevronen er fjernet, og "Enable all"/"Disable all" (den gamle master-switch-funktion) ligger nu i long-press-menuen sammen med Rename/Delete. FolderCard-signaturen er uændret. For ikke at fejllæses som tænd/sluk bruger mappe-switchen grå (0xFF5A5A5A, åben) / mørkegrå (0xFF2C2C2C, lukket) spor og FIRKANTET knop (RoundedCornerShape 4dp, spor 8dp) — `ThemedSwitch` fik valgfri `checkedTrackColor`/`uncheckedTrackColor`/`trackShape`/`thumbShape` med defaults, så alle andre switches er uændrede (grøn/gul, rund).
 
+## Seneste arbejde (fase 8c — kant-farveregel + mappe-fane, 2026-07-19)
+
+1. **Designregel (CardVisuals.breathingVeinColor):** ALLE kort bærer altid deres egen accentfarve på kant-"åren" — fuld og åndende når aktiv, svag (alpha 0.35) i hvile. Aldrig neutral grå (før fik alle inaktive kort samme grå kant).
+2. **Mappekortet har nu fysisk mappe-silhuet** (brugervalg blandt 3 forslag): custom `FolderTabShape` i FolderCard.kt — hævet fane øverst til venstre (38 % bredde, 12dp høj, afrundet top-venstre 8dp, skrå højrekant 16dp) fyldt med accent alpha 0.45; kroppen beholder leaf-cut-hjørnerne (6/18/6). Kortet er nu 88dp (12 fane + 76 krop); struktur = Column(fane-strip, Row(indhold)) klippet af shapen. Fanens bredde-fraktion deles mellem shape og strip via TAB_WIDTH_FRACTION.
+
 ## Seneste arbejde (fase 8b — chevron-knap, 2026-07-19)
 
 Brugeren fandt åbn/luk-skyderen for stor og klodset → erstattet af en lille rund chevron-knap (30dp cirkel i mappens accentfarve, alpha 0.16) med eget vektorikon `res/drawable/ic_chevron.xml` (rounded-stroke, hvid stroke så Compose-tint farver den). Peger højre = lukket, roterer 90° ned = åben (tween 200ms). Samme onClick-callback som kortet. `ThemedSwitch`s valgfri farve/form-parametre fra fase 8 er nu ubrugte men bevaret (generisk API, defaults uændrede).
