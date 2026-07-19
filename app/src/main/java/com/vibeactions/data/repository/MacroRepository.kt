@@ -35,11 +35,6 @@ class MacroRepository @Inject constructor(private val dao: MacroDao) {
     suspend fun tryClaimScheduledFire(id: String, at: Long, startOfDay: Long): Boolean =
         dao.claimScheduledFire(id, at, startOfDay) > 0
 
-    /** Persist a new manual ordering: each id's sort_order becomes its index in [orderedIds]. */
-    suspend fun persistOrder(orderedIds: List<String>) {
-        orderedIds.forEachIndexed { index, id -> dao.updateSortOrder(id, index) }
-    }
-
     suspend fun getByFolder(folderId: String): List<Macro> =
         dao.getByFolder(folderId).map { it.toDomain() }
 
