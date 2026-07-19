@@ -1,10 +1,13 @@
 package com.vibeactions.ui.common
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DragHandle
@@ -17,12 +20,15 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.sp
+import com.vibeactions.R
 import com.vibeactions.domain.model.Folder
 import com.vibeactions.ui.theme.JetBrainsMono
 import com.vibeactions.ui.theme.OnSurface
@@ -86,18 +92,29 @@ fun FolderCard(
                 color = OnSurfaceVariant, fontSize = 12.sp, maxLines = 1
             )
         }
-        // Open/close control: checked = expanded. Toggling routes through the same callback as
-        // tapping the card, so both paths stay in sync with the persisted expanded state.
-        // Deliberately NOT the green/amber enabled-language: gray tones + a square thumb make it
-        // read as "open/close", not "on/off".
-        Box(Modifier.fillMaxHeight().padding(end = 2.dp), contentAlignment = Alignment.Center) {
-            ThemedSwitch(
-                checked = folder.expanded,
-                onCheckedChange = { onClick() },
-                checkedTrackColor = Color(0xFF5A5A5A),   // open = gray
-                uncheckedTrackColor = Color(0xFF2C2C2C), // closed = dark gray
-                trackShape = RoundedCornerShape(8.dp),
-                thumbShape = RoundedCornerShape(4.dp)
+        // Open/close control: a small round chevron button in the folder's accent — points right
+        // when closed, rotates down when open (file-tree language). Same callback as tapping the
+        // card, so both paths stay in sync with the persisted expanded state.
+        val chevronRotation by animateFloatAsState(
+            targetValue = if (folder.expanded) 90f else 0f,
+            animationSpec = tween(200),
+            label = "chevron"
+        )
+        Box(
+            Modifier
+                .align(Alignment.CenterVertically)
+                .padding(end = 2.dp)
+                .size(30.dp)
+                .clip(CircleShape)
+                .background(accent.copy(alpha = 0.16f))
+                .clickable(onClick = onClick),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                painterResource(R.drawable.ic_chevron),
+                contentDescription = if (folder.expanded) "Collapse" else "Expand",
+                tint = accent,
+                modifier = Modifier.size(15.dp).rotate(chevronRotation)
             )
         }
         Box(Modifier.fillMaxHeight().padding(end = 4.dp), contentAlignment = Alignment.Center) {
