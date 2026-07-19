@@ -15,6 +15,10 @@ Adversarial kodegennemgang (to review-agenter) af mapper- + mistet-opkald/deferr
 
 **UI-ønsker fra brugeren (efter on-device test):** X-ikoner (fjern modtager / ryd udløb / ryd søgning) fik eksplicit `tint = OnSurface` (var sort-på-sort). **FolderCard lavet om:** switchen åbner/lukker nu mappen (samme callback som tap på kortet), chevronen er fjernet, og "Enable all"/"Disable all" (den gamle master-switch-funktion) ligger nu i long-press-menuen sammen med Rename/Delete. FolderCard-signaturen er uændret. For ikke at fejllæses som tænd/sluk bruger mappe-switchen grå (0xFF5A5A5A, åben) / mørkegrå (0xFF2C2C2C, lukket) spor og FIRKANTET knop (RoundedCornerShape 4dp, spor 8dp) — `ThemedSwitch` fik valgfri `checkedTrackColor`/`uncheckedTrackColor`/`trackShape`/`thumbShape` med defaults, så alle andre switches er uændrede (grøn/gul, rund).
 
+## Seneste arbejde (fase 8d — søgning flyttet i headerbjælken, 2026-07-19)
+
+Det store pilleformede søgefelt under headeren er fjernet. I stedet: et diskret søgeikon (32dp) yderst til højre i wordmark-bjælken (kun når der findes makroer); tryk morfer bjælken til et kompakt inline-BasicTextField (mono 15sp, grøn cursor, "Find a macro"-hint, auto-fokus via FocusRequester) med X der rydder + lukker. Samme søgelogik som før (searching = query ikke blank → flad liste uden drag).
+
 ## Seneste arbejde (fase 8c — kant-farveregel + mappe-fane, 2026-07-19)
 
 1. **Designregel (CardVisuals.breathingVeinColor):** ALLE kort bærer altid deres egen accentfarve på kant-"åren" — fuld og åndende når aktiv, svag (alpha 0.35) i hvile. Aldrig neutral grå (før fik alle inaktive kort samme grå kant).
