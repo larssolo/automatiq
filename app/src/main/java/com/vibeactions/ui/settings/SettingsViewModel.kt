@@ -3,6 +3,7 @@ package com.vibeactions.ui.settings
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.vibeactions.data.repository.FolderRepository
 import com.vibeactions.data.repository.MacroRepository
 import com.vibeactions.domain.usecase.SaveMacroUseCase
 import com.vibeactions.ui.common.BackgroundSetting
@@ -18,6 +19,7 @@ import javax.inject.Inject
 class SettingsViewModel @Inject constructor(
     private val repo: MacroRepository,
     private val save: SaveMacroUseCase,
+    private val folderRepo: FolderRepository,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
@@ -38,8 +40,9 @@ class SettingsViewModel @Inject constructor(
      *  (off by default — the key is otherwise kept out of any exported/backed-up file). */
     fun exportBackup(includeApiKey: Boolean, onReady: (String) -> Unit) = viewModelScope.launch {
         val macros = repo.observeAll().first()
+        val folders = folderRepo.observeAll().first()
         // Fully qualified: the top-level util function is otherwise shadowed by this member's name.
-        onReady(com.vibeactions.util.exportBackup(macros, collectSettings(includeApiKey)))
+        onReady(com.vibeactions.util.exportBackup(macros, folders, collectSettings(includeApiKey)))
     }
 
     /**
@@ -49,6 +52,10 @@ class SettingsViewModel @Inject constructor(
     fun importBackup(json: String, onDone: (Result<Int>) -> Unit) = viewModelScope.launch {
         val result = runCatching { parseBackup(json) }
         result.getOrNull()?.let { parsed ->
+            // Folders restored before macros: membership (already resolved by the orphan guard at
+            // parse time) needs them present, and upserting first keeps the list coherent while
+            // macro saves stream in.
+            parsed.folders.forEach { folderRepo.upsert(it) }
             parsed.macros.forEach { save(it) }
             applySettings(parsed.settings)
         }

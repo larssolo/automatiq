@@ -25,7 +25,8 @@ internal data class MacroDto(
     val aiReplyInstruction: String? = null,
     val triggerOnConnect: Boolean = true,
     val triggerTarget: String? = null,
-    val triggerTargetLabel: String? = null
+    val triggerTargetLabel: String? = null,
+    val folderId: String? = null
 )
 
 private val json = Json { prettyPrint = true; ignoreUnknownKeys = true }
@@ -47,7 +48,8 @@ internal fun Macro.toDto() = MacroDto(
     aiReplyInstruction = aiReplyInstruction,
     triggerOnConnect = triggerOnConnect,
     triggerTarget = triggerTarget,
-    triggerTargetLabel = triggerTargetLabel
+    triggerTargetLabel = triggerTargetLabel,
+    folderId = folderId
 )
 
 internal fun MacroDto.toMacro(): Macro {
@@ -75,7 +77,8 @@ internal fun MacroDto.toMacro(): Macro {
         aiReplyInstruction = aiReplyInstruction,
         triggerOnConnect = triggerOnConnect,
         triggerTarget = triggerTarget,
-        triggerTargetLabel = triggerTargetLabel
+        triggerTargetLabel = triggerTargetLabel,
+        folderId = folderId
     )
 }
 
