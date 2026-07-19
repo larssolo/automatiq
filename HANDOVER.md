@@ -15,6 +15,10 @@ Adversarial kodegennemgang (to review-agenter) af mapper- + mistet-opkald/deferr
 
 **UI-ønsker fra brugeren (efter on-device test):** X-ikoner (fjern modtager / ryd udløb / ryd søgning) fik eksplicit `tint = OnSurface` (var sort-på-sort). **FolderCard lavet om:** switchen åbner/lukker nu mappen (samme callback som tap på kortet), chevronen er fjernet, og "Enable all"/"Disable all" (den gamle master-switch-funktion) ligger nu i long-press-menuen sammen med Rename/Delete. FolderCard-signaturen er uændret. For ikke at fejllæses som tænd/sluk bruger mappe-switchen grå (0xFF5A5A5A, åben) / mørkegrå (0xFF2C2C2C, lukket) spor og FIRKANTET knop (RoundedCornerShape 4dp, spor 8dp) — `ThemedSwitch` fik valgfri `checkedTrackColor`/`uncheckedTrackColor`/`trackShape`/`thumbShape` med defaults, så alle andre switches er uændrede (grøn/gul, rund).
 
+## Seneste arbejde (fase 8f — "Open location settings" gjorde ingenting, 2026-07-19)
+
+Rodårsag (verificeret på enheden via dumpsys): knappen havde `enabled = fineGranted`, og ACCESS_FINE_LOCATION var ikke givet → deaktiveret knap, der ligner en aktiv på mørkt tema og lover handling. Intent'en (ACTION_APPLICATION_DETAILS_SETTINGS) resolver fint på MIUI (bevist med `am start` → com.miui.appmanager.ApplicationsDetailsActivity). Fix: knappen er altid aktiv og kæder flowet: mangler foreground-lokation → RequestMultiplePermissions(FINE+COARSE), og ved accept på API 30+ åbnes app-Settings DIREKTE i callbacken; ellers åbner den Settings (API 30+) / bg-dialog (API 29). Label skifter: "Allow location" → "Open location settings". Hjælpeteksten opdateret.
+
 ## Seneste arbejde (fase 8e — ikon-justering på kortene, 2026-07-19)
 
 Fra brugerens screenshot: højresidens action-ikoner (mappe-chevron, send-pil, AI-badge) flugtede ikke og klæbede til trækhåndtaget. Nu: alle action-marks ligger i en fast 44dp-slot (fælles bagkant på tværs af korttyper), er ~20 % større (send 19→23dp, chevron-cirkel 30→36dp/ikon 15→18dp, AI-badge 9→11sp) og har 10dp Spacer-luft før håndtagets streger. Både MacroCard og FolderCard.

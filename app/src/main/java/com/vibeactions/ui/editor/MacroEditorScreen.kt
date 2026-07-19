@@ -420,11 +420,30 @@ fun MacroEditorScreen(
                 val bgPermLauncher = rememberLauncherForActivityResult(
                     ActivityResultContracts.RequestPermission()
                 ) { /* result reflected on next recomposition */ }
+                fun openAppLocationSettings() {
+                    ctx.startActivity(
+                        Intent(
+                            Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                            Uri.fromParts("package", ctx.packageName, null)
+                        ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    )
+                }
+                // First tap asks for foreground location; on grant it chains STRAIGHT into the
+                // Settings page (Android 11+ can't grant "all the time" from an in-app dialog).
+                // The button was previously disabled until fine location was granted — it looked
+                // active on the dark theme and silently did nothing.
+                val finePermLauncher = rememberLauncherForActivityResult(
+                    ActivityResultContracts.RequestMultiplePermissions()
+                ) { result ->
+                    if (result[Manifest.permission.ACCESS_FINE_LOCATION] == true &&
+                        Build.VERSION.SDK_INT >= Build.VERSION_CODES.R
+                    ) openAppLocationSettings()
+                }
                 if (!bgGranted) {
                     val needsSettings = Build.VERSION.SDK_INT >= Build.VERSION_CODES.R
                     Text(
                         when {
-                            !fineGranted -> "First allow location access above, then enable \"all the time\"."
+                            !fineGranted -> "Location access is needed first — the button walks you through it."
                             needsSettings -> "Open Settings and set location to \"Allow all the time\" so this fires in the background."
                             else -> "For this to work in the background, allow location \"all the time\"."
                         },
@@ -432,20 +451,29 @@ fun MacroEditorScreen(
                         style = MaterialTheme.typography.bodySmall
                     )
                     TextButton(
-                        enabled = fineGranted,
                         onClick = {
-                            if (needsSettings) {
-                                ctx.startActivity(
-                                    Intent(
-                                        Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
-                                        Uri.fromParts("package", ctx.packageName, null)
-                                    ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            when {
+                                !fineGranted -> finePermLauncher.launch(
+                                    arrayOf(
+                                        Manifest.permission.ACCESS_FINE_LOCATION,
+                                        Manifest.permission.ACCESS_COARSE_LOCATION
+                                    )
                                 )
-                            } else {
-                                bgPermLauncher.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+                                needsSettings -> openAppLocationSettings()
+                                else -> bgPermLauncher.launch(
+                                    Manifest.permission.ACCESS_BACKGROUND_LOCATION
+                                )
                             }
                         }
-                    ) { Text(if (needsSettings) "Open location settings" else "Allow background location") }
+                    ) {
+                        Text(
+                            when {
+                                !fineGranted -> "Allow location"
+                                needsSettings -> "Open location settings"
+                                else -> "Allow background location"
+                            }
+                        )
+                    }
                 }
             }
 
