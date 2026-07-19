@@ -14,6 +14,8 @@ import com.vibeactions.data.db.MIGRATION_8_9
 import com.vibeactions.data.db.MIGRATION_9_10
 import com.vibeactions.data.db.MIGRATION_10_11
 import com.vibeactions.data.db.MIGRATION_11_12
+import com.vibeactions.data.db.MIGRATION_12_13
+import com.vibeactions.data.db.FolderDao
 import com.vibeactions.data.db.MacroDao
 import com.vibeactions.data.db.MacroLogDao
 import dagger.Module
@@ -32,10 +34,11 @@ object DatabaseModule {
             .addMigrations(
                 MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6,
                 MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10,
-                MIGRATION_10_11, MIGRATION_11_12
+                MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13
             )
             .build()
 
     @Provides fun provideMacroDao(db: AppDatabase): MacroDao = db.macroDao()
     @Provides fun provideMacroLogDao(db: AppDatabase): MacroLogDao = db.macroLogDao()
+    @Provides fun provideFolderDao(db: AppDatabase): FolderDao = db.folderDao()
 }

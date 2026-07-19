@@ -70,4 +70,14 @@ class EditorStateToMacroTest {
         assertNull(macro.matchSender)
         assertNull(macro.matchKeyword)
     }
+
+    @Test fun folderMembership_survivesEditRoundTrip() {
+        // Editing a macro that lives in a folder must not kick it out on save.
+        val state = EditorState(
+            name = "Member", triggerType = TriggerType.SCHEDULED,
+            recipients = listOf("+4512345678"), message = "Hej",
+            folderId = "folder-1"
+        )
+        assertEquals("folder-1", state.toMacro("id-1").folderId)
+    }
 }

@@ -1,5 +1,6 @@
 package com.vibeactions.domain.model
 
+import com.vibeactions.data.db.entities.FolderEntity
 import com.vibeactions.data.db.entities.MacroEntity
 import com.vibeactions.data.db.entities.MacroLogEntity
 
@@ -28,7 +29,8 @@ fun MacroEntity.toDomain() = Macro(
     aiReplyInstruction = aiReplyInstruction,
     triggerOnConnect = triggerOnConnect,
     triggerTarget = triggerTarget,
-    triggerTargetLabel = triggerTargetLabel
+    triggerTargetLabel = triggerTargetLabel,
+    folderId = folderId
 )
 
 fun Macro.toEntity() = MacroEntity(
@@ -46,7 +48,8 @@ fun Macro.toEntity() = MacroEntity(
     aiReplyInstruction = aiReplyInstruction,
     triggerOnConnect = triggerOnConnect,
     triggerTarget = triggerTarget,
-    triggerTargetLabel = triggerTargetLabel
+    triggerTargetLabel = triggerTargetLabel,
+    folderId = folderId
 )
 
 fun MacroLogEntity.toDomain() = MacroLog(
@@ -59,4 +62,14 @@ fun MacroLog.toEntity() = MacroLogEntity(
     id = id, macroId = macroId, triggeredAt = triggeredAt, status = status.name,
     messagePreview = messagePreview, errorMessage = errorMessage,
     deliveryStatus = deliveryStatus?.name
+)
+
+fun FolderEntity.toDomain() = Folder(
+    id = id, name = name, cardColor = cardColor,
+    sortOrder = sortOrder, expanded = expanded, createdAt = createdAt
+)
+
+fun Folder.toEntity() = FolderEntity(
+    id = id, name = name, cardColor = cardColor,
+    sortOrder = sortOrder, expanded = expanded, createdAt = createdAt
 )

@@ -65,7 +65,9 @@ data class Macro(
     /** BLUETOOTH: device MAC address (or WIFI: SSID) to match; null/blank = any device/network. */
     val triggerTarget: String? = null,
     /** BLUETOOTH/WIFI: human-readable label for [triggerTarget] shown in the UI (e.g. the device name). */
-    val triggerTargetLabel: String? = null
+    val triggerTargetLabel: String? = null,
+    /** Folder this macro lives in; null = top level ("root") of the list. */
+    val folderId: String? = null
 ) {
     /** Stable positive Int request code for PendingIntent, derived from the UUID. */
     fun alarmRequestCode(): Int = (id.hashCode() and 0x7FFFFFFF)

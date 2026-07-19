@@ -50,4 +50,14 @@ interface MacroDao {
 
     @Query("UPDATE macros SET sort_order = :order WHERE id = :id")
     suspend fun updateSortOrder(id: String, order: Int)
+
+    @Query("SELECT * FROM macros WHERE folder_id = :folderId")
+    suspend fun getByFolder(folderId: String): List<MacroEntity>
+
+    @Query("UPDATE macros SET folder_id = :folderId WHERE id = :id")
+    suspend fun updateFolder(id: String, folderId: String?)
+
+    /** Folder deletion: members move to the root; nothing is deleted. */
+    @Query("UPDATE macros SET folder_id = NULL WHERE folder_id = :folderId")
+    suspend fun clearFolder(folderId: String)
 }

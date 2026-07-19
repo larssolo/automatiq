@@ -36,5 +36,6 @@ data class MacroEntity(
     @ColumnInfo(name = "ai_reply_instruction") val aiReplyInstruction: String? = null,
     @ColumnInfo(name = "trigger_on_connect", defaultValue = "1") val triggerOnConnect: Boolean = true,
     @ColumnInfo(name = "trigger_target") val triggerTarget: String? = null,
-    @ColumnInfo(name = "trigger_target_label") val triggerTargetLabel: String? = null
+    @ColumnInfo(name = "trigger_target_label") val triggerTargetLabel: String? = null,
+    @ColumnInfo(name = "folder_id") val folderId: String? = null
 )

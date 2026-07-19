@@ -107,3 +107,20 @@ val MIGRATION_11_12 = object : Migration(11, 12) {
         db.execSQL("ALTER TABLE macro_logs ADD COLUMN delivery_status TEXT")
     }
 }
+
+/** v12 → v13: adds the `folders` table and `folder_id` on macros (NULL = root). Folder membership
+ *  is pure list organization — the firing engine never reads it. */
+val MIGRATION_12_13 = object : Migration(12, 13) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            "CREATE TABLE IF NOT EXISTS folders (" +
+                "id TEXT NOT NULL PRIMARY KEY, " +
+                "name TEXT NOT NULL, " +
+                "card_color INTEGER NOT NULL, " +
+                "sort_order INTEGER NOT NULL DEFAULT 0, " +
+                "expanded INTEGER NOT NULL DEFAULT 1, " +
+                "created_at INTEGER NOT NULL)"
+        )
+        db.execSQL("ALTER TABLE macros ADD COLUMN folder_id TEXT")
+    }
+}

@@ -39,4 +39,14 @@ class MacroRepository @Inject constructor(private val dao: MacroDao) {
     suspend fun persistOrder(orderedIds: List<String>) {
         orderedIds.forEachIndexed { index, id -> dao.updateSortOrder(id, index) }
     }
+
+    suspend fun getByFolder(folderId: String): List<Macro> =
+        dao.getByFolder(folderId).map { it.toDomain() }
+
+    /** Moves a macro into a folder (or to the root with null). List organization only. */
+    suspend fun setFolder(macroId: String, folderId: String?) = dao.updateFolder(macroId, folderId)
+
+    suspend fun clearFolder(folderId: String) = dao.clearFolder(folderId)
+
+    suspend fun updateSortOrder(id: String, order: Int) = dao.updateSortOrder(id, order)
 }
