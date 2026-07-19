@@ -8,6 +8,7 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -23,8 +24,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -78,6 +83,7 @@ fun MacroListScreen(
     var showEditor by remember { mutableStateOf(false) }
     var editorMacroId by remember { mutableStateOf<String?>(null) }
     var query by remember { mutableStateOf("") }
+    var searchOpen by remember { mutableStateOf(false) }
     // Filter for display; reordering is disabled while searching (dragging a filtered subset would
     // scramble the persisted order), so the drag handle only appears on the full, unfiltered list.
     val searching = query.isNotBlank()
@@ -165,52 +171,82 @@ fun MacroListScreen(
     ) { padding ->
         Column(Modifier.padding(padding).fillMaxSize().padding(horizontal = 8.dp)) {
             banner()
-            // Wordmark header with the app's heartbeat: the dot breathes while anything is armed.
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth().padding(top = 12.dp, start = 6.dp, end = 6.dp)
-            ) {
-                PulseDot(alive = macros.any { it.enabled })
-                Spacer(Modifier.width(9.dp))
-                Text(
-                    "automatiq",
-                    fontFamily = JetBrainsMono,
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 20.sp,
-                    color = OnSurface
-                )
-                Spacer(Modifier.weight(1f))
-                if (macros.isNotEmpty()) {
-                    val active = macros.count { it.enabled }
-                    Text(
-                        "$active of ${macros.size} live",
-                        fontFamily = JetBrainsMono,
-                        fontSize = 12.sp,
-                        color = OnSurfaceVariant
+            // Header bar: normally the wordmark + live counter + a discreet search icon; tapping
+            // the icon morphs the bar into a compact inline search field (no standalone pill field).
+            if (searchOpen) {
+                val focusRequester = remember { FocusRequester() }
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth().padding(top = 12.dp, start = 6.dp, end = 6.dp)
+                ) {
+                    Icon(
+                        Icons.Default.Search, contentDescription = null,
+                        tint = OnSurfaceVariant, modifier = Modifier.size(18.dp)
                     )
-                }
-            }
-            if (macros.isNotEmpty()) {
-                OutlinedTextField(
-                    value = query,
-                    onValueChange = { query = it },
-                    shape = RoundedCornerShape(50),
-                    placeholder = { Text("Find a macro") },
-                    leadingIcon = {
-                        Icon(Icons.Default.Search, contentDescription = null, tint = OnSurfaceVariant)
-                    },
-                    trailingIcon = {
-                        if (searching) {
-                            IconButton(onClick = { query = "" }) {
-                                // Explicit tint — the default content color is dark-on-dark here.
-                                Icon(Icons.Default.Close, contentDescription = "Clear search",
-                                    tint = OnSurface)
+                    Spacer(Modifier.width(9.dp))
+                    BasicTextField(
+                        value = query,
+                        onValueChange = { query = it },
+                        singleLine = true,
+                        textStyle = TextStyle(
+                            fontFamily = JetBrainsMono, fontSize = 15.sp, color = OnSurface
+                        ),
+                        cursorBrush = SolidColor(Primary),
+                        modifier = Modifier.weight(1f).focusRequester(focusRequester),
+                        decorationBox = { inner ->
+                            Box(contentAlignment = Alignment.CenterStart) {
+                                if (query.isEmpty()) {
+                                    Text(
+                                        "Find a macro",
+                                        fontFamily = JetBrainsMono, fontSize = 15.sp,
+                                        color = OnSurfaceVariant
+                                    )
+                                }
+                                inner()
                             }
                         }
-                    },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
-                )
+                    )
+                    IconButton(
+                        onClick = { query = ""; searchOpen = false },
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(Icons.Default.Close, contentDescription = "Close search", tint = OnSurface)
+                    }
+                }
+                LaunchedEffect(Unit) { focusRequester.requestFocus() }
+            } else {
+                // Wordmark header with the app's heartbeat: the dot breathes while anything is armed.
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth().padding(top = 12.dp, start = 6.dp, end = 6.dp)
+                ) {
+                    PulseDot(alive = macros.any { it.enabled })
+                    Spacer(Modifier.width(9.dp))
+                    Text(
+                        "automatiq",
+                        fontFamily = JetBrainsMono,
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 20.sp,
+                        color = OnSurface
+                    )
+                    Spacer(Modifier.weight(1f))
+                    if (macros.isNotEmpty()) {
+                        val active = macros.count { it.enabled }
+                        Text(
+                            "$active of ${macros.size} live",
+                            fontFamily = JetBrainsMono,
+                            fontSize = 12.sp,
+                            color = OnSurfaceVariant
+                        )
+                        Spacer(Modifier.width(2.dp))
+                        IconButton(onClick = { searchOpen = true }, modifier = Modifier.size(32.dp)) {
+                            Icon(
+                                Icons.Default.Search, contentDescription = "Search macros",
+                                tint = OnSurfaceVariant, modifier = Modifier.size(19.dp)
+                            )
+                        }
+                    }
+                }
             }
             if (rows.isEmpty()) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
