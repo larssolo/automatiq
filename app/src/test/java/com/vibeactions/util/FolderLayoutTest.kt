@@ -111,9 +111,12 @@ class FolderLayoutTest {
     @Test fun drop_belowRootMacro_staysRoot() {
         val rows = flattenRows(
             folders = emptyList(),
-            macros = listOf(macro("root1", 0), macro("root2", 1))
-        )
-        assertNull(resolveDrop(listOf(rows[1], rows[0]), "m:root2").movedMacroFolderId)
+            macros = listOf(macro("root1", 0), macro("root2", 1), macro("root3", 2))
+        ) // m:root1, m:root2, m:root3 → drag root1 between root2 and root3
+        val moved = listOf(rows[1], rows[0], rows[2]) // m:root2, m:root1, m:root3
+        val result = resolveDrop(moved, "m:root1")
+        assertNull(result.movedMacroFolderId) // root1 lands below root2 (a root macro) → stays root
+        assertNull((result.rows[1] as MacroRow).macro.folderId)
     }
 
     @Test fun drop_draggedFolder_neverChangesMembership() {
@@ -123,6 +126,16 @@ class FolderLayoutTest {
         )
         val result = resolveDrop(listOf(rows[1], rows[0]), "f:A")
         assertNull(result.movedMacroFolderId)
+    }
+
+    @Test fun drop_unknownDraggedKey_isNoOp() {
+        val rows = flattenRows(
+            folders = listOf(folder("A", 0)),
+            macros = listOf(macro("m1", 0, "A"), macro("root1", 1))
+        ) // f:A, m:m1, m:root1
+        val result = resolveDrop(rows, "m:ghost")
+        assertNull(result.movedMacroFolderId)
+        assertEquals(rows, result.rows)
     }
 
     // ── layoutOrders ──
