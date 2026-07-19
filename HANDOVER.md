@@ -15,6 +15,10 @@ Adversarial kodegennemgang (to review-agenter) af mapper- + mistet-opkald/deferr
 
 **UI-ønsker fra brugeren (efter on-device test):** X-ikoner (fjern modtager / ryd udløb / ryd søgning) fik eksplicit `tint = OnSurface` (var sort-på-sort). **FolderCard lavet om:** switchen åbner/lukker nu mappen (samme callback som tap på kortet), chevronen er fjernet, og "Enable all"/"Disable all" (den gamle master-switch-funktion) ligger nu i long-press-menuen sammen med Rename/Delete. FolderCard-signaturen er uændret. For ikke at fejllæses som tænd/sluk bruger mappe-switchen grå (0xFF5A5A5A, åben) / mørkegrå (0xFF2C2C2C, lukket) spor og FIRKANTET knop (RoundedCornerShape 4dp, spor 8dp) — `ThemedSwitch` fik valgfri `checkedTrackColor`/`uncheckedTrackColor`/`trackShape`/`thumbShape` med defaults, så alle andre switches er uændrede (grøn/gul, rund).
 
+## Seneste arbejde (fase 8h — radius-tekst læsbar og opgraderet, 2026-07-19)
+
+"Radius: N m" i editorens LOCATION-sektion var sort-på-mørk (manglende eksplicit farve — det kendte mønster). Nu: Row med "Radius"-label (labelLarge, OnSurface) til venstre og værdien til højre i JetBrains Mono Medium 18sp i Primary-grøn — stor, flot og aflæselig med det samme.
+
 ## Seneste arbejde (fase 8g — permission-banner opdaterede ikke efter Settings, 2026-07-19)
 
 Opfølgning på 8f: brugeren gav foreground-lokation (verificeret granted=true på enheden), men banneret stod stadig. To årsager: (1) BACKGROUND var reelt stadig denied — teksten var korrekt; (2) ægte bug: fineGranted/bgGranted var plain vals læst ved komposition — hjemkomst fra Settings trigger ingen recomposition, så banneret ville hænge fast selv efter korrekt grant. Fix: begge er nu mutableStateOf, genopfrisket af en LifecycleEventObserver på ON_RESUME (samme mønster som smsGranted i MainActivity) + launcher-callbacks sætter state direkte. Settings-teksten er mere vejvisende: "In Settings: Permissions → Location → 'Allow all the time' …".

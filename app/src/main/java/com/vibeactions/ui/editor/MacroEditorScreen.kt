@@ -36,7 +36,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -47,7 +49,9 @@ import com.vibeactions.domain.model.STATE_TRIGGERS
 import com.vibeactions.domain.model.TriggerType
 import com.vibeactions.ui.common.ThemedSwitch
 import com.vibeactions.ui.theme.ErrorRed
+import com.vibeactions.ui.theme.JetBrainsMono
 import com.vibeactions.ui.theme.OnSurface
+import com.vibeactions.ui.theme.Primary
 import com.vibeactions.util.CardColorPalette
 import com.vibeactions.util.expandTemplate
 import com.vibeactions.util.geminiSuggest
@@ -385,7 +389,19 @@ fun MacroEditorScreen(
                     )
                 }
 
-                Text("Radius: ${s.radiusMeters.toInt()} m", style = MaterialTheme.typography.labelLarge)
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                    Text("Radius", style = MaterialTheme.typography.labelLarge, color = OnSurface)
+                    Spacer(Modifier.weight(1f))
+                    // The value in the app's mono number language — big and accent-lit, so the
+                    // slider's current setting reads at a glance on the dark sheet.
+                    Text(
+                        "${s.radiusMeters.toInt()} m",
+                        fontFamily = JetBrainsMono,
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 18.sp,
+                        color = Primary
+                    )
+                }
                 Slider(
                     value = s.radiusMeters,
                     onValueChange = { v -> vm.update { it.copy(radiusMeters = v) } },
