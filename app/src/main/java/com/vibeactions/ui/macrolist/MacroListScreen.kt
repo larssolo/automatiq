@@ -41,6 +41,7 @@ import com.vibeactions.ui.theme.OnSurface
 import com.vibeactions.ui.theme.OnSurfaceVariant
 import com.vibeactions.ui.theme.Primary
 import com.vibeactions.util.FolderRow
+import com.vibeactions.util.ListRow
 import com.vibeactions.util.MacroRow
 import com.vibeactions.util.folderSwitchOn
 import com.vibeactions.util.hideMembers
@@ -63,6 +64,7 @@ fun MacroListScreen(
     var rows by remember { mutableStateOf(vmRows) }
     LaunchedEffect(vmRows) { rows = vmRows }
     var draggedKey by remember { mutableStateOf<String?>(null) }
+    var hiddenMembers by remember { mutableStateOf<List<ListRow>>(emptyList()) }
     var showCreateFolder by remember { mutableStateOf(false) }
     var renameTarget by remember { mutableStateOf<Folder?>(null) }
     var deleteTarget by remember { mutableStateOf<Folder?>(null) }
@@ -84,7 +86,9 @@ fun MacroListScreen(
         val key = current.getOrNull(from.index)?.key
         if (key != null && key.startsWith("f:") && draggedKey != key) {
             draggedKey = key
-            current = hideMembers(current, key.removePrefix("f:"))
+            val folderId = key.removePrefix("f:")
+            hiddenMembers = current.filter { it is MacroRow && it.macro.folderId == folderId }
+            current = hideMembers(current, folderId)
         } else if (key != null && draggedKey == null) draggedKey = key
         val fromIdx = current.indexOfFirst { it.key == key }
         rows = current.toMutableList().apply {
@@ -108,6 +112,14 @@ fun MacroListScreen(
         val key = draggedKey ?: return
         draggedKey = null
         vm.onDrop(rows, key)
+        // vm.rows never re-emits a content-equal list (StateFlow conflation), so a folder drag
+        // that lands back where it started would otherwise leave its members hidden forever.
+        // Restore them locally; a real change is overwritten by the next vm emission anyway.
+        if (hiddenMembers.isNotEmpty() && key.startsWith("f:")) {
+            val idx = rows.indexOfFirst { it.key == key }
+            if (idx >= 0) rows = rows.toMutableList().apply { addAll(idx + 1, hiddenMembers) }
+        }
+        hiddenMembers = emptyList()
     }
 
     Scaffold(
