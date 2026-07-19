@@ -13,6 +13,8 @@ Adversarial kodegennemgang (to review-agenter) af mapper- + mistet-opkald/deferr
 - **Mellem – sletning af mappe smed medlemmer til toppen:** `deleteFolder`/`onMoveToFolder` renumererer nu frigivne makroer til halen af destinationens sort-space.
 - **Lav:** stale-RINGING-expiry (`ringStartedAt` + `CALL_STALE_MS`, forhindrer falsk mistet-opkald til forkert nummer efter tabt IDLE); `goAsync()` om deferral-enqueue i SMS-/opkalds-receiver; `onMove`-fallback bail'er ved ukendt nøgle; `resolveDrop` ignorerer orphan "ghost"-folderId; editor skjuler "Send now (test)" for reply-makroer og ekspanderer `{afsender}` i preview.
 
+**UI-ønsker fra brugeren (efter on-device test):** X-ikoner (fjern modtager / ryd udløb / ryd søgning) fik eksplicit `tint = OnSurface` (var sort-på-sort). **FolderCard lavet om:** switchen åbner/lukker nu mappen (grøn = åben, gul = lukket; samme callback som tap på kortet), chevronen er fjernet, og "Enable all"/"Disable all" (den gamle master-switch-funktion) ligger nu i long-press-menuen sammen med Rename/Delete. FolderCard-signaturen er uændret.
+
 ## Seneste arbejde (fase 7 — mapper, 2026-07-19)
 
 **Makro-mapper:** navngivne accordion-kort i listen. DB **12 → 13** (MIGRATION_12_13: ny `folders`-tabel + `folder_id` på macros; additiv). Motoren (scheduler/sms/widget) rører aldrig folder_id.

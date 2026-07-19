@@ -1,6 +1,5 @@
 package com.vibeactions.ui.common
 
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
@@ -9,14 +8,14 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DragHandle
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Folder
+import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -30,8 +29,9 @@ import com.vibeactions.ui.theme.OnSurfaceVariant
 import com.vibeactions.ui.theme.Surface
 
 /**
- * Accordion folder card. Tap = expand/collapse; long-press = Rename/Delete; the switch
- * enables/disables every member at once (ON only when ALL members are enabled).
+ * Accordion folder card. The switch (and tapping the card) expands/collapses the folder —
+ * green = open, amber = closed. Long-press = Enable/Disable all members, Rename, Delete;
+ * the bulk enable/disable lives in that menu, mirroring the macro card's menu toggle.
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -49,7 +49,6 @@ fun FolderCard(
 ) {
     val accent = Color(folder.cardColor)
     var menuExpanded by remember { mutableStateOf(false) }
-    val chevron by animateFloatAsState(if (folder.expanded) 180f else 0f, label = "chevron")
 
     Row(
         modifier
@@ -86,16 +85,11 @@ fun FolderCard(
                 color = OnSurfaceVariant, fontSize = 12.sp, maxLines = 1
             )
         }
-        if (memberCount > 0) {
-            Box(Modifier.fillMaxHeight().padding(end = 2.dp), contentAlignment = Alignment.Center) {
-                ThemedSwitch(checked = switchOn, onCheckedChange = onToggleAll)
-            }
+        // Open/close control: checked = expanded. Toggling routes through the same callback as
+        // tapping the card, so both paths stay in sync with the persisted expanded state.
+        Box(Modifier.fillMaxHeight().padding(end = 2.dp), contentAlignment = Alignment.Center) {
+            ThemedSwitch(checked = folder.expanded, onCheckedChange = { onClick() })
         }
-        Icon(
-            Icons.Default.ExpandMore, contentDescription = if (folder.expanded) "Collapse" else "Expand",
-            tint = OnSurfaceVariant,
-            modifier = Modifier.align(Alignment.CenterVertically).rotate(chevron)
-        )
         Box(Modifier.fillMaxHeight().padding(end = 4.dp), contentAlignment = Alignment.Center) {
             Icon(
                 Icons.Default.DragHandle, contentDescription = "Reorder", tint = OnSurfaceVariant,
@@ -104,6 +98,18 @@ fun FolderCard(
         }
         Box {
             DropdownMenu(expanded = menuExpanded, onDismissRequest = { menuExpanded = false }) {
+                if (memberCount > 0) {
+                    DropdownMenuItem(
+                        text = { Text(if (switchOn) "Disable all" else "Enable all") },
+                        leadingIcon = {
+                            Icon(
+                                if (switchOn) Icons.Default.Pause else Icons.Default.PlayArrow,
+                                contentDescription = null
+                            )
+                        },
+                        onClick = { menuExpanded = false; onToggleAll(!switchOn) }
+                    )
+                }
                 DropdownMenuItem(
                     text = { Text("Rename") },
                     leadingIcon = { Icon(Icons.Default.Edit, contentDescription = null) },
