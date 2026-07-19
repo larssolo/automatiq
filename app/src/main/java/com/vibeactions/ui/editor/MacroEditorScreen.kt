@@ -699,8 +699,13 @@ fun MacroEditorScreen(
             // Live preview: show the message with {dato}/{tid}/{ugedag}/{navn} filled in, so the
             // user can see exactly what will be sent before saving. Only shown when a token is used.
             if ((TEMPLATE_TOKENS + SENDER_TOKEN).any { s.message.contains(it) }) {
-                val preview = remember(s.message, s.name) {
-                    expandTemplate(s.message, LocalDateTime.now(), s.name.ifBlank { "macro" })
+                val replyType = s.triggerType == TriggerType.INCOMING ||
+                    s.triggerType == TriggerType.MISSED_CALL
+                val preview = remember(s.message, s.name, replyType) {
+                    // Reply macros fill {afsender} with the counterparty; show a sample number so the
+                    // preview isn't a literal {afsender}. Non-reply macros have no counterparty.
+                    val sampleSender = if (replyType) "12345678" else null
+                    expandTemplate(s.message, LocalDateTime.now(), s.name.ifBlank { "macro" }, sampleSender)
                 }
                 Surface(
                     color = MaterialTheme.colorScheme.surfaceVariant,
@@ -738,7 +743,11 @@ fun MacroEditorScreen(
                 )
             }
 
-            if (macroId != null && onSend != null) {
+            // Reply macros (auto-reply / missed call) send to the incoming counterparty, so a manual
+            // test-send has no recipient and would be a silent no-op — hide it for those.
+            val canTestSend = s.triggerType != TriggerType.INCOMING &&
+                s.triggerType != TriggerType.MISSED_CALL
+            if (macroId != null && onSend != null && canTestSend) {
                 HorizontalDivider()
                 FilledTonalButton(onClick = onSend, modifier = Modifier.fillMaxWidth()) {
                     Icon(Icons.Default.Send, null, Modifier.size(16.dp))

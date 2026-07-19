@@ -62,9 +62,13 @@ fun MacroListScreen(
     val scope = rememberCoroutineScope()
 
     var rows by remember { mutableStateOf(vmRows) }
-    LaunchedEffect(vmRows) { rows = vmRows }
     var draggedKey by remember { mutableStateOf<String?>(null) }
     var hiddenMembers by remember { mutableStateOf<List<ListRow>>(emptyList()) }
+    // Don't clobber the local list mid-drag: a background macro update (a scheduled fire, a delivery
+    // report, an auto-reply status change) makes vm.rows re-emit, which would restore the folder's
+    // hidden members while a drag holds them out — then dropped() re-splices them, duplicating
+    // LazyGrid keys and crashing. Only sync when no drag is in progress.
+    LaunchedEffect(vmRows) { if (draggedKey == null) rows = vmRows }
     var showCreateFolder by remember { mutableStateOf(false) }
     var renameTarget by remember { mutableStateOf<Folder?>(null) }
     var deleteTarget by remember { mutableStateOf<Folder?>(null) }
@@ -91,8 +95,11 @@ fun MacroListScreen(
             current = hideMembers(current, folderId)
         } else if (key != null && draggedKey == null) draggedKey = key
         val fromIdx = current.indexOfFirst { it.key == key }
+        // Bail on an unknown key rather than coercing to 0, which would silently reorder an
+        // unrelated item.
+        if (fromIdx < 0) return@rememberReorderableLazyGridState
         rows = current.toMutableList().apply {
-            add(to.index.coerceAtMost(size - 1), removeAt(fromIdx.coerceAtLeast(0)))
+            add(to.index.coerceIn(0, size - 1), removeAt(fromIdx))
         }
     }
 
@@ -115,9 +122,13 @@ fun MacroListScreen(
         // vm.rows never re-emits a content-equal list (StateFlow conflation), so a folder drag
         // that lands back where it started would otherwise leave its members hidden forever.
         // Restore them locally; a real change is overwritten by the next vm emission anyway.
+        // Only re-add members not already present, so this can never duplicate a LazyGrid key.
         if (hiddenMembers.isNotEmpty() && key.startsWith("f:")) {
             val idx = rows.indexOfFirst { it.key == key }
-            if (idx >= 0) rows = rows.toMutableList().apply { addAll(idx + 1, hiddenMembers) }
+            val absent = hiddenMembers.filter { m -> rows.none { it.key == m.key } }
+            if (idx >= 0 && absent.isNotEmpty()) {
+                rows = rows.toMutableList().apply { addAll(idx + 1, absent) }
+            }
         }
         hiddenMembers = emptyList()
     }

@@ -65,7 +65,10 @@ fun resolveDrop(rows: List<ListRow>, draggedKey: String): DropResult {
     val above = rows.getOrNull(index - 1)
     val newFolderId = when {
         above is FolderRow && above.folder.expanded -> above.folder.id
-        above is MacroRow && above.macro.folderId != null -> above.macro.folderId
+        // Only inherit the row-above's folder when it names a REAL folder present in the list;
+        // an orphan macro (folderId → deleted folder, shown at root) must not pass on its ghost id.
+        above is MacroRow && above.macro.folderId != null &&
+            rows.any { it is FolderRow && it.folder.id == above.macro.folderId } -> above.macro.folderId
         else -> null
     }
     val updated = rows.toMutableList()

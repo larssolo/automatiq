@@ -2,6 +2,17 @@
 
 > Kopiér denne fil ind i en ny chattråd som kontekst. Sidst opdateret: 2026-07-18 (fase 5: 8 nye funktioner).
 
+## Seneste arbejde (fase 8 — review-rettelser af fase 6+7, 2026-07-19)
+
+Adversarial kodegennemgang (to review-agenter) af mapper- + mistet-opkald/deferral-arbejdet fandt 2 reelle fejl + flere mellem/lav. Rettet på gren `claude/app-review-improvements-5fide7` (frisk fra main, da PR #3 er merget). **124 grønne JVM-tests** (fra 119). `versionCode` bumpet 1→2, `versionName` "1.0"→"1.1".
+
+- **HØJ – crash under mappe-træk:** `MacroListScreen` nulstillede den lokale rækkeliste ved *enhver* vm-emission, også midt i et træk → gemte mappe-medlemmer blev gendannet, og `dropped()` gen-indsatte dem → dublerede LazyGrid-nøgler → crash. Fix: `LaunchedEffect(vmRows) { if (draggedKey == null) rows = vmRows }` + idempotent gen-indsættelse (kun medlemmer der ikke allerede er i listen). `draggedKey`/`hiddenMembers` flyttet før effekten.
+- **HØJ – mistet-opkald-svar droppet på mange OEM'er:** `advanceCallState` beskyttede kun mod `null`-nummer, ikke `""` (tom streng på dublet-broadcast) → rigtige nummer overskrevet. Fix: `number?.takeIf { it.isNotBlank() } ?: state.number` (+ test).
+- **Mellem – AI-fallback sendte tokens bogstaveligt:** `GeminiReplyWorker` faldt tilbage til rå `messageBody` (uekspanderet, da `MacroFirer` aldrig ekspanderer `overrideBody`). Fix: ekspandér fallback med `expandTemplate(..., sender)`.
+- **Mellem – dobbelt-svar muligt:** throttle i `IncomingReplyRouter` gjort atomisk (`ConcurrentHashMap.compute`); `DeferredReplyWorker` fik persistent one-shot-claim (prefs "deferred_sent", pruned pr. dag) mod WorkManager-genkørsel efter procesdød.
+- **Mellem – sletning af mappe smed medlemmer til toppen:** `deleteFolder`/`onMoveToFolder` renumererer nu frigivne makroer til halen af destinationens sort-space.
+- **Lav:** stale-RINGING-expiry (`ringStartedAt` + `CALL_STALE_MS`, forhindrer falsk mistet-opkald til forkert nummer efter tabt IDLE); `goAsync()` om deferral-enqueue i SMS-/opkalds-receiver; `onMove`-fallback bail'er ved ukendt nøgle; `resolveDrop` ignorerer orphan "ghost"-folderId; editor skjuler "Send now (test)" for reply-makroer og ekspanderer `{afsender}` i preview.
+
 ## Seneste arbejde (fase 7 — mapper, 2026-07-19)
 
 **Makro-mapper:** navngivne accordion-kort i listen. DB **12 → 13** (MIGRATION_12_13: ny `folders`-tabel + `folder_id` på macros; additiv). Motoren (scheduler/sms/widget) rører aldrig folder_id.

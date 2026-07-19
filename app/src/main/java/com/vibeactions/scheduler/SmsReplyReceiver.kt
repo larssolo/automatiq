@@ -39,7 +39,14 @@ class SmsReplyReceiver : BroadcastReceiver() {
                 AppSettings.quietEndMinute(context)
             )
         ) {
-            DeferredReplyWorker.enqueue(context, DeferredReplyWorker.KIND_SMS, sender, body)
+            // Hold the process while WorkManager persists the deferral, else a process kill right
+            // after onReceive returns could lose it.
+            val pending = goAsync()
+            try {
+                DeferredReplyWorker.enqueue(context, DeferredReplyWorker.KIND_SMS, sender, body)
+            } finally {
+                pending.finish()
+            }
             return
         }
 

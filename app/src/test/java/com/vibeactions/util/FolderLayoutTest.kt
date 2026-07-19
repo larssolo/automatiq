@@ -161,6 +161,27 @@ class FolderLayoutTest {
         assertEquals(1, orders.rootMacroOrder["root1"])
     }
 
+    @Test fun resolveDrop_belowOrphanMacro_landsAtRootNotGhostFolder() {
+        // The row above the dropped macro is an orphan (folderId → a folder that isn't in the
+        // list). The dragged macro must land at root, not inherit the ghost folder id.
+        val rows = listOf<ListRow>(
+            MacroRow(macro("orphan", sort = 0, folderId = "ghost")),
+            MacroRow(macro("dragged", sort = 1, folderId = null))
+        )
+        val result = resolveDrop(rows, "m:dragged")
+        assertNull(result.movedMacroFolderId)
+    }
+
+    @Test fun resolveDrop_belowRealFolderMember_joinsThatFolder() {
+        val rows = listOf<ListRow>(
+            FolderRow(folder("A", sort = 0), memberCount = 1, activeCount = 1),
+            MacroRow(macro("m1", sort = 0, folderId = "A")),
+            MacroRow(macro("dragged", sort = 1, folderId = null))
+        )
+        val result = resolveDrop(rows, "m:dragged")
+        assertEquals("A", result.movedMacroFolderId)
+    }
+
     // ── folderSwitchOn ──
 
     @Test fun switch_onOnlyWhenAllMembersEnabled() {

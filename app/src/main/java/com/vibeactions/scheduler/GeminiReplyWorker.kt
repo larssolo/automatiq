@@ -9,9 +9,11 @@ import com.vibeactions.domain.model.AiSendMode
 import com.vibeactions.notifications.MacroNotificationManager
 import com.vibeactions.util.DEFAULT_GEMINI_MODEL
 import com.vibeactions.util.aiReplyDedupKey
+import com.vibeactions.util.expandTemplate
 import com.vibeactions.util.geminiGenerate
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
+import java.time.LocalDateTime
 
 /**
  * Generates an AI auto-reply and either posts an approval notification (APPROVE) or sends it and
@@ -59,7 +61,12 @@ class GeminiReplyWorker @AssistedInject constructor(
         }
         val generated = runCatching {
             geminiGenerate(apiKey, systemPrompt, body, model, maxOutputTokens = 150)
-        }.getOrElse { macro.messageBody }
+        }.getOrElse {
+            // Gemini unreachable → send the fixed fallback body, expanded like any other reply
+            // (MacroFirer never expands an overrideBody, so a raw {afsender}/{dato} would otherwise
+            // go out literally — unlike the no-API-key path which expands via MacroFirer).
+            expandTemplate(macro.messageBody, LocalDateTime.now(), macro.name, sender)
+        }
 
         when (macro.aiSendMode) {
             AiSendMode.APPROVE -> notifications.notifyAiApproval(macro, sender, generated)

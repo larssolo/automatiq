@@ -112,8 +112,16 @@ class MacroListViewModel @Inject constructor(
     /** Deletes the folder, moving members to root. Returns their ids so the screen's Undo
      *  snackbar can restore the memberships. */
     suspend fun deleteFolder(folder: Folder): List<String> {
-        val memberIds = repo.getByFolder(folder.id).map { it.id }
+        val members = repo.getByFolder(folder.id)
+        val memberIds = members.map { it.id }
+        // Freed members carry small in-folder sort orders (0,1,2…); left as-is they'd sort ABOVE
+        // existing root items. Renumber them onto the tail of the root sort space so they stay put.
+        val maxRoot = maxOf(
+            folders.value.maxOfOrNull { it.sortOrder } ?: 0,
+            macros.value.filter { it.folderId == null }.maxOfOrNull { it.sortOrder } ?: 0
+        )
         repo.clearFolder(folder.id)
+        members.forEachIndexed { i, m -> repo.updateSortOrder(m.id, maxRoot + 1 + i) }
         folderRepo.delete(folder)
         return memberIds
     }
@@ -126,7 +134,21 @@ class MacroListViewModel @Inject constructor(
     fun onToggleFolder(folder: Folder, enabled: Boolean) =
         viewModelScope.launch { toggleFolder(folder.id, enabled) }
 
-    /** Menu-driven move ("Move to folder…" / "Move to root"); null = root. */
-    fun onMoveToFolder(macro: Macro, folderId: String?) =
-        viewModelScope.launch { repo.setFolder(macro.id, folderId) }
+    /** Menu-driven move ("Move to folder…" / "Move to root"); null = root. Assigns a fresh
+     *  sort_order at the tail of the destination so the macro lands at the bottom there rather than
+     *  at a position dictated by its stale order in the space it came from. */
+    fun onMoveToFolder(macro: Macro, folderId: String?) = viewModelScope.launch {
+        repo.setFolder(macro.id, folderId)
+        val tail = if (folderId == null) {
+            maxOf(
+                folders.value.maxOfOrNull { it.sortOrder } ?: -1,
+                macros.value.filter { it.folderId == null && it.id != macro.id }
+                    .maxOfOrNull { it.sortOrder } ?: -1
+            )
+        } else {
+            macros.value.filter { it.folderId == folderId && it.id != macro.id }
+                .maxOfOrNull { it.sortOrder } ?: -1
+        }
+        repo.updateSortOrder(macro.id, tail + 1)
+    }
 }

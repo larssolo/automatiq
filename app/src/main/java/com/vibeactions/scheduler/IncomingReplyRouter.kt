@@ -70,13 +70,17 @@ class IncomingReplyRouter @Inject constructor(
     }
 
     /** Per-(macro, other party) throttle so two auto-replying phones can't ping-pong, and repeated
-     *  calls/messages within the window get one reply. True = claimed, caller may fire. */
+     *  calls/messages within the window get one reply. True = claimed, caller may fire. The
+     *  check-and-set is atomic (a single [ConcurrentHashMap.compute]), so two events for the same
+     *  (macro, party) arriving on overlapping threads can't both claim and double-reply. */
     private fun claimThrottle(macroId: String, party: String, now: Long): Boolean {
         val key = macroId + "|" + party.filter { it.isDigit() }
-        val last = lastReply[key]
-        if (last != null && now - last < THROTTLE_MS) return false
-        lastReply[key] = now
-        return true
+        var claimed = false
+        lastReply.compute(key) { _, last ->
+            if (last != null && now - last < THROTTLE_MS) last
+            else { claimed = true; now }
+        }
+        return claimed
     }
 
     private fun pruneThrottle(now: Long) {

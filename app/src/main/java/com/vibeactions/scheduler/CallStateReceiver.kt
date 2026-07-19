@@ -37,14 +37,16 @@ class CallStateReceiver : BroadcastReceiver() {
             CallWatchState(
                 ringing = prefs.getBoolean(KEY_RINGING, false),
                 number = prefs.getString(KEY_NUMBER, null),
-                answered = prefs.getBoolean(KEY_ANSWERED, false)
+                answered = prefs.getBoolean(KEY_ANSWERED, false),
+                ringStartedAt = prefs.getLong(KEY_RING_STARTED, 0L)
             ),
-            phoneState, number
+            phoneState, number, now = System.currentTimeMillis()
         )
         prefs.edit()
             .putBoolean(KEY_RINGING, advance.state.ringing)
             .putString(KEY_NUMBER, advance.state.number)
             .putBoolean(KEY_ANSWERED, advance.state.answered)
+            .putLong(KEY_RING_STARTED, advance.state.ringStartedAt)
             .apply()
 
         val missed = advance.missedNumber ?: return
@@ -57,7 +59,14 @@ class CallStateReceiver : BroadcastReceiver() {
                 AppSettings.quietEndMinute(context)
             )
         ) {
-            DeferredReplyWorker.enqueue(context, DeferredReplyWorker.KIND_CALL, missed, body = "")
+            // Hold the process while WorkManager persists the deferral, else a process kill right
+            // after onReceive returns could lose it.
+            val pending = goAsync()
+            try {
+                DeferredReplyWorker.enqueue(context, DeferredReplyWorker.KIND_CALL, missed, body = "")
+            } finally {
+                pending.finish()
+            }
             return
         }
         val pending = goAsync()
@@ -75,5 +84,6 @@ class CallStateReceiver : BroadcastReceiver() {
         private const val KEY_RINGING = "ringing"
         private const val KEY_NUMBER = "number"
         private const val KEY_ANSWERED = "answered"
+        private const val KEY_RING_STARTED = "ring_started_at"
     }
 }
