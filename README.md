@@ -17,7 +17,7 @@
 
 ## What it does
 
-Automatiq lets you define SMS macros — a name, one or more recipients, and a message — and fire them automatically. A macro can trigger on a **schedule**, on a **button tap**, as an **auto-reply** to an incoming SMS, when you **miss (or decline) a call**, when you **arrive at / leave a place**, or on a **device state change** — plugging in the charger, connecting a Bluetooth device or a Wi-Fi network. Auto-replies can answer with a fixed text or with an **AI-generated reply** (Gemini) — either sent automatically or held for your approval.
+Automatiq lets you define SMS macros — a name, one or more recipients, and a message — and fire them automatically. A macro can trigger on a **schedule**, on a **button tap**, as an **auto-reply** to an incoming SMS, when you **miss (or decline) a call**, when you **arrive at / leave a place**, or on a **device state change** — plugging in the charger, connecting a Bluetooth device or a Wi-Fi network. Macros can be organized into nameable **folders** with a per-folder master switch. Auto-replies can answer with a fixed text or with an **AI-generated reply** (Gemini) — either sent automatically or held for your approval.
 
 Everything runs on-device. No account, no server. Only two optional features reach outside the phone: the **location trigger** (Google Play Services geofencing) and **AI replies** (Google's Gemini API, with your own free key).
 
@@ -69,6 +69,7 @@ Everything runs on-device. No account, no server. Only two optional features rea
 | 📵 | **Missed-call auto-text** — "I'll call you back" to anyone you couldn't pick up for; declined calls count too |
 | 🩺 | **Health screen** — exact-alarm, battery and notification status with one-tap fixes, plus each macro's next fire time |
 | 🔍 | **Search & log filters** — find macros by name; filter the log by status and by macro |
+| 📁 | **Folders** — nameable accordion cards in the list; drag macros in (the drop position decides membership), master enable/disable switch per folder, Undo-friendly delete |
 | 🔔 | **Notifications** — result (success / failed) + one-tap retry on failure; message content is kept off the lock screen |
 | ⏯️ | **Quick actions** — a one-tap send button on every card; long-press for Delete / Duplicate / Send now / Enable-Disable |
 | 🖼️ | **Living dark UI** — a static background with hue/saturation and card-opacity sliders, topped by a slow aurora of drifting accent glows; cards breathe while armed |
@@ -124,10 +125,10 @@ Notes:
 │          Scheduler / Triggers         │ │          Data Layer          │
 │  AlarmScheduler · MacroAlarmReceiver  │ │  MacroRepository             │
 │  MacroCatchUpWorker · BootReceiver    │ │  MacroLogRepository          │
-│  SmsReplyReceiver · IncomingRouter    │ │  Room DB (v12)               │
+│  SmsReplyReceiver · IncomingRouter    │ │  Room DB (v13)               │
 │  GeminiReplyWorker · DeferredReplyWkr │ │  MacroEntity · MacroLogEntity│
 │  CallStateReceiver  (missed calls)    │ │  AppSettings (quiet hours)   │
-│  TriggerMonitorService (state trig.)  │ │  Migrations 1→…→12           │
+│  TriggerMonitorService (state trig.)  │ │  Migrations 1→…→13           │
 │  GeofenceManager · GeofenceReceiver   │ │                              │
 │  SmsSentReceiver · SmsDeliveredRecv   │ │                              │
 │  MacroFirer  ←── single send path ────┼─┤                              │
@@ -228,7 +229,7 @@ The app is not distributed via the Play Store — it is sideloaded on a personal
 
 ## Database schema
 
-Room database at version **12**. All migrations are additive (`ADD COLUMN`) — upgrading from any prior install preserves existing macros.
+Room database at version **13**. All migrations are additive (`ADD COLUMN`) — upgrading from any prior install preserves existing macros.
 
 | Migration | Change |
 |---|---|
@@ -243,6 +244,7 @@ Room database at version **12**. All migrations are additive (`ADD COLUMN`) — 
 | 9 → 10 | `ai_reply_instruction` (per-macro AI prompt) |
 | 10 → 11 | `trigger_on_connect`, `trigger_target`, `trigger_target_label` (state triggers) |
 | 11 → 12 | `delivery_status` on `macro_logs` (carrier delivery reports) |
+| 12 → 13 | `folders` table + `folder_id` on macros (macro folders) |
 
 ---
 
@@ -273,13 +275,14 @@ app/src/main/java/com/vibeactions/
 │   ├── log/           Log screen + ViewModel
 │   ├── settings/      Settings screen + ViewModel (AI settings, export/import)
 │   ├── health/        Health screen + ViewModel (system status, next fires)
-│   ├── common/        MacroCard, ThemedSwitch, PermissionBanner, StaticBackground
+│   ├── common/        MacroCard, FolderCard, CardVisuals, ThemedSwitch, PermissionBanner, StaticBackground
 │   └── theme/         Color, Type, Theme
 ├── di/                Hilt modules
 └── util/              TimeUtils · PhoneUtils · MacroJson · BackupJson
                        MessageTemplate · IncomingMatch · GeminiClient
                        AiReplyDedup · SmsResult · QuietHours · StateTrigger
                        CallState · WidgetSubtitle · ColorMatrixMath · CardColors
+                       FolderLayout
 ```
 
 ---

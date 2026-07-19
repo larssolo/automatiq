@@ -2,6 +2,20 @@
 
 > Kopiér denne fil ind i en ny chattråd som kontekst. Sidst opdateret: 2026-07-18 (fase 5: 8 nye funktioner).
 
+## Seneste arbejde (fase 7 — mapper, 2026-07-19)
+
+**Makro-mapper:** navngivne accordion-kort i listen. DB **12 → 13** (MIGRATION_12_13: ny `folders`-tabel + `folder_id` på macros; additiv). Motoren (scheduler/sms/widget) rører aldrig folder_id.
+
+1. **Ren logik i `util/FolderLayout.kt`** (flattenRows/hideMembers/resolveDrop/layoutOrders/folderSwitchOn), testdrevet — **119 grønne JVM-tests** (fra 100). Slip-reglen: rækken over landingspositionen afgør medlemskab (udfoldet mappe-header eller medlem ⇒ ind i mappen; alt andet ⇒ roden). Kendt hjørne: slip lige under en udfoldet mappes sidste medlem lander I mappen — menuen "Move to root" er escape.
+2. **UI:** `ui/common/FolderCard.kt` (chevron, master-ThemedSwitch = alle aktive, åndende åre via ny delt `ui/common/CardVisuals.kt` — LeafShape + breathingVeinColor udtrukket fra MacroCard), medlemmer indrykket 16dp med mappefarvet åre, FAB-menu (New macro/New folder), "Move to folder…"/"Move to root" i long-press-menu, delete-dialog med Undo der genopretter medlemskaber.
+3. **ViewModel:** `rows`-flow (flattenRows), onDrop persisterer via layoutOrders; `ToggleFolderUseCase` looper medlemmer gennem ToggleMacroUseCase. `MacroRepository.persistOrder`/`onReorder` fjernet.
+4. **Backup:** `folders`-array + `folderId` på MacroDto; orphan-guard på BEGGE parse-grene (også legacy bare-array); bagudkompatibel.
+5. **Editor:** `EditorState.folderId` passthrough så redigering ikke smider makroen ud af mappen.
+
+**Review-fixes undervejs (subagent-drevet eksekvering):** drop-rule testdækning, legacy-array orphan-guard, og et StateFlow-conflation-bug hvor et no-op mappe-træk permanent skjulte medlemmer (fix: stash + splice i MacroListScreen).
+
+**Spec/plan:** `docs/superpowers/specs/2026-07-19-macro-folders-design.md`; `docs/superpowers/plans/2026-07-19-macro-folders.md`.
+
 ## Seneste arbejde (fase 6 — quick wins + ubesvaret opkald + organisk UI, 2026-07-18)
 
 Fuld kodegennemgang (dom: solid; 5 småfejl fundet, se nedenfor) fulgt af implementering. Byggemiljø: brugerens Mac (denne fase er lavet i `automatiq-main`-mappen, en zip-kopi af main uden git). **100 grønne JVM-tests** (fra 85). `assembleDebug` bygger.
