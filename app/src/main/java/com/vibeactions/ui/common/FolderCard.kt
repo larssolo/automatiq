@@ -115,23 +115,26 @@ fun FolderCard(
             animationSpec = tween(200),
             label = "chevron"
         )
-        Box(
-            Modifier
-                .align(Alignment.CenterVertically)
-                .padding(end = 2.dp)
-                .size(30.dp)
-                .clip(CircleShape)
-                .background(accent.copy(alpha = 0.16f))
-                .clickable(onClick = onClick),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                painterResource(R.drawable.ic_chevron),
-                contentDescription = if (folder.expanded) "Collapse" else "Expand",
-                tint = accent,
-                modifier = Modifier.size(15.dp).rotate(chevronRotation)
-            )
+        // 44dp slot shared with the macro cards' action marks, so all icons hold one trailing edge.
+        Box(Modifier.width(44.dp).fillMaxHeight(), contentAlignment = Alignment.Center) {
+            Box(
+                Modifier
+                    .size(36.dp)
+                    .clip(CircleShape)
+                    .background(accent.copy(alpha = 0.16f))
+                    .clickable(onClick = onClick),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    painterResource(R.drawable.ic_chevron),
+                    contentDescription = if (folder.expanded) "Collapse" else "Expand",
+                    tint = accent,
+                    modifier = Modifier.size(18.dp).rotate(chevronRotation)
+                )
+            }
         }
+        // Air between the chevron and the drag handle's lines.
+        Spacer(Modifier.width(10.dp))
         Box(Modifier.fillMaxHeight().padding(end = 4.dp), contentAlignment = Alignment.Center) {
             Icon(
                 Icons.Default.DragHandle, contentDescription = "Reorder", tint = OnSurfaceVariant,

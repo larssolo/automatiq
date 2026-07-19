@@ -127,20 +127,16 @@ fun MacroCard(
             )
         }
         if (macro.triggerType == TriggerType.INCOMING && macro.aiReplyEnabled) {
-            Column(
-                Modifier
-                    .fillMaxHeight()
-                    .padding(vertical = 6.dp),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.End
-            ) {
+            // Fixed-width slot: every right-side action mark (AI badge, send arrow, folder
+            // chevron) sits in a 44dp slot so they share one trailing edge across all cards.
+            Box(Modifier.width(44.dp).fillMaxHeight(), contentAlignment = Alignment.Center) {
                 Surface(color = accent.copy(alpha = 0.2f), shape = RoundedCornerShape(4.dp)) {
                     Text(
                         "AI",
                         color = accent,
-                        fontSize = 9.sp,
+                        fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp)
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp)
                     )
                 }
             }
@@ -148,17 +144,19 @@ fun MacroCard(
         // One-tap manual send. Reply macros (auto-reply / missed call) have no recipient list
         // of their own, so a manual send has no target — the button is hidden for those.
         if (macro.triggerType != TriggerType.INCOMING && macro.triggerType != TriggerType.MISSED_CALL) {
-            Box(Modifier.fillMaxHeight(), contentAlignment = Alignment.Center) {
+            Box(Modifier.width(44.dp).fillMaxHeight(), contentAlignment = Alignment.Center) {
                 IconButton(onClick = onSend) {
                     Icon(
                         Icons.AutoMirrored.Filled.Send,
                         contentDescription = "Send now",
                         tint = accent,
-                        modifier = Modifier.size(19.dp)
+                        modifier = Modifier.size(23.dp)
                     )
                 }
             }
         }
+        // Air between the action mark and the drag handle's lines.
+        Spacer(Modifier.width(10.dp))
         // Drag handle for reordering (long-press is now reserved for the actions menu).
         Box(
             Modifier.fillMaxHeight().padding(end = 4.dp),
