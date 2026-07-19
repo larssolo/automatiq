@@ -20,6 +20,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -27,8 +28,10 @@ import com.vibeactions.ui.theme.Amber
 import com.vibeactions.ui.theme.Primary
 
 /**
- * A standard sliding-thumb toggle: a white thumb travels across a pill-shaped track. The track is
- * [Primary] (green) when checked and [Amber] (yellow) when unchecked, so state reads at a glance.
+ * A standard sliding-thumb toggle: a white thumb travels across a pill-shaped track. The default
+ * colors — [Primary] (green) checked, [Amber] (yellow) unchecked — are the app's enabled/disabled
+ * language; controls that mean something else (e.g. the folder open/close switch) pass their own
+ * track colors and shapes so the signal can't be misread as on/off.
  */
 @Composable
 fun ThemedSwitch(
@@ -38,9 +41,13 @@ fun ThemedSwitch(
     enabled: Boolean = true,
     width: Dp = 60.dp,
     height: Dp = 30.dp,
+    checkedTrackColor: Color = Primary,
+    uncheckedTrackColor: Color = Amber,
+    trackShape: Shape = RoundedCornerShape(percent = 50),
+    thumbShape: Shape = CircleShape,
 ) {
     val trackColor by animateColorAsState(
-        targetValue = if (checked) Primary else Amber,
+        targetValue = if (checked) checkedTrackColor else uncheckedTrackColor,
         animationSpec = tween(durationMillis = 200),
         label = "track",
     )
@@ -76,7 +83,7 @@ fun ThemedSwitch(
         modifier = modifier
             .then(toggleModifier)
             .size(width = width, height = height)
-            .clip(RoundedCornerShape(percent = 50))
+            .clip(trackShape)
             .background(trackColor.copy(alpha = trackColor.alpha * alpha)),
     ) {
         Box(
@@ -84,7 +91,7 @@ fun ThemedSwitch(
                 .padding(inset)
                 .offset(x = thumbOffset)
                 .size(thumbSize)
-                .clip(CircleShape)
+                .clip(thumbShape)
                 .background(Color.White.copy(alpha = alpha)),
         )
     }

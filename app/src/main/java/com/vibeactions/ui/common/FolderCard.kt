@@ -4,6 +4,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DragHandle
@@ -87,8 +88,17 @@ fun FolderCard(
         }
         // Open/close control: checked = expanded. Toggling routes through the same callback as
         // tapping the card, so both paths stay in sync with the persisted expanded state.
+        // Deliberately NOT the green/amber enabled-language: gray tones + a square thumb make it
+        // read as "open/close", not "on/off".
         Box(Modifier.fillMaxHeight().padding(end = 2.dp), contentAlignment = Alignment.Center) {
-            ThemedSwitch(checked = folder.expanded, onCheckedChange = { onClick() })
+            ThemedSwitch(
+                checked = folder.expanded,
+                onCheckedChange = { onClick() },
+                checkedTrackColor = Color(0xFF5A5A5A),   // open = gray
+                uncheckedTrackColor = Color(0xFF2C2C2C), // closed = dark gray
+                trackShape = RoundedCornerShape(8.dp),
+                thumbShape = RoundedCornerShape(4.dp)
+            )
         }
         Box(Modifier.fillMaxHeight().padding(end = 4.dp), contentAlignment = Alignment.Center) {
             Icon(
