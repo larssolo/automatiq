@@ -76,9 +76,6 @@ class MacroListViewModel @Inject constructor(
         )
     }
 
-    /** No-op: MacroListScreen still calls this until Task 5 rewrites it against onDrop/rows. */
-    fun onReorder(orderedIds: List<String>) = Unit
-
     /** Persists a finished drag: the dragged macro's (possibly new) folder plus every visible
      *  row's order. Membership was decided by resolveDrop from the landing position. */
     fun onDrop(rows: List<ListRow>, draggedKey: String) = viewModelScope.launch {

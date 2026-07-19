@@ -1,13 +1,7 @@
 package com.vibeactions.ui.common
 
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
@@ -20,6 +14,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DragHandle
+import androidx.compose.material.icons.filled.Folder
+import androidx.compose.material.icons.filled.FolderOff
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.automirrored.filled.Send
@@ -34,6 +30,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -48,11 +45,6 @@ import com.vibeactions.util.accentColorFor
 import com.vibeactions.util.formatRecurrence
 import com.vibeactions.util.maskPhone
 
-/** Asymmetric "leaf-cut" corners — the app's organic signature shape. */
-private val LeafShape = RoundedCornerShape(
-    topStart = 18.dp, topEnd = 6.dp, bottomEnd = 18.dp, bottomStart = 6.dp
-)
-
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun MacroCard(
@@ -62,10 +54,13 @@ fun MacroCard(
     onCopy: () -> Unit,
     onSend: () -> Unit,
     onToggle: (Boolean) -> Unit,
+    veinColor: Color? = null,
+    onMoveToFolder: (() -> Unit)? = null,
+    onMoveToRoot: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
     dragHandleModifier: Modifier = Modifier
 ) {
-    val accent = androidx.compose.ui.graphics.Color(accentColorFor(macro))
+    val accent = Color(accentColorFor(macro))
     var menuExpanded by remember { mutableStateOf(false) }
 
     // Organic press physics: the card gives slightly under the finger and springs back.
@@ -97,21 +92,14 @@ fun MacroCard(
                 onLongClick = { menuExpanded = true }
             )
     ) {
-        // The vein: a living accent edge that breathes while the macro is armed.
-        val veinColor = if (macro.enabled) {
-            val breath = rememberInfiniteTransition(label = "vein")
-            val veinAlpha by breath.animateFloat(
-                0.45f, 1f,
-                infiniteRepeatable(tween(3600, easing = FastOutSlowInEasing), RepeatMode.Reverse),
-                label = "veinAlpha"
-            )
-            accent.copy(alpha = veinAlpha)
-        } else Outline
+        // The vein: a living accent edge that breathes while the macro is armed. A folder's
+        // color (veinColor) overrides the macro's own accent when the macro is a member.
+        val vein = breathingVeinColor(veinColor ?: accent, macro.enabled)
         Box(
             Modifier
                 .width(4.dp)
                 .fillMaxHeight()
-                .background(veinColor)
+                .background(vein)
         )
         Column(
             Modifier
@@ -205,6 +193,16 @@ fun MacroCard(
                     text = { Text("Send now") },
                     leadingIcon = { Icon(Icons.Default.Send, contentDescription = null) },
                     onClick = { menuExpanded = false; onSend() }
+                )
+                if (onMoveToFolder != null) DropdownMenuItem(
+                    text = { Text("Move to folder…") },
+                    leadingIcon = { Icon(Icons.Default.Folder, contentDescription = null) },
+                    onClick = { menuExpanded = false; onMoveToFolder() }
+                )
+                if (onMoveToRoot != null) DropdownMenuItem(
+                    text = { Text("Move to root") },
+                    leadingIcon = { Icon(Icons.Default.FolderOff, contentDescription = null) },
+                    onClick = { menuExpanded = false; onMoveToRoot() }
                 )
                 DropdownMenuItem(
                     text = { Text(if (macro.enabled) "Disable" else "Enable") },
