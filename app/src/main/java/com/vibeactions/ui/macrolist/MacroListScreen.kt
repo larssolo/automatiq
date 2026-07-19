@@ -196,11 +196,15 @@ fun MacroListScreen(
                     onValueChange = { query = it },
                     shape = RoundedCornerShape(50),
                     placeholder = { Text("Find a macro") },
-                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                    leadingIcon = {
+                        Icon(Icons.Default.Search, contentDescription = null, tint = OnSurfaceVariant)
+                    },
                     trailingIcon = {
                         if (searching) {
                             IconButton(onClick = { query = "" }) {
-                                Icon(Icons.Default.Close, contentDescription = "Clear search")
+                                // Explicit tint — the default content color is dark-on-dark here.
+                                Icon(Icons.Default.Close, contentDescription = "Clear search",
+                                    tint = OnSurface)
                             }
                         }
                     },

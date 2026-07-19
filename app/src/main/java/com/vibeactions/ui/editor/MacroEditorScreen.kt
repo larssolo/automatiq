@@ -334,7 +334,8 @@ fun MacroEditorScreen(
                             Text("Expires: ${LocalDate.ofEpochDay(expiry)}")
                         }
                         IconButton(onClick = { vm.update { it.copy(validUntilEpochDay = null) } }) {
-                            Icon(Icons.Default.Close, contentDescription = "Clear expiry")
+                            Icon(Icons.Default.Close, contentDescription = "Clear expiry",
+                                tint = OnSurface)
                         }
                     }
                 }
@@ -661,7 +662,12 @@ fun MacroEditorScreen(
                                 vm.update { st ->
                                     st.copy(recipients = st.recipients.filterIndexed { i, _ -> i != index })
                                 }
-                            }) { Icon(Icons.Default.Close, contentDescription = "Remove recipient") }
+                            }) {
+                                // Explicit tint: the default content color renders dark-on-dark
+                                // here, leaving the remove-X nearly invisible.
+                                Icon(Icons.Default.Close, contentDescription = "Remove recipient",
+                                    tint = OnSurface)
+                            }
                         }
                     }
                 }
