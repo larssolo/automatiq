@@ -407,19 +407,35 @@ fun MacroEditorScreen(
                 }
 
                 // Geofences only fire in the background with "Allow all the time" (Android 10+).
-                val fineGranted = ContextCompat.checkSelfPermission(
+                // Held as STATE refreshed on resume: the values change in system Settings, outside
+                // any Compose-visible event — a plain val kept showing the stale banner after the
+                // user returned from granting the permission.
+                fun hasFine() = ContextCompat.checkSelfPermission(
                     ctx, Manifest.permission.ACCESS_FINE_LOCATION
                 ) == PackageManager.PERMISSION_GRANTED
-                val bgGranted = Build.VERSION.SDK_INT < Build.VERSION_CODES.Q ||
+                fun hasBg() = Build.VERSION.SDK_INT < Build.VERSION_CODES.Q ||
                     ContextCompat.checkSelfPermission(
                         ctx, Manifest.permission.ACCESS_BACKGROUND_LOCATION
                     ) == PackageManager.PERMISSION_GRANTED
+                var fineGranted by remember { mutableStateOf(hasFine()) }
+                var bgGranted by remember { mutableStateOf(hasBg()) }
+                val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+                DisposableEffect(lifecycleOwner) {
+                    val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+                        if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+                            fineGranted = hasFine()
+                            bgGranted = hasBg()
+                        }
+                    }
+                    lifecycleOwner.lifecycle.addObserver(observer)
+                    onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+                }
                 // On Android 11+ background location can't be granted from an in-app dialog — the
                 // request is silently denied and the user must pick "Allow all the time" in Settings.
                 // Android 10 still allows the runtime dialog, so keep the launcher there.
                 val bgPermLauncher = rememberLauncherForActivityResult(
                     ActivityResultContracts.RequestPermission()
-                ) { /* result reflected on next recomposition */ }
+                ) { bgGranted = hasBg() }
                 fun openAppLocationSettings() {
                     ctx.startActivity(
                         Intent(
@@ -435,16 +451,17 @@ fun MacroEditorScreen(
                 val finePermLauncher = rememberLauncherForActivityResult(
                     ActivityResultContracts.RequestMultiplePermissions()
                 ) { result ->
-                    if (result[Manifest.permission.ACCESS_FINE_LOCATION] == true &&
-                        Build.VERSION.SDK_INT >= Build.VERSION_CODES.R
-                    ) openAppLocationSettings()
+                    fineGranted = result[Manifest.permission.ACCESS_FINE_LOCATION] == true
+                    if (fineGranted && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                        openAppLocationSettings()
+                    }
                 }
                 if (!bgGranted) {
                     val needsSettings = Build.VERSION.SDK_INT >= Build.VERSION_CODES.R
                     Text(
                         when {
                             !fineGranted -> "Location access is needed first — the button walks you through it."
-                            needsSettings -> "Open Settings and set location to \"Allow all the time\" so this fires in the background."
+                            needsSettings -> "In Settings: Permissions → Location → \"Allow all the time\" — needed so this fires in the background."
                             else -> "For this to work in the background, allow location \"all the time\"."
                         },
                         color = MaterialTheme.colorScheme.error,
