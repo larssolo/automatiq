@@ -49,6 +49,19 @@ class BackupJsonTest {
         assertTrue(parsed.settings.isEmpty())
     }
 
+    @Test fun legacyArray_withFolderId_fallsBackToRoot() {
+        // A macro with a folderId in a bare array carries no folders by construction, so any
+        // folderId is by definition an orphan and must be nulled.
+        val withFolder = Macro(
+            id = "m1", name = "Orphan", triggerType = TriggerType.MANUAL, scheduledTime = null,
+            recipients = listOf("+4512345678"), messageBody = "x", folderId = "ghost"
+        )
+        val legacy = exportMacros(listOf(withFolder))
+        assertTrue(legacy.trimStart().startsWith("["))
+        val parsed = parseBackup(legacy)
+        assertNull(parsed.macros.single().folderId)
+    }
+
     @Test fun backup_roundTripsFoldersAndMembership() {
         val folder = Folder(id = "f1", name = "Holiday", cardColor = 5L, sortOrder = 2,
             expanded = false, createdAt = 7L)

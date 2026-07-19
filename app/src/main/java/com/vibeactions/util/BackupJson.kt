@@ -46,7 +46,11 @@ class ParsedBackup(val macros: List<Macro>, val folders: List<Folder>, val setti
  */
 fun parseBackup(text: String): ParsedBackup {
     val firstChar = text.trimStart().firstOrNull()
-    if (firstChar == '[') return ParsedBackup(importMacros(text), emptyList(), emptyMap())
+    if (firstChar == '[') return ParsedBackup(
+        // A bare array carries no folders, so any folderId in it is by definition an orphan.
+        importMacros(text).map { if (it.folderId != null) it.copy(folderId = null) else it },
+        emptyList(), emptyMap()
+    )
     val backup = backupJson.decodeFromString(Backup.serializer(), text)
     val folders = backup.folders.map { it.toFolder() }
     val ids = folders.map { it.id }.toSet()
