@@ -48,6 +48,7 @@ import com.vibeactions.ui.theme.Primary
 import com.vibeactions.util.FolderRow
 import com.vibeactions.util.ListRow
 import com.vibeactions.util.MacroRow
+import com.vibeactions.util.aiVariationApplies
 import com.vibeactions.util.folderSwitchOn
 import com.vibeactions.util.hideMembers
 import kotlinx.coroutines.launch
@@ -119,7 +120,14 @@ fun MacroListScreen(
     }
     fun sendMacro(macro: Macro) {
         vm.onTrigger(macro)
-        scope.launch { snackbar.showSnackbar("On its way — ${macro.name}") }
+        // An AI-variation macro doesn't send on the spot: Gemini writes the text first, and in
+        // APPROVE mode it waits for the user — "On its way" would be a false promise.
+        val varying = macro.enabled && macro.recipients.isNotEmpty() && aiVariationApplies(
+            macro.triggerType, macro.aiReplyEnabled,
+            hasOverrideBody = false, hasOverrideRecipient = false
+        )
+        val message = if (varying) "Writing AI message — ${macro.name}…" else "On its way — ${macro.name}"
+        scope.launch { snackbar.showSnackbar(message) }
     }
     fun dropped() {
         val key = draggedKey ?: return

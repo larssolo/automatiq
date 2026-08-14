@@ -23,13 +23,15 @@ class AiReplyActionReceiver : BroadcastReceiver() {
         if (intent.action != ACTION_AI_SEND) return
 
         val macroId = intent.getStringExtra(EXTRA_MACRO_ID) ?: return
-        val recipient = intent.getStringExtra(EXTRA_RECIPIENT) ?: return
+        // Null for an approved AI variation (scheduled macro): the send then targets the macro's
+        // own recipient list instead of a reply counterparty.
+        val recipient = intent.getStringExtra(EXTRA_RECIPIENT)
         val body = intent.getStringExtra(EXTRA_BODY) ?: return
 
         // A notification action button doesn't dismiss on tap, so a quick double-tap on "Send"
         // delivers two broadcasts before the cancel above lands — swallow the duplicate.
         val now = System.currentTimeMillis()
-        val key = "$macroId|$recipient|${body.hashCode()}"
+        val key = "$macroId|${recipient.orEmpty()}|${body.hashCode()}"
         recentSends.entries.removeAll { now - it.value > DOUBLE_TAP_WINDOW_MS }
         if (recentSends.putIfAbsent(key, now) != null) return
 

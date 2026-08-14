@@ -71,6 +71,44 @@ class EditorStateToMacroTest {
         assertNull(macro.matchKeyword)
     }
 
+    @Test fun scheduled_keepsAiVariationFields() {
+        // Scheduled macros can send AI-written variations: the AI fields must survive the save.
+        val state = EditorState(
+            name = "Morning", triggerType = TriggerType.SCHEDULED,
+            recipients = listOf("+4512345678"), message = "Godmorgen!",
+            aiReplyEnabled = true, aiSendMode = com.vibeactions.domain.model.AiSendMode.AUTO,
+            aiReplyInstruction = "  varm og kort  "
+        )
+        val macro = state.toMacro("id-1")
+        assertTrue(macro.aiReplyEnabled)
+        assertEquals(com.vibeactions.domain.model.AiSendMode.AUTO, macro.aiSendMode)
+        assertEquals("varm og kort", macro.aiReplyInstruction)
+    }
+
+    @Test fun scheduled_aiDisabled_dropsInstruction() {
+        val state = EditorState(
+            name = "Morning", triggerType = TriggerType.SCHEDULED,
+            recipients = listOf("+4512345678"), message = "Godmorgen!",
+            aiReplyEnabled = false, aiReplyInstruction = "varm og kort"
+        )
+        val macro = state.toMacro("id-1")
+        assertEquals(false, macro.aiReplyEnabled)
+        assertNull(macro.aiReplyInstruction)
+    }
+
+    @Test fun manual_dropsAiVariationFields() {
+        // Only auto-reply and scheduled macros carry AI fields; a trigger-type switch to MANUAL
+        // must not leave a stale enabled flag that would surprise-vary a plain manual send.
+        val state = EditorState(
+            name = "Tap", triggerType = TriggerType.MANUAL,
+            recipients = listOf("+4512345678"), message = "Hej",
+            aiReplyEnabled = true, aiReplyInstruction = "varm"
+        )
+        val macro = state.toMacro("id-1")
+        assertEquals(false, macro.aiReplyEnabled)
+        assertNull(macro.aiReplyInstruction)
+    }
+
     @Test fun folderMembership_survivesEditRoundTrip() {
         // Editing a macro that lives in a folder must not kick it out on save.
         val state = EditorState(

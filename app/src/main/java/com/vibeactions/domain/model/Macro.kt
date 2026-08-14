@@ -54,11 +54,12 @@ data class Macro(
     val radiusMeters: Float? = null,
     /** LOCATION only: [GeofenceTransition.ENTER] or [GeofenceTransition.EXIT]. */
     val geofenceTransition: Int? = null,
-    /** INCOMING only: when true, replies via Gemini AI instead of the fixed messageBody. */
+    /** INCOMING: replies via Gemini AI instead of the fixed messageBody. SCHEDULED: every fire
+     *  sends a fresh AI-written variation of messageBody, so recipients never get the same text. */
     val aiReplyEnabled: Boolean = false,
-    /** INCOMING only: APPROVE = notify user to confirm before send; AUTO = send immediately and inform. */
+    /** AI macros: APPROVE = notify user to confirm before send; AUTO = send immediately and inform. */
     val aiSendMode: AiSendMode = AiSendMode.APPROVE,
-    /** INCOMING + AI only: per-macro instruction steering tone/length of the reply; null/blank = none. */
+    /** AI macros: per-macro instruction steering tone/style of the AI text; null/blank = none. */
     val aiReplyInstruction: String? = null,
     /** State triggers (CHARGING/BLUETOOTH/WIFI): fire on connect/arrive (true) or disconnect/leave (false). */
     val triggerOnConnect: Boolean = true,

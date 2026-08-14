@@ -126,7 +126,8 @@ fun MacroCard(
                 overflow = TextOverflow.Ellipsis
             )
         }
-        if (macro.triggerType == TriggerType.INCOMING && macro.aiReplyEnabled) {
+        // AI badge for any macro whose text Gemini writes: auto-replies and scheduled variations.
+        if (macro.aiReplyEnabled) {
             // Fixed-width slot: every right-side action mark (AI badge, send arrow, folder
             // chevron) sits in a 44dp slot so they share one trailing edge across all cards.
             Box(Modifier.width(44.dp).fillMaxHeight(), contentAlignment = Alignment.Center) {

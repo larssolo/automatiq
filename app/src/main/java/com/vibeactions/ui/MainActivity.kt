@@ -42,8 +42,16 @@ import com.vibeactions.ui.theme.VibeActionsTheme
 import com.vibeactions.util.maskPhone
 import dagger.hilt.android.AndroidEntryPoint
 
-/** A pending AI auto-reply the user opened from a notification, awaiting approve/discard in-app. */
-data class AiApproval(val macroId: String, val recipient: String, val body: String, val notifId: Int)
+/** A pending AI text the user opened from a notification, awaiting approve/discard in-app.
+ *  [recipient] is the counterparty for auto-replies; null for an AI-variation (scheduled) draft,
+ *  which sends to the macro's own recipient list. [toLabel] is the masked "To …" display text. */
+data class AiApproval(
+    val macroId: String,
+    val recipient: String?,
+    val toLabel: String,
+    val body: String,
+    val notifId: Int
+)
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -76,23 +84,28 @@ class MainActivity : ComponentActivity() {
     private fun readApproval(intent: Intent?): AiApproval? {
         if (intent?.getStringExtra(EXTRA_AI_ACTION) != "approve") return null
         val macroId = intent.getStringExtra(EXTRA_MACRO_ID) ?: return null
-        val recipient = intent.getStringExtra(EXTRA_RECIPIENT) ?: return null
+        // Absent recipient = AI-variation draft (sends to the macro's own recipients).
+        val recipient = intent.getStringExtra(EXTRA_RECIPIENT)
         val body = intent.getStringExtra(EXTRA_BODY) ?: return null
-        return AiApproval(macroId, recipient, body, intent.getIntExtra(EXTRA_NOTIF_ID, -1))
+        // Fallback chain covers notifications posted by an older app version without the label.
+        val toLabel = intent.getStringExtra(EXTRA_TO_LABEL)
+            ?: recipient?.let { maskPhone(it) } ?: "recipients"
+        return AiApproval(macroId, recipient, toLabel, body, intent.getIntExtra(EXTRA_NOTIF_ID, -1))
     }
 
     companion object {
         const val EXTRA_AI_ACTION = "ai_action"
         const val EXTRA_MACRO_ID = "macro_id"
         const val EXTRA_RECIPIENT = "recipient"
+        const val EXTRA_TO_LABEL = "to_label"
         const val EXTRA_BODY = "body"
         const val EXTRA_NOTIF_ID = "notif_id"
         const val EXTRA_NAV = "nav"
     }
 }
 
-/** In-app approval surface for AI auto-replies — reliable on OEM skins (MIUI) where notification
- *  action buttons don't render. Lets the user edit the reply before sending. */
+/** In-app approval surface for AI texts (auto-replies and scheduled variations) — reliable on OEM
+ *  skins (MIUI) where notification action buttons don't render. Lets the user edit before sending. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun AiApprovalDialog(approval: AiApproval, onDone: () -> Unit) {
@@ -107,18 +120,18 @@ private fun AiApprovalDialog(approval: AiApproval, onDone: () -> Unit) {
 
     AlertDialog(
         onDismissRequest = onDone,
-        title = { Text("Send AI reply?") },
+        title = { Text(if (approval.recipient != null) "Send AI reply?" else "Send AI message?") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
-                    "To ${maskPhone(approval.recipient)}",
+                    "To ${approval.toLabel}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 OutlinedTextField(
                     value = text,
                     onValueChange = { text = it },
-                    label = { Text("Reply (editable)") },
+                    label = { Text("Message (editable)") },
                     modifier = Modifier.fillMaxWidth()
                 )
             }
@@ -131,7 +144,11 @@ private fun AiApprovalDialog(approval: AiApproval, onDone: () -> Unit) {
                         Intent(context, AiReplyActionReceiver::class.java).apply {
                             action = AiReplyActionReceiver.ACTION_AI_SEND
                             putExtra(AiReplyActionReceiver.EXTRA_MACRO_ID, approval.macroId)
-                            putExtra(AiReplyActionReceiver.EXTRA_RECIPIENT, approval.recipient)
+                            // Absent for a variation draft: the receiver then sends to the
+                            // macro's own recipient list.
+                            approval.recipient?.let {
+                                putExtra(AiReplyActionReceiver.EXTRA_RECIPIENT, it)
+                            }
                             putExtra(AiReplyActionReceiver.EXTRA_BODY, text)
                             putExtra(AiReplyActionReceiver.EXTRA_NOTIF_ID, approval.notifId)
                         }

@@ -10,6 +10,7 @@ import android.widget.Toast
 import com.vibeactions.data.repository.MacroRepository
 import com.vibeactions.domain.model.MacroStatus
 import com.vibeactions.scheduler.MacroFirer
+import com.vibeactions.util.aiVariationApplies
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -34,14 +35,24 @@ class WidgetTapReceiver : BroadcastReceiver() {
         val pending = goAsync()
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                firer.fire(macroId, enforceOncePerDay = false)
+                val result = firer.fire(macroId, enforceOncePerDay = false)
                 MacroWidgetProvider.renderWidget(context, AppWidgetManager.getInstance(context), widgetId)
                 val macro = repo.getById(macroId)
                 if (macro != null) {
-                    val msg = if (macro.lastStatus == MacroStatus.SUCCESS) {
-                        "Sent: ${macro.name}"
-                    } else {
-                        "Failed: ${macro.name}"
+                    // An AI-variation macro hands off to a worker (result null, nothing sent yet) —
+                    // the stale lastStatus must not be announced as this tap's outcome. fire()
+                    // also returns null when it bails BEFORE the hand-off (disabled macro, no
+                    // recipients), so mirror those guards: no worker was enqueued in that case.
+                    val deferredToAi = result == null && macro.enabled &&
+                        macro.recipients.isNotEmpty() &&
+                        aiVariationApplies(
+                            macro.triggerType, macro.aiReplyEnabled,
+                            hasOverrideBody = false, hasOverrideRecipient = false
+                        )
+                    val msg = when {
+                        deferredToAi -> "Writing AI message: ${macro.name}…"
+                        macro.lastStatus == MacroStatus.SUCCESS -> "Sent: ${macro.name}"
+                        else -> "Failed: ${macro.name}"
                     }
                     Handler(Looper.getMainLooper()).post {
                         Toast.makeText(context.applicationContext, msg, Toast.LENGTH_SHORT).show()

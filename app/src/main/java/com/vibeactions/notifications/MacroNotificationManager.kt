@@ -32,10 +32,30 @@ class MacroNotificationManager @Inject constructor(
         manager.createNotificationChannel(channel)
         // Separate high-importance channel so AI-approval prompts surface as a heads-up. On Android 8+
         // the channel importance — not the per-notification priority — governs heads-up behaviour.
-        val aiChannel = NotificationChannel(CHANNEL_ID_AI, "AI Replies", NotificationManager.IMPORTANCE_HIGH)
-        aiChannel.description = "AI-generated SMS replies awaiting approval"
+        val aiChannel = NotificationChannel(CHANNEL_ID_AI, "AI Messages", NotificationManager.IMPORTANCE_HIGH)
+        aiChannel.description = "AI-written SMS replies and scheduled variations awaiting approval"
         manager.createNotificationChannel(aiChannel)
+        // Quiet channel for the short-lived foreground service WorkManager starts when it runs an
+        // expedited AI job on Android 8–11 (API < 31).
+        val workChannel = NotificationChannel(
+            CHANNEL_ID_AI_WORK, "AI writing", NotificationManager.IMPORTANCE_LOW
+        )
+        workChannel.description = "Shown briefly while Gemini writes a message"
+        manager.createNotificationChannel(workChannel)
     }
+
+    /**
+     * Quiet notification backing the foreground service WorkManager starts for an expedited AI job
+     * on Android 8–11. WorkManager asks the worker for this BEFORE running it there, and the
+     * default implementation throws — without it the job fails and the message is never written.
+     */
+    fun aiWorkingNotification(title: String): Notification =
+        NotificationCompat.Builder(context, CHANNEL_ID_AI_WORK)
+            .setSmallIcon(android.R.drawable.stat_notify_sync)
+            .setContentTitle(title)
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setOngoing(true)
+            .build()
 
     fun notifyResult(
         macro: Macro,
@@ -107,20 +127,28 @@ class MacroNotificationManager @Inject constructor(
         )
     }
 
-    /** Posts a notification with Send/Discard action buttons for APPROVE-mode AI replies. */
-    fun notifyAiApproval(macro: Macro, recipient: String, generatedBody: String) {
-        val notifId = ("ai_approve" + macro.id + recipient).hashCode() and 0x7FFFFFFF
+    /** Posts a notification with Send/Discard action buttons for APPROVE-mode AI texts.
+     *  [recipient] is the counterparty for auto-replies; null for AI-variation macros (scheduled),
+     *  whose approved text goes to the macro's own recipient list. */
+    fun notifyAiApproval(macro: Macro, recipient: String?, generatedBody: String) {
+        // Request-code/notification keys keep the recipient when present so parallel approvals for
+        // different senders coexist; a macro's own variation has one pending draft at a time.
+        val partyKey = recipient.orEmpty()
+        val notifId = ("ai_approve" + macro.id + partyKey).hashCode() and 0x7FFFFFFF
+        val toLabel = recipient?.let { maskPhone(it) }
+            ?: maskRecipients(macro.recipients).ifBlank { "recipients" }
         val preview = if (generatedBody.length > 200) generatedBody.take(200) + "…" else generatedBody
 
         val sendIntent = Intent(context, AiReplyActionReceiver::class.java).apply {
             action = AiReplyActionReceiver.ACTION_AI_SEND
             putExtra(AiReplyActionReceiver.EXTRA_MACRO_ID, macro.id)
-            putExtra(AiReplyActionReceiver.EXTRA_RECIPIENT, recipient)
+            // No recipient extra for a variation: the receiver then fires the macro's own list.
+            if (recipient != null) putExtra(AiReplyActionReceiver.EXTRA_RECIPIENT, recipient)
             putExtra(AiReplyActionReceiver.EXTRA_BODY, generatedBody)
             putExtra(AiReplyActionReceiver.EXTRA_NOTIF_ID, notifId)
         }
         val sendPi = PendingIntent.getBroadcast(
-            context, ("ai_send" + macro.id + recipient).hashCode() and 0x7FFFFFFF, sendIntent,
+            context, ("ai_send" + macro.id + partyKey).hashCode() and 0x7FFFFFFF, sendIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
         val discardIntent = Intent(context, AiReplyActionReceiver::class.java).apply {
@@ -128,7 +156,7 @@ class MacroNotificationManager @Inject constructor(
             putExtra(AiReplyActionReceiver.EXTRA_NOTIF_ID, notifId)
         }
         val discardPi = PendingIntent.getBroadcast(
-            context, ("ai_discard" + macro.id + recipient).hashCode() and 0x7FFFFFFF, discardIntent,
+            context, ("ai_discard" + macro.id + partyKey).hashCode() and 0x7FFFFFFF, discardIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
         // Tapping the body opens an in-app approve/edit dialog — the reliable path on OEM skins
@@ -136,25 +164,33 @@ class MacroNotificationManager @Inject constructor(
         val openIntent = Intent(context, com.vibeactions.ui.MainActivity::class.java).apply {
             putExtra(com.vibeactions.ui.MainActivity.EXTRA_AI_ACTION, "approve")
             putExtra(com.vibeactions.ui.MainActivity.EXTRA_MACRO_ID, macro.id)
-            putExtra(com.vibeactions.ui.MainActivity.EXTRA_RECIPIENT, recipient)
+            if (recipient != null) putExtra(com.vibeactions.ui.MainActivity.EXTRA_RECIPIENT, recipient)
+            putExtra(com.vibeactions.ui.MainActivity.EXTRA_TO_LABEL, toLabel)
             putExtra(com.vibeactions.ui.MainActivity.EXTRA_BODY, generatedBody)
             putExtra(com.vibeactions.ui.MainActivity.EXTRA_NOTIF_ID, notifId)
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
         }
         val openPi = PendingIntent.getActivity(
-            context, ("ai_open" + macro.id + recipient).hashCode() and 0x7FFFFFFF, openIntent,
+            context, ("ai_open" + macro.id + partyKey).hashCode() and 0x7FFFFFFF, openIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
         val builder = NotificationCompat.Builder(context, CHANNEL_ID_AI)
             .setSmallIcon(android.R.drawable.stat_notify_chat)
-            .setContentTitle("AI reply ready for ${maskPhone(recipient)}")
+            .setContentTitle(
+                if (recipient != null) "AI reply ready for $toLabel"
+                else "AI message ready: ${macro.name}"
+            )
             .setContentText(preview)
             .setStyle(NotificationCompat.BigTextStyle().bigText(preview))
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setCategory(NotificationCompat.CATEGORY_MESSAGE)
             .setContentIntent(openPi)
             .setAutoCancel(true)
+            // A variation draft IS that day's scheduled send waiting on the user: swiping it away
+            // by accident would skip the send silently, so it stays until Send or Discard. Replies
+            // keep the old dismissable behaviour — a missed one is just an unanswered SMS.
+            .setOngoing(recipient == null)
             .addAction(android.R.drawable.ic_menu_send, "Send", sendPi)
             .addAction(android.R.drawable.ic_menu_delete, "Discard", discardPi)
         manager.notify(notifId, builder.build())
@@ -190,5 +226,6 @@ class MacroNotificationManager @Inject constructor(
     companion object {
         const val CHANNEL_ID = "macro_actions"
         const val CHANNEL_ID_AI = "macro_ai"
+        const val CHANNEL_ID_AI_WORK = "macro_ai_work"
     }
 }
