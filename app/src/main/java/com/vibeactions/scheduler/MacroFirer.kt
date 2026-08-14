@@ -1,21 +1,31 @@
 package com.vibeactions.scheduler
 
+import android.content.Context
+import androidx.work.ExistingWorkPolicy
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.OutOfQuotaPolicy
+import androidx.work.WorkManager
+import androidx.work.workDataOf
 import com.vibeactions.data.repository.MacroLogRepository
 import com.vibeactions.data.repository.MacroRepository
 import com.vibeactions.domain.startOfDayMillis
+import com.vibeactions.domain.model.Macro
 import com.vibeactions.domain.model.MacroLog
 import com.vibeactions.domain.model.MacroStatus
 import com.vibeactions.domain.model.TriggerType
 import com.vibeactions.notifications.MacroNotificationManager
 import com.vibeactions.sms.SmsDispatcher
+import com.vibeactions.util.aiVariationApplies
 import com.vibeactions.util.expandTemplate
 import com.vibeactions.widget.WidgetRefresher
+import dagger.hilt.android.qualifiers.ApplicationContext
 import java.time.LocalDateTime
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class MacroFirer @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val macroRepo: MacroRepository,
     private val logRepo: MacroLogRepository,
     private val sms: SmsDispatcher,
@@ -30,7 +40,8 @@ class MacroFirer @Inject constructor(
      * [overrideBody] when set, uses this text directly instead of expanding the macro's template.
      * [suppressResultNotification] when true, skips posting the result notification.
      * Returns the outcome, or null when the fire was skipped (macro missing/disabled, no recipients,
-     * or another path already claimed today's scheduled send).
+     * or another path already claimed today's scheduled send) or handed off to [AiVaryWorker]
+     * (AI-variation macros: the worker calls back with an overrideBody once the text exists).
      */
     suspend fun fire(
         macroId: String,
@@ -50,6 +61,24 @@ class MacroFirer @Inject constructor(
         // manual/widget tap earlier today does not consume the day's scheduled send. The claim is an
         // atomic check-and-set, so a simultaneous alarm + catch-up can't both pass the guard.
         if (enforceOncePerDay && !macroRepo.tryClaimScheduledFire(macro.id, now, startOfDayMillis(now))) return null
+
+        // AI-varied sends: generating the text takes seconds (Gemini) and may need the user's
+        // approval, so it can't happen inline — receivers call fire() on a tight goAsync budget.
+        // Hand off to AiVaryWorker, which calls back here with an overrideBody once the text
+        // exists (AUTO) or is approved (APPROVE). The claim above stays consumed: the hand-off IS
+        // today's scheduled send.
+        if (aiVariationApplies(macro.triggerType, macro.aiReplyEnabled,
+                hasOverrideBody = overrideBody != null,
+                hasOverrideRecipient = overrideRecipient != null)
+        ) {
+            // Re-arm tomorrow NOW: the normal re-arm below only runs when a send completes, and an
+            // APPROVE-mode draft the user ignores would otherwise leave the alarm dead for good.
+            if (macro.triggerType == TriggerType.SCHEDULED && macro.repeatDaily) {
+                alarmScheduler.schedule(macro)
+            }
+            enqueueAiVary(macro)
+            return null
+        }
 
         // Expand {dato}/{tid}/{ugedag}/{navn} once, then send the same text to every recipient.
         // For reply fires (auto-reply / missed call) the override recipient IS the other party,
@@ -94,6 +123,24 @@ class MacroFirer @Inject constructor(
         // Keep bound home-screen widgets' "Last: …" subtitle in sync for scheduled/auto fires too.
         widgets.refreshFor(macro.id)
         return FireResult(finalStatus, finalError)
+    }
+
+    /** Hands an AI-variation fire to [AiVaryWorker]. The fresh event id makes a WorkManager retry
+     *  of the same job dedupe (identical inputData) while a later fire mints a new id. Unique work
+     *  with REPLACE: a still-pending variation from an earlier fire is superseded, never stacked. */
+    private fun enqueueAiVary(macro: Macro) {
+        val work = OneTimeWorkRequestBuilder<AiVaryWorker>()
+            .setInputData(
+                workDataOf(
+                    AiVaryWorker.KEY_MACRO_ID to macro.id,
+                    AiVaryWorker.KEY_EVENT_ID to java.util.UUID.randomUUID().toString()
+                )
+            )
+            .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
+            .build()
+        WorkManager.getInstance(context).enqueueUniqueWork(
+            AiVaryWorker.uniqueName(macro.id), ExistingWorkPolicy.REPLACE, work
+        )
     }
 }
 

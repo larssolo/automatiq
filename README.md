@@ -53,6 +53,7 @@ Everything runs on-device. No account, no server. Only two optional features rea
 | | Feature |
 |---|---|
 | 🤖 | **AI auto-replies (Gemini)** — per macro: approve each reply before it goes out, or send automatically and get notified. An optional per-macro instruction steers tone and length |
+| 🎲 | **AI variations for scheduled sends (Gemini)** — a scheduled macro can send a fresh AI-written variation of its message on every fire, so recipients never get the exact same text twice. Per macro: approve (and edit) each variation before it goes out, or send automatically. Falls back to the fixed message if Gemini is unreachable |
 | ✨ | **AI compose** — describe the message in the editor and pick between three generated suggestions |
 | 👥 | **Multiple recipients** — one macro sends to a whole list of numbers |
 | 🔤 | **Message variables** — `{dato}` `{tid}` `{ugedag}` `{navn}` are filled in at send time; reply macros also get `{afsender}` (the other party's number) |
@@ -89,6 +90,15 @@ Auto-reply macros can hand the incoming message to Google's **Gemini** and reply
 - **Send automatically & inform** — the reply goes out on its own and a notification tells you what was sent. A per-day dedup guard ensures a retried background job never sends the same reply twice.
 
 A per-macro instruction (e.g. *"Svar kort og venligt på dansk, maks. 1 sætning"*) steers the reply; otherwise the global system prompt from Settings is used. If the API is unreachable or no key is configured, the macro falls back to its fixed message text — auto-replies never silently fail.
+
+### AI variations for scheduled sends
+
+A **scheduled** macro can turn on **AI variation** in the editor: at every fire, Gemini rewrites the macro's message — same meaning, same language, roughly the same length — so a daily or weekly send never delivers the exact same text twice. Template tokens (`{dato}`, `{tid}`, …) are expanded *before* the rewrite, so the variation always carries today's real values. The same two modes apply, chosen per macro:
+
+- **Approve before sending** (default) — at send time a notification (or the in-app dialog) shows the generated message; you can edit it, send it to the macro's recipients, or discard it (discarding skips that day's send).
+- **Send automatically and notify** — the variation goes out on its own; the result notification shows exactly what was sent.
+
+An optional per-macro instruction steers tone and style (e.g. *"varm og uformel, hold den kort"*). If Gemini is unreachable or no key is configured, the original message is sent unchanged — a scheduled send is never silently dropped.
 
 ### Getting a free Gemini API key
 
@@ -191,7 +201,7 @@ Each SMS also requests a **delivery report**. When the carrier sends one, the lo
 |---|---|
 | `SEND_SMS` | Send the macro message |
 | `RECEIVE_SMS` | Detect incoming SMS for auto-reply macros |
-| `INTERNET` | Gemini API calls (AI replies / AI compose) — nothing else leaves the device |
+| `INTERNET` | Gemini API calls (AI replies / AI variations / AI compose) — nothing else leaves the device |
 | `RECEIVE_BOOT_COMPLETED` | Re-register alarms and geofences after reboot |
 | `SCHEDULE_EXACT_ALARM` / `USE_EXACT_ALARM` | Precise fire time for scheduled macros |
 | `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` | Keep WorkManager running on aggressive OEM ROMs |
@@ -261,7 +271,8 @@ app/src/main/java/com/vibeactions/
 │   └── usecase/       Save, Delete, Toggle, Trigger, RescheduleAll
 ├── scheduler/         AlarmScheduler · MacroFirer · MacroCatchUpWorker
 │                      BootReceiver · SmsReplyReceiver · IncomingReplyRouter
-│                      GeminiReplyWorker · DeferredReplyWorker (quiet hours)
+│                      GeminiReplyWorker · AiVaryWorker · AiAutoSendClaim
+│                      DeferredReplyWorker (quiet hours)
 │                      CallStateReceiver (missed calls) · AiReplyActionReceiver
 │                      SmsSentReceiver · SmsDeliveredReceiver (receipts)
 │                      TriggerMonitorService · TriggerMonitor (state triggers)
@@ -280,7 +291,7 @@ app/src/main/java/com/vibeactions/
 ├── di/                Hilt modules
 └── util/              TimeUtils · PhoneUtils · MacroJson · BackupJson
                        MessageTemplate · IncomingMatch · GeminiClient
-                       AiReplyDedup · SmsResult · QuietHours · StateTrigger
+                       AiReplyDedup · AiVary · SmsResult · QuietHours · StateTrigger
                        CallState · WidgetSubtitle · ColorMatrixMath · CardColors
                        FolderLayout
 ```

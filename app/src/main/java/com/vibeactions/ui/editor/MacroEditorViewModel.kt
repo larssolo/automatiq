@@ -109,9 +109,11 @@ fun EditorState.toMacro(id: String): Macro {
         weekInterval = interval,
         anchorEpochDay = anchor,
         cardColor = cardColor,
-        aiReplyEnabled = if (incoming) aiReplyEnabled else false,
+        // AI fields apply to auto-replies (Gemini answers the incoming SMS) and to scheduled
+        // macros (Gemini writes a fresh variation of the fixed message on every fire).
+        aiReplyEnabled = if (incoming || scheduled) aiReplyEnabled else false,
         aiSendMode = aiSendMode,
-        aiReplyInstruction = if (incoming && aiReplyEnabled)
+        aiReplyInstruction = if ((incoming || scheduled) && aiReplyEnabled)
             aiReplyInstruction.trim().ifBlank { null } else null,
         triggerOnConnect = if (triggerType in STATE_TRIGGERS) triggerOnConnect else true,
         triggerTarget = if (triggerType == TriggerType.BLUETOOTH || triggerType == TriggerType.WIFI)

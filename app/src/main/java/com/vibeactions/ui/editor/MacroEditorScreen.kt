@@ -90,7 +90,6 @@ fun MacroEditorScreen(
     var showExpiry by remember { mutableStateOf(false) }
     var intervalExpanded by remember { mutableStateOf(false) }
     var triggerExpanded by remember { mutableStateOf(false) }
-    var aiModeExpanded by remember { mutableStateOf(false) }
     var showAiCompose by remember { mutableStateOf(false) }
     // -1 = matchSender field; 0+ = recipient index
     var pendingContactIndex by remember { mutableStateOf<Int?>(null) }
@@ -647,39 +646,7 @@ fun MacroEditorScreen(
                     )
                 }
                 if (s.aiReplyEnabled) {
-                    ExposedDropdownMenuBox(
-                        expanded = aiModeExpanded,
-                        onExpandedChange = { aiModeExpanded = it }
-                    ) {
-                        OutlinedTextField(
-                            value = if (s.aiSendMode == AiSendMode.AUTO)
-                                "Send automatically and notify" else "Approve before sending",
-                            onValueChange = {},
-                            readOnly = true,
-                            label = { Text("AI sending", color = OnSurface) },
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = aiModeExpanded) },
-                            modifier = Modifier.menuAnchor().fillMaxWidth()
-                        )
-                        ExposedDropdownMenu(
-                            expanded = aiModeExpanded,
-                            onDismissRequest = { aiModeExpanded = false }
-                        ) {
-                            DropdownMenuItem(
-                                text = { Text("Approve before sending") },
-                                onClick = {
-                                    vm.update { it.copy(aiSendMode = AiSendMode.APPROVE) }
-                                    aiModeExpanded = false
-                                }
-                            )
-                            DropdownMenuItem(
-                                text = { Text("Send automatically and notify") },
-                                onClick = {
-                                    vm.update { it.copy(aiSendMode = AiSendMode.AUTO) }
-                                    aiModeExpanded = false
-                                }
-                            )
-                        }
-                    }
+                    AiSendModeField(s.aiSendMode) { mode -> vm.update { it.copy(aiSendMode = mode) } }
                     OutlinedTextField(
                         value = s.aiReplyInstruction,
                         onValueChange = { v -> vm.update { it.copy(aiReplyInstruction = v) } },
@@ -799,6 +766,50 @@ fun MacroEditorScreen(
                     )
                     Spacer(Modifier.width(4.dp))
                     Text("AI write", style = MaterialTheme.typography.labelMedium)
+                }
+            }
+
+            if (s.triggerType == TriggerType.SCHEDULED) {
+                // AI variation: every fire sends a fresh Gemini rewrite of the message above, so a
+                // recurring send never delivers the exact same text twice. Same APPROVE/AUTO modes
+                // as AI auto-replies; the fixed message doubles as the no-AI fallback.
+                HorizontalDivider()
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("AI variation (Gemini)", modifier = Modifier.weight(1f), color = OnSurface)
+                    ThemedSwitch(
+                        checked = s.aiReplyEnabled,
+                        onCheckedChange = { v -> vm.update { it.copy(aiReplyEnabled = v) } }
+                    )
+                }
+                if (s.aiReplyEnabled) {
+                    Text(
+                        "Every send gets a fresh AI-written variation of the message above, so " +
+                            "recipients never get the exact same text twice.",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                    AiSendModeField(s.aiSendMode) { mode -> vm.update { it.copy(aiSendMode = mode) } }
+                    if (s.aiSendMode == AiSendMode.APPROVE) {
+                        Text(
+                            "At send time a notification lets you review, edit or discard the " +
+                                "message before it goes out.",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                    OutlinedTextField(
+                        value = s.aiReplyInstruction,
+                        onValueChange = { v -> vm.update { it.copy(aiReplyInstruction = v) } },
+                        label = { Text("How the AI should vary it (optional)") },
+                        placeholder = { Text("e.g.: warm and casual, keep it short") },
+                        supportingText = { Text("Controls tone and style of the variations.") },
+                        minLines = 2, modifier = Modifier.fillMaxWidth()
+                    )
+                    Text(
+                        "If Gemini doesn't respond, the original message is sent unchanged.",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodySmall
+                    )
                 }
             }
 
@@ -1008,6 +1019,34 @@ fun MacroEditorScreen(
                 }
             }
         )
+    }
+}
+
+/** Shared APPROVE/AUTO picker for AI macros — auto-replies and scheduled variations. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun AiSendModeField(mode: AiSendMode, onModeChange: (AiSendMode) -> Unit) {
+    var expanded by remember { mutableStateOf(false) }
+    ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = it }) {
+        OutlinedTextField(
+            value = if (mode == AiSendMode.AUTO)
+                "Send automatically and notify" else "Approve before sending",
+            onValueChange = {},
+            readOnly = true,
+            label = { Text("AI sending", color = OnSurface) },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+            modifier = Modifier.menuAnchor().fillMaxWidth()
+        )
+        ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            DropdownMenuItem(
+                text = { Text("Approve before sending") },
+                onClick = { onModeChange(AiSendMode.APPROVE); expanded = false }
+            )
+            DropdownMenuItem(
+                text = { Text("Send automatically and notify") },
+                onClick = { onModeChange(AiSendMode.AUTO); expanded = false }
+            )
+        }
     }
 }
 

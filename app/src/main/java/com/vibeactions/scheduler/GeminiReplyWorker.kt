@@ -3,17 +3,20 @@ package com.vibeactions.scheduler
 import android.content.Context
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
+import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
 import com.vibeactions.data.repository.MacroRepository
 import com.vibeactions.domain.model.AiSendMode
 import com.vibeactions.notifications.MacroNotificationManager
 import com.vibeactions.util.DEFAULT_GEMINI_MODEL
-import com.vibeactions.util.aiReplyDedupKey
 import com.vibeactions.util.expandTemplate
 import com.vibeactions.util.geminiGenerate
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.ensureActive
 import java.time.LocalDateTime
+import kotlin.coroutines.coroutineContext
 
 /**
  * Generates an AI auto-reply and either posts an approval notification (APPROVE) or sends it and
@@ -27,7 +30,8 @@ class GeminiReplyWorker @AssistedInject constructor(
     @Assisted params: WorkerParameters,
     private val repo: MacroRepository,
     private val firer: MacroFirer,
-    private val notifications: MacroNotificationManager
+    private val notifications: MacroNotificationManager,
+    private val autoSendClaim: AiAutoSendClaim
 ) : CoroutineWorker(appContext, params) {
 
     override suspend fun doWork(): Result {
@@ -59,14 +63,21 @@ class GeminiReplyWorker @AssistedInject constructor(
             append("Reply ONLY with the message itself — no preamble, no explanation, no quotes. ")
             if (instruction != null) append("Reply like this: $instruction")
         }
-        val generated = runCatching {
+        val generated = try {
             geminiGenerate(apiKey, systemPrompt, body, model, maxOutputTokens = 150)
-        }.getOrElse {
+        } catch (cancelled: CancellationException) {
+            // A stopped worker must not consume the auto-send claim below (SharedPreferences
+            // commits even under cancellation) and then abort — the re-run would dedupe on that
+            // claim and never send the reply. Let WorkManager re-run this cleanly instead.
+            throw cancelled
+        } catch (t: Throwable) {
             // Gemini unreachable → send the fixed fallback body, expanded like any other reply
             // (MacroFirer never expands an overrideBody, so a raw {afsender}/{dato} would otherwise
             // go out literally — unlike the no-API-key path which expands via MacroFirer).
             expandTemplate(macro.messageBody, LocalDateTime.now(), macro.name, sender)
         }
+        // Same guard for a stop landing after the call returned.
+        coroutineContext.ensureActive()
 
         when (macro.aiSendMode) {
             AiSendMode.APPROVE -> notifications.notifyAiApproval(macro, sender, generated)
@@ -74,7 +85,7 @@ class GeminiReplyWorker @AssistedInject constructor(
                 // Claim this (macro, sender, event, day) before sending. If WorkManager re-runs a
                 // worker that died mid-flight, the retry carries identical inputData → identical key
                 // → the claim fails and we don't send the auto-reply twice.
-                if (!claimAutoSend(macroId, sender, eventId)) return Result.success()
+                if (!autoSendClaim.claim(macroId, sender, eventId)) return Result.success()
                 val result = firer.fire(
                     macroId, enforceOncePerDay = false,
                     overrideRecipient = sender, overrideBody = generated,
@@ -92,22 +103,14 @@ class GeminiReplyWorker @AssistedInject constructor(
         return Result.success()
     }
 
-    /** True if this auto-send was newly claimed; false if an earlier run already claimed it today.
-     *  Backed by SharedPreferences, pruned to the current day so it can't grow unbounded. */
-    private fun claimAutoSend(macroId: String, sender: String, eventId: String): Boolean {
-        val now = System.currentTimeMillis()
-        val key = aiReplyDedupKey(macroId, sender, eventId, now)
-        val todayToken = "|" + java.time.Instant.ofEpochMilli(now)
-            .atZone(java.time.ZoneId.systemDefault()).toLocalDate().toEpochDay() + "|"
-        val prefs = applicationContext.getSharedPreferences("ai_sent", Context.MODE_PRIVATE)
-        synchronized(claimLock) {
-            val current = prefs.getStringSet(KEY_SENT, emptySet()).orEmpty()
-            if (key in current) return false
-            // Keep only today's keys plus the new one.
-            val pruned = current.filter { todayToken in it }.toMutableSet().apply { add(key) }
-            prefs.edit().putStringSet(KEY_SENT, pruned).commit()
-            return true
-        }
+    /** Required for the expedited request: on Android 8–11 WorkManager runs expedited work in a
+     *  foreground service and asks for this first — the default implementation throws, which would
+     *  fail the job before [doWork] and leave the incoming message unanswered. */
+    override suspend fun getForegroundInfo(): ForegroundInfo {
+        val macroId = inputData.getString(KEY_MACRO_ID).orEmpty()
+        val sender = inputData.getString(KEY_SENDER).orEmpty()
+        val notifId = ("ai_fg_reply$macroId$sender").hashCode() and 0x7FFFFFFF
+        return ForegroundInfo(notifId, notifications.aiWorkingNotification("Writing reply…"))
     }
 
     companion object {
@@ -115,8 +118,5 @@ class GeminiReplyWorker @AssistedInject constructor(
         const val KEY_SENDER = "sender"
         const val KEY_BODY = "body"
         const val KEY_EVENT_ID = "event_id"
-        private const val KEY_SENT = "sent_keys"
-        // Guards the read-modify-write of the SharedPreferences claim set across overlapping workers.
-        private val claimLock = Any()
     }
 }

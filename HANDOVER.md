@@ -1,6 +1,34 @@
 # Overlevering — Automatiq (VibeActions)
 
-> Kopiér denne fil ind i en ny chattråd som kontekst. Sidst opdateret: 2026-07-18 (fase 5: 8 nye funktioner).
+> Kopiér denne fil ind i en ny chattråd som kontekst. Sidst opdateret: 2026-08-14 (fase 9: AI-variationer for planlagte afsendelser).
+
+## Seneste arbejde (fase 9 — AI-variationer for planlagte afsendelser, 2026-08-14)
+
+Brugerønske: planlagte makroer skal kunne sende en frisk AI-genereret variation af beskeden ved hver affyring (modtageren får aldrig præcis samme tekst), med per-makro-valg mellem "Approve before sending" og "Send automatically and notify". Gren `claude/macro-message-ai-variations-gv8xir`. `versionCode` 2→3, `versionName` "1.1"→"1.2".
+
+**Design: genbruger de eksisterende AI-kolonner** (`ai_reply_enabled`/`ai_send_mode`/`ai_reply_instruction`) for SCHEDULED — INGEN DB-migration (stadig v13), og backup/import virker uændret. Trigger-typen kontekstualiserer semantikken (INCOMING = AI-svar, SCHEDULED = AI-variation).
+
+1. **`util/AiVary.kt` (ren, testdrevet):** `aiVariationApplies(...)` (gælder ikke-reply-triggere med AI slået til, kun "egne" fires — overrideBody = teksten findes allerede, overrideRecipient = reply-fire) + `buildVaryPrompt(instruction)` (fast wrapper: ÉN variation, samme mening/sprog/længde, kun beskedteksten; per-makro-instruktion oveni — den globale system-prompt bruges IKKE, den er skrevet til svar). 8 nye JVM-tests (`AiVaryTest`) + 3 nye i `EditorStateToMacroTest`.
+2. **`scheduler/AiVaryWorker.kt` (ny):** ekspanderer tokens FØR Gemini (variationen bærer dagens reelle dato/tid; modellen kan ikke ødelægge et `{token}`), `maxOutputTokens=300`. APPROVE → `notifyAiApproval(macro, recipient=null, …)`; AUTO → claim + `fire(overrideBody=generated)` (normal resultat-notifikation viser hvad der blev sendt, FAILED beholder Retry). Ingen nøgle/Gemini-fejl → den faste (ekspanderede) tekst sendes uanset mode — et planlagt send må aldrig droppes tavst (dags-claimet er allerede forbrugt).
+3. **`MacroFirer`:** efter claim → hvis `aiVariationApplies` → re-arm morgendagens alarm STRAKS (ellers dør alarmen hvis en APPROVE-kladde ignoreres), enqueue worker (unikt navn `ai_vary_<id>`, REPLACE så en gammel uafviklet variation aldrig stakkes oven på dagens), return null. Claim + hand-off tæller som dagens send.
+4. **`AiAutoSendClaim` (ny @Singleton):** claim-mod-dobbeltsend udtrukket fra `GeminiReplyWorker` (samme prefs `ai_sent`/`sent_keys`, samme lås) — deles af begge workers.
+5. **Godkendelsesflow generaliseret til modtager-løse sends:** `notifyAiApproval` tager nu `recipient: String?` (null = variation; sender til makroens egen modtagerliste; titel "AI message ready: <navn>", "To"-label = maskerede modtagere). `AiReplyActionReceiver` klarer manglende recipient-extra. `MainActivity.AiApproval` har `recipient: String?` + `toLabel` (ny `EXTRA_TO_LABEL`; fallback-kæde dækker notifikationer fra ældre version).
+6. **Editor:** SCHEDULED-sektion "AI variation (Gemini)" (switch + mode-dropdown + instruktionsfelt + fallback-note; APPROVE-hint om notifikationen). Mode-dropdown udtrukket som delt `AiSendModeField` (bruges også af INCOMING). `EditorState.toMacro`: AI-felter gælder nu incoming ELLER scheduled (MANUAL m.fl. nulstilles stadig).
+7. **Småting:** `MacroCard` viser AI-badgen for alle `aiReplyEnabled`-makroer (badge + send-knap sameksisterer på scheduled-kort). `WidgetTapReceiver`-toast siger "Writing AI message: …" ved hand-off i stedet for at annoncere en forældet `lastStatus`.
+
+**Review-rettelser (adversarial gennemgang, 4 lenses + verifikation af hvert fund):**
+
+- **MELLEM – expedited worker uden `getForegroundInfo()`:** på API 26-30 kører WorkManager expedited jobs via en foreground service og spørger om `getForegroundInfo()` FØR workeren startes; `CoroutineWorker`s default kaster → jobbet fejler uden at `doWork()` kører. For AiVaryWorker ville dags-claimet (allerede forbrugt ved hand-off) betyde et tavst tabt planlagt send. Begge workers har nu et override + ny lav-prioritets-kanal `macro_ai_work` (`aiWorkingNotification`). **Dette var en eksisterende fejl i `GeminiReplyWorker`** (AI-auto-svar virkede formentlig aldrig på Android 8-11) — rettet samme sted.
+- **MELLEM – `CancellationException` slugt → claim brændt uden afsendelse:** `runCatching { geminiGenerate(...) }` fangede også den cancellation WorkManager sender ved et system-stop; fallback-grenen nåede at committe engangs-claimet (SharedPreferences kører synkront selv under cancellation) og døde så ved næste suspension → gen-kørslen deduperede på claimet og sendte intet. Nu: CE re-kastes (WorkManager kører rent igen) + `ensureActive()` før claim. Samme mønster rettet i `GeminiReplyWorker`.
+- **LAV – falsk "Writing AI message…":** `fire()` returnerer også null FØR hand-off (deaktiveret makro / ingen modtagere), så widget-toast og listens snackbar lovede en AI-besked der aldrig kom. Begge tjekker nu `enabled` + `recipients` som `fire()` gør. Snackbaren sagde desuden stadig "On its way" for AI-makroer.
+- **LAV – kanalnavn:** `macro_ai` hed "AI Replies"/"…replies awaiting approval" og dækker nu også variationer → "AI Messages" / "AI-written SMS replies and scheduled variations awaiting approval".
+- **Kladden er `setOngoing`** for variationer (ikke for svar): en variations-kladde ER dagens planlagte send, og et uheldigt swipe ville springe sendet over tavst. Send/Discard/tap fjerner den stadig.
+
+**Kendte begrænsninger (bevidst, ikke rettet):** (a) en APPROVE-kladde lever kun i notifikationen — genstart af telefonen inden godkendelse springer dagens send over (en persistent kladde-tabel + "afventer godkendelse"-skærm er en selvstændig feature); (b) "Retry" på et fejlet AI-variations-send genererer en NY variation (ikke den fejlede tekst) og kræver ny godkendelse i APPROVE-mode.
+
+**Byggenote:** `./gradlew test`/`assembleDebug` kunne ikke køres i dette miljø (netværkspolitik blokerer dl.google.com → AGP/androidx kan ikke hentes). De nye rene tests er verificeret grønne i et isoleret JVM-projekt (Kotlin 2.0.21 + JUnit fra Maven Central). **Kør `./gradlew test` + `assembleDebug` lokalt før installation.**
+
+**On-device test (fase 9):** (a) planlagt makro med AI-variation + AUTO: affyring sender varieret tekst, resultat-notifikation + log viser den; (b) APPROVE: notifikation ved affyringstid, Send/Discard-knapper OG tap → in-app-dialog (MIUI), redigering virker, send går til hele modtagerlisten; (c) discard → intet sendt, morgendagens alarm står stadig (Health-skærmen viser næste affyring); (d) ingen API-nøgle → fast tekst sendes; (e) INCOMING AI-svar uændret (regression); (f) widget-tap på AI-makro toaster "Writing AI message…".
 
 ## Seneste arbejde (fase 8 — review-rettelser af fase 6+7, 2026-07-19)
 
