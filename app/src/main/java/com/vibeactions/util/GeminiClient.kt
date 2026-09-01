@@ -32,7 +32,16 @@ internal data class GeminiRequest(
 
 @Serializable internal data class GeminiContent(val parts: List<GeminiPart>, val role: String? = null)
 @Serializable internal data class GeminiPart(val text: String)
-@Serializable internal data class GenConfig(val maxOutputTokens: Int = 400)
+@Serializable internal data class ThinkingConfig(val thinkingBudget: Int)
+@Serializable internal data class GenConfig(
+    val maxOutputTokens: Int = 400,
+    val thinkingConfig: ThinkingConfig? = null
+)
+
+/** The 2.5 series reasons internally before writing the reply, and that reasoning shares
+ *  maxOutputTokens with the visible text — on a short SMS budget it can eat the whole cap and
+ *  leave the reply truncated mid-sentence. Only those models accept thinkingConfig at all. */
+private fun isThinkingModel(model: String) = model.startsWith("gemini-2.5")
 
 @Serializable
 internal data class GeminiResponse(val candidates: List<GeminiCandidate> = emptyList())
@@ -64,7 +73,10 @@ suspend fun geminiGenerate(
             systemInstruction = if (systemPrompt.isNotBlank())
                 GeminiContent(parts = listOf(GeminiPart(systemPrompt))) else null,
             contents = listOf(GeminiContent(parts = listOf(GeminiPart(userMessage)))),
-            generationConfig = GenConfig(maxOutputTokens = maxOutputTokens)
+            generationConfig = GenConfig(
+                maxOutputTokens = maxOutputTokens,
+                thinkingConfig = if (isThinkingModel(model)) ThinkingConfig(thinkingBudget = 0) else null
+            )
         )
         val body = geminiJson.encodeToString(GeminiRequest.serializer(), request)
         // Key travels as a header, not a query param — URLs end up in logs and proxies.

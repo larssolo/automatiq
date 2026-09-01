@@ -64,7 +64,7 @@ class GeminiReplyWorker @AssistedInject constructor(
             if (instruction != null) append("Reply like this: $instruction")
         }
         val generated = try {
-            geminiGenerate(apiKey, systemPrompt, body, model, maxOutputTokens = 150)
+            geminiGenerate(apiKey, systemPrompt, body, model, maxOutputTokens = 220)
         } catch (cancelled: CancellationException) {
             // A stopped worker must not consume the auto-send claim below (SharedPreferences
             // commits even under cancellation) and then abort — the re-run would dedupe on that
