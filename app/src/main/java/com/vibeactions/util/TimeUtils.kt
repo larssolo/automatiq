@@ -38,8 +38,25 @@ fun isScheduledDay(
 }
 
 /**
+ * A per-day random offset in minutes applied symmetrically around a scheduled macro's fire time
+ * (uniform in [-[spreadMinutes], +[spreadMinutes]]), so it doesn't land on the exact same minute
+ * every day. Deterministic in ([seed], [date]): the alarm and the hourly catch-up worker both
+ * compute the SAME offset for a given day (so they never disagree and double-send), while a
+ * different day yields a different offset. Returns 0 when [spreadMinutes] <= 0 (feature off).
+ */
+fun scheduledJitterMinutes(seed: String, date: LocalDate, spreadMinutes: Int): Int {
+    if (spreadMinutes <= 0) return 0
+    // Mix the seed and the day so consecutive days don't correlate; any stable hash is fine here.
+    val mixed = seed.hashCode().toLong() * 1_000_003L + date.toEpochDay()
+    // nextInt over the full 2*spread+1 window, then shift so the range is centred on 0.
+    return kotlin.random.Random(mixed).nextInt(2 * spreadMinutes + 1) - spreadMinutes
+}
+
+/**
  * Next epoch-ms at which [hhmm] ("HH:mm") occurs at or after [now] on a day that satisfies
- * [isScheduledDay] for [days]/[weekInterval]/[anchorEpochDay].
+ * [isScheduledDay] for [days]/[weekInterval]/[anchorEpochDay]. When [jitterSpreadMinutes] > 0 the
+ * chosen day's fire is shifted by ±[scheduledJitterMinutes] (seeded by [jitterSeed]); the "after
+ * now" test uses the shifted time, so the earlier/later spread is honoured against the clock.
  */
 fun calculateNextFireTime(
     hhmm: String,
@@ -48,7 +65,9 @@ fun calculateNextFireTime(
     days: Set<Int> = ALL_DAYS,
     weekInterval: Int = 1,
     anchorEpochDay: Long? = null,
-    validUntilEpochDay: Long? = null
+    validUntilEpochDay: Long? = null,
+    jitterSeed: String = "",
+    jitterSpreadMinutes: Int = 0
 ): Long {
     val target = LocalTime.parse(hhmm)
     val horizon = weekInterval.coerceAtLeast(1) * 7 + 7
@@ -60,9 +79,10 @@ fun calculateNextFireTime(
     val scanStart = if (anchor != null && anchor.isAfter(date)) anchor else date
     for (i in 0..horizon) {
         val d = scanStart.plusDays(i.toLong())
-        val candidate = d.atTime(target)
-        if (candidate.isAfter(now) &&
-            isScheduledDay(d, days, weekInterval, anchorEpochDay, validUntilEpochDay)) {
+        if (!isScheduledDay(d, days, weekInterval, anchorEpochDay, validUntilEpochDay)) continue
+        val offset = scheduledJitterMinutes(jitterSeed, d, jitterSpreadMinutes)
+        val candidate = d.atTime(target).plusMinutes(offset.toLong())
+        if (candidate.isAfter(now)) {
             return candidate.atZone(zone).toInstant().toEpochMilli()
         }
     }

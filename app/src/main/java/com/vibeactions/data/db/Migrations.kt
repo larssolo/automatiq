@@ -124,3 +124,12 @@ val MIGRATION_12_13 = object : Migration(12, 13) {
         db.execSQL("ALTER TABLE macros ADD COLUMN folder_id TEXT")
     }
 }
+
+/** v13 → v14: adds a random send-time window for SCHEDULED macros so a daily send doesn't land on
+ *  the exact same minute. Both default to 0 (= fire exactly on time, unchanged behaviour). */
+val MIGRATION_13_14 = object : Migration(13, 14) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE macros ADD COLUMN random_window_min_minutes INTEGER NOT NULL DEFAULT 0")
+        db.execSQL("ALTER TABLE macros ADD COLUMN random_window_max_minutes INTEGER NOT NULL DEFAULT 0")
+    }
+}

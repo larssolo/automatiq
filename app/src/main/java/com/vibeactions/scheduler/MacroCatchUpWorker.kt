@@ -10,6 +10,7 @@ import com.vibeactions.data.repository.MacroRepository
 import com.vibeactions.domain.alreadySentToday
 import com.vibeactions.util.isScheduledDay
 import com.vibeactions.util.parseHhMmOrNull
+import com.vibeactions.util.scheduledJitterMinutes
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import java.time.LocalDate
@@ -35,9 +36,14 @@ class MacroCatchUpWorker @AssistedInject constructor(
             // A one-shot macro (repeatDaily=false, import-only) that already fired is done for good.
             if (!macro.repeatDaily && macro.lastScheduledFireAt != null) return@forEach
             val time = macro.scheduledTime?.let { parseHhMmOrNull(it) } ?: return@forEach
+            // Honour the same per-day random offset the alarm used, so the catch-up net doesn't fire
+            // the macro before its jittered time (defeating the spread). Same seed+day → same offset.
+            val jitteredTime = time.plusMinutes(
+                scheduledJitterMinutes(macro.id, today, macro.randomSpreadMinutes).toLong()
+            )
             // Catch up only if today is an active scheduled day (weekday + week-interval/anchor) and
-            // the time has passed.
-            val passedToday = !nowTime.isBefore(time) &&
+            // the (jittered) time has passed.
+            val passedToday = !nowTime.isBefore(jitteredTime) &&
                 isScheduledDay(today, macro.daysOfWeek, macro.weekInterval, macro.anchorEpochDay,
                     macro.validUntilEpochDay)
             // Dedupe on the scheduled-fire marker (not lastTriggeredAt), so a manual tap today

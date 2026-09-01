@@ -161,4 +161,48 @@ class TimeUtilsTest {
         // Fallback is tomorrow (past expiry) — caller must reject it.
         assertTrue(fireAt(fire).toLocalDate().toEpochDay() > expired)
     }
+
+    @Test fun jitter_zeroSpread_isOff() {
+        val day = LocalDate.of(2026, 6, 15)
+        assertEquals(0, scheduledJitterMinutes("macro-1", day, spreadMinutes = 0))
+    }
+
+    @Test fun jitter_isDeterministicPerMacroAndDay() {
+        val day = LocalDate.of(2026, 6, 15)
+        val a = scheduledJitterMinutes("macro-1", day, 5)
+        val b = scheduledJitterMinutes("macro-1", day, 5)
+        assertEquals(a, b) // same macro + day -> same offset (alarm and catch-up agree)
+        assertTrue(a in -5..5)
+    }
+
+    @Test fun jitter_isSymmetricAroundZero() {
+        // Across many macro/day seeds the offset must reach both sides of the scheduled time,
+        // otherwise it wouldn't be a ± spread.
+        val offsets = (0..200).map {
+            scheduledJitterMinutes("macro-$it", LocalDate.of(2026, 6, 15).plusDays(it.toLong()), 5)
+        }
+        assertTrue(offsets.all { it in -5..5 })
+        assertTrue("expected some negative offsets", offsets.any { it < 0 })
+        assertTrue("expected some positive offsets", offsets.any { it > 0 })
+    }
+
+    @Test fun jitter_variesAcrossDays() {
+        val seed = "macro-1"
+        val offsets = (0..13).map {
+            scheduledJitterMinutes(seed, LocalDate.of(2026, 6, 15).plusDays(it.toLong()), 5)
+        }
+        assertTrue(offsets.toSet().size > 1)
+        assertTrue(offsets.all { it in -5..5 })
+    }
+
+    @Test fun calculateNextFireTime_appliesSymmetricJitterToday() {
+        val now = LocalDateTime.of(2026, 6, 15, 6, 0) // early, so a -5..+5 shift is still ahead
+        val base = calculateNextFireTime("09:00", now, zone)
+        val jittered = calculateNextFireTime(
+            "09:00", now, zone, jitterSeed = "macro-1", jitterSpreadMinutes = 5
+        )
+        val offsetMin = (jittered - base) / 60_000L
+        assertTrue("expected -5..5 min offset, was $offsetMin", offsetMin in -5..5)
+        assertEquals(LocalDate.of(2026, 6, 15), fireAt(jittered).toLocalDate())
+    }
 }

@@ -39,6 +39,10 @@ data class EditorState(
     val daysOfWeek: Set<Int> = setOf(1, 2, 3, 4, 5, 6, 7),
     val weekInterval: Int = 1,
     val startEpochDay: Long? = null,
+    /** SCHEDULED: whether the send time is spread by ±[randomSpreadMinutes]. Kept separate from the
+     *  value so clearing the number field (→ 0) doesn't collapse the input and lock the user out. */
+    val randomSpreadEnabled: Boolean = false,
+    val randomSpreadMinutes: Int = 5,
     val validUntilEpochDay: Long? = null,
     val matchSender: String = "",
     val matchKeyword: String = "",
@@ -63,13 +67,15 @@ data class EditorState(
     val phoneValid get() = cleanRecipients.isNotEmpty() && cleanRecipients.all { isValidPhone(it) }
     val messageValid get() = message.isNotBlank()
     val daysValid get() = triggerType != TriggerType.SCHEDULED || daysOfWeek.isNotEmpty()
+    /** When the spread is enabled it needs a value of at least 1 minute. */
+    val randomSpreadValid get() = !randomSpreadEnabled || randomSpreadMinutes >= 1
     /** Reply macros (auto-reply / missed call) answer the other party, so no recipient list. */
     val recipientsRequired get() =
         triggerType != TriggerType.INCOMING && triggerType != TriggerType.MISSED_CALL
     /** Location macros need a chosen point. */
     val locationValid get() = triggerType != TriggerType.LOCATION || (latitude != null && longitude != null)
     val canSave get() = nameValid && messageValid && daysValid && locationValid &&
-        (!recipientsRequired || phoneValid)
+        randomSpreadValid && (!recipientsRequired || phoneValid)
 }
 
 /** Pure mapping from editor state to a saveable [Macro]; testable without Android. */
@@ -108,6 +114,8 @@ fun EditorState.toMacro(id: String): Macro {
         daysOfWeek = if (scheduled) daysOfWeek else setOf(1, 2, 3, 4, 5, 6, 7),
         weekInterval = interval,
         anchorEpochDay = anchor,
+        // Random send-time spread only applies to scheduled macros, and only when toggled on.
+        randomSpreadMinutes = if (scheduled && randomSpreadEnabled) randomSpreadMinutes.coerceAtLeast(0) else 0,
         cardColor = cardColor,
         // AI fields apply to auto-replies (Gemini answers the incoming SMS) and to scheduled
         // macros (Gemini writes a fresh variation of the fixed message on every fire).
@@ -148,7 +156,10 @@ class MacroEditorViewModel @Inject constructor(
                     m.lastTriggeredAt, m.lastStatus, m.lastScheduledFireAt, m.sortOrder,
                     folderId = m.folderId,
                     daysOfWeek = m.daysOfWeek, weekInterval = m.weekInterval,
-                    startEpochDay = m.anchorEpochDay, validUntilEpochDay = m.validUntilEpochDay,
+                    startEpochDay = m.anchorEpochDay,
+                    randomSpreadEnabled = m.randomSpreadMinutes > 0,
+                    randomSpreadMinutes = if (m.randomSpreadMinutes > 0) m.randomSpreadMinutes else 5,
+                    validUntilEpochDay = m.validUntilEpochDay,
                     matchSender = m.matchSender ?: "", matchKeyword = m.matchKeyword ?: "",
                     latitude = m.latitude, longitude = m.longitude,
                     radiusMeters = m.radiusMeters ?: 200f,

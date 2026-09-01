@@ -33,7 +33,9 @@ class AlarmScheduler @Inject constructor(
             days = macro.daysOfWeek,
             weekInterval = macro.weekInterval,
             anchorEpochDay = macro.anchorEpochDay,
-            validUntilEpochDay = macro.validUntilEpochDay
+            validUntilEpochDay = macro.validUntilEpochDay,
+            jitterSeed = macro.id,
+            jitterSpreadMinutes = macro.randomSpreadMinutes
         )
         // Don't arm an alarm for a date past the macro's expiry (the fallback day may overrun it).
         val validUntil = macro.validUntilEpochDay

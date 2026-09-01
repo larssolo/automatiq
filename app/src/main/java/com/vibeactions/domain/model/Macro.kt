@@ -38,6 +38,10 @@ data class Macro(
     val weekInterval: Int = 1,
     /** First fire date (epoch day) anchoring the multi-week rhythm; null when [weekInterval] == 1. */
     val anchorEpochDay: Long? = null,
+    /** SCHEDULED: symmetric random send-time spread in minutes. The fire is shifted by a per-day
+     *  random offset in [-value, +value] around [scheduledTime], so it isn't the same minute every
+     *  day (e.g. 5 fires within ±5 min of the time). 0 = fire exactly on time. */
+    val randomSpreadMinutes: Int = 0,
     /** ARGB card accent color (from CardColorPalette). 0 = not yet assigned → UI falls back to primary. */
     val cardColor: Long = 0L,
     /** Last day (epoch day) the macro may fire on, inclusive; null = no expiry. */

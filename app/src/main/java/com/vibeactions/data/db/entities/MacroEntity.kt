@@ -23,6 +23,12 @@ data class MacroEntity(
     @ColumnInfo(name = "days_of_week", defaultValue = "127") val daysOfWeek: Int = 127,
     @ColumnInfo(name = "week_interval", defaultValue = "1") val weekInterval: Int = 1,
     @ColumnInfo(name = "anchor_epoch_day") val anchorEpochDay: Long? = null,
+    /** Legacy (schema v14): the send-time spread was once a min..max window. It is now a single
+     *  symmetric ± value stored in [randomSpreadMinutes] (= random_window_max_minutes). This column
+     *  is retained only to keep the v14 schema intact — always written 0, never read. */
+    @ColumnInfo(name = "random_window_min_minutes", defaultValue = "0") val randomWindowMinMinutes: Int = 0,
+    /** SCHEDULED: symmetric ± send-time spread in minutes (0 = exactly on time). */
+    @ColumnInfo(name = "random_window_max_minutes", defaultValue = "0") val randomSpreadMinutes: Int = 0,
     @ColumnInfo(name = "card_color", defaultValue = "0") val cardColor: Long = 0L,
     @ColumnInfo(name = "valid_until_epoch_day") val validUntilEpochDay: Long? = null,
     @ColumnInfo(name = "match_sender") val matchSender: String? = null,

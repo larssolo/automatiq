@@ -342,6 +342,51 @@ fun MacroEditorScreen(
                         }
                     }
                 }
+
+                // Random send-time spread: fire within ±N minutes of the exact time so the send
+                // isn't recognisably on-the-dot every day. The field's visibility is tied to the
+                // switch, not to the value, so clearing the number doesn't collapse the input.
+                HorizontalDivider()
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("Vary send time", modifier = Modifier.weight(1f), color = OnSurface)
+                    ThemedSwitch(
+                        checked = s.randomSpreadEnabled,
+                        onCheckedChange = { on ->
+                            vm.update {
+                                it.copy(
+                                    randomSpreadEnabled = on,
+                                    // Restore a sensible default when turning on after clearing to 0.
+                                    randomSpreadMinutes = if (on && it.randomSpreadMinutes < 1) 5
+                                        else it.randomSpreadMinutes
+                                )
+                            }
+                        }
+                    )
+                }
+                if (s.randomSpreadEnabled) {
+                    OutlinedTextField(
+                        // Show blank rather than "0" so the field can be cleared and retyped.
+                        value = if (s.randomSpreadMinutes == 0) "" else s.randomSpreadMinutes.toString(),
+                        onValueChange = { v ->
+                            val n = v.filter { it.isDigit() }.take(3).toIntOrNull() ?: 0
+                            vm.update { it.copy(randomSpreadMinutes = n) }
+                        },
+                        label = { Text("± minutes") },
+                        isError = !s.randomSpreadValid,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        singleLine = true, modifier = Modifier.fillMaxWidth()
+                    )
+                    Text(
+                        if (!s.randomSpreadValid)
+                            "Enter at least 1 minute."
+                        else
+                            "Each send fires within ±${s.randomSpreadMinutes} min of ${s.scheduledTime} " +
+                                "(a fresh random time each day).",
+                        color = if (!s.randomSpreadValid) MaterialTheme.colorScheme.error
+                            else MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
             }
 
             if (s.triggerType == TriggerType.LOCATION) {
