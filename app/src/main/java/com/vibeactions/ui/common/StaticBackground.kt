@@ -1,16 +1,9 @@
 package com.vibeactions.ui.common
 
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -56,21 +49,15 @@ fun StaticBackground(modifier: Modifier = Modifier) {
 /**
  * Three radial glows drifting on minute-scale cycles. Alphas stay single-digit so the user's own
  * hue/saturation-tuned image remains the subject — this only adds depth and life. Compose pauses
- * infinite transitions while the UI isn't visible, so there is no background battery cost.
+ * infinite transitions while the UI isn't visible, so there is no background battery cost. Reads
+ * the drift phase from [ambientPulse] rather than running its own InfiniteTransition — see
+ * AmbientAnimation.kt for why that matters.
  */
 @Composable
 private fun AuroraOverlay(modifier: Modifier = Modifier) {
-    val drift = rememberInfiniteTransition(label = "aurora")
-    val t1 by drift.animateFloat(
-        0f, 1f,
-        infiniteRepeatable(tween(52_000, easing = LinearEasing), RepeatMode.Reverse),
-        label = "auroraT1"
-    )
-    val t2 by drift.animateFloat(
-        0f, 1f,
-        infiniteRepeatable(tween(73_000, easing = LinearEasing), RepeatMode.Reverse),
-        label = "auroraT2"
-    )
+    val pulse = ambientPulse()
+    val t1 = pulse.auroraT1
+    val t2 = pulse.auroraT2
     Canvas(modifier) {
         val w = size.width
         val h = size.height

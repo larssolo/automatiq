@@ -1,11 +1,5 @@
 package com.vibeactions.ui.macrolist
 
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.BasicTextField
@@ -39,6 +33,7 @@ import com.vibeactions.domain.model.Folder
 import com.vibeactions.domain.model.Macro
 import com.vibeactions.ui.common.FolderCard
 import com.vibeactions.ui.common.MacroCard
+import com.vibeactions.ui.common.ambientPulse
 import com.vibeactions.ui.editor.MacroEditorScreen
 import com.vibeactions.ui.theme.JetBrainsMono
 import com.vibeactions.ui.theme.OnPrimary
@@ -422,18 +417,11 @@ fun MacroListScreen(
     }
 }
 
-/** A small status dot: breathes while at least one macro is armed, rests dim otherwise. */
+/** A small status dot: breathes while at least one macro is armed, rests dim otherwise. Reads the
+ *  shared [ambientPulse] instead of running its own InfiniteTransition. */
 @Composable
 private fun PulseDot(alive: Boolean) {
-    val alpha = if (alive) {
-        val breath = rememberInfiniteTransition(label = "pulseDot")
-        val a by breath.animateFloat(
-            0.35f, 1f,
-            infiniteRepeatable(tween(2600, easing = FastOutSlowInEasing), RepeatMode.Reverse),
-            label = "pulseDotAlpha"
-        )
-        a
-    } else 0.3f
+    val alpha = if (alive) ambientPulse().dotBreath else 0.3f
     Box(
         Modifier
             .size(9.dp)
