@@ -40,6 +40,10 @@ data class EditorState(
     val daysOfWeek: Set<Int> = setOf(1, 2, 3, 4, 5, 6, 7),
     val weekInterval: Int = 1,
     val startEpochDay: Long? = null,
+    /** SCHEDULED: when true this macro fires once on [oneOffEpochDay] instead of recurring weekly. */
+    val oneOff: Boolean = false,
+    /** The single date (epoch day) a one-off scheduled macro fires on; null = today when first shown. */
+    val oneOffEpochDay: Long? = null,
     /** SCHEDULED: whether the send time is spread by ±[randomSpreadMinutes]. Kept separate from the
      *  value so clearing the number field (→ 0) doesn't collapse the input and lock the user out. */
     val randomSpreadEnabled: Boolean = false,
@@ -87,19 +91,26 @@ fun EditorState.toMacro(id: String): Macro {
     // sender filter applies. Keyword matching and AI only make sense for SMS (there is a message).
     val reply = incoming || triggerType == TriggerType.MISSED_CALL
     val location = triggerType == TriggerType.LOCATION
-    val interval = if (scheduled) weekInterval.coerceAtLeast(1) else 1
+    // A one-off scheduled macro reuses the recurring machinery: it's a single-weekday send anchored
+    // on, and expiring on, the chosen date, with repeatDaily=false so it never re-arms after firing.
+    val oneOffDate = if (scheduled && oneOff) LocalDate.ofEpochDay(oneOffEpochDay ?: LocalDate.now().toEpochDay()) else null
+    val interval = if (scheduled && !oneOff) weekInterval.coerceAtLeast(1) else 1
     // Anchor the multi-week rhythm on the first actual fire (first allowed weekday on/after the
     // chosen start date), so parity starts cleanly. Weekly macros need no anchor.
-    val anchor = if (scheduled && interval > 1) {
-        val start = startEpochDay?.let { LocalDate.ofEpochDay(it) } ?: LocalDate.now()
-        firstScheduledDateOnOrAfter(start, daysOfWeek).toEpochDay()
-    } else null
+    val anchor = when {
+        oneOffDate != null -> oneOffDate.toEpochDay()
+        scheduled && interval > 1 -> {
+            val start = startEpochDay?.let { LocalDate.ofEpochDay(it) } ?: LocalDate.now()
+            firstScheduledDateOnOrAfter(start, daysOfWeek).toEpochDay()
+        }
+        else -> null
+    }
     return Macro(
         id = id,
         name = name.trim(),
         triggerType = triggerType,
         scheduledTime = if (scheduled) scheduledTime else null,
-        repeatDaily = true,
+        repeatDaily = oneOffDate == null,
         // Auto-reply macros answer the incoming sender. A recipient list left over from a previous
         // trigger type must be dropped: the failed-send Retry action re-fires via macro.recipients
         // and would resend the fixed body to numbers that no longer apply.
@@ -112,7 +123,11 @@ fun EditorState.toMacro(id: String): Macro {
         lastScheduledFireAt = lastScheduledFireAt,
         sortOrder = sortOrder,
         folderId = folderId,
-        daysOfWeek = if (scheduled) daysOfWeek else setOf(1, 2, 3, 4, 5, 6, 7),
+        daysOfWeek = when {
+            oneOffDate != null -> setOf(oneOffDate.dayOfWeek.value)
+            scheduled -> daysOfWeek
+            else -> setOf(1, 2, 3, 4, 5, 6, 7)
+        },
         weekInterval = interval,
         anchorEpochDay = anchor,
         // Random send-time spread only applies to scheduled macros, and only when toggled on.
@@ -129,7 +144,12 @@ fun EditorState.toMacro(id: String): Macro {
             triggerTarget.trim().ifBlank { null } else null,
         triggerTargetLabel = if (triggerType == TriggerType.BLUETOOTH || triggerType == TriggerType.WIFI)
             triggerTargetLabel.trim().ifBlank { null } else null,
-        validUntilEpochDay = if (scheduled) validUntilEpochDay else null,
+        // A one-off expires on its own date so it can't fire on the same weekday in later weeks.
+        validUntilEpochDay = when {
+            oneOffDate != null -> oneOffDate.toEpochDay()
+            scheduled -> validUntilEpochDay
+            else -> null
+        },
         matchSender = if (reply) matchSender.trim().ifBlank { null } else null,
         matchKeyword = if (incoming) matchKeyword.trim().ifBlank { null } else null,
         latitude = if (location) latitude else null,
@@ -169,6 +189,10 @@ class MacroEditorViewModel @Inject constructor(
         return contacts.displayName(trimmed) ?: trimmed
     }
 
+    /** True when any recipient is this device's own number — a common footgun (you text yourself). */
+    fun anyRecipientIsOwnNumber(numbers: List<String>): Boolean =
+        numbers.any { it.isNotBlank() && contacts.isOwnNumber(it) }
+
     fun load(macroId: String?) {
         if (macroId == null) { _state.value = EditorState(); return }
         viewModelScope.launch {
@@ -180,6 +204,11 @@ class MacroEditorViewModel @Inject constructor(
                     folderId = m.folderId,
                     daysOfWeek = m.daysOfWeek, weekInterval = m.weekInterval,
                     startEpochDay = m.anchorEpochDay,
+                    // A scheduled macro with repeatDaily=false is a one-off; its date is the anchor
+                    // (== the expiry). Recurring macros keep oneOff=false.
+                    oneOff = m.triggerType == TriggerType.SCHEDULED && !m.repeatDaily,
+                    oneOffEpochDay = if (m.triggerType == TriggerType.SCHEDULED && !m.repeatDaily)
+                        (m.anchorEpochDay ?: m.validUntilEpochDay) else null,
                     randomSpreadEnabled = m.randomSpreadMinutes > 0,
                     randomSpreadMinutes = if (m.randomSpreadMinutes > 0) m.randomSpreadMinutes else 5,
                     validUntilEpochDay = m.validUntilEpochDay,

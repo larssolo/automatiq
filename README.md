@@ -59,6 +59,9 @@ Everything runs on-device. No account, no server. Only two optional features rea
 | 🔤 | **Message variables** — `{dato}` `{tid}` `{ugedag}` `{navn}` are filled in at send time; `{modtager}` becomes each recipient's contact name (so a multi-recipient macro personalises every copy); reply macros also get `{afsender}` (the other party's number) |
 | 👤 | **Contact names** — recipients are resolved to their saved contact name in the editor (with a "your own phone" hint), so you can tell at a glance who a number belongs to |
 | ⏳ | **Expiry date** — a scheduled macro stops firing after a date you pick |
+| 📆 | **One-time schedule** — a scheduled macro can fire once on a specific date instead of recurring weekly |
+| 🔎 | **AI preview** — try the AI variation from the editor and see a sample before enabling it, without sending anything |
+| ⚠️ | **Send safety hints** — the editor warns when a recipient is your own number, or when a macro targets many people |
 | 💬 | **Auto-reply** — react to incoming SMS by sender/keyword, with a loop guard |
 | 📍 | **Location triggers** — arrive/depart a place, re-armed after reboot and app updates |
 | 🔁 | **Dual scheduling engine** — AlarmManager for precision + WorkManager catch-up, self-healing on every app start, so nothing is missed after Doze, reboot or an update |

@@ -118,4 +118,29 @@ class EditorStateToMacroTest {
         )
         assertEquals("folder-1", state.toMacro("id-1").folderId)
     }
+
+    @Test fun oneOff_mapsToSingleDayAnchorExpiryAndNoRepeat() {
+        // A one-off on Thu 2026-12-24 must become: repeatDaily=false, that single weekday,
+        // anchored on and expiring on the date — so the recurring engine fires it exactly once.
+        val date = LocalDate.of(2026, 12, 24) // a Thursday (ISO day 4)
+        val state = EditorState(
+            name = "Julehilsen", triggerType = TriggerType.SCHEDULED,
+            recipients = listOf("+4512345678"), message = "God jul",
+            scheduledTime = "10:00", oneOff = true, oneOffEpochDay = date.toEpochDay()
+        )
+        val macro = state.toMacro("id-1")
+        assertEquals(false, macro.repeatDaily)
+        assertEquals(setOf(4), macro.daysOfWeek)
+        assertEquals(date.toEpochDay(), macro.anchorEpochDay)
+        assertEquals(date.toEpochDay(), macro.validUntilEpochDay)
+        assertEquals(1, macro.weekInterval)
+    }
+
+    @Test fun recurring_staysRepeating() {
+        val state = EditorState(
+            name = "Daily", triggerType = TriggerType.SCHEDULED,
+            recipients = listOf("+4512345678"), message = "Hej", oneOff = false
+        )
+        assertTrue(state.toMacro("id-1").repeatDaily)
+    }
 }
