@@ -71,7 +71,9 @@ data class EditorState(
     val cleanRecipients get() = recipients.map { it.trim() }.filter { it.isNotBlank() }
     val phoneValid get() = cleanRecipients.isNotEmpty() && cleanRecipients.all { isValidPhone(it) }
     val messageValid get() = message.isNotBlank()
-    val daysValid get() = triggerType != TriggerType.SCHEDULED || daysOfWeek.isNotEmpty()
+    // A one-off has no weekday selection (it fires on a single date), so the weekday rule doesn't
+    // apply — without this exemption the hidden weekday picker could block save with no visible error.
+    val daysValid get() = triggerType != TriggerType.SCHEDULED || oneOff || daysOfWeek.isNotEmpty()
     /** When the spread is enabled it needs a value of at least 1 minute. */
     val randomSpreadValid get() = !randomSpreadEnabled || randomSpreadMinutes >= 1
     /** Reply macros (auto-reply / missed call) answer the other party, so no recipient list. */

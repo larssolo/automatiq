@@ -143,4 +143,26 @@ class EditorStateToMacroTest {
         )
         assertTrue(state.toMacro("id-1").repeatDaily)
     }
+
+    @Test fun oneOff_canSaveWithNoWeekdaySelected() {
+        // A one-off has no weekday picker, so an empty daysOfWeek must NOT block saving (the
+        // weekday rule only applies to recurring macros).
+        val state = EditorState(
+            name = "Julehilsen", triggerType = TriggerType.SCHEDULED,
+            recipients = listOf("+4512345678"), message = "God jul",
+            oneOff = true, oneOffEpochDay = LocalDate.of(2026, 12, 24).toEpochDay(),
+            daysOfWeek = emptySet()
+        )
+        assertTrue(state.daysValid)
+        assertTrue(state.canSave)
+    }
+
+    @Test fun recurring_withNoWeekdayCannotSave() {
+        val state = EditorState(
+            name = "Broken", triggerType = TriggerType.SCHEDULED,
+            recipients = listOf("+4512345678"), message = "Hej",
+            oneOff = false, daysOfWeek = emptySet()
+        )
+        assertTrue(!state.canSave)
+    }
 }
