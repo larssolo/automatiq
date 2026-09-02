@@ -715,6 +715,11 @@ fun MacroEditorScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
+                        // Resolve the contact name (and own-number hint) off-thread so the user can
+                        // see who a number belongs to — e.g. spotting their own number in the list.
+                        val contactLabel by produceState<String?>(null, number) {
+                            value = vm.recipientLabel(number)
+                        }
                         OutlinedTextField(
                             value = number,
                             onValueChange = { v ->
@@ -723,6 +728,7 @@ fun MacroEditorScreen(
                                 }
                             },
                             label = { Text("Number ${index + 1}") },
+                            supportingText = contactLabel?.let { { Text(it) } },
                             isError = number.isNotBlank() && !isValidPhone(number),
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                             singleLine = true, modifier = Modifier.weight(1f)
@@ -780,11 +786,19 @@ fun MacroEditorScreen(
             if ((TEMPLATE_TOKENS + SENDER_TOKEN).any { s.message.contains(it) }) {
                 val replyType = s.triggerType == TriggerType.INCOMING ||
                     s.triggerType == TriggerType.MISSED_CALL
-                val preview = remember(s.message, s.name, replyType) {
+                // Resolve the first recipient's name so {modtager} previews as a real name, not a token.
+                val firstRecipient = s.recipients.firstOrNull { it.isNotBlank() }?.trim()
+                val sampleRecipient by produceState(firstRecipient, firstRecipient) {
+                    value = firstRecipient?.let { vm.recipientName(it) }
+                }
+                val preview = remember(s.message, s.name, replyType, sampleRecipient) {
                     // Reply macros fill {afsender} with the counterparty; show a sample number so the
                     // preview isn't a literal {afsender}. Non-reply macros have no counterparty.
                     val sampleSender = if (replyType) "12345678" else null
-                    expandTemplate(s.message, LocalDateTime.now(), s.name.ifBlank { "macro" }, sampleSender)
+                    expandTemplate(
+                        s.message, LocalDateTime.now(), s.name.ifBlank { "macro" },
+                        sender = sampleSender, recipientName = sampleRecipient
+                    )
                 }
                 Surface(
                     color = MaterialTheme.colorScheme.surfaceVariant,
