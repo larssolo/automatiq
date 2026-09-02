@@ -54,6 +54,9 @@ import com.vibeactions.ui.theme.OnSurface
 import com.vibeactions.ui.theme.Primary
 import com.vibeactions.util.CardColorPalette
 import com.vibeactions.util.expandTemplate
+import com.vibeactions.util.DEFAULT_GEMINI_MODEL
+import com.vibeactions.util.buildVaryPrompt
+import com.vibeactions.util.geminiGenerate
 import com.vibeactions.util.geminiSuggest
 import com.vibeactions.util.SENDER_TOKEN
 import com.vibeactions.util.TEMPLATE_TOKENS
@@ -87,6 +90,7 @@ fun MacroEditorScreen(
     val scope = rememberCoroutineScope()
     var showTime by remember { mutableStateOf(false) }
     var showDate by remember { mutableStateOf(false) }
+    var showOneOffDate by remember { mutableStateOf(false) }
     var showExpiry by remember { mutableStateOf(false) }
     var intervalExpanded by remember { mutableStateOf(false) }
     var triggerExpanded by remember { mutableStateOf(false) }
@@ -244,6 +248,35 @@ fun MacroEditorScreen(
                     Text("Time: ${s.scheduledTime}")
                 }
 
+                // Recurring (weekly rhythm) vs one-time (a single date). One-time reuses the
+                // recurring engine under the hood — see EditorState.toMacro.
+                SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+                    SegmentedButton(
+                        selected = !s.oneOff,
+                        onClick = { vm.update { it.copy(oneOff = false) } },
+                        shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2)
+                    ) { Text("Repeat") }
+                    SegmentedButton(
+                        selected = s.oneOff,
+                        onClick = {
+                            vm.update {
+                                it.copy(
+                                    oneOff = true,
+                                    oneOffEpochDay = it.oneOffEpochDay ?: LocalDate.now().toEpochDay()
+                                )
+                            }
+                        },
+                        shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2)
+                    ) { Text("One-time") }
+                }
+
+                if (s.oneOff) {
+                    val d = s.oneOffEpochDay ?: LocalDate.now().toEpochDay()
+                    OutlinedButton(onClick = { showOneOffDate = true }, modifier = Modifier.fillMaxWidth()) {
+                        Text("Date: ${LocalDate.ofEpochDay(d)}")
+                    }
+                } else {
+
                 Text("Repeat on", style = MaterialTheme.typography.labelLarge, color = OnSurface)
                 // Single letters (Mon→Sun) so all seven fit across; fixed order disambiguates T/T, S/S.
                 val dayLabels = listOf("M", "T", "W", "T", "F", "S", "S")
@@ -342,6 +375,7 @@ fun MacroEditorScreen(
                         }
                     }
                 }
+                } // end recurring-only controls (else of s.oneOff)
 
                 // Random send-time spread: fire within ±N minutes of the exact time so the send
                 // isn't recognisably on-the-dot every day. The field's visibility is tied to the
@@ -762,6 +796,26 @@ fun MacroEditorScreen(
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
+                // Safety hint: texting your own number is a common mistake (you receive your own send).
+                val ownNumberWarning by produceState(false, s.recipients) {
+                    value = vm.anyRecipientIsOwnNumber(s.recipients)
+                }
+                if (ownNumberWarning) {
+                    Text(
+                        "⚠ En af modtagerne er din egen telefon — du modtager selv beskeden.",
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+                // Heads-up before an accidental mass-send.
+                val cleanCount = s.recipients.count { it.isNotBlank() }
+                if (cleanCount >= 5) {
+                    Text(
+                        "Denne macro sender til $cleanCount modtagere.",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
             }
 
             OutlinedTextField(
@@ -869,6 +923,9 @@ fun MacroEditorScreen(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         style = MaterialTheme.typography.bodySmall
                     )
+                    // Try the AI now: generate one sample variation so you can see what kind of text
+                    // it produces before enabling AUTO mode — without sending anything.
+                    AiVariationPreview(message = s.message, instruction = s.aiReplyInstruction)
                 }
             }
 
@@ -953,6 +1010,23 @@ fun MacroEditorScreen(
                 }) { Text("OK") }
             },
             dismissButton = { TextButton(onClick = { showDate = false }) { Text("Cancel") } }
+        ) { DatePicker(state = dps) }
+    }
+
+    if (showOneOffDate) {
+        val initMs = (s.oneOffEpochDay ?: LocalDate.now().toEpochDay()) * 86_400_000L
+        val dps = rememberDatePickerState(initialSelectedDateMillis = initMs)
+        DatePickerDialog(
+            onDismissRequest = { showOneOffDate = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    dps.selectedDateMillis?.let { ms ->
+                        vm.update { it.copy(oneOffEpochDay = ms / 86_400_000L) }
+                    }
+                    showOneOffDate = false
+                }) { Text("OK") }
+            },
+            dismissButton = { TextButton(onClick = { showOneOffDate = false }) { Text("Cancel") } }
         ) { DatePicker(state = dps) }
     }
 
@@ -1106,6 +1180,65 @@ private fun AiSendModeField(mode: AiSendMode, onModeChange: (AiSendMode) -> Unit
                 onClick = { onModeChange(AiSendMode.AUTO); expanded = false }
             )
         }
+    }
+}
+
+/** A "try it now" button that generates one sample AI variation of [message] and shows it inline,
+ *  so the user can judge the AI's output before turning on AUTO mode. Sends nothing. */
+@Composable
+private fun AiVariationPreview(message: String, instruction: String) {
+    val ctx = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var state by remember { mutableStateOf<AiState>(AiState.Idle) }
+    OutlinedButton(
+        onClick = {
+            state = AiState.Loading
+            scope.launch {
+                val prefs = ctx.getSharedPreferences("ai_settings", android.content.Context.MODE_PRIVATE)
+                val key = prefs.getString("gemini_api_key", "").orEmpty()
+                if (key.isBlank()) {
+                    state = AiState.Err("Ingen API-nøgle — tilføj den i Indstillinger.")
+                    return@launch
+                }
+                val model = prefs.getString("gemini_model", DEFAULT_GEMINI_MODEL)
+                    ?.ifBlank { DEFAULT_GEMINI_MODEL } ?: DEFAULT_GEMINI_MODEL
+                val body = expandTemplate(message, LocalDateTime.now(), "macro")
+                val res = withContext(Dispatchers.IO) {
+                    runCatching {
+                        geminiGenerate(key, buildVaryPrompt(instruction.ifBlank { null }), body, model, maxOutputTokens = 300)
+                    }
+                }
+                state = res.fold(
+                    onSuccess = { AiState.Suggestions(listOf(it.trim())) },
+                    onFailure = { AiState.Err(it.message?.take(120) ?: "Gemini-fejl") }
+                )
+            }
+        },
+        enabled = message.isNotBlank() && state != AiState.Loading,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Text(if (state == AiState.Loading) "Genererer…" else "Forhåndsvis AI-variation")
+    }
+    when (val st = state) {
+        is AiState.Suggestions -> Surface(
+            color = MaterialTheme.colorScheme.surfaceVariant,
+            shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(Modifier.padding(12.dp)) {
+                Text(
+                    "AI-eksempel", style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(Modifier.height(4.dp))
+                Text(st.items.first(), style = MaterialTheme.typography.bodyMedium, color = OnSurface)
+            }
+        }
+        is AiState.Err -> Text(
+            st.msg, color = MaterialTheme.colorScheme.error,
+            style = MaterialTheme.typography.bodySmall
+        )
+        else -> {}
     }
 }
 

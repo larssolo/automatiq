@@ -222,8 +222,14 @@ fun MacroCard(
 private fun compactSummary(macro: Macro): String = when (macro.triggerType) {
     TriggerType.SCHEDULED -> buildString {
         append(macro.scheduledTime ?: "--:--")
-        val days = formatRecurrence(macro.daysOfWeek, macro.weekInterval)
-        if (days.isNotBlank()) append(" · $days")
+        // A one-off (repeatDaily=false) shows its single date; recurring shows its weekday rhythm.
+        if (!macro.repeatDaily) {
+            val day = macro.anchorEpochDay ?: macro.validUntilEpochDay
+            append(" · ${day?.let { java.time.LocalDate.ofEpochDay(it).toString() } ?: "once"} (once)")
+        } else {
+            val days = formatRecurrence(macro.daysOfWeek, macro.weekInterval)
+            if (days.isNotBlank()) append(" · $days")
+        }
     }
     TriggerType.INCOMING -> buildString {
         append("Auto-reply")
