@@ -9,6 +9,7 @@ import com.vibeactions.domain.model.Macro
 import com.vibeactions.domain.model.STATE_TRIGGERS
 import com.vibeactions.domain.model.TriggerType
 import com.vibeactions.domain.usecase.SaveMacroUseCase
+import com.vibeactions.util.ContactResolver
 import com.vibeactions.util.consumedFireStampForNewMacro
 import com.vibeactions.util.firstScheduledDateOnOrAfter
 import com.vibeactions.util.isValidPhone
@@ -141,10 +142,32 @@ fun EditorState.toMacro(id: String): Macro {
 @HiltViewModel
 class MacroEditorViewModel @Inject constructor(
     private val repo: MacroRepository,
-    private val save: SaveMacroUseCase
+    private val save: SaveMacroUseCase,
+    private val contacts: ContactResolver
 ) : ViewModel() {
     private val _state = MutableStateFlow(EditorState())
     val state = _state.asStateFlow()
+
+    /** A short label shown under a recipient field: the contact name, "din egen telefon", both, or
+     *  null when the number is blank / unknown / contacts permission is off. */
+    suspend fun recipientLabel(number: String): String? {
+        val trimmed = number.trim()
+        if (trimmed.isEmpty()) return null
+        val name = contacts.displayName(trimmed)
+        val own = contacts.isOwnNumber(trimmed)
+        return when {
+            name != null && own -> "$name · din egen telefon"
+            name != null -> name
+            own -> "din egen telefon"
+            else -> null
+        }
+    }
+
+    /** What {modtager} resolves to for [number]: the contact name, else the number itself. */
+    suspend fun recipientName(number: String): String {
+        val trimmed = number.trim()
+        return contacts.displayName(trimmed) ?: trimmed
+    }
 
     fun load(macroId: String?) {
         if (macroId == null) { _state.value = EditorState(); return }

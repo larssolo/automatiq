@@ -56,7 +56,8 @@ Everything runs on-device. No account, no server. Only two optional features rea
 | 🎲 | **AI variations for scheduled sends (Gemini)** — a scheduled macro can send a fresh AI-written variation of its message on every fire, so recipients never get the exact same text twice. Per macro: approve (and edit) each variation before it goes out, or send automatically. Falls back to the fixed message if Gemini is unreachable |
 | ✨ | **AI compose** — describe the message in the editor and pick between three generated suggestions |
 | 👥 | **Multiple recipients** — one macro sends to a whole list of numbers |
-| 🔤 | **Message variables** — `{dato}` `{tid}` `{ugedag}` `{navn}` are filled in at send time; reply macros also get `{afsender}` (the other party's number) |
+| 🔤 | **Message variables** — `{dato}` `{tid}` `{ugedag}` `{navn}` are filled in at send time; `{modtager}` becomes each recipient's contact name (so a multi-recipient macro personalises every copy); reply macros also get `{afsender}` (the other party's number) |
+| 👤 | **Contact names** — recipients are resolved to their saved contact name in the editor (with a "your own phone" hint), so you can tell at a glance who a number belongs to |
 | ⏳ | **Expiry date** — a scheduled macro stops firing after a date you pick |
 | 💬 | **Auto-reply** — react to incoming SMS by sender/keyword, with a loop guard |
 | 📍 | **Location triggers** — arrive/depart a place, re-armed after reboot and app updates |

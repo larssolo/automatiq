@@ -15,6 +15,7 @@ import com.vibeactions.domain.model.MacroStatus
 import com.vibeactions.domain.model.TriggerType
 import com.vibeactions.notifications.MacroNotificationManager
 import com.vibeactions.sms.SmsDispatcher
+import com.vibeactions.util.ContactResolver
 import com.vibeactions.util.aiVariationApplies
 import com.vibeactions.util.expandTemplate
 import com.vibeactions.widget.WidgetRefresher
@@ -31,7 +32,8 @@ class MacroFirer @Inject constructor(
     private val sms: SmsDispatcher,
     private val notifications: MacroNotificationManager,
     private val alarmScheduler: AlarmScheduler,
-    private val widgets: WidgetRefresher
+    private val widgets: WidgetRefresher,
+    private val contacts: ContactResolver
 ) {
     /**
      * Sends the macro's SMS, logs, notifies, updates status, and (for scheduled+repeat) re-arms tomorrow.
@@ -80,22 +82,33 @@ class MacroFirer @Inject constructor(
             return null
         }
 
-        // Expand {dato}/{tid}/{ugedag}/{navn} once, then send the same text to every recipient.
-        // For reply fires (auto-reply / missed call) the override recipient IS the other party,
-        // which is what {afsender} should expand to.
-        val body = overrideBody
-            ?: expandTemplate(macro.messageBody, LocalDateTime.now(), macro.name, overrideRecipient)
+        // Expand {dato}/{tid}/{ugedag}/{navn} — and {modtager} per recipient (their contact name,
+        // or the number when not saved), so a multi-recipient macro personalises each copy. For
+        // reply fires the override recipient IS the other party ({afsender}), and is also the sole
+        // recipient whose name {modtager} resolves to. An overrideBody (AI variation / AI reply) is
+        // already final and goes out verbatim to everyone.
+        val nowDt = LocalDateTime.now()
+        val bodies = targets.associateWith { number ->
+            overrideBody ?: expandTemplate(
+                macro.messageBody, nowDt, macro.name,
+                sender = overrideRecipient,
+                recipientName = contacts.displayName(number) ?: number
+            )
+        }
+        // The log keeps one representative preview — the first recipient's copy.
+        val previewBody = bodies.getValue(targets.first())
         // The log row is created before sending so each SMS can carry a sent receipt addressing it:
         // a radio-level failure later flips this entry (and the macro status) to FAILED.
         val logId = logRepo.add(
             MacroLog(
                 macroId = macro.id, triggeredAt = now, status = MacroStatus.PENDING,
-                messagePreview = body, errorMessage = null
+                messagePreview = previewBody, errorMessage = null
             )
         )
         // Send to every recipient; success only if all succeed, otherwise FAILED with a summary error.
         val failures = targets.mapNotNull { number ->
-            sms.send(number, body, logId, macro.id).exceptionOrNull()?.let { number to it }
+            sms.send(number, bodies.getValue(number), logId, macro.id).exceptionOrNull()
+                ?.let { number to it }
         }
         val status = if (failures.isEmpty()) MacroStatus.SUCCESS else MacroStatus.FAILED
         val error = when {
@@ -114,7 +127,7 @@ class MacroFirer @Inject constructor(
         macroRepo.updateStatus(macro.id, now, finalStatus)
         // If the receipt won the race, SmsSentReceiver already posted a corrective notification.
         if (!suppressResultNotification && finalStatus == status) {
-            notifications.notifyResult(macro, finalStatus, finalError, targets, body)
+            notifications.notifyResult(macro, finalStatus, finalError, targets, previewBody)
         }
 
         if (macro.triggerType == TriggerType.SCHEDULED && macro.repeatDaily) {
