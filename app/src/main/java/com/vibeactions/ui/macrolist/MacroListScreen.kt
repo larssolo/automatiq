@@ -109,7 +109,12 @@ fun MacroListScreen(
     fun deleteMacro(macro: Macro) {
         vm.onDelete(macro)
         scope.launch {
-            val result = snackbar.showSnackbar("\"${macro.name}\" deleted", actionLabel = "Undo")
+            // Explicit duration: Material3 defaults to Indefinite whenever an actionLabel is set, so
+            // without this the Undo snackbar never auto-dismisses (hangs until the app restarts).
+            val result = snackbar.showSnackbar(
+                "\"${macro.name}\" deleted", actionLabel = "Undo",
+                withDismissAction = true, duration = SnackbarDuration.Long
+            )
             if (result == SnackbarResult.ActionPerformed) vm.onUndoDelete(macro)
         }
     }
@@ -386,7 +391,10 @@ fun MacroListScreen(
                     deleteTarget = null
                     scope.launch {
                         val members = vm.deleteFolder(folder)
-                        val result = snackbar.showSnackbar("\"${folder.name}\" deleted", actionLabel = "Undo")
+                        val result = snackbar.showSnackbar(
+                            "\"${folder.name}\" deleted", actionLabel = "Undo",
+                            withDismissAction = true, duration = SnackbarDuration.Long
+                        )
                         if (result == SnackbarResult.ActionPerformed) vm.onUndoDeleteFolder(folder, members)
                     }
                 }) { Text("Delete") }
