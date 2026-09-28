@@ -18,7 +18,6 @@ import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.FolderOff
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -28,6 +27,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -105,7 +105,9 @@ fun MacroCard(
             Modifier
                 .weight(1f)
                 .fillMaxHeight()
-                .padding(horizontal = 12.dp),
+                .padding(horizontal = 12.dp)
+                // Disabled macros read as visibly "off" even before the switch is noticed.
+                .alpha(if (macro.enabled) 1f else 0.5f),
             verticalArrangement = Arrangement.Center
         ) {
             Text(
@@ -128,8 +130,8 @@ fun MacroCard(
         }
         // AI badge for any macro whose text Gemini writes: auto-replies and scheduled variations.
         if (macro.aiReplyEnabled) {
-            // Fixed-width slot: every right-side action mark (AI badge, send arrow, folder
-            // chevron) sits in a 44dp slot so they share one trailing edge across all cards.
+            // Fixed-width slot: every right-side action mark (AI badge, on/off switch) sits in a
+            // 44dp slot so they share one trailing edge across all cards.
             Box(Modifier.width(44.dp).fillMaxHeight(), contentAlignment = Alignment.Center) {
                 Surface(color = accent.copy(alpha = 0.2f), shape = RoundedCornerShape(4.dp)) {
                     Text(
@@ -142,19 +144,16 @@ fun MacroCard(
                 }
             }
         }
-        // One-tap manual send. Reply macros (auto-reply / missed call) have no recipient list
-        // of their own, so a manual send has no target — the button is hidden for those.
-        if (macro.triggerType != TriggerType.INCOMING && macro.triggerType != TriggerType.MISSED_CALL) {
-            Box(Modifier.width(44.dp).fillMaxHeight(), contentAlignment = Alignment.Center) {
-                IconButton(onClick = onSend) {
-                    Icon(
-                        Icons.AutoMirrored.Filled.Send,
-                        contentDescription = "Send now",
-                        tint = accent,
-                        modifier = Modifier.size(23.dp)
-                    )
-                }
-            }
+        // Primary on/off control, in the trailing action slot (formerly the one-tap send
+        // button — manual send moved into the long-press menu): the same green/amber switch
+        // language used in Settings and the editor, so a macro's armed state reads at a glance.
+        Box(Modifier.width(44.dp).fillMaxHeight(), contentAlignment = Alignment.Center) {
+            ThemedSwitch(
+                checked = macro.enabled,
+                onCheckedChange = onToggle,
+                width = 40.dp,
+                height = 22.dp
+            )
         }
         // Air between the action mark and the drag handle's lines.
         Spacer(Modifier.width(10.dp))
