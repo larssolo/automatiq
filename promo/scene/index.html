@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="da">
+<head>
+  <meta charset="utf-8">
+  <title>Automatiq promo</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <svg width="0" height="0" style="position:absolute">
+    <defs id="fxdefs">
+      <filter id="rgbsplit" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
+        <feColorMatrix in="SourceGraphic" type="matrix" values="1 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0" result="r"/>
+        <feOffset id="rgbR" in="r" dx="8" dy="0" result="r2"/>
+        <feColorMatrix in="SourceGraphic" type="matrix" values="0 0 0 0 0  0 1 0 0 0  0 0 0 0 0  0 0 0 1 0" result="g"/>
+        <feColorMatrix in="SourceGraphic" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 1 0 0  0 0 0 1 0" result="b"/>
+        <feOffset id="rgbB" in="b" dx="-8" dy="0" result="b2"/>
+        <feBlend in="r2" in2="g" mode="screen" result="rg"/>
+        <feBlend in="rg" in2="b2" mode="screen"/>
+      </filter>
+    </defs>
+  </svg>
+  <div id="stage">
+    <div id="backdrop" class="aurora"></div>
+    <div id="world"></div>
+    <div id="glitch"></div>
+    <div id="fx">
+      <div id="vignette"></div>
+      <div id="grain"></div>
+      <div id="flash"></div>
+    </div>
+  </div>
+  <script src="../timeline.js"></script>
+  <script src="icons.js"></script>
+  <script src="lib.js"></script>
+  <script src="ui.js"></script>
+  <script src="shots.js"></script>
+  <script src="shots-a.js"></script>
+  <script src="shots-b.js"></script>
+  <script src="shots-c.js"></script>
+  <script src="shots-d.js"></script>
+  <script src="shots-e.js"></script>
+  <script src="main.js"></script>
+</body>
+</html>
