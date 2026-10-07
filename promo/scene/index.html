@@ -3,6 +3,13 @@
 <head>
   <meta charset="utf-8">
   <title>Automatiq promo</title>
+  <script>
+    // ?f=land renders the 16:9 (1920x1080) composition; the default is the 9:16 (1080x1920) one.
+    window.STAGE = { land: /[?&]f=(land|16x9)/.test(location.search) };
+    window.STAGE.W = window.STAGE.land ? 1920 : 1080;
+    window.STAGE.H = window.STAGE.land ? 1080 : 1920;
+    if (window.STAGE.land) document.documentElement.classList.add('land');
+  </script>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>

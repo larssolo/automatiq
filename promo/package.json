@@ -4,6 +4,7 @@
   "description": "60 s beat-cut promo for Automatiq, rendered from code",
   "scripts": {
     "render": "node render.cjs",
+    "render:16x9": "node render.cjs --format 16x9",
     "sheet": "node render.cjs --sheet 0:60:1"
   },
   "devDependencies": {

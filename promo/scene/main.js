@@ -3,6 +3,7 @@
  *   window.sceneReady      — Promise resolved once fonts and images are decoded */
 (function () {
   const TL = window.TIMELINE;
+  const { W, H } = window.STAGE;
   const backdrop = document.getElementById('backdrop');
   const world = document.getElementById('world');
   const flash = document.getElementById('flash');
@@ -130,11 +131,11 @@
     const rnd = L.rng(FX.glitchSeed * 7919 + Math.floor(bt * 24));
     const n = 5 + Math.floor(FX.glitch * 9);
     for (let i = 0; i < n; i++) {
-      const y0 = rnd() * 1920;
+      const y0 = rnd() * H;
       const h = 14 + rnd() * 160 * FX.glitch;
       const clone = world.cloneNode(true);
       clone.removeAttribute('id');
-      clone.style.clipPath = `inset(${y0.toFixed(0)}px 0 ${Math.max(0, 1920 - y0 - h).toFixed(0)}px 0)`;
+      clone.style.clipPath = `inset(${y0.toFixed(0)}px 0 ${Math.max(0, H - y0 - h).toFixed(0)}px 0)`;
       clone.style.transform = `${world.style.transform} translateX(${((rnd() - 0.5) * 220 * FX.glitch).toFixed(1)}px)`;
       const tint = rnd();
       clone.style.filter =
@@ -148,9 +149,9 @@
     FX.reset();
     // backdrop aurora drift
     const d = bt * 0.05;
-    L.tf(glows[0], { x: 1080 * (0.15 + 0.22 * Math.sin(d * 1.3)), y: 1920 * (0.12 + 0.12 * Math.cos(d)) });
-    L.tf(glows[1], { x: 1080 * (0.88 - 0.2 * Math.sin(d * 0.9)), y: 1920 * (0.82 - 0.1 * Math.cos(d * 1.2)) });
-    L.tf(glows[2], { x: 1080 * (0.12 + 0.1 * Math.cos(d * 1.1)), y: 1920 * (0.66 + 0.08 * Math.sin(d)) });
+    L.tf(glows[0], { x: W * (0.15 + 0.22 * Math.sin(d * 1.3)), y: H * (0.12 + 0.12 * Math.cos(d)) });
+    L.tf(glows[1], { x: W * (0.88 - 0.2 * Math.sin(d * 0.9)), y: H * (0.82 - 0.1 * Math.cos(d * 1.2)) });
+    L.tf(glows[2], { x: W * (0.12 + 0.1 * Math.cos(d * 1.1)), y: H * (0.66 + 0.08 * Math.sin(d)) });
 
     for (const s of shots) {
       const pre = s.def.pre || 0;
@@ -196,6 +197,7 @@
       im.onload = im.onerror = res;
       im.src = '../../app/src/main/res/drawable-nodpi/bg_static.webp';
     });
+    SH.relayout(); // caption geometry depends on the real font metrics, so it runs after fonts load
     window.renderFrame(0);
     return true;
   })();

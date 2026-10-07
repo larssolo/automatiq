@@ -1,13 +1,27 @@
 # Automatiq — 60 sek. promo
 
-**`out/automatiq-promo-60s.mp4`** · 1080×1920 (9:16) · 60 fps · H.264 + AAC · præcis 60,0 s · 80 BPM
+Samme film i to formater, begge 60 fps · H.264 + AAC · præcis 60,0 s · 80 BPM:
 
-![Storyboard: 12 nedslag fra filmen](out/storyboard.jpg)
+| Fil | Format | Til |
+|---|---|---|
+| **`out/automatiq-promo-60s-1080x1920.mp4`** | 9:16 lodret | Reels, TikTok, Shorts, stories |
+| **`out/automatiq-promo-60s-1920x1080.mp4`** | 16:9 vandret | YouTube, website, præsentationer, LinkedIn |
+
+![Storyboard 9:16: 12 nedslag fra filmen](out/storyboard-1080x1920.jpg)
+
+![Storyboard 16:9: 12 nedslag fra filmen](out/storyboard-1920x1080.jpg)
 
 En ung, beat-klippet præsentation af appen til Reels/TikTok/Shorts. Hvert klip, hver tekst-slam og
 hver lydeffekt sidder på et 80 BPM-grid: 1 beat = 0,75 s, 1 takt = 3 s, 20 takter = 60 s.
 Billede og lyd læser **samme tidslinje** (`timeline.js`), så en overgang og den whoosh, der sælger
 den, kan ikke glide fra hinanden.
+
+**16:9 er komponeret om, ikke sat på sort.** Teksten står venstrejusteret i en kolonne til venstre
+(lodret centreret efter de rigtige skrifttypemål), og appen, chatten, kortene og telefonen står til højre.
+Logo, trigger-intro, AI-reveal, recap og slutbillede er egne kompositioner: robotten ved siden af
+teksten i stedet for over den, triggerikonerne i en ellipse i stedet for en cirkel, kortet med
+placeringen som kort over hele billedet. Tid, klip, musik og lydeffekter er identiske i begge formater,
+så lyden er den samme fil.
 
 Alt er genereret fra kode: UI'et er genskabt fra appens Compose-kilder (leaf-cut-kort med åndende
 åre, grøn/amber ThemedSwitch, mono-wordmark med puls-prik, blob-FAB, den kornede blå-violette
@@ -42,17 +56,18 @@ overgangene altid står igennem. Mastereret til −14 LUFS integreret (true peak
 promo/
   timeline.js            fælles tidslinje: 28 shots, sektioner, trommegrid, gaps, 119 SFX-cues (beats)
   scene/                 deterministisk HTML-renderer: window.renderFrame(t)
-    index.html, style.css
+    index.html, style.css   ?f=land skifter til 1920×1080 (ellers 1080×1920)
     lib.js               easing, springs, seeded noise, kinetisk typografi
     ui.js                appens UI genskabt (MacroCard, ThemedSwitch, telefon, widget …)
-    shots*.js            de 28 shots, ét pr. tidslinje-indgang
+    shots.js             hjælpere: captions, overgange, SH.vis/place/map (placering i 16:9)
+    shots-*.js           de 28 shots, ét pr. tidslinje-indgang
     main.js              shot-scheduler, kamera (kick-puls, rystelse), flash, glitch, grain
   audio/
     dsp.py               oscillatorer (polyBLEP), filtre, reverb, delay, limiter
     soundtrack.py        arrangement + SFX-bibliotek + mix/master → WAV
   render.cjs             Playwright → frames → ffmpeg (x264/AAC) med lyd
   assets/                DM Sans + JetBrains Mono (OFL), robot-ikonet i 3× størrelse
-  out/                   færdig video
+  out/                   færdige videoer (begge formater) og storyboards
 ```
 
 ## Render igen
@@ -62,15 +77,19 @@ Python 3 med `numpy` + `scipy`, og `ffmpeg` med libx264.
 
 ```bash
 cd promo
-node render.cjs                         # fuld render → out/automatiq-promo-60s.mp4 (10–15 min på 4 kerner)
-node render.cjs --sheet 18:30:0.375     # kontaktark af et udsnit → build/sheet.png
+node render.cjs                         # 9:16 → out/automatiq-promo-60s-1080x1920.mp4 (ca. 10 min på 4 kerner)
+node render.cjs --format 16x9           # 16:9 → out/automatiq-promo-60s-1920x1080.mp4
+node render.cjs --format 16x9 --sheet 18:30:0.375   # kontaktark af et udsnit → build/sheet.png
 node render.cjs --preview 6,9.5,36      # enkelte stills → build/preview/
 ```
 
-Flag: `--fps 60`, `--crf 22` (x264-kvalitet; 22 giver ~30 MB), `--workers 4`, `--from/--to` (sekunder),
-`--no-audio`, `--keep-frames`, `--out navn.mp4`.
+Flag: `--format 9x16|16x9`, `--fps 60`, `--crf 22` (x264-kvalitet; 22 giver ~30 MB), `--workers 4`,
+`--from/--to` (sekunder), `--no-audio`, `--keep-frames`, `--out navn.mp4`.
 
-Ret tekster i `scene/shots*.js`, timing og lydeffekter i `timeline.js`, musikken i
+Skal du ændre noget i begge formater, ret det i `scene/shots-*.js`: visualerne bygges i et fælles
+1080×1920-"designrum", og `SH.vis(root, SH.place(...))` placerer det i højre kolonne i 16:9.
+
+Ret tekster i `scene/shots-*.js`, timing og lydeffekter i `timeline.js`, musikken i
 `audio/soundtrack.py`.
 
 ## Licenser

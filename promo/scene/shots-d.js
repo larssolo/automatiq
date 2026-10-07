@@ -2,6 +2,8 @@
 (function () {
   const { div, seg, lerp, tf } = L;
   const S = window.SHOTS;
+  const LAND = SH.land;
+  const BGX = LAND ? '74%' : '50%'; // landscape: tints sit behind the right-hand column
 
   function bg(root, css) {
     const b = div('layer', root);
@@ -18,13 +20,13 @@
   function cubeOut(root, p) {
     const q = L.inOutCubic(p);
     root.style.transformOrigin = '100% 50%';
-    root.style.transform = `perspective(1700px) translateX(${(-1080 * q).toFixed(1)}px) rotateY(${(-90 * q).toFixed(2)}deg)`;
+    root.style.transform = `perspective(${SH.K.persp}px) translateX(${(-SH.W * q).toFixed(1)}px) rotateY(${(-90 * q).toFixed(2)}deg)`;
     root.style.filter = `brightness(${(1 - 0.6 * q).toFixed(2)})`;
   }
   function cubeIn(root, p) {
     const q = 1 - L.inOutCubic(p);
     root.style.transformOrigin = '0% 50%';
-    root.style.transform = `perspective(1700px) translateX(${(1080 * q).toFixed(1)}px) rotateY(${(90 * q).toFixed(2)}deg)`;
+    root.style.transform = `perspective(${SH.K.persp}px) translateX(${(SH.W * q).toFixed(1)}px) rotateY(${(90 * q).toFixed(2)}deg)`;
     root.style.filter = `brightness(${(1 - 0.6 * q).toFixed(2)})`;
   }
   const card = (parent, css) => {
@@ -35,15 +37,17 @@
   };
 
   // ───────────────────────────── featDelivered (48-50) · drop B lands here ──
+  const DELIV_PLACE = SH.place(540, 990, 0.98);
   S.featDelivered = {
     build(root, ctx) {
-      bg(root, 'radial-gradient(ellipse 80% 50% at 50% 55%, rgba(0,230,118,.18), rgba(0,0,0,0) 70%), #0d0d0d');
-      ctx.big = div('abs', root);
+      bg(root, `radial-gradient(ellipse 80% 50% at ${BGX} 55%, rgba(0,230,118,.18), rgba(0,0,0,0) 70%), #0d0d0d`);
+      const v = SH.vis(root, DELIV_PLACE);
+      ctx.big = div('abs', v);
       L.css(ctx.big, { left: '340px', top: '560px', width: '400px', height: '400px' });
       ctx.one = div('layer', ctx.big, L.icon('check', 400, '#00E676'));
       ctx.two = div('layer', ctx.big, L.icon('done_all', 400, '#00E676'));
       ctx.big.style.filter = 'drop-shadow(0 0 40px rgba(0,230,118,.6))';
-      const c = card(root, { left: '70px', right: '70px', top: '1040px', padding: '40px 46px' });
+      const c = card(v, { left: '70px', right: '70px', top: '1040px', padding: '40px 46px' });
       c.innerHTML = `<div style="display:flex;justify-content:space-between;font:700 32px var(--mono)"><span style="color:#00E676">SUCCESS</span><span style="color:#999">16:30</span></div>
         <div style="margin-top:14px;font:500 40px var(--mono);color:#f0f0f0">På vej hjem</div>
         <div style="margin-top:10px;font:400 38px var(--sans);color:#d0d0d0">Hej Sofie! Er på vej hjem nu.</div>
@@ -69,6 +73,8 @@
   };
 
   // ───────────────────────────── featQuiet (50-52) ──
+  // Landscape: the day/night wheel becomes a wide horizon across the bottom; the chat sits above it, right.
+  const QUIET_PLACE = SH.place(540, 770, 0.85, [SH.W * 0.75, 420]);
   S.featQuiet = {
     pre: 0.25,
     build(root, ctx) {
@@ -78,23 +84,25 @@
       ctx.stars = Array.from({ length: 40 }, () => {
         const s = div('abs', root);
         const z = 2 + rnd() * 4;
-        L.css(s, { left: rnd() * 1080 + 'px', top: rnd() * 1300 + 'px', width: z + 'px', height: z + 'px', borderRadius: '50%', background: '#fff' });
+        L.css(s, { left: rnd() * SH.W + 'px', top: rnd() * (LAND ? 700 : 1300) + 'px', width: z + 'px', height: z + 'px', borderRadius: '50%', background: '#fff' });
         return { s, ph: rnd() * 6 };
       });
-      // day/night wheel
+      // day/night wheel: moon on top, sun at the bottom; a 180° turn swaps them
+      const D = LAND ? 1400 : 900, moonSize = LAND ? 200 : 230;
       ctx.wheel = div('abs', root);
-      L.css(ctx.wheel, { left: '90px', top: '1180px', width: '900px', height: '900px', borderRadius: '50%',
+      L.css(ctx.wheel, { left: (SH.W - D) / 2 + 'px', top: (LAND ? 800 : 1180) + 'px', width: D + 'px', height: D + 'px', borderRadius: '50%',
         border: '3px solid rgba(255,255,255,.12)' });
-      const moon = div('abs', ctx.wheel, L.icon('dark_mode', 230, '#DDE3FF'));
-      L.css(moon, { left: '335px', top: '-115px', filter: 'drop-shadow(0 0 40px rgba(200,210,255,.7))' });
+      const moon = div('abs', ctx.wheel, L.icon('dark_mode', moonSize, '#DDE3FF'));
+      L.css(moon, { left: D / 2 - moonSize / 2 + 'px', top: -moonSize / 2 + 'px', filter: 'drop-shadow(0 0 40px rgba(200,210,255,.7))' });
       const sun = div('abs', ctx.wheel, L.icon('wb_sunny', 250, '#FFB300'));
-      L.css(sun, { left: '325px', top: '775px', transform: 'rotate(180deg)', filter: 'drop-shadow(0 0 60px rgba(255,179,0,.9))' });
-      ctx.inB = div('abs', root);
+      L.css(sun, { left: D / 2 - 125 + 'px', top: D - 125 + 'px', transform: 'rotate(180deg)', filter: 'drop-shadow(0 0 60px rgba(255,179,0,.9))' });
+      const v = SH.vis(root, QUIET_PLACE);
+      ctx.inB = div('abs', v);
       L.css(ctx.inB, { left: '70px', top: '540px', transformOrigin: '0 100%' });
       UI.bubble(ctx.inB, 'Sover du?', 'in', 'big');
       ctx.hold = div('', ctx.inB, `${L.icon('pause', 30, '#FFB300')}<span style="margin-left:8px">23:14 · venter til 07:00</span>`);
       L.css(ctx.hold, { display: 'flex', alignItems: 'center', font: '600 28px var(--mono)', color: '#FFB300', marginTop: '12px' });
-      ctx.outB = div('abs', root);
+      ctx.outB = div('abs', v);
       L.css(ctx.outB, { right: '70px', top: '790px', textAlign: 'right', transformOrigin: '100% 100%' });
       UI.bubble(ctx.outB, 'Godmorgen! Så den først nu.', 'out', 'big');
       const st = div('stamp', ctx.outB, '07:00 · Delivered ✓✓');
@@ -118,23 +126,25 @@
   };
 
   // ───────────────────────────── featWidgets (52-54) ──
+  const WIDG_PLACE = SH.place(540, 1050, 0.92);
   S.featWidgets = {
     pre: 0.25,
     build(root, ctx) {
       root.innerHTML = '<div class="app-bg" style="filter:blur(22px) brightness(.6) saturate(1.2);inset:-60px"></div>';
+      const v = SH.vis(root, WIDG_PLACE);
       const ws = [['Kommer lidt for sent', 'Last: 08:42 ✓'], ['Godnat skat', 'Tap to send'], ['Ringer tilbage', 'Last: 12/7 ✓']];
       ctx.ws = ws.map(([n, sub], i) => {
-        const w = UI.widget(root, n, sub, 3.6);
+        const w = UI.widget(v, n, sub, 3.6);
         L.css(w.el, { position: 'absolute', left: '110px', width: '860px', top: 640 + i * 200 + 'px' });
         return w;
       });
-      const row = div('abs', root);
+      const row = div('abs', v);
       L.css(row, { left: '110px', right: '110px', top: '1290px', display: 'flex', justifyContent: 'space-between' });
       ['#FF7043', '#42A5F5', '#FFCA28', '#AB47BC'].forEach((c) => {
         const e = div('', row);
         L.css(e, { width: '160px', height: '160px', borderRadius: '46px', background: `linear-gradient(145deg, ${c}, ${SH.hexA(c, 0.5)})`, opacity: 0.7 });
       });
-      ctx.touch = SH.touch(root);
+      ctx.touch = SH.touch(v);
       ctx.caps = feature(root, 'Widgets.', 'Ét tryk fra hjemmeskærmen.');
     },
     render(lb, ctx) {
@@ -149,18 +159,20 @@
       w.el.style.boxShadow = `0 18px 50px rgba(0,0,0,.45), 0 0 ${(90 * L.decay(lb, 0.75, 4)).toFixed(0)}px rgba(0,230,118,.6)`;
       ctx.touch(lb, 0.5, 540, 900);
       ctx.caps(lb);
-      if (lb > 1.75) SH.zoomThroughOut(ctx.root, seg(lb, 1.75, 2), 540, 900);
+      if (lb > 1.75) SH.zoomThroughOut(ctx.root, seg(lb, 1.75, 2), ...SH.map(WIDG_PLACE, 540, 900));
     },
   };
 
   // ───────────────────────────── featFolders (54-56) ──
   const FOLDER = { x: 110, y: 1180, w: 860, dp: 2.4 };
+  const FOLD_PLACE = SH.place(540, 1000, 0.95);
   S.featFolders = {
     pre: 0.25,
     build(root, ctx) {
-      bg(root, 'radial-gradient(ellipse 80% 50% at 50% 60%, rgba(233,30,99,.16), rgba(0,0,0,0) 70%), #0d0d0d');
+      bg(root, `radial-gradient(ellipse 80% 50% at ${BGX} 60%, rgba(233,30,99,.16), rgba(0,0,0,0) 70%), #0d0d0d`);
+      const v = SH.vis(root, FOLD_PLACE);
       const dp = FOLDER.dp;
-      const f = (ctx.folder = div('abs', root));
+      const f = (ctx.folder = div('abs', v));
       L.css(f, { left: FOLDER.x + 'px', top: FOLDER.y + 'px', width: FOLDER.w + 'px', height: 88 * dp + 'px', filter: 'drop-shadow(0 24px 40px rgba(0,0,0,.5))' });
       const tab = div('abs', f);
       L.css(tab, { left: 0, top: 0, width: FOLDER.w * 0.38 + 'px', height: 12 * dp + 1 + 'px', background: 'rgba(233,30,99,.55)',
@@ -177,7 +189,7 @@
       ctx.chev = body.querySelector('.chev');
       const ms = [['Godnat skat', '22:30 · Every day', '#3F51B5'], ['Ringer tilbage', 'Missed call', '#00BCD4'], ['Mors fødselsdag', '08:00 · 2026-11-14 (once)', '#FF9800']];
       ctx.cards = ms.map(([n, sm, ac], i) => {
-        const w = div('abs', root);
+        const w = div('abs', v);
         w.style.setProperty('--dp', '2.3px');
         L.css(w, { left: '130px', width: '820px', top: 560 + i * 196 + 'px' });
         UI.macroCard(w, { name: n, summary: sm, accent: ac, enabled: true });
@@ -185,7 +197,7 @@
       });
       // the same macros as folder members once it opens: indented 16dp, veins in the folder colour
       ctx.members = ms.map(([n, sm, ac], i) => {
-        const w = div('abs', root);
+        const w = div('abs', v);
         w.style.setProperty('--dp', '2.3px');
         L.css(w, { left: FOLDER.x + 16 * dp + 'px', width: FOLDER.w - 16 * dp + 'px', top: 560 + 88 * dp + 22 + i * (76 * 2.3 + 18) + 'px' });
         const mc = UI.macroCard(w, { name: n, summary: sm, accent: ac, enabled: true });
@@ -225,10 +237,11 @@
   };
 
   // ───────────────────────────── featHealth (56-58) ──
+  const HEALTH_PLACE = SH.place(540, 910, 0.95);
   S.featHealth = {
     build(root, ctx) {
-      bg(root, 'radial-gradient(ellipse 80% 50% at 50% 60%, rgba(0,230,118,.12), rgba(0,0,0,0) 70%), #0d0d0d');
-      const c = card(root, { left: '70px', right: '70px', top: '560px', padding: '40px 44px 30px' });
+      bg(root, `radial-gradient(ellipse 80% 50% at ${BGX} 60%, rgba(0,230,118,.12), rgba(0,0,0,0) 70%), #0d0d0d`);
+      const c = card(SH.vis(root, HEALTH_PLACE), { left: '70px', right: '70px', top: '560px', padding: '40px 44px 30px' });
       c.innerHTML = `<div style="font:600 34px var(--mono);color:#f0f0f0;letter-spacing:.02em;margin-bottom:12px">System</div>`;
       const rows = [
         ['alarm', 'Exact alarms', 'Allowed — fires on time'],
@@ -268,11 +281,12 @@
   };
 
   // ───────────────────────────── featReboot (58-60) ──
+  const REBOOT_PLACE = SH.place(540, 960, 0.95);
   S.featReboot = {
     pre: 0.25,
     build(root, ctx) {
       bg(root, '#0b0c0e');
-      const vis = (ctx.vis = div('layer', root));
+      const vis = (ctx.vis = div('layer', SH.vis(root, REBOOT_PLACE)));
       ctx.glow = div('abs', vis);
       L.css(ctx.glow, { left: '140px', top: '560px', width: '800px', height: '800px', borderRadius: '50%',
         background: 'radial-gradient(circle, rgba(0,230,118,.30), rgba(0,230,118,0) 65%)' });
@@ -323,15 +337,17 @@
 
   // ───────────────────────────── featVars (60-62) ──
   const VARS = [['{modtager}', 'Sofie'], ['{ugedag}', 'tirsdag'], ['{tid}', '16:30']];
+  const VARS_PLACE = SH.place(540, 1020, 0.95);
   S.featVars = {
     pre: 0.25,
     build(root, ctx) {
-      bg(root, 'radial-gradient(ellipse 80% 50% at 50% 55%, rgba(0,230,118,.14), rgba(0,0,0,0) 70%), #0d0d0d');
-      const c = card(root, { left: '70px', right: '70px', top: '640px', padding: '48px 50px', font: '500 54px/1.45 var(--sans)', color: '#f0f0f0' });
+      bg(root, `radial-gradient(ellipse 80% 50% at ${BGX} 55%, rgba(0,230,118,.14), rgba(0,0,0,0) 70%), #0d0d0d`);
+      const v = SH.vis(root, VARS_PLACE);
+      const c = card(v, { left: '70px', right: '70px', top: '640px', padding: '48px 50px', font: '500 54px/1.45 var(--sans)', color: '#f0f0f0' });
       c.innerHTML = 'Hej <span class="v0"></span>! Det er <span class="v1"></span> kl. <span class="v2"></span> – jeg er på vej.';
       ctx.vs = [0, 1, 2].map((i) => c.querySelector('.v' + i));
       ctx.card = c;
-      const row = div('abs', root);
+      const row = div('abs', v);
       L.css(row, { left: '60px', right: '60px', top: '1180px', display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '18px' });
       ctx.chips = ['{dato}', '{tid}', '{ugedag}', '{navn}', '{modtager}', '{afsender}'].map((t) => {
         const ch = div('', row, t);
@@ -360,20 +376,22 @@
   };
 
   // ───────────────────────────── featBackup (62-64) ──
+  const BACKUP_PLACE = SH.place(540, 1030, 1.0);
   S.featBackup = {
     pre: 0.25,
     build(root, ctx) {
-      bg(root, 'radial-gradient(ellipse 80% 50% at 50% 55%, rgba(66,209,202,.16), rgba(0,0,0,0) 70%), #0d0d0d');
-      const c = (ctx.file = card(root, { left: '120px', right: '120px', top: '600px', padding: '40px 46px' }));
+      bg(root, `radial-gradient(ellipse 80% 50% at ${BGX} 55%, rgba(66,209,202,.16), rgba(0,0,0,0) 70%), #0d0d0d`);
+      const v = SH.vis(root, BACKUP_PLACE);
+      const c = (ctx.file = card(v, { left: '120px', right: '120px', top: '600px', padding: '40px 46px' }));
       c.innerHTML = `<div style="display:flex;align-items:center;gap:18px;font:600 32px var(--mono);color:#42D1CA;margin-bottom:22px">${L.icon('upload_file', 48, '#42D1CA')}automatiq-backup.json</div>
         <pre style="margin:0;font:500 34px/1.5 var(--mono);color:#ddd">{
   <span style="color:#82AAFF">"macros"</span>: [ <span style="color:#F78C6C">4</span> ],
   <span style="color:#82AAFF">"folders"</span>: [ <span style="color:#F78C6C">1</span> ],
   <span style="color:#82AAFF">"settings"</span>: { … }
 }</pre>`;
-      ctx.ok = div('abs', root, `${L.icon('check_circle', 60, '#00E676')}<span style="margin-left:16px">Eksporteret</span>`);
+      ctx.ok = div('abs', v, `${L.icon('check_circle', 60, '#00E676')}<span style="margin-left:16px">Eksporteret</span>`);
       L.css(ctx.ok, { left: 0, right: 0, top: '1180px', display: 'flex', justifyContent: 'center', alignItems: 'center', font: '700 50px var(--sans)', color: '#00E676' });
-      ctx.arrow = div('abs', root, L.icon('upload_file', 150, '#42D1CA'));
+      ctx.arrow = div('abs', v, L.icon('upload_file', 150, '#42D1CA'));
       L.css(ctx.arrow, { left: '465px', top: '1300px' });
       ctx.caps = feature(root, 'Backup.', 'Alt med – i én JSON-fil.');
     },
@@ -389,7 +407,7 @@
       // collapse into the trust section
       if (lb > 1.75) {
         const q = L.inCubic(seg(lb, 1.75, 2));
-        ctx.root.style.transformOrigin = '540px 960px';
+        ctx.root.style.transformOrigin = `${SH.CX}px ${SH.CY}px`;
         ctx.root.style.transform = `scale(${(1 - 0.75 * q).toFixed(4)})`;
         ctx.root.style.opacity = (1 - q).toFixed(3);
         ctx.root.style.filter = `blur(${(10 * q).toFixed(1)}px)`;

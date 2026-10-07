@@ -3,10 +3,12 @@
   const { div, seg, lerp, tf } = L;
   const S = window.SHOTS;
   const T = SH.TRIGGERS;
+  const LAND = SH.land;
+  const BGX = LAND ? '74%' : '50%'; // landscape: the glow sits behind the right-hand column
 
   function darkBg(root, glow) {
     const bg = div('layer', root);
-    bg.style.background = `radial-gradient(ellipse 80% 55% at 50% 52%, ${SH.hexA(glow, 0.22)} 0%, ${SH.hexA(glow, 0.04)} 55%, rgba(0,0,0,0) 80%), #0d0d0d`;
+    bg.style.background = `radial-gradient(ellipse 80% 55% at ${BGX} 52%, ${SH.hexA(glow, 0.22)} 0%, ${SH.hexA(glow, 0.04)} 55%, rgba(0,0,0,0) 80%), #0d0d0d`;
     return bg;
   }
 
@@ -19,28 +21,29 @@
         { text: 'Den sender,', at: 0, br: true },
         { text: 'når…', at: 1, cls: 'green' },
       ]);
-      ctx.k.root.style.top = '800px';
+      ctx.k.root.style.top = LAND ? '420px' : '800px';
     },
     render(lb, ctx) {
       SH.reset(ctx.root);
       const spin = 14 * lb + 120 * L.inCubic(seg(lb, 1.3, 2));
       const out = seg(lb, 1.5, 2);
+      const RX = LAND ? 1.7 : 1, RY = LAND ? 0.88 : 1; // landscape: the orbit is an ellipse
       ctx.tiles.forEach((t, i) => {
         const a = ((-90 + i * 45 + spin) * Math.PI) / 180;
         const k = seg(lb, -0.2 + i * 0.04, 0.2 + i * 0.04);
         const R = lerp(700, 420, L.outCubic(k));
-        let x = 540 + Math.cos(a) * R, y = 960 + Math.sin(a) * R * 1.05, s = L.outBack(k, 1.8), o = seg(k, 0, 0.2), blur = 0;
+        let x = SH.CX + Math.cos(a) * R * RX, y = SH.CY + Math.sin(a) * R * 1.05 * RY, s = L.outBack(k, 1.8), o = seg(k, 0, 0.2), blur = 0;
         if (i === 0) {
           // the clock tile dives into the camera → next shot
           const z = L.inExpo(out);
-          x = lerp(x, 540, L.inOutCubic(out));
-          y = lerp(y, 960, L.inOutCubic(out));
+          x = lerp(x, SH.CX, L.inOutCubic(out));
+          y = lerp(y, SH.CY, L.inOutCubic(out));
           s *= 1 + 16 * z;
           blur = 6 * z;
         } else {
           const f = L.inCubic(out);
-          x += Math.cos(a) * 500 * f;
-          y += Math.sin(a) * 500 * f;
+          x += Math.cos(a) * 500 * f * RX;
+          y += Math.sin(a) * 500 * f * RY;
           o *= 1 - f;
         }
         L.css(t, { left: x + 'px', top: y + 'px' });
@@ -51,10 +54,11 @@
   };
 
   // ───────────────────────────── trigScheduled (26-28) ──
+  const SCH_PLACE = SH.place(540, 1000, 0.88);
   S.trigScheduled = {
     build(root, ctx) {
       darkBg(root, '#00BCD4');
-      const cam = (ctx.cam = div('layer', root));
+      const cam = (ctx.cam = div('layer', SH.vis(root, SCH_PLACE)));
       const ns = 'http://www.w3.org/2000/svg';
       const svg = document.createElementNS(ns, 'svg');
       svg.setAttribute('width', 760); svg.setAttribute('height', 760); svg.setAttribute('viewBox', '0 0 760 760');
@@ -126,17 +130,18 @@
   };
 
   // ───────────────────────────── trigManual (28-30) ──
+  const MAN_PLACE = SH.place(540, 980, 0.92);
   S.trigManual = {
     pre: 0.25,
     build(root, ctx) {
       const bg = div('layer', root);
       bg.innerHTML = '<div class="app-bg" style="filter:blur(26px) brightness(.55) saturate(1.2);inset:-60px"></div>';
-      const cam = (ctx.cam = div('layer', root));
+      const cam = (ctx.cam = div('layer', SH.vis(root, MAN_PLACE)));
       // a home screen: one row of icons, the widget, the dock
       const icons = ['#FF7043', '#42A5F5', '#FFCA28', '#AB47BC', '#26A69A', '#EC407A', '#7E57C2', '#66BB6A'];
       icons.forEach((c, i) => {
         const e = div('abs', cam);
-        const x = 120 + (i % 4) * 230, y = i < 4 ? 560 : 1740;
+        const x = 120 + (i % 4) * 230, y = i < 4 ? (LAND ? 640 : 560) : (LAND ? 1330 : 1740);
         L.css(e, { left: x + 'px', top: y + 'px', width: '150px', height: '150px', borderRadius: '44px',
           background: `linear-gradient(145deg, ${c}, ${SH.hexA(c, 0.55)})`, opacity: 0.55 });
       });
@@ -168,12 +173,13 @@
   };
 
   // ───────────────────────────── trigReply (30-32) ──
+  const REP_PLACE = SH.place(540, 885, 0.9);
   S.trigReply = {
     pre: 0.25,
     build(root, ctx) {
       const bg = div('layer', root);
-      bg.style.background = 'radial-gradient(ellipse 90% 60% at 50% 60%, rgba(179,136,255,.16), rgba(0,0,0,0) 70%), #101116';
-      const cam = (ctx.cam = div('layer', root));
+      bg.style.background = `radial-gradient(ellipse 90% 60% at ${BGX} 60%, rgba(179,136,255,.16), rgba(0,0,0,0) 70%), #101116`;
+      const cam = (ctx.cam = div('layer', SH.vis(root, REP_PLACE)));
       const head = div('abs', cam);
       L.css(head, { left: '70px', top: '520px', display: 'flex', alignItems: 'center', gap: '28px' });
       head.innerHTML = `<div style="width:124px;height:124px;border-radius:50%;background:linear-gradient(140deg,#42D1CA,#1e88e5);display:flex;align-items:center;justify-content:center;font:800 62px var(--sans);color:#06202a">J</div>
@@ -210,11 +216,13 @@
       tf(ctx.outB, { s: lerp(0.4, 1, L.outBack(b, 2.2)), o: seg(lb, 1, 1.05) });
       ctx.caps(lb);
       ctx.chip(lb, 2);
-      if (lb > 1.75) SH.zoomThroughOut(ctx.root, seg(lb, 1.75, 2), 700, 1100);
+      if (lb > 1.75) SH.zoomThroughOut(ctx.root, seg(lb, 1.75, 2), ...SH.map(REP_PLACE, 700, 1100));
     },
   };
 
   // ───────────────────────────── trigLocation (32-34) ──
+  // Full-bleed map in both formats. Portrait: fence in the middle; landscape: fence in the right-hand
+  // column, a dark gradient from the left keeps the caption legible.
   S.trigLocation = {
     pre: 0.25,
     build(root, ctx) {
@@ -222,22 +230,28 @@
       cam.style.background = '#0e1114';
       const ns = 'http://www.w3.org/2000/svg';
       const svg = document.createElementNS(ns, 'svg');
-      svg.setAttribute('width', 1600); svg.setAttribute('height', 2400); svg.setAttribute('viewBox', '0 0 1600 2400');
-      L.css(svg, { position: 'absolute', left: '-260px', top: '-240px' });
+      // street grid, river and a park, drawn rotated so the blocks are never axis-aligned
+      const M = LAND
+        ? { w: 2600, h: 1800, left: -340, top: -360, cx: 1300, cy: 900, x0: -300, x1: 2900, y0: -300, y1: 2100,
+            river: 'M -300 1180 C 400 980, 1000 1380, 1600 1100 S 2400 900, 2900 1060', park: [1560, 240, 420, 330] }
+        : { w: 1600, h: 2400, left: -260, top: -240, cx: 800, cy: 1200, x0: -200, x1: 1900, y0: -300, y1: 2700,
+            river: 'M -200 1700 C 300 1500, 700 1950, 1100 1700 S 1700 1500, 1900 1650', park: [1060, 520, 340, 300] };
+      svg.setAttribute('width', M.w); svg.setAttribute('height', M.h); svg.setAttribute('viewBox', `0 0 ${M.w} ${M.h}`);
+      L.css(svg, { position: 'absolute', left: M.left + 'px', top: M.top + 'px' });
       const rnd = L.rng(5);
-      let g = '<g transform="rotate(-14 800 1200)">';
-      g += '<path d="M -200 1700 C 300 1500, 700 1950, 1100 1700 S 1700 1500, 1900 1650" stroke="#10283a" stroke-width="90" fill="none"/>';
-      g += '<rect x="1060" y="520" width="340" height="300" rx="40" fill="#10251a"/>';
-      for (let x = -200; x < 1900; x += 150 + Math.floor(rnd() * 60)) {
-        g += `<line x1="${x}" y1="-300" x2="${x}" y2="2700" stroke="#1d232b" stroke-width="${rnd() < 0.25 ? 26 : 12}"/>`;
+      let g = `<g transform="rotate(-14 ${M.cx} ${M.cy})">`;
+      g += `<path d="${M.river}" stroke="#10283a" stroke-width="90" fill="none"/>`;
+      g += `<rect x="${M.park[0]}" y="${M.park[1]}" width="${M.park[2]}" height="${M.park[3]}" rx="40" fill="#10251a"/>`;
+      for (let x = M.x0; x < M.x1; x += 150 + Math.floor(rnd() * 60)) {
+        g += `<line x1="${x}" y1="${M.y0}" x2="${x}" y2="${M.y1}" stroke="#1d232b" stroke-width="${rnd() < 0.25 ? 26 : 12}"/>`;
       }
-      for (let y = -300; y < 2700; y += 150 + Math.floor(rnd() * 70)) {
-        g += `<line x1="-300" y1="${y}" x2="1900" y2="${y}" stroke="#1d232b" stroke-width="${rnd() < 0.25 ? 26 : 12}"/>`;
+      for (let y = M.y0; y < M.y1; y += 150 + Math.floor(rnd() * 70)) {
+        g += `<line x1="${M.x0 - 100}" y1="${y}" x2="${M.x1}" y2="${y}" stroke="#1d232b" stroke-width="${rnd() < 0.25 ? 26 : 12}"/>`;
       }
       g += '</g>';
       svg.innerHTML = g;
       cam.appendChild(svg);
-      const C = (ctx.C = { x: 520, y: 1030, r: 250 });
+      const C = (ctx.C = LAND ? { x: 1340, y: 540, r: 260 } : { x: 520, y: 1030, r: 250 });
       ctx.fence = div('abs', cam);
       L.css(ctx.fence, { left: C.x - C.r + 'px', top: C.y - C.r + 'px', width: 2 * C.r + 'px', height: 2 * C.r + 'px', borderRadius: '50%',
         border: '6px solid #00E676', background: 'rgba(0,230,118,.10)' });
@@ -259,7 +273,9 @@
       L.css(ctx.msg, { transformOrigin: '100% 100%' });
       UI.bubble(ctx.msg, 'På vej hjem nu!', 'out');
       ctx.scrim = div('layer', root);
-      ctx.scrim.style.background = 'linear-gradient(to bottom, rgba(13,13,13,.85), rgba(13,13,13,0) 40%)';
+      ctx.scrim.style.background = LAND
+        ? 'linear-gradient(to right, rgba(13,13,13,.94) 0%, rgba(13,13,13,.8) 36%, rgba(13,13,13,0) 62%)'
+        : 'linear-gradient(to bottom, rgba(13,13,13,.85), rgba(13,13,13,0) 40%)';
       ctx.caps = SH.caps(root, [{ at: 0, cls: 'h-l', words: [['…du forlader', 0, null, true], ['kontoret.', 0.3, 'green']] }]);
       ctx.chip = SH.trigChip(root);
     },
@@ -276,7 +292,7 @@
         tf(p, { s: 0.2 + 1.2 * L.outCubic(k), o: 1 - k });
       });
       // walking out of the fence; crossing exactly on beat 33
-      const dir = (28 * Math.PI) / 180;
+      const dir = ((LAND ? 16 : 28) * Math.PI) / 180;
       const r = C.r * Math.max(0, lb);
       const mx = C.x + Math.cos(dir) * r, my = C.y + Math.sin(dir) * r;
       L.css(ctx.me, { left: mx + 'px', top: my + 'px' });
@@ -293,10 +309,11 @@
   };
 
   // ───────────────────────────── trigMissed (34-36) ──
+  const MIS_PLACE = SH.place(540, 1040, 0.92);
   S.trigMissed = {
     build(root, ctx) {
       darkBg(root, '#FF4081');
-      const cam = (ctx.cam = div('layer', root));
+      const cam = (ctx.cam = div('layer', SH.vis(root, MIS_PLACE)));
       const card = (ctx.card = div('abs', cam));
       L.css(card, { left: 0, right: 0, top: '600px', height: '900px' });
       ctx.waves = [0, 1, 2].map(() => {
@@ -353,18 +370,20 @@
   };
 
   // ───────────────────────────── trigStates (36-38) ──
+  const STA_PLACE = SH.place(540, 1070, 1.0);
   S.trigStates = {
     build(root, ctx) {
       darkBg(root, '#448AFF');
+      const v = SH.vis(root, STA_PLACE);
       const items = [['bolt', '#FFB300', 'Oplader'], ['bluetooth', '#448AFF', 'Bluetooth'], ['wifi', '#42D1CA', 'Wi-Fi']];
-      ctx.line = div('abs', root);
+      ctx.line = div('abs', v);
       L.css(ctx.line, { left: '220px', width: '640px', top: '1017px', height: '6px', borderRadius: '3px',
         background: 'linear-gradient(90deg,#FFB300,#448AFF,#42D1CA)', transformOrigin: '0 50%' });
       ctx.items = items.map(([ic, col, label], i) => {
         const x = 220 + i * 320;
-        const t = SH.tile(root, ic, col, 250, 0.22);
+        const t = SH.tile(v, ic, col, 250, 0.22);
         L.css(t, { left: x + 'px', top: '1020px' });
-        const l = div('abs', root, label);
+        const l = div('abs', v, label);
         L.css(l, { left: x - 200 + 'px', width: '400px', top: '1190px', textAlign: 'center', font: '700 50px var(--sans)', color: col });
         return { t, l };
       });
@@ -385,7 +404,7 @@
       tf(ctx.line, { sx: L.outCubic(seg(lb, 1.5, 1.75)), o: 0.9 });
       ctx.caps(lb);
       ctx.chip(lb, lb < 0.5 ? 4 : lb < 1 ? 5 : 6);
-      if (lb > 1.75) SH.zoomThroughOut(ctx.root, seg(lb, 1.75, 2), 540, 1020);
+      if (lb > 1.75) SH.zoomThroughOut(ctx.root, seg(lb, 1.75, 2), ...SH.map(STA_PLACE, 540, 1020));
     },
   };
 
@@ -399,9 +418,9 @@
         { text: 'Otte triggere.', at: -0.1, br: true },
         { text: 'Nul stress.', at: 1, cls: 'green' },
       ]);
-      ctx.k.root.style.top = '850px';
+      ctx.k.root.style.top = LAND ? '440px' : '850px';
       ctx.line = div('abs', root);
-      L.css(ctx.line, { left: 0, right: 0, top: '957px', height: '6px', background: '#fff', boxShadow: '0 0 30px #fff, 0 0 80px #9fffd0' });
+      L.css(ctx.line, { left: 0, right: 0, top: SH.CY - 3 + 'px', height: '6px', background: '#fff', boxShadow: '0 0 30px #fff, 0 0 80px #9fffd0' });
     },
     render(lb, ctx) {
       SH.reset(ctx.root);
@@ -414,7 +433,8 @@
         const a = ((-90 + i * 45 + 30 * tt) * Math.PI) / 180;
         const k = seg(tt, -0.22 + i * 0.03, 0.05 + i * 0.03);
         const R = lerp(lerp(640, 430, L.outCubic(k)), 0, conv);
-        L.css(t, { left: 540 + Math.cos(a) * R + 'px', top: 960 + Math.sin(a) * R * 1.08 + 'px' });
+        const RX = LAND ? 1.65 : 1, RY = LAND ? 0.82 : 1;
+        L.css(t, { left: SH.CX + Math.cos(a) * R * RX + 'px', top: SH.CY + Math.sin(a) * R * 1.08 * RY + 'px' });
         tf(t, { s: L.outBack(k, 1.8) * (1 - 0.8 * conv), o: seg(k, 0, 0.2) * (1 - conv) });
       });
       ctx.k.render(tt);
@@ -426,7 +446,7 @@
       const a1 = seg(lb, 1.7, 1.82), a2 = seg(lb, 1.82, 1.96);
       L.show(ctx.line, a1 > 0 && lb < 2);
       if (a1 > 0) {
-        ctx.cam.style.transformOrigin = '540px 960px';
+        ctx.cam.style.transformOrigin = `${SH.CX}px ${SH.CY}px`;
         ctx.cam.style.transform = `scaleY(${Math.max(0.004, 1 - L.inCubic(a1)).toFixed(4)})`;
         ctx.cam.style.filter = `brightness(${(1 + 3 * a1).toFixed(2)})`;
         tf(ctx.line, { sx: Math.max(0.002, 1 - L.inQuart(a2)), sy: 1 + 2 * a1, o: a1 * (1 - seg(lb, 1.96, 2)) });

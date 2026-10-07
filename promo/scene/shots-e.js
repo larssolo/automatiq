@@ -2,13 +2,15 @@
 (function () {
   const { div, seg, lerp, tf } = L;
   const S = window.SHOTS;
+  const LAND = SH.land;
 
   // ───────────────────────────── trust (64-72) ──
   const TP = { dp: 1.5, top: 640 };
+  const TRUST_PLACE = SH.place(540, 1234, 0.8);
   S.trust = {
     pre: 0.25,
     build(root, ctx) {
-      const cam = (ctx.cam = div('layer', root));
+      const cam = (ctx.cam = div('layer', SH.vis(root, TRUST_PLACE)));
       ctx.shield = div('abs', cam);
       L.css(ctx.shield, { left: '90px', top: '520px', width: '900px', height: '1500px', borderRadius: '50%',
         background: 'radial-gradient(ellipse, rgba(0,230,118,.22), rgba(0,230,118,.05) 45%, rgba(0,0,0,0) 70%)' });
@@ -87,30 +89,33 @@
         if (h.bg === 'img') f.innerHTML = '<div class="app-bg"></div><div class="layer" style="background:rgba(10,8,40,.25)"></div>';
         else f.style.background = h.bg;
         const vis = div('layer', f);
+        const ring = LAND ? { left: 580, top: 160, size: 760 } : { left: 140, top: 560, size: 800 };
         if (i === 0) {
-          vis.innerHTML = `<svg viewBox="0 0 600 600" style="position:absolute;left:140px;top:560px;width:800px;height:800px">
+          vis.innerHTML = `<svg viewBox="0 0 600 600" style="position:absolute;left:${ring.left}px;top:${ring.top}px;width:${ring.size}px;height:${ring.size}px">
             <circle cx="300" cy="300" r="270" fill="none" stroke="rgba(0,0,0,.18)" stroke-width="26"/>
             <circle cx="300" cy="300" r="270" fill="none" stroke="#04140b" stroke-width="26" stroke-linecap="round" stroke-dasharray="1696" stroke-dashoffset="420" transform="rotate(-90 300 300)"/></svg>`;
         } else if (i === 1) {
           const a = div('abs', vis);
-          L.css(a, { left: '70px', top: '470px' });
+          L.css(a, LAND ? { left: '220px', top: '150px' } : { left: '70px', top: '470px' });
           UI.bubble(a, 'Er du ledig?', 'in', 'big');
           const b = div('abs', vis);
-          L.css(b, { right: '70px', top: '1260px' });
+          L.css(b, LAND ? { right: '220px', top: '790px' } : { right: '70px', top: '1260px' });
           UI.bubble(b, 'Ringer kl. 19!', 'out', 'big');
         } else if (i === 2) {
-          const r = UI.robot(vis, 380);
-          L.css(r, { left: '350px', top: '440px', boxShadow: '0 30px 80px rgba(0,0,0,.35)' });
+          const r = UI.robot(vis, LAND ? 300 : 380);
+          L.css(r, { left: LAND ? '810px' : '350px', top: LAND ? '265px' : '440px', boxShadow: '0 30px 80px rgba(0,0,0,.35)' });
         } else {
           const row = div('abs', vis);
           row.style.setProperty('--dp', '4px');
-          L.css(row, { left: 0, right: 0, top: '560px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '24px' });
+          L.css(row, { left: 0, right: 0, top: LAND ? '350px' : '560px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '24px' });
           row.innerHTML = '<div class="pdot" style="width:40px;height:40px"></div><span style="font:500 76px var(--mono);color:#fff">4 of 4 live</span>';
           ctx.dot = row.firstChild;
         }
         const w = div('abs', f, h.word);
-        L.css(w, { left: 0, right: 0, top: i === 2 ? '930px' : '880px', textAlign: 'center', color: h.fg,
-          font: `950 ${i === 2 ? 150 : 190}px/1 var(--sans)`, letterSpacing: '-0.05em' });
+        const wordTop = LAND ? (i === 2 ? 625 : i === 3 ? 490 : 420) : (i === 2 ? 930 : 880);
+        const wordSize = LAND ? (i === 2 ? 190 : 240) : (i === 2 ? 150 : 190);
+        L.css(w, { left: 0, right: 0, top: wordTop + 'px', textAlign: 'center', color: h.fg,
+          font: `950 ${wordSize}px/1 var(--sans)`, letterSpacing: '-0.05em' });
         return { f, w, vis };
       });
     },
@@ -135,7 +140,7 @@
   };
 
   // ───────────────────────────── endCard (76-80) ──
-  const ER = { x: 540, y: 690, size: 340 };
+  const ER = LAND ? { x: 600, y: 540, size: 420 } : { x: 540, y: 690, size: 340 };
   S.endCard = {
     build(root, ctx) {
       const cam = (ctx.cam = div('layer', root));
@@ -152,28 +157,31 @@
       L.css(ctx.robot, { left: ER.x - ER.size / 2 + 'px', top: ER.y - ER.size / 2 + 'px',
         boxShadow: '0 30px 90px rgba(0,0,0,.55), 0 0 0 8px rgba(66,209,202,.18)' });
       const wm = (ctx.wm = div('abs', cam));
-      L.css(wm, { left: 0, right: 0, top: '930px', display: 'flex', justifyContent: 'center', alignItems: 'center' });
+      L.css(wm, LAND
+        ? { left: '900px', right: '40px', top: '330px', display: 'flex', justifyContent: 'flex-start', alignItems: 'center' }
+        : { left: 0, right: 0, top: '930px', display: 'flex', justifyContent: 'center', alignItems: 'center' });
       ctx.wdot = div('', wm);
       L.css(ctx.wdot, { width: '32px', height: '32px', borderRadius: '50%', background: '#00E676', marginRight: '28px',
         boxShadow: '0 0 30px rgba(0,230,118,.9)' });
       ctx.letters = [...'automatiq'].map((ch) => {
         const s = L.el('span', 'kw', wm, ch);
-        L.css(s, { font: '500 116px/1 var(--mono)', letterSpacing: '-0.02em' });
+        L.css(s, { font: `500 ${LAND ? 120 : 116}px/1 var(--mono)`, letterSpacing: '-0.02em' });
         return s;
       });
       ctx.tag = L.kinetic(cam, 'h-l shadow-txt', [{ text: 'SMS på ', at: 1 }, { text: 'autopilot.', at: 1.25, cls: 'grad' }]);
-      ctx.tag.root.style.top = '1100px';
+      ctx.tag.root.style.top = LAND ? '490px' : '1100px';
       ctx.spec = L.kinetic(cam, 'mono-s dim', [{ text: 'android 8.0+  ·  kører lokalt  ·  ai via gemini', at: 1.6 }], { style: 'rise' });
-      ctx.spec.root.style.top = '1290px';
+      ctx.spec.root.style.top = LAND ? '650px' : '1290px';
       ctx.url = L.kinetic(cam, 'mono-m green', [{ text: 'larssohl.dk', at: 2.1 }], { style: 'rise' });
-      ctx.url.root.style.top = '1420px';
+      ctx.url.root.style.top = LAND ? '730px' : '1420px';
+      if (LAND) [ctx.tag.root, ctx.spec.root, ctx.url.root].forEach((e) => L.css(e, { left: '900px', right: '40px', textAlign: 'left' }));
     },
     render(lb, ctx) {
       SH.reset(ctx.root);
       FX.flash = Math.max(FX.flash, 0.95 * L.decay(lb, 0, 7));
       FX.shake = Math.max(FX.shake, 1.2 * L.decay(lb, 0, 4.5));
       FX.rgb = Math.max(FX.rgb, 0.7 * L.decay(lb, 0, 6));
-      ctx.cam.style.transformOrigin = '540px 900px';
+      ctx.cam.style.transformOrigin = LAND ? `${SH.CX}px ${SH.CY}px` : '540px 900px';
       ctx.cam.style.transform = `scale(${(1 + 0.035 * seg(lb, 0, 4)).toFixed(4)})`;
       ctx.rings.forEach((r, i) => {
         const p = seg(lb, i * 0.1, 1.4 + i * 0.1);

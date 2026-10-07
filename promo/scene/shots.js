@@ -6,10 +6,44 @@
   window.SHOTS = {};
   const SH = {};
 
+  // ── Stage format. Portrait (1080x1920) is the original composition; landscape (1920x1080) re-composes
+  // it: shots build their visuals in the portrait "design space" and SH.vis() places that space into
+  // the right-hand column (see style.css). Portrait code paths are unchanged.
+  SH.land = window.STAGE.land;
+  SH.W = window.STAGE.W;
+  SH.H = window.STAGE.H;
+  SH.CX = SH.W / 2;
+  SH.CY = SH.H / 2;
+  /** Transition travel distances (the portrait values are the originals). */
+  const K = SH.land ? { whip: 2200, push: 1120, persp: 2600 } : { whip: 1250, push: 2000, persp: 1700 };
+  SH.K = K;
+
+  /**
+   * Placement of a design-space point (dx, dy) at screen point `to`, scaled by s. Landscape only;
+   * `to` defaults to the centre of the right-hand column.
+   */
+  SH.place = (dx, dy, s, to = [SH.W * 0.75, SH.H / 2]) => ({ d: [dx, dy], to, s });
+  /** The container a shot should put its visuals in: the shot root in portrait, a 1080x1920 design
+   *  canvas transformed into place in landscape. Backgrounds and full-bleed layers stay on the root. */
+  SH.vis = (parent, place) => {
+    if (!SH.land || !place) return parent;
+    const w = L.div('abs', parent);
+    L.css(w, {
+      left: 0, top: 0, width: '1080px', height: '1920px', transformOrigin: '0 0',
+      transform: `translate(${place.to[0] - place.s * place.d[0]}px, ${place.to[1] - place.s * place.d[1]}px) scale(${place.s})`,
+    });
+    return w;
+  };
+  /** Screen position of a design-space point (identity in portrait). */
+  SH.map = (place, x, y) => (SH.land && place
+    ? [place.to[0] + place.s * (x - place.d[0]), place.to[1] + place.s * (y - place.d[1])]
+    : [x, y]);
+
   /**
    * Caption groups at the top of the frame. groups: [{ at, out, cls, style, words: [[html, dt, cls]] }]
    * Each group slams in word by word (dt = offset in beats from `at`) and leaves at `out`.
    */
+  const capBoxes = [];
   SH.caps = (root, groups, opts = {}) => {
     const box = L.div('cap shadow-txt', root);
     if (opts.top != null) box.style.top = opts.top + 'px';
@@ -23,6 +57,7 @@
       k.root.style.top = (g.y || 0) + 'px';
       return { k, g };
     });
+    if (SH.land) capBoxes.push({ root, box, ks, dy: opts.dy || 0 });
     return (lb) => {
       ks.forEach(({ k, g }) => {
         // `out` = gone by then: the exit runs just before it, so it never overlaps the next slam
@@ -33,6 +68,25 @@
         if (visible) k.render(lb, exitAt, dur);
       });
     };
+  };
+
+  /**
+   * Landscape: centre every caption block vertically in the left column. Needs real font metrics, so
+   * it runs once after the fonts have loaded (main.js). A block is the group stack of one shot: the
+   * title plus any sub-line below it (offset by g.y).
+   */
+  SH.relayout = () => {
+    capBoxes.forEach(({ root, box, ks, dy }) => {
+      const prev = root.style.display;
+      root.style.display = 'block';
+      let bottom = 0;
+      ks.forEach(({ k, g }) => {
+        k.root.style.display = '';
+        bottom = Math.max(bottom, (g.y || 0) + k.root.offsetHeight);
+      });
+      root.style.display = prev;
+      box.style.top = Math.round((SH.H - bottom) / 2 + dy) + 'px';
+    });
   };
 
   /** A finger: soft white disc that lands at `at`, plus a ripple ring. */
@@ -105,7 +159,7 @@
         last = idx;
       }
       const k = L.seg(lb, 0.1, 0.4);
-      c.style.transform = `translateX(-50%) translateY(${(40 * (1 - L.outBack(k, 2))).toFixed(1)}px)`;
+      c.style.transform = `translateX(${SH.land ? 0 : '-50%'}) translateY(${(40 * (1 - L.outBack(k, 2))).toFixed(1)}px)`;
       c.style.opacity = k.toFixed(3);
     };
   };
@@ -115,25 +169,25 @@
   // ── Transitions on a shot root (p: 0..1)
   SH.whipOut = (root, p, dir = -1, key = 'w') => {
     const q = L.inCubic(p);
-    root.style.transform = `translateX(${dir * 1250 * q}px) skewX(${-dir * 8 * q}deg)`;
+    root.style.transform = `translateX(${dir * K.whip * q}px) skewX(${-dir * 8 * q}deg)`;
     root.style.filter = FX.dirBlur(key + 'o', 70 * Math.sin(Math.min(1, p * 1.2) * Math.PI * 0.5), 0) || 'none';
   };
   SH.whipIn = (root, p, dir = -1, key = 'w') => {
     const q = 1 - L.outCubic(p);
-    root.style.transform = `translateX(${-dir * 1250 * q}px) skewX(${dir * 8 * q}deg)`;
+    root.style.transform = `translateX(${-dir * K.whip * q}px) skewX(${dir * 8 * q}deg)`;
     root.style.filter = FX.dirBlur(key + 'i', 70 * q, 0) || 'none';
   };
   SH.pushOut = (root, p, dir = -1, key = 'p') => {
     const q = L.inCubic(p);
-    root.style.transform = `translateY(${dir * 2000 * q}px)`;
+    root.style.transform = `translateY(${dir * K.push * q}px)`;
     root.style.filter = FX.dirBlur(key + 'o', 0, 60 * q) || 'none';
   };
   SH.pushIn = (root, p, dir = -1, key = 'p') => {
     const q = 1 - L.outCubic(p);
-    root.style.transform = `translateY(${-dir * 2000 * q}px)`;
+    root.style.transform = `translateY(${-dir * K.push * q}px)`;
     root.style.filter = FX.dirBlur(key + 'i', 0, 60 * q) || 'none';
   };
-  SH.zoomThroughOut = (root, p, ox = 540, oy = 960) => {
+  SH.zoomThroughOut = (root, p, ox = SH.CX, oy = SH.CY) => {
     const q = L.inExpo(p);
     root.style.transformOrigin = `${ox}px ${oy}px`;
     root.style.transform = `scale(${1 + 5 * q})`;
@@ -142,7 +196,7 @@
   };
   SH.zoomThroughIn = (root, p) => {
     const q = 1 - L.outExpo(p);
-    root.style.transformOrigin = '540px 960px';
+    root.style.transformOrigin = `${SH.CX}px ${SH.CY}px`;
     root.style.transform = `scale(${1 - 0.6 * q})`;
     root.style.opacity = L.seg(p, 0, 0.35).toFixed(3);
     root.style.filter = q > 0.02 ? `blur(${(16 * q).toFixed(1)}px)` : 'none';
@@ -156,21 +210,21 @@
       return;
     }
     // One solid mask layer per strip (layers add up), so the strips need no polygon gymnastics.
-    const h = 1920 / n;
+    const h = SH.H / n;
     const img = [], size = [], pos = [];
     for (let i = 0; i < n; i++) {
       const lp = L.outCubic(L.seg(p, i * 0.05, 0.6 + i * 0.05));
-      const w = Math.max(0, 1080 * lp);
+      const w = Math.max(0, SH.W * lp);
       img.push('linear-gradient(#000,#000)');
       size.push(`${w.toFixed(1)}px ${Math.ceil(h) + 1}px`);
-      pos.push(`${i % 2 === 0 ? 0 : (1080 - w).toFixed(1)}px ${Math.floor(i * h)}px`);
+      pos.push(`${i % 2 === 0 ? 0 : (SH.W - w).toFixed(1)}px ${Math.floor(i * h)}px`);
     }
     root.style.maskImage = root.style.webkitMaskImage = img.join(',');
     root.style.maskSize = root.style.webkitMaskSize = size.join(',');
     root.style.maskPosition = root.style.webkitMaskPosition = pos.join(',');
     root.style.maskRepeat = root.style.webkitMaskRepeat = 'no-repeat';
   };
-  SH.irisIn = (root, p, x = 540, y = 960) => {
+  SH.irisIn = (root, p, x = SH.CX, y = SH.CY) => {
     if (p >= 1) { root.style.clipPath = 'none'; return; }
     root.style.clipPath = `circle(${(2300 * L.inOutCubic(p)).toFixed(1)}px at ${x}px ${y}px)`;
   };

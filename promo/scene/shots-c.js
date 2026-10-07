@@ -2,6 +2,8 @@
 (function () {
   const { div, seg, lerp, tf } = L;
   const S = window.SHOTS;
+  const LAND = SH.land;
+  const BGX = LAND ? '74%' : '50%'; // landscape: tints sit behind the right-hand column
 
   /** 4-point sparkle star as inline SVG. */
   function star(parent, size, color) {
@@ -13,7 +15,7 @@
 
   function chatBg(root, tint) {
     const bg = div('layer', root);
-    bg.style.background = `radial-gradient(ellipse 85% 55% at 50% 58%, ${tint}, rgba(0,0,0,0) 70%), #0e0f13`;
+    bg.style.background = `radial-gradient(ellipse 85% 55% at ${BGX} 58%, ${tint}, rgba(0,0,0,0) 70%), #0e0f13`;
   }
 
   // ───────────────────────────── aiReveal (40-42) ──
@@ -22,14 +24,17 @@
       const bg = div('layer', root);
       bg.style.background = '#000';
       ctx.glow = div('abs', root);
-      L.css(ctx.glow, { left: '-160px', top: '360px', width: '1400px', height: '1200px', borderRadius: '50%',
-        background: 'radial-gradient(ellipse, rgba(138,125,255,.32), rgba(66,209,202,.12) 40%, rgba(0,0,0,0) 70%)' });
+      L.css(ctx.glow, LAND
+        ? { left: '160px', top: '-20px', width: '1600px', height: '1100px', borderRadius: '50%',
+            background: 'radial-gradient(ellipse, rgba(138,125,255,.32), rgba(66,209,202,.12) 40%, rgba(0,0,0,0) 70%)' }
+        : { left: '-160px', top: '360px', width: '1400px', height: '1200px', borderRadius: '50%',
+            background: 'radial-gradient(ellipse, rgba(138,125,255,.32), rgba(66,209,202,.12) 40%, rgba(0,0,0,0) 70%)' });
       ctx.seed = star(root, 120, '#ffffff');
-      L.css(ctx.seed, { left: '540px', top: '960px' });
+      L.css(ctx.seed, { left: SH.CX + 'px', top: SH.CY + 'px' });
       ctx.pre = L.kinetic(root, 'mono-l dim', [{ text: 'Og så…', at: 0.25 }], { style: 'rise' });
-      ctx.pre.root.style.top = '640px';
+      ctx.pre.root.style.top = LAND ? '170px' : '640px';
       ctx.ai = div('abs grad', root, 'AI.');
-      L.css(ctx.ai, { left: 0, right: 0, top: '720px', textAlign: 'center', font: '1000 420px/1 var(--sans)', letterSpacing: '-0.06em',
+      L.css(ctx.ai, { left: 0, right: 0, top: LAND ? '290px' : '720px', textAlign: 'center', font: '1000 420px/1 var(--sans)', letterSpacing: '-0.06em',
         backgroundSize: '200% 100%' });
       const rnd = L.rng(41);
       ctx.sparks = Array.from({ length: 16 }, (_, i) => {
@@ -37,7 +42,7 @@
         const sz = 30 + rnd() * 70;
         const e = star(root, sz, c);
         const a = rnd() * Math.PI * 2, d = 260 + rnd() * 420;
-        return { e, x: 540 + Math.cos(a) * d, y: 930 + Math.sin(a) * d * 0.8, t: 1 + rnd() * 0.5, spin: (rnd() - 0.5) * 180 };
+        return { e, x: SH.CX + Math.cos(a) * d * (LAND ? 1.7 : 1), y: (LAND ? 510 : 930) + Math.sin(a) * d * 0.8, t: 1 + rnd() * 0.5, spin: (rnd() - 0.5) * 180 };
       });
     },
     render(lb, ctx) {
@@ -63,23 +68,25 @@
           tf(sp.e, { s: Math.sin(k * Math.PI), r: sp.spin * k });
         }
       });
-      if (lb > 1.75) SH.zoomThroughOut(ctx.root, seg(lb, 1.75, 2), 540, 940);
+      if (lb > 1.75) SH.zoomThroughOut(ctx.root, seg(lb, 1.75, 2), SH.CX, SH.CY - 20);
     },
   };
 
   // ───────────────────────────── aiReply (42-44) ──
+  const REPLY_PLACE = SH.place(540, 890, 0.9);
   S.aiReply = {
     pre: 0.25,
     build(root, ctx) {
       chatBg(root, 'rgba(138,125,255,.20)');
-      const head = div('abs', root);
+      const v = SH.vis(root, REPLY_PLACE);
+      const head = div('abs', v);
       L.css(head, { left: '70px', top: '520px', display: 'flex', alignItems: 'center', gap: '28px' });
       head.innerHTML = `<div style="width:124px;height:124px;border-radius:50%;background:linear-gradient(140deg,#FF4081,#7C4DFF);display:flex;align-items:center;justify-content:center;font:800 62px var(--sans);color:#fff">M</div>
         <div><div style="font:750 66px var(--sans)">Mor</div><div class="mono-s dim" style="font-size:30px">sms · nu</div></div>`;
-      ctx.inB = div('abs', root);
+      ctx.inB = div('abs', v);
       L.css(ctx.inB, { left: '70px', top: '730px', transformOrigin: '0 100%' });
       UI.bubble(ctx.inB, 'Kommer du til middag lørdag?', 'in', 'big');
-      ctx.out = div('abs', root);
+      ctx.out = div('abs', v);
       L.css(ctx.out, { right: '70px', top: '1010px', textAlign: 'right', transformOrigin: '100% 100%' });
       ctx.tag = div('', ctx.out, `${L.icon('auto_awesome', 34, '#B388FF')}<span style="margin-left:10px">AI · Gemini</span>`);
       L.css(ctx.tag, { display: 'inline-flex', alignItems: 'center', font: '600 30px var(--mono)', color: '#B388FF', marginBottom: '16px' });
@@ -87,7 +94,7 @@
       ctx.bub = UI.bubble(ctx.out, '', 'ghost', 'big');
       L.css(ctx.bub, { minWidth: '210px', textAlign: 'left', backgroundSize: '220% 100%' });
       ctx.sparks = [0, 1, 2].map((i) => {
-        const e = star(root, 46 - i * 10, ['#ffffff', '#B388FF', '#00E676'][i]);
+        const e = star(v, 46 - i * 10, ['#ffffff', '#B388FF', '#00E676'][i]);
         L.css(e, { left: [990, 760, 1030][i] + 'px', top: [1000, 980, 1190][i] + 'px' });
         return e;
       });
@@ -123,31 +130,33 @@
       // card flip into the approval shot
       if (lb > 1.75) {
         const f = L.inCubic(seg(lb, 1.75, 2));
-        ctx.root.style.transformOrigin = '540px 960px';
-        ctx.root.style.transform = `perspective(2200px) rotateY(${(-90 * f).toFixed(2)}deg)`;
+        ctx.root.style.transformOrigin = `${SH.CX}px ${SH.CY}px`;
+        ctx.root.style.transform = `perspective(${SH.land ? 3000 : 2200}px) rotateY(${(-90 * f).toFixed(2)}deg)`;
         ctx.root.style.filter = `brightness(${(1 - 0.5 * f).toFixed(2)})`;
       }
     },
   };
 
   // ───────────────────────────── aiApprove (44-46) ──
+  const APPR_PLACE = SH.place(540, 1050, 0.92);
   S.aiApprove = {
     pre: 0.25,
     build(root, ctx) {
       const bg = div('layer', root);
       bg.innerHTML = '<div class="app-bg" style="filter:blur(30px) brightness(.38) saturate(1.3);inset:-60px"></div>';
-      ctx.n = div('notif', root);
+      const v = SH.vis(root, APPR_PLACE);
+      ctx.n = div('notif', v);
       ctx.n.style.top = '600px';
       ctx.n.innerHTML = `<div class="top"><img src="../assets/robot.png"><span>Automatiq · nu</span></div>
         <div class="title">AI message ready: Mor</div>
         <div class="text">Klart! Jeg tager dessert med.</div>
         <div class="btns"><span class="send">SEND</span><span style="color:#ccc">DISCARD</span></div>`;
       ctx.sendBtn = ctx.n.querySelector('.send');
-      ctx.done = div('abs', root, `${L.icon('check_circle', 64, '#00E676')}<span style="margin-left:18px">Sendt til Mor</span>`);
+      ctx.done = div('abs', v, `${L.icon('check_circle', 64, '#00E676')}<span style="margin-left:18px">Sendt til Mor</span>`);
       L.css(ctx.done, { left: 0, right: 0, top: '1060px', display: 'flex', justifyContent: 'center', alignItems: 'center',
         font: '700 54px var(--sans)', color: '#00E676' });
       // the two AI sending modes, as named in the editor
-      const modes = (ctx.modes = div('abs', root));
+      const modes = (ctx.modes = div('abs', v));
       L.css(modes, { left: '70px', right: '70px', top: '1260px', display: 'flex', flexDirection: 'column', gap: '22px' });
       ctx.mode = ['Approve before sending', 'Send automatically and notify'].map((t) => {
         const m = div('', modes, `<span class="rd"></span><span>${t}</span>`);
@@ -157,7 +166,7 @@
         L.css(rd, { width: '34px', height: '34px', borderRadius: '50%', border: '4px solid #888', flex: 'none' });
         return { m, rd };
       });
-      ctx.touch = SH.touch(root);
+      ctx.touch = SH.touch(v);
       ctx.caps = SH.caps(root, [{ at: 0, cls: 'h-l', words: [['Du har det', 0, null, true], ['sidste ord.', 0.3, 'green']] }]);
     },
     render(lb, ctx) {
@@ -165,8 +174,8 @@
       FX.pulse = false;
       if (lb < 0.25) {
         const f = 1 - L.outCubic(seg(lb, -0.25, 0.25));
-        ctx.root.style.transformOrigin = '540px 960px';
-        ctx.root.style.transform = `perspective(2200px) rotateY(${(90 * f).toFixed(2)}deg)`;
+        ctx.root.style.transformOrigin = `${SH.CX}px ${SH.CY}px`;
+        ctx.root.style.transform = `perspective(${SH.land ? 3000 : 2200}px) rotateY(${(90 * f).toFixed(2)}deg)`;
       }
       const d = L.outBack(seg(lb, 0, 0.35), 1.4);
       const collapse = L.inCubic(seg(lb, 1.25, 1.5));
@@ -189,7 +198,7 @@
         m.style.borderColor = sel ? 'rgba(0,230,118,.55)' : 'rgba(255,255,255,.08)';
       });
       ctx.caps(lb);
-      if (lb > 1.75) SH.zoomThroughOut(ctx.root, seg(lb, 1.75, 2), 540, 1000);
+      if (lb > 1.75) SH.zoomThroughOut(ctx.root, seg(lb, 1.75, 2), ...SH.map(APPR_PLACE, 540, 1000));
     },
   };
 
@@ -199,11 +208,12 @@
     ['tir', 'Godmorgen! Tænker på dig i dag.', 3],
     ['ons', "Hej smukke, ha' en super dag!", -2],
   ];
+  const VARY_PLACE = SH.place(540, 1040, 0.88);
   S.aiVary = {
     pre: 0.25,
     build(root, ctx) {
       chatBg(root, 'rgba(0,230,118,.14)');
-      const cam = (ctx.cam = div('layer', root));
+      const cam = (ctx.cam = div('layer', SH.vis(root, VARY_PLACE)));
       ctx.base = div('abs', cam);
       L.css(ctx.base, { left: '70px', right: '70px', top: '560px' });
       ctx.base.innerHTML = `<div class="mono-s" style="color:#00BCD4;margin-bottom:16px;display:flex;align-items:center;gap:12px">${L.icon('schedule', 34, '#00BCD4')}<span>07:00 · hver morgen · original</span></div>`;

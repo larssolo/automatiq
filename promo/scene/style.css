@@ -26,13 +26,16 @@
   --outline: #505050;
   --mono: 'JetBrains Mono', monospace;
   --sans: 'DM Sans', sans-serif;
+  --W: 1080px;
+  --H: 1920px;
 }
+:root.land { --W: 1920px; --H: 1080px; }
 
 * { box-sizing: border-box; }
 html, body {
   margin: 0;
-  width: 1080px;
-  height: 1920px;
+  width: var(--W);
+  height: var(--H);
   overflow: hidden;
   background: var(--bg);
   font-family: var(--sans);
@@ -64,7 +67,7 @@ html, body {
 
 /* ── Type ─────────────────────────────────────────────────────────────── */
 .kin { position: absolute; left: 0; right: 0; text-align: center; }
-.kw { display: inline-block; white-space: pre; will-change: transform; }
+.kw { display: inline-block; white-space: pre; }
 .h-xl { font: 900 150px/0.92 var(--sans); letter-spacing: -0.045em; }
 .h-l { font: 850 118px/0.95 var(--sans); letter-spacing: -0.04em; }
 .h-m { font: 800 92px/1 var(--sans); letter-spacing: -0.035em; }
@@ -223,3 +226,15 @@ html, body {
   border-radius: 40px 14px 40px 14px; background: rgba(16,17,20,.88); border: 2px solid rgba(255,255,255,.10);
   font: 600 34px var(--mono); color: #eee; white-space: nowrap; box-shadow: 0 16px 40px rgba(0,0,0,.45); }
 .tchip .n { color: #777; margin-left: 10px; }
+
+/* ── 16:9 (1920×1080) ─────────────────────────────────────────────────────
+ * The same film, re-composed rather than letterboxed: captions in a left column (left-aligned,
+ * vertically centred by SH.relayout), the app / chat / cards in a right column. Visuals are laid
+ * out in the 1080x1920 design space and placed by SH.vis(); only type scale and caption geometry
+ * are tuned here. */
+.land .h-xl { font-size: 128px; }
+.land .h-l { font-size: 104px; }
+.land .h-m { font-size: 84px; }
+.land .cap { left: 100px; right: auto; width: 880px; text-align: left; }
+.land .cap .kin { text-align: left; }
+.land .tchip { left: 100px; top: 905px; }

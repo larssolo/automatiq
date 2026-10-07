@@ -3,10 +3,12 @@
  * Renders the Automatiq promo: frames from scene/index.html (headless Chromium via Playwright),
  * soundtrack from audio/soundtrack.py, both locked to timeline.js, muxed by ffmpeg.
  *
- *   node render.cjs                      full render → out/automatiq-promo-60s.mp4
+ *   node render.cjs                      full render, 9:16 → out/automatiq-promo-60s-1080x1920.mp4
+ *   node render.cjs --format 16x9        full render, 16:9 → out/automatiq-promo-60s-1920x1080.mp4
  *   node render.cjs --preview 6,9.5,30   PNG stills at those seconds → build/preview/
  *   node render.cjs --sheet 0:60:1.5     contact sheet (from:to:step seconds) → build/sheet.png
- *   options: --fps 60  --workers 4  --crf 22  --from 0 --to 60  --no-audio  --keep-frames  --out name.mp4
+ *   options: --format 9x16|16x9  --fps 60  --workers 4  --crf 22  --from 0 --to 60  --no-audio
+ *            --keep-frames  --out name.mp4
  */
 const fs = require('fs');
 const path = require('path');
@@ -38,6 +40,10 @@ const opt = (name, def) => {
 const FPS = Number(opt('fps', 60));
 const WORKERS = Number(opt('workers', 4));
 const SCALE = Number(opt('scale', 1));
+const FORMAT = String(opt('format', '9x16')).toLowerCase();
+if (!['9x16', '16x9'].includes(FORMAT)) throw new Error('--format must be 9x16 or 16x9');
+const LAND = FORMAT === '16x9';
+const VIEW = LAND ? { width: 1920, height: 1080 } : { width: 1080, height: 1920 };
 
 const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.png': 'image/png',
   '.webp': 'image/webp', '.woff2': 'font/woff2', '.svg': 'image/svg+xml', '.json': 'application/json' };
@@ -59,7 +65,7 @@ function serve() {
 }
 
 async function openPage(browser, url, scale) {
-  const page = await browser.newPage({ viewport: { width: 1080, height: 1920 }, deviceScaleFactor: scale });
+  const page = await browser.newPage({ viewport: VIEW, deviceScaleFactor: scale });
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
   page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
@@ -72,7 +78,7 @@ async function openPage(browser, url, scale) {
 async function renderFrames(times, dir, type, scale) {
   fs.mkdirSync(dir, { recursive: true });
   const srv = await serve();
-  const url = `http://127.0.0.1:${srv.address().port}/promo/scene/index.html`;
+  const url = `http://127.0.0.1:${srv.address().port}/promo/scene/index.html${LAND ? '?f=land' : ''}`;
   const browser = await chromium.launch({ args: ['--font-render-hinting=none', '--force-color-profile=srgb'] });
   const pages = await Promise.all(Array.from({ length: Math.min(WORKERS, times.length) }, () => openPage(browser, url, scale)));
   let next = 0, done = 0;
@@ -138,7 +144,7 @@ function run(cmd, a, opts = {}) {
   if (withAudio) run('python3', [path.join(PROMO, 'audio', 'soundtrack.py'), path.join(BUILD, 'timeline.json'), wav]);
 
   fs.mkdirSync(OUT, { recursive: true });
-  const out = path.join(OUT, opt('out', 'automatiq-promo-60s.mp4'));
+  const out = path.join(OUT, opt('out', `automatiq-promo-60s-${LAND ? '1920x1080' : '1080x1920'}.mp4`));
   const ff = ['-y', '-loglevel', 'error', '-stats', '-framerate', String(FPS), '-i', path.join(framesDir, '%05d.jpg')];
   if (withAudio) ff.push('-ss', String(from), '-t', String(to - from), '-i', wav);
   ff.push('-vf', 'scale=out_color_matrix=bt709:out_range=tv,format=yuv420p',

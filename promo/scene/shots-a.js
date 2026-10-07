@@ -2,15 +2,18 @@
 (function () {
   const { div, seg, lerp, tf } = L;
   const S = window.SHOTS;
+  const LAND = SH.land;
 
   // ───────────────────────────── hookSame (0-4, lingers until the implosion) ──
   const HOOK_TIMES = [-0.1, 1, 2, 2.5, 3, 3.25, 3.5, 3.75];
   const HOOK_STAMPS = ['man 16:30', 'tir 16:31', 'ons 16:29', 'tor 16:30', 'fre 16:32', 'man 16:30', 'tir 16:31', 'ons 16:30'];
-  const DOT = { x: 540, y: 1180 };
+  // Landscape: the bubble pile climbs the right-hand column; DOT is where it collapses (the middle of that column).
+  const HOOK_PLACE = SH.place(990, 1628, 0.78, [1830, 960]);
+  const DOT = LAND ? { x: 490, y: 1090 } : { x: 540, y: 1180 };
   S.hookSame = {
     post: 3.2,
     build(root, ctx) {
-      ctx.cam = div('layer', root);
+      ctx.cam = div('layer', SH.vis(root, HOOK_PLACE));
       ctx.stack = div('layer', ctx.cam);
       // fade the pile out as it climbs under the caption
       ctx.stack.style.maskImage = ctx.stack.style.webkitMaskImage =
@@ -71,16 +74,17 @@
         { at: 0, out: 3, cls: 'h-l', words: [['Hvad ', 0], ['hvis ', 0.5], ['den', 1, null, true], ['sendte', 1.5, null, true], ['sig selv?', 2, 'green']] },
       ], { top: 230 });
       // gravity well: rings collapsing into the dot
+      const v = SH.vis(root, HOOK_PLACE);
       ctx.rings = [0, 1, 2, 3].map(() => {
-        const r = div('abs', root);
+        const r = div('abs', v);
         L.css(r, { left: DOT.x - 400 + 'px', top: DOT.y - 400 + 'px', width: '800px', height: '800px', borderRadius: '50%',
           border: '3px solid rgba(0,230,118,.55)' });
         return r;
       });
-      ctx.dot = div('abs', root);
+      ctx.dot = div('abs', v);
       L.css(ctx.dot, { left: DOT.x - 40 + 'px', top: DOT.y - 40 + 'px', width: '80px', height: '80px', borderRadius: '50%',
         background: 'radial-gradient(circle, #b9ffd9 0%, #00e676 45%, #00e676 60%, rgba(0,230,118,0) 72%)' });
-      ctx.halo = div('abs', root);
+      ctx.halo = div('abs', v);
       L.css(ctx.halo, { left: DOT.x - 300 + 'px', top: DOT.y - 300 + 'px', width: '600px', height: '600px', borderRadius: '50%',
         background: 'radial-gradient(circle, rgba(0,230,118,.45) 0%, rgba(0,230,118,.12) 35%, rgba(0,230,118,0) 70%)' });
     },
@@ -117,7 +121,7 @@
   };
 
   // ───────────────────────────── logo (8-12) ──
-  const ROBOT = { x: 540, y: 760, size: 400 };
+  const ROBOT = LAND ? { x: 600, y: 540, size: 500 } : { x: 540, y: 760, size: 400 };
   const PUPIL = { x: ROBOT.x - ROBOT.size / 2 + 0.399 * ROBOT.size, y: ROBOT.y - ROBOT.size / 2 + 0.342 * ROBOT.size };
   S.logo = {
     build(root, ctx) {
@@ -147,19 +151,22 @@
         boxShadow: '0 30px 90px rgba(0,0,0,.55), 0 0 0 8px rgba(66,209,202,.18)' });
       // wordmark: pulse dot + mono letters
       const wm = (ctx.wm = div('abs', cam));
-      L.css(wm, { left: 0, right: 0, top: '1040px', display: 'flex', justifyContent: 'center', alignItems: 'center' });
+      L.css(wm, LAND
+        ? { left: '930px', right: '40px', top: '350px', display: 'flex', justifyContent: 'flex-start', alignItems: 'center' }
+        : { left: 0, right: 0, top: '1040px', display: 'flex', justifyContent: 'center', alignItems: 'center' });
       ctx.wdot = div('', wm);
       L.css(ctx.wdot, { width: '34px', height: '34px', borderRadius: '50%', background: '#00E676', marginRight: '30px',
         boxShadow: '0 0 30px rgba(0,230,118,.9)' });
       ctx.letters = [...'automatiq'].map((ch) => {
         const s = L.el('span', 'kw', wm, ch);
-        L.css(s, { font: '500 120px/1 var(--mono)', letterSpacing: '-0.02em' });
+        L.css(s, { font: `500 ${LAND ? 124 : 120}px/1 var(--mono)`, letterSpacing: '-0.02em' });
         return s;
       });
       ctx.tag = L.kinetic(cam, 'h-l shadow-txt', [{ text: 'SMS på ', at: 1 }, { text: 'autopilot.', at: 1.5, cls: 'grad' }]);
-      ctx.tag.root.style.top = '1220px';
+      ctx.tag.root.style.top = LAND ? '520px' : '1220px';
       ctx.sub = L.kinetic(cam, 'mono-s dim', [{ text: 'android  ·  kører lokalt  ·  ai-klar', at: 2.1 }], { style: 'rise' });
-      ctx.sub.root.style.top = '1400px';
+      ctx.sub.root.style.top = LAND ? '690px' : '1400px';
+      if (LAND) [ctx.tag.root, ctx.sub.root].forEach((e) => L.css(e, { left: '930px', right: '40px', textAlign: 'left' }));
       ctx.purple = div('layer', root);
       ctx.purple.style.background = '#9586EA';
     },
@@ -206,6 +213,7 @@
 
   // ───────────────────────────── appList (12-16) ──
   const PHONE = { dp: 2.15, left: (1080 - 372 * 2.15) / 2, top: 420 };
+  const LIST_PLACE = SH.place(540, 1271, 0.58); // the whole phone fits the right column
   const scr = (xdp, ydp) => ({ x: PHONE.left + 6 * PHONE.dp + xdp * PHONE.dp, y: PHONE.top + 6 * PHONE.dp + ydp * PHONE.dp });
   const LIST_MACROS = [
     { name: 'Morgen-check-in', summary: '07:00 · Every 2 weeks · Mon · Wed', accent: '#00BCD4', enabled: true },
@@ -215,7 +223,7 @@
   ];
   S.appList = {
     build(root, ctx) {
-      const cam = (ctx.cam = div('layer', root));
+      const cam = (ctx.cam = div('layer', SH.vis(root, LIST_PLACE)));
       ctx.phoneWrap = div('layer', cam);
       const ph = UI.phone(ctx.phoneWrap, PHONE.dp);
       L.css(ph.el, { left: PHONE.left + 'px', top: PHONE.top + 'px' });
@@ -243,7 +251,7 @@
       ctx.phoneWrap.style.transform = `perspective(2400px) rotateX(${lerp(28, 0, p).toFixed(2)}deg) rotate(${lerp(-9, 0, p).toFixed(2)}deg) scale(${s.toFixed(4)})`;
       ctx.purple.style.opacity = (1 - seg(lb, 0, 0.38)).toFixed(3);
       // tilt down to the FAB before it gets tapped
-      ctx.cam.style.transform = `translateY(${(-300 * L.inOutCubic(seg(lb, 2.7, 3.0))).toFixed(1)}px)`;
+      ctx.cam.style.transform = LAND ? 'none' : `translateY(${(-300 * L.inOutCubic(seg(lb, 2.7, 3.0))).toFixed(1)}px)`;
       const breath = 0.5 + 0.5 * Math.cos(Math.PI * lb);
       ctx.ui.dot.style.opacity = (0.35 + 0.65 * breath).toFixed(3);
       ctx.ui.cards.forEach((c, i) => {
@@ -272,13 +280,15 @@
 
   // ───────────────────────────── editor (16-24) ──
   const ED = { dp: 2.65, left: 64, width: 952 };
+  const ED_PLACE = SH.place(540, 1080, 0.82); // the focused field stays at the middle of the right column
   const FOCUS = [
     [0, 108], [1.75, 108], [2.1, 330], [3.75, 330], [4.1, 440], [5.35, 440], [5.7, 600], [6.7, 600], [6.95, 238],
   ];
   const MSG = 'Hej {modtager}! Er på vej hjem nu.';
   S.editor = {
     build(root, ctx) {
-      const cam = (ctx.cam = div('layer', root));
+      const v = SH.vis(root, ED_PLACE);
+      const cam = (ctx.cam = div('layer', v));
       cam.style.maskImage = cam.style.webkitMaskImage = 'linear-gradient(to bottom, transparent 400px, #000 600px)';
       const panel = (ctx.panel = div('abs', cam));
       panel.style.setProperty('--dp', ED.dp + 'px');
@@ -349,7 +359,7 @@
         L.css(it, { display: 'flex', alignItems: 'center', height: d(46), padding: `0 ${d(16)}`, font: `400 ${d(15.5)} var(--sans)`, color: '#f0f0f0' });
         return it;
       });
-      ctx.touch = SH.touch(root);
+      ctx.touch = SH.touch(v);
       ctx.green = div('layer', root);
       ctx.green.style.background = '#00E676';
       ctx.caps = SH.caps(root, [
@@ -376,7 +386,7 @@
       ctx.panel.style.filter = whip > 0.05 ? FX.dirBlur('edw', 0, 50 * whip) : 'none';
       // blob hand-off: green wipes up off the editor
       const gw = L.inOutCubic(seg(lb, 0, 0.45));
-      ctx.green.style.transform = `translateY(${(-2000 * gw).toFixed(1)}px)`;
+      ctx.green.style.transform = `translateY(${(-(SH.H + 80) * gw).toFixed(1)}px)`;
       L.show(ctx.green, gw < 1);
       // name typing
       const NAME = 'På vej hjem';
