@@ -211,6 +211,11 @@
     },
   };
 
+  // 15 s cut: the whole logo sequence in half the time (impact → wordmark → tagline → pupil zoom). It starts
+  // 0.2 beats into the impact, so the very first frame (the cover frame on most platforms) already shows the
+  // robot instead of a white flash; the impact sound still lands on frame 0.
+  S.logoShort = Object.assign({}, S.logo, { render(lb, ctx) { S.logo.render(lb * 2 + 0.2, ctx); } });
+
   // ───────────────────────────── appList (12-16) ──
   const PHONE = { dp: 2.15, left: (1080 - 372 * 2.15) / 2, top: 420 };
   const LIST_PLACE = SH.place(540, 1271, 0.58); // the whole phone fits the right column
@@ -285,7 +290,11 @@
     [0, 108], [1.75, 108], [2.1, 330], [3.75, 330], [4.1, 440], [5.35, 440], [5.7, 600], [6.7, 600], [6.95, 238],
   ];
   const MSG = 'Hej {modtager}! Er på vej hjem nu.';
-  S.editor = {
+  /**
+   * The macro editor. cfg: speed (editor beats per film beat), wipe (colour of the full-screen layer that
+   * wipes up at the start) and caps (caption groups, in editor beats).
+   */
+  const makeEditor = (cfg) => ({
     build(root, ctx) {
       const v = SH.vis(root, ED_PLACE);
       const cam = (ctx.cam = div('layer', v));
@@ -361,15 +370,11 @@
       });
       ctx.touch = SH.touch(v);
       ctx.green = div('layer', root);
-      ctx.green.style.background = '#00E676';
-      ctx.caps = SH.caps(root, [
-        { at: 0, out: 2, cls: 'h-l', words: [['Giv den ', 0.1], ['et navn.', 0.35, 'green']] },
-        { at: 2, out: 4, cls: 'h-l', words: [['Vælg ', 0], ['modtagere.', 0.25, 'green']] },
-        { at: 4, out: 5.5, cls: 'h-l', words: [['Skriv ', 0], ['beskeden.', 0.25, 'green']] },
-        { at: 5.5, out: 7, cls: 'h-m', words: [['Personlig til', 0, null, true], ['hver modtager.', 0.25, 'green']] },
-      ], { top: 170 });
+      ctx.green.style.background = cfg.wipe;
+      ctx.caps = SH.caps(root, cfg.caps, { top: 170 });
     },
-    render(lb, ctx) {
+    render(lbIn, ctx) {
+      const lb = lbIn * cfg.speed;
       SH.reset(ctx.root);
       const dp = ED.dp;
       // camera: keep the active field around y≈1080
@@ -433,7 +438,28 @@
       }
       ctx.caps(lb);
     },
-  };
+  });
+
+  S.editor = makeEditor({
+    speed: 1,
+    wipe: '#00E676', // the FAB blob from the previous shot fills the screen green
+    caps: [
+      { at: 0, out: 2, cls: 'h-l', words: [['Giv den ', 0.1], ['et navn.', 0.35, 'green']] },
+      { at: 2, out: 4, cls: 'h-l', words: [['Vælg ', 0], ['modtagere.', 0.25, 'green']] },
+      { at: 4, out: 5.5, cls: 'h-l', words: [['Skriv ', 0], ['beskeden.', 0.25, 'green']] },
+      { at: 5.5, out: 7, cls: 'h-m', words: [['Personlig til', 0, null, true], ['hver modtager.', 0.25, 'green']] },
+    ],
+  });
+  // 15 s cut: the same editor at double speed, entered from the logo's purple pupil zoom, with a lead-in to
+  // the trigger shots that follow ("Den sender, når…" → "…klokken slår.").
+  S.editorShort = makeEditor({
+    speed: 2,
+    wipe: '#9586EA',
+    caps: [
+      { at: 0, out: 4, cls: 'h-l', words: [['Byg en ', 0], ['makro.', 0.25, 'green']] },
+      { at: 4, out: 8, cls: 'h-l', words: [['Den sender,', 0, null, true], ['når…', 0.3, 'green']] },
+    ],
+  });
 
   function tokenize(s) {
     const esc = (t) => t.replace(/&/g, '&amp;').replace(/</g, '&lt;');

@@ -5,9 +5,10 @@
  *
  *   node render.cjs                      full render, 9:16 → out/automatiq-promo-60s-1080x1920.mp4
  *   node render.cjs --format 16x9        full render, 16:9 → out/automatiq-promo-60s-1920x1080.mp4
+ *   node render.cjs --cut 15             the 15 s core-function cut → out/automatiq-promo-15s-<size>.mp4
  *   node render.cjs --preview 6,9.5,30   PNG stills at those seconds → build/preview/
  *   node render.cjs --sheet 0:60:1.5     contact sheet (from:to:step seconds) → build/sheet.png
- *   options: --format 9x16|16x9  --fps 60  --workers 4  --crf 22  --from 0 --to 60  --no-audio
+ *   options: --format 9x16|16x9  --cut 15  --fps 60  --workers 4  --crf 22  --from 0 --to 60  --no-audio
  *            --keep-frames  --out name.mp4
  */
 const fs = require('fs');
@@ -28,7 +29,8 @@ const PROMO = __dirname;
 const REPO = path.resolve(PROMO, '..');
 const BUILD = path.join(PROMO, 'build');
 const OUT = path.join(PROMO, 'out');
-const TL = require('./timeline.js');
+const CUT15 = process.argv.includes('--cut') && process.argv[process.argv.indexOf('--cut') + 1] === '15';
+const TL = CUT15 ? require('./timeline-short.js') : require('./timeline.js');
 
 const args = process.argv.slice(2);
 const opt = (name, def) => {
@@ -47,6 +49,11 @@ const VIEW = LAND ? { width: 1920, height: 1080 } : { width: 1080, height: 1920 
 
 const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.png': 'image/png',
   '.webp': 'image/webp', '.woff2': 'font/woff2', '.svg': 'image/svg+xml', '.json': 'application/json' };
+
+function urlQuery() {
+  const q = [LAND && 'f=land', CUT15 && 'cut=15'].filter(Boolean).join('&');
+  return q ? '?' + q : '';
+}
 
 function serve() {
   return new Promise((resolve) => {
@@ -78,7 +85,7 @@ async function openPage(browser, url, scale) {
 async function renderFrames(times, dir, type, scale) {
   fs.mkdirSync(dir, { recursive: true });
   const srv = await serve();
-  const url = `http://127.0.0.1:${srv.address().port}/promo/scene/index.html${LAND ? '?f=land' : ''}`;
+  const url = `http://127.0.0.1:${srv.address().port}/promo/scene/index.html${urlQuery()}`;
   const browser = await chromium.launch({ args: ['--font-render-hinting=none', '--force-color-profile=srgb'] });
   const pages = await Promise.all(Array.from({ length: Math.min(WORKERS, times.length) }, () => openPage(browser, url, scale)));
   let next = 0, done = 0;
@@ -144,7 +151,7 @@ function run(cmd, a, opts = {}) {
   if (withAudio) run('python3', [path.join(PROMO, 'audio', 'soundtrack.py'), path.join(BUILD, 'timeline.json'), wav]);
 
   fs.mkdirSync(OUT, { recursive: true });
-  const out = path.join(OUT, opt('out', `automatiq-promo-60s-${LAND ? '1920x1080' : '1080x1920'}.mp4`));
+  const out = path.join(OUT, opt('out', `automatiq-promo-${CUT15 ? '15s' : '60s'}-${LAND ? '1920x1080' : '1080x1920'}.mp4`));
   const ff = ['-y', '-loglevel', 'error', '-stats', '-framerate', String(FPS), '-i', path.join(framesDir, '%05d.jpg')];
   if (withAudio) ff.push('-ss', String(from), '-t', String(to - from), '-i', wav);
   ff.push('-vf', 'scale=out_color_matrix=bt709:out_range=tv,format=yuv420p',

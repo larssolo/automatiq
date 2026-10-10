@@ -1,11 +1,13 @@
 # Automatiq — 60 sek. promo
 
-Samme film i to formater, begge 60 fps · H.264 + AAC · præcis 60,0 s · 80 BPM:
+Samme film i to formater og to længder, alle 60 fps · H.264 + AAC · 80 BPM:
 
-| Fil | Format | Til |
-|---|---|---|
-| **`out/automatiq-promo-60s-1080x1920.mp4`** | 9:16 lodret | Reels, TikTok, Shorts, stories |
-| **`out/automatiq-promo-60s-1920x1080.mp4`** | 16:9 vandret | YouTube, website, præsentationer, LinkedIn |
+| Fil | Format | Længde | Til |
+|---|---|---|---|
+| **`out/automatiq-promo-60s-1080x1920.mp4`** | 9:16 lodret | 60,0 s | Reels, TikTok, Shorts, stories |
+| **`out/automatiq-promo-60s-1920x1080.mp4`** | 16:9 vandret | 60,0 s | YouTube, website, præsentationer, LinkedIn |
+| **`out/automatiq-promo-15s-1080x1920.mp4`** | 9:16 lodret | 15,0 s | korte annoncer, stories, pre-roll |
+| **`out/automatiq-promo-15s-1920x1080.mp4`** | 16:9 vandret | 15,0 s | bannere, website-hero, korte annoncer |
 
 ![Storyboard 9:16: 12 nedslag fra filmen](out/storyboard-1080x1920.jpg)
 
@@ -22,6 +24,22 @@ Logo, trigger-intro, AI-reveal, recap og slutbillede er egne kompositioner: robo
 teksten i stedet for over den, triggerikonerne i en ellipse i stedet for en cirkel, kortet med
 placeringen som kort over hele billedet. Tid, klip, musik og lydeffekter er identiske i begge formater,
 så lyden er den samme fil.
+
+**15-sekunders-versionen viser kun kernefunktionen**: byg én makro → den sender selv, når noget sker →
+leveret. 20 beats på samme 80 BPM-grid (5 takter), og trommerne spiller allerede på beat 0, så første
+slag er drop'et:
+
+| Tid | Beats | Scene |
+|---|---|---|
+| 0:00 | 0–2 | Logo-slam: *automatiq — SMS på autopilot* (logoet i dobbelt tempo, starter lige efter slaget så forsidebilledet viser robotten) |
+| 0:01,5 | 2–6 | *Byg en makro.* (editoren i dobbelt tempo: navn, modtagere, besked med `{modtager}`) → *Den sender, når…* |
+| 0:04,5 | 6–14 | Fire triggere, 2 beats hver: *…klokken slår* · *…du trykker én gang* · *…nogen skriver til dig* · *…du forlader kontoret* |
+| 0:10,5 | 14–16 | *Leveret.* med ✓✓ |
+| 0:12 | 16–20 | Slutkort med logo og *SMS på autopilot.* |
+
+Lydeffekterne er ikke skrevet om: hver effekt hos de genbrugte scener er kopieret fra hovedfilmen og
+flyttet med scenen (og skaleret med dens tempo), så overgangen og den lyd, der sælger den, bliver
+sammen. Musikken har sit eget femtakters arrangement uden opbygning.
 
 Alt er genereret fra kode: UI'et er genskabt fra appens Compose-kilder (leaf-cut-kort med åndende
 åre, grøn/amber ThemedSwitch, mono-wordmark med puls-prik, blob-FAB, den kornede blå-violette
@@ -55,6 +73,7 @@ overgangene altid står igennem. Mastereret til −14 LUFS integreret (true peak
 ```
 promo/
   timeline.js            fælles tidslinje: 28 shots, sektioner, trommegrid, gaps, 119 SFX-cues (beats)
+  timeline-short.js      15 s-klippet: 8 shots og de samme SFX-cues, afledt af timeline.js
   scene/                 deterministisk HTML-renderer: window.renderFrame(t)
     index.html, style.css   ?f=land skifter til 1920×1080 (ellers 1080×1920)
     lib.js               easing, springs, seeded noise, kinetisk typografi
@@ -64,7 +83,7 @@ promo/
     main.js              shot-scheduler, kamera (kick-puls, rystelse), flash, glitch, grain
   audio/
     dsp.py               oscillatorer (polyBLEP), filtre, reverb, delay, limiter
-    soundtrack.py        arrangement + SFX-bibliotek + mix/master → WAV
+    soundtrack.py        arrangement (60 s og 15 s) + SFX-bibliotek + mix/master → WAV
   render.cjs             Playwright → frames → ffmpeg (x264/AAC) med lyd
   assets/                DM Sans + JetBrains Mono (OFL), robot-ikonet i 3× størrelse
   out/                   færdige videoer (begge formater) og storyboards
@@ -79,18 +98,20 @@ Python 3 med `numpy` + `scipy`, og `ffmpeg` med libx264.
 cd promo
 node render.cjs                         # 9:16 → out/automatiq-promo-60s-1080x1920.mp4 (ca. 10 min på 4 kerner)
 node render.cjs --format 16x9           # 16:9 → out/automatiq-promo-60s-1920x1080.mp4
+node render.cjs --cut 15                # 15 s-klippet, 9:16 → out/automatiq-promo-15s-1080x1920.mp4
+node render.cjs --cut 15 --format 16x9  # 15 s-klippet, 16:9 → out/automatiq-promo-15s-1920x1080.mp4
 node render.cjs --format 16x9 --sheet 18:30:0.375   # kontaktark af et udsnit → build/sheet.png
 node render.cjs --preview 6,9.5,36      # enkelte stills → build/preview/
 ```
 
-Flag: `--format 9x16|16x9`, `--fps 60`, `--crf 22` (x264-kvalitet; 22 giver ~30 MB), `--workers 4`,
+Flag: `--format 9x16|16x9`, `--cut 15`, `--fps 60`, `--crf 22` (x264-kvalitet; 22 giver ~30 MB), `--workers 4`,
 `--from/--to` (sekunder), `--no-audio`, `--keep-frames`, `--out navn.mp4`.
 
 Skal du ændre noget i begge formater, ret det i `scene/shots-*.js`: visualerne bygges i et fælles
 1080×1920-"designrum", og `SH.vis(root, SH.place(...))` placerer det i højre kolonne i 16:9.
 
-Ret tekster i `scene/shots-*.js`, timing og lydeffekter i `timeline.js`, musikken i
-`audio/soundtrack.py`.
+Ret tekster i `scene/shots-*.js`, timing og lydeffekter i `timeline.js` (15 s-klippets rækkefølge
+står i `PLAN` i `timeline-short.js`), musikken i `audio/soundtrack.py`.
 
 ## Licenser
 

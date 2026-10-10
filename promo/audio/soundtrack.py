@@ -27,6 +27,7 @@ BEAT = TL['BEAT']
 DUR = TL['DURATION']
 N = nsamp(DUR)
 TAIL = nsamp(3.0)
+SHORT = TL.get('ARRANGEMENT') == 'short'  # the 15 s cut has its own five-bar arrangement
 
 
 def S(b):
@@ -34,7 +35,8 @@ def S(b):
     return b * BEAT
 
 
-SPLIT = S(40)  # the tape stop: everything that starts before beat 40 winds down with it
+# the tape stop: everything that starts before beat 40 winds down with it (the 15 s cut has none)
+SPLIT = S(1e6) if SHORT else S(40)
 
 
 class Track:
@@ -197,7 +199,8 @@ LEAD = {
 
 
 # one chord per bar (20 bars); bar 18 (outro) changes chord every beat, handled separately
-CHORDS = [C, Ab, C, Ab, Eb, Bb, C, Ab, Eb, Bb, Ab, Bb, C, Ab, Eb, Bb, Ab, Bb, C, C]
+CHORDS = ([C, Ab, Eb, Bb, C] if SHORT else
+          [C, Ab, C, Ab, Eb, Bb, C, Ab, Eb, Bb, Ab, Bb, C, Ab, Eb, Bb, Ab, Bb, C, C])
 
 
 def chord_at(bar):
@@ -276,69 +279,83 @@ def snare_roll(b_from, b_to, start_div=2, end_div=8, v0=0.25, v1=1.0):
         b += 1 / div
 
 
-# intro (bars 0-1): filtered pad + hook + ticking hats; roll into the drop
-for bar in (0, 1):
-    pad_bar(bar, cutoff=1300, gain=1.7)
-    hook_bar(bar, gain=0.85, bright=0.8)
-    for k in range(8):
-        hat_t.add(hat(0.55 if k % 2 == 0 else 0.38, seed=k), S(bar * 4 + k * 0.5), p=0.3 if k % 2 else -0.3)
-for b in (0, 2, 4):  # soft heartbeat kicks under the hook; beat 4 lands with the glitch
-    kick_t.add(lp(kick(0.7), 2500), S(b))
-snare_roll(6.0, 7.5)
+if not SHORT:
+    # intro (bars 0-1): filtered pad + hook + ticking hats; roll into the drop
+    for bar in (0, 1):
+        pad_bar(bar, cutoff=1300, gain=1.7)
+        hook_bar(bar, gain=0.85, bright=0.8)
+        for k in range(8):
+            hat_t.add(hat(0.55 if k % 2 == 0 else 0.38, seed=k), S(bar * 4 + k * 0.5), p=0.3 if k % 2 else -0.3)
+    for b in (0, 2, 4):  # soft heartbeat kicks under the hook; beat 4 lands with the glitch
+        kick_t.add(lp(kick(0.7), 2500), S(b))
+    snare_roll(6.0, 7.5)
 
-# drop A (bars 2-9), tape stop applied later on beats 39.25-40
-for bar in range(2, 10):
-    groove_bar(bar)
-    pad_bar(bar)
-    hook_bar(bar)
+    # drop A (bars 2-9), tape stop applied later on beats 39.25-40
+    for bar in range(2, 10):
+        groove_bar(bar)
+        pad_bar(bar)
+        hook_bar(bar)
 
-# break (bars 10-11): lush pad + glassy arpeggio, build in bar 11
-pad_bar(10, cutoff=3200, gain=1.7)
-pad_bar(11, cutoff=3600, gain=1.5)
-for k, m in enumerate([68, 72, 75, 79, 82, 79, 75, 72]):
-    pluck_t.add(bell(m + 12, 1.4, ratio=2.0, index=1.4, tau=0.6), S(40 + k * 0.5), 0.7, p=0.4 * np.sin(k))
-for k, m in enumerate([70, 74, 77, 82, 86, 82, 77, 74]):
-    pluck_t.add(bell(m + 12, 1.0, ratio=2.0, index=1.4, tau=0.4), S(44 + k * 0.5), 0.55, p=0.4 * np.sin(k))
-for k in range(16):
-    hat_t.add(hat(0.25 + 0.03 * k, seed=k), S(44 + k * 0.25), p=0.2 * np.sin(k))
-snare_roll(44.0, 47.5, v0=0.2)
+    # break (bars 10-11): lush pad + glassy arpeggio, build in bar 11
+    pad_bar(10, cutoff=3200, gain=1.7)
+    pad_bar(11, cutoff=3600, gain=1.5)
+    for k, m in enumerate([68, 72, 75, 79, 82, 79, 75, 72]):
+        pluck_t.add(bell(m + 12, 1.4, ratio=2.0, index=1.4, tau=0.6), S(40 + k * 0.5), 0.7, p=0.4 * np.sin(k))
+    for k, m in enumerate([70, 74, 77, 82, 86, 82, 77, 74]):
+        pluck_t.add(bell(m + 12, 1.0, ratio=2.0, index=1.4, tau=0.4), S(44 + k * 0.5), 0.55, p=0.4 * np.sin(k))
+    for k in range(16):
+        hat_t.add(hat(0.25 + 0.03 * k, seed=k), S(44 + k * 0.25), p=0.2 * np.sin(k))
+    snare_roll(44.0, 47.5, v0=0.2)
 
-# drop B (bars 12-15): everything + lead
-for bar in range(12, 16):
-    groove_bar(bar)
-    pad_bar(bar)
-    hook_bar(bar, gain=1.0, bright=1.15)
-    lead_bar(bar, gain=0.75)
+    # drop B (bars 12-15): everything + lead
+    for bar in range(12, 16):
+        groove_bar(bar)
+        pad_bar(bar)
+        hook_bar(bar, gain=1.0, bright=1.15)
+        lead_bar(bar, gain=0.75)
 
-# trust (bars 16-17): muffled groove, build at the end
-for bar in (16, 17):
-    groove_bar(bar, hats_level=0.0, snare_on=bar == 16, rolls=False)
-    pad_bar(bar, cutoff=1400)
-    hook_bar(bar, gain=0.6, bright=0.7)
-snare_roll(70.0, 71.5, v0=0.25)
+    # trust (bars 16-17): muffled groove, build at the end
+    for bar in (16, 17):
+        groove_bar(bar, hats_level=0.0, snare_on=bar == 16, rolls=False)
+        pad_bar(bar, cutoff=1400)
+        hook_bar(bar, gain=0.6, bright=0.7)
+    snare_roll(70.0, 71.5, v0=0.25)
 
-# outro (bar 18): a chord per beat under the four recap hits
-for k, ch in enumerate(LOOP):
-    b = 72 + k
-    kick_t.add(kick(1.0), S(b))
-    kick_times.append(S(b))
-    bass_notes.append((S(b), S(b + 1), ROOT[ch], None))
-    pad_t.add(pad_chord(VOICING[ch], nsamp(S(1) + 0.4), cutoff=3000, attack=0.01, release=0.25, seed=40 + k), S(b), 1.15)
-    for step in range(4):
-        hat_t.add(hat(0.8 if step == 0 else 0.55, seed=step), S(b + step / 4))
-snare_t.add(snare(1.0), S(73))
-snare_t.add(snare(1.0), S(75))
-for k in range(4):
-    snare_t.add(snare(0.35 + 0.15 * k), S(75.5 + k * 0.125))
-for step, m in HOOK[C]:
-    pluck_t.add(pluck(m, bright=1.2), S(72 + step / 4))
+    # outro (bar 18): a chord per beat under the four recap hits
+    for k, ch in enumerate(LOOP):
+        b = 72 + k
+        kick_t.add(kick(1.0), S(b))
+        kick_times.append(S(b))
+        bass_notes.append((S(b), S(b + 1), ROOT[ch], None))
+        pad_t.add(pad_chord(VOICING[ch], nsamp(S(1) + 0.4), cutoff=3000, attack=0.01, release=0.25, seed=40 + k), S(b), 1.15)
+        for step in range(4):
+            hat_t.add(hat(0.8 if step == 0 else 0.55, seed=step), S(b + step / 4))
+    snare_t.add(snare(1.0), S(73))
+    snare_t.add(snare(1.0), S(75))
+    for k in range(4):
+        snare_t.add(snare(0.35 + 0.15 * k), S(75.5 + k * 0.125))
+    for step, m in HOOK[C]:
+        pluck_t.add(pluck(m, bright=1.2), S(72 + step / 4))
 
-# end (bar 19): the last chord rings out, a three-note signature, a final sub
-kick_t.add(kick(1.0), S(76))
-bass_notes.append((S(76), S(79.6), 36, None))
-pad_t.add(pad_chord(VOICING[C] + [67, 74], nsamp(S(4)), cutoff=3800, attack=0.005, release=1.2, seed=99), S(76), 1.3)
-for b, m in ((77, 79), (77.5, 75), (78, 72)):
-    pluck_t.add(bell(m, 2.0, ratio=2.0, index=1.6, tau=0.9), S(b), 0.6)
+    # end (bar 19): the last chord rings out, a three-note signature, a final sub
+    kick_t.add(kick(1.0), S(76))
+    bass_notes.append((S(76), S(79.6), 36, None))
+    pad_t.add(pad_chord(VOICING[C] + [67, 74], nsamp(S(4)), cutoff=3800, attack=0.005, release=1.2, seed=99), S(76), 1.3)
+    for b, m in ((77, 79), (77.5, 75), (78, 72)):
+        pluck_t.add(bell(m, 2.0, ratio=2.0, index=1.6, tau=0.9), S(b), 0.6)
+else:
+    # 15 s cut: five bars straight into the groove, no build-up: the first beat is the drop (bar 4 = ring-out)
+    for bar in range(4):
+        groove_bar(bar)
+        pad_bar(bar)
+        hook_bar(bar, gain=1.0, bright=1.15)
+        if bar >= 2:
+            lead_bar(bar, gain=0.75)
+    kick_t.add(kick(1.0), S(16))
+    bass_notes.append((S(16), S(19.6), 36, None))
+    pad_t.add(pad_chord(VOICING[C] + [67, 74], nsamp(S(4)), cutoff=3800, attack=0.005, release=1.2, seed=99), S(16), 1.3)
+    for b, m in ((17, 79), (17.5, 75), (18, 72)):
+        pluck_t.add(bell(m, 2.0, ratio=2.0, index=1.6, tau=0.9), S(b), 0.6)
 
 bass_t.pre += pan(bass_line([n for n in bass_notes if n[0] < SPLIT - 1e-6], N + TAIL), 0)
 bass_t.post += pan(bass_line([n for n in bass_notes if n[0] >= SPLIT - 1e-6], N + TAIL), 0)
@@ -796,32 +813,35 @@ def lowpass_span(x, b0, b1, points, xfade=0.01):
     x[:, a:i1] = y
 
 
-# tape stop: the groove winds down to nothing on beats 39.25-40; nothing from before survives it
-i0, i1 = span(39.25, 40)
-seg = music_pre[:, i0:i1].copy()
-m = i1 - i0
-pos = np.clip(np.cumsum(np.linspace(1, 0, m)), 0, m - 1)
-for ch in range(2):
-    music_pre[ch, i0:i1] = np.interp(pos, np.arange(m), seg[ch]) * np.linspace(1, 0.15, m) ** 0.7
-f = nsamp(0.03)  # land on true silence, not on a step
-music_pre[:, i1 - f:i1] *= np.linspace(1, 0, f)
-music_pre[:, i1:] = 0
-music = music_pre + music_post
+if SHORT:
+    music = music_pre + music_post
+else:
+    # tape stop: the groove winds down to nothing on beats 39.25-40; nothing from before survives it
+    i0, i1 = span(39.25, 40)
+    seg = music_pre[:, i0:i1].copy()
+    m = i1 - i0
+    pos = np.clip(np.cumsum(np.linspace(1, 0, m)), 0, m - 1)
+    for ch in range(2):
+        music_pre[ch, i0:i1] = np.interp(pos, np.arange(m), seg[ch]) * np.linspace(1, 0.15, m) ** 0.7
+    f = nsamp(0.03)  # land on true silence, not on a step
+    music_pre[:, i1 - f:i1] *= np.linspace(1, 0, f)
+    music_pre[:, i1:] = 0
+    music = music_pre + music_post
 
-# intro opens up; the trust section is heard as through a wall, then bursts open
-lowpass_span(music, 0, 7.5, [(0, 1200), (7.5, 9000)])
-lowpass_span(music, 64, 71.5, [(64, 650), (70, 1100), (71.5, 12000)])
+    # intro opens up; the trust section is heard as through a wall, then bursts open
+    lowpass_span(music, 0, 7.5, [(0, 1200), (7.5, 9000)])
+    lowpass_span(music, 64, 71.5, [(64, 650), (70, 1100), (71.5, 12000)])
 
-# pre-drop gaps: hard silence for the music (5 ms fades)
-for g0, g1 in TL['GAPS']:
-    a, b = span(g0, g1)
-    f = nsamp(0.005)
-    music[:, a - f:a] *= np.linspace(1, 0, f)
-    music[:, a:b] = 0
-    music[:, b:b + f] *= np.linspace(0, 1, f)
+    # pre-drop gaps: hard silence for the music (5 ms fades)
+    for g0, g1 in TL['GAPS']:
+        a, b = span(g0, g1)
+        f = nsamp(0.005)
+        music[:, a - f:a] *= np.linspace(1, 0, f)
+        music[:, a:b] = 0
+        music[:, b:b + f] *= np.linspace(0, 1, f)
 
-# outro: fade the tail into silence by 60.0 s
-f0, f1 = nsamp(S(78.4)), N
+# outro: fade the tail into silence by the end of the film
+f0, f1 = nsamp(S(18.4 if SHORT else 78.4)), N
 music[:, f0:f1] *= np.linspace(1, 0, f1 - f0) ** 1.5
 music[:, f1:] = 0
 
