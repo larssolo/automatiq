@@ -63,8 +63,12 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        pendingApproval.value = readApproval(intent)
-        pendingNav.value = intent.getStringExtra(EXTRA_NAV)
+        // On recreation (process death, config change) Android hands back the original launch
+        // intent; replaying it would yank the user back to the Log / approval dialog every time.
+        if (savedInstanceState == null) {
+            pendingApproval.value = readApproval(intent)
+            pendingNav.value = intent.getStringExtra(EXTRA_NAV)
+        }
         setContent {
             VibeActionsTheme {
                 AppRoot(pendingNav.value, onNavConsumed = { pendingNav.value = null })
@@ -170,11 +174,27 @@ private fun AppRoot(navTarget: String? = null, onNavConsumed: () -> Unit = {}) {
     val nav = rememberNavController()
     val context = LocalContext.current
 
+    // Tab-style navigation: at most one instance of each tab, always on top of "list".
+    // "list" itself is reached by popping, not by navigate+restoreState: popUpTo("list") with
+    // saveState files the popped tabs under "list", so restoring "list" can re-push them and
+    // leave the user stuck on the Log.
+    fun navigateTab(target: String) {
+        if (target == "list") {
+            if (!nav.popBackStack("list", inclusive = false)) nav.navigate("list")
+            return
+        }
+        nav.navigate(target) {
+            popUpTo("list") { saveState = true }
+            launchSingleTop = true
+            restoreState = true
+        }
+    }
+
     // A notification asked us to open a specific tab (e.g. the Log). Navigate once, then clear it so
-    // it doesn't re-fire on recomposition or config change.
+    // it doesn't re-fire on recomposition.
     LaunchedEffect(navTarget) {
         if (navTarget != null) {
-            nav.navigate(navTarget) { launchSingleTop = true }
+            navigateTab(navTarget)
             onNavConsumed()
         }
     }
@@ -215,16 +235,6 @@ private fun AppRoot(navTarget: String? = null, onNavConsumed: () -> Unit = {}) {
 
     val backStack by nav.currentBackStackEntryAsState()
     val route = backStack?.destination?.route
-
-    // Tab-style navigation: don't stack a new copy of the destination on every tap — pop back to
-    // the start destination and keep at most one instance of each tab on the stack.
-    fun navigateTab(target: String) {
-        nav.navigate(target) {
-            popUpTo(nav.graph.startDestinationId) { saveState = true }
-            launchSingleTop = true
-            restoreState = true
-        }
-    }
 
     Box(Modifier.fillMaxSize()) {
       ProvideAmbientPulse {
