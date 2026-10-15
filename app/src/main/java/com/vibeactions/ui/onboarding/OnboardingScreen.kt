@@ -45,6 +45,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.vibeactions.BuildConfig
 import com.vibeactions.data.AppSettings
 import com.vibeactions.ui.common.ProvideAmbientPulse
 import com.vibeactions.ui.common.StaticBackground
@@ -71,7 +72,7 @@ private val TRIGGERS = listOf(
     Trigger(Icons.AutoMirrored.Filled.PhoneMissed, "Missed call", "Text people back when you can't pick up."),
     Trigger(Icons.Default.LocationOn, "Location", "Arriving at or leaving a place you choose."),
     Trigger(Icons.Default.BatteryChargingFull, "Device", "Charger plugged in, Bluetooth or Wi-Fi connects.")
-)
+).filter { it.name != "Location" || BuildConfig.LOCATION_TRIGGER }
 
 /**
  * First-run guide. One live [SignalCore] sits above a pager and morphs with the swipe; each page
@@ -92,7 +93,7 @@ fun OnboardingScreen(onFinish: () -> Unit) {
         0f, 360f, infiniteRepeatable(tween(30_000, easing = LinearEasing), RepeatMode.Restart),
         label = "rotation"
     )
-    val activeTrigger = (((360f - rotation) / 60f).roundToInt()) % TRIGGERS.size
+    val activeTrigger = (((360f - rotation) / (360f / TRIGGERS.size)).roundToInt()) % TRIGGERS.size
 
     val setup = rememberSetupController()
 
@@ -132,7 +133,7 @@ fun OnboardingScreen(onFinish: () -> Unit) {
                     Brush.verticalGradient(listOf(Color(0x66000000), Color(0xCC000000), Color(0xF0000000)))
                 )
             )
-            Column(Modifier.fillMaxSize()) {
+            Column(Modifier.fillMaxSize().safeDrawingPadding()) {
                 TopRow(
                     page = pager.currentPage,
                     onSkip = { scope.launch { pager.animateScrollToPage(PAGES - 1) } }
@@ -312,7 +313,7 @@ private fun Pill(icon: ImageVector, text: String) {
 @Composable
 private fun TriggersPage(index: Int) {
     Kicker("// 02 · TRIGGERS", Amber)
-    Title("Six ways\nto fire a message.")
+    Title("${if (TRIGGERS.size == 6) "Six" else "Five"} ways\nto fire a message.")
     // Ticker follows whichever trigger the orbit above has brought to the top.
     AnimatedContent(
         targetState = index,

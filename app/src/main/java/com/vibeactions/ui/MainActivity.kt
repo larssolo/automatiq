@@ -8,6 +8,7 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import com.vibeactions.ui.common.enableDarkEdgeToEdge
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
@@ -68,6 +69,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableDarkEdgeToEdge()
         // On recreation (process death, config change) Android hands back the original launch
         // intent; replaying it would yank the user back to the Log / approval dialog every time.
         if (savedInstanceState == null) {
@@ -265,7 +267,9 @@ private fun AppRoot(
                 }
             }
         ) { p ->
-            NavHost(nav, startDestination = "list", modifier = Modifier.padding(p)) {
+            // consumeWindowInsets: the screens' own Scaffolds/TopAppBars must not pad for the status
+            // and navigation bars a second time — this outer Scaffold already did.
+            NavHost(nav, startDestination = "list", modifier = Modifier.padding(p).consumeWindowInsets(p)) {
                 composable("list") {
                     MacroListScreen(
                         banner = {

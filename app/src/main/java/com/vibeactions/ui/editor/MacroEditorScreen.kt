@@ -28,6 +28,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Send
+import com.vibeactions.BuildConfig
 import com.vibeactions.domain.model.AiSendMode
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -231,7 +232,9 @@ fun MacroEditorScreen(
                     expanded = triggerExpanded,
                     onDismissRequest = { triggerExpanded = false }
                 ) {
-                    TriggerType.entries.forEach { type ->
+                    TriggerType.entries.filter {
+                        it != TriggerType.LOCATION || BuildConfig.LOCATION_TRIGGER || s.triggerType == it
+                    }.forEach { type ->
                         DropdownMenuItem(
                             text = { Text(triggerLabel(type)) },
                             onClick = {
