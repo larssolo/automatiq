@@ -11,8 +11,9 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-/** A log entry joined with the (current) name of the macro that produced it. */
-data class LogRow(val log: MacroLog, val macroName: String?)
+/** A log entry joined with the (current) name of the macro that produced it. [aiMacro]: the macro
+ *  writes with AI, so the sent text may be AI-generated and can be reported. */
+data class LogRow(val log: MacroLog, val macroName: String?, val aiMacro: Boolean = false)
 
 @HiltViewModel
 class LogViewModel @Inject constructor(
@@ -34,10 +35,11 @@ class LogViewModel @Inject constructor(
     val logs: StateFlow<List<LogRow>> =
         combine(repo.observeAll(), macroRepo.observeAll(), filter, macroFilter) { list, macros, status, macroId ->
             val names = macros.associate { it.id to it.name }
+            val aiIds = macros.filter { it.aiReplyEnabled }.mapTo(HashSet()) { it.id }
             list.asSequence()
                 .filter { status == null || it.status == status }
                 .filter { macroId == null || it.macroId == macroId }
-                .map { LogRow(it, names[it.macroId]) }
+                .map { LogRow(it, names[it.macroId], it.macroId in aiIds) }
                 .toList()
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 

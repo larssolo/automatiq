@@ -8,6 +8,7 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import com.vibeactions.ui.common.enableDarkEdgeToEdge
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
@@ -34,7 +35,11 @@ import androidx.navigation.compose.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import com.vibeactions.data.AppSettings
 import com.vibeactions.scheduler.AiReplyActionReceiver
+import com.vibeactions.ui.common.AiConsentDialog
+import com.vibeactions.ui.common.ReportAiButton
 import com.vibeactions.ui.onboarding.OnboardingScreen
+import com.vibeactions.util.AiConsent
+import com.vibeactions.util.AiReportSource
 import com.vibeactions.ui.setup.SetupScreen
 import com.vibeactions.ui.setup.missingSetupSteps
 import com.vibeactions.ui.common.PermissionBanner
@@ -68,6 +73,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableDarkEdgeToEdge()
         // On recreation (process death, config change) Android hands back the original launch
         // intent; replaying it would yank the user back to the Log / approval dialog every time.
         if (savedInstanceState == null) {
@@ -88,6 +94,16 @@ class MainActivity : ComponentActivity() {
                 }
                 pendingApproval.value?.let { approval ->
                     AiApprovalDialog(approval, onDone = { pendingApproval.value = null })
+                }
+                // Users who added a key before consent existed: AI is paused until they agree.
+                var askConsent by rememberSaveable {
+                    mutableStateOf(hasGeminiKey(this) && !AiConsent.given(this))
+                }
+                if (askConsent && !showGuide && pendingApproval.value == null) {
+                    AiConsentDialog(
+                        onAccept = { AiConsent.give(this); askConsent = false },
+                        onDecline = { askConsent = false }
+                    )
                 }
             }
         }
@@ -111,6 +127,10 @@ class MainActivity : ComponentActivity() {
             ?: recipient?.let { maskPhone(it) } ?: "recipients"
         return AiApproval(macroId, recipient, toLabel, body, intent.getIntExtra(EXTRA_NOTIF_ID, -1))
     }
+
+    private fun hasGeminiKey(context: Context) =
+        !context.getSharedPreferences("ai_settings", Context.MODE_PRIVATE)
+            .getString("gemini_api_key", null).isNullOrBlank()
 
     companion object {
         const val EXTRA_AI_ACTION = "ai_action"
@@ -152,6 +172,11 @@ private fun AiApprovalDialog(approval: AiApproval, onDone: () -> Unit) {
                     onValueChange = { text = it },
                     label = { Text("Message (editable)") },
                     modifier = Modifier.fillMaxWidth()
+                )
+                // Reports what the AI wrote, not the user's edit of it.
+                ReportAiButton(
+                    approval.body,
+                    if (approval.recipient != null) AiReportSource.AUTO_REPLY else AiReportSource.VARIATION
                 )
             }
         },
@@ -265,7 +290,9 @@ private fun AppRoot(
                 }
             }
         ) { p ->
-            NavHost(nav, startDestination = "list", modifier = Modifier.padding(p)) {
+            // consumeWindowInsets: the screens' own Scaffolds/TopAppBars must not pad for the status
+            // and navigation bars a second time — this outer Scaffold already did.
+            NavHost(nav, startDestination = "list", modifier = Modifier.padding(p).consumeWindowInsets(p)) {
                 composable("list") {
                     MacroListScreen(
                         banner = {

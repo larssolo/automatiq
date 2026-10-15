@@ -16,6 +16,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.vibeactions.domain.model.DeliveryStatus
 import com.vibeactions.domain.model.MacroStatus
+import com.vibeactions.ui.common.ReportAiButton
+import com.vibeactions.util.AiReportSource
 import com.vibeactions.ui.theme.*
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -122,6 +124,9 @@ fun LogScreen(vm: LogViewModel = hiltViewModel()) {
                                 color = OnSurfaceVariant, fontSize = 12.sp)
                         }
                         Text(log.messagePreview ?: "", color = OnSurface, fontSize = 13.sp)
+                        if (row.aiMacro && !log.messagePreview.isNullOrBlank()) {
+                            ReportAiButton(log.messagePreview, AiReportSource.AUTO_REPLY)
+                        }
                         log.errorMessage?.let { Text(it, color = ErrorRed, fontSize = 12.sp) }
                         when (log.deliveryStatus) {
                             DeliveryStatus.DELIVERED ->

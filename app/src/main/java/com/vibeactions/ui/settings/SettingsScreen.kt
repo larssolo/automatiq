@@ -33,6 +33,7 @@ import com.vibeactions.ui.theme.OnSurfaceVariant
 import com.vibeactions.ui.theme.Primary
 import com.vibeactions.ui.common.BackgroundSetting
 import com.vibeactions.ui.common.ThemedSwitch
+import com.vibeactions.ui.common.rememberAiConsentGate
 import com.vibeactions.ui.setup.isXiaomi
 import com.vibeactions.util.GEMINI_API_KEY_URL
 import com.vibeactions.util.GEMINI_MODELS
@@ -52,6 +53,7 @@ fun SettingsScreen(
     val context = LocalContext.current
     val snackbar = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+    val aiConsentGate = rememberAiConsentGate()
     var pendingExport by remember { mutableStateOf<String?>(null) }
     var apiKey by remember { mutableStateOf(vm.getApiKey()) }
     var apiKeyVisible by remember { mutableStateOf(false) }
@@ -66,6 +68,8 @@ fun SettingsScreen(
     var showQuietStart by remember { mutableStateOf(false) }
     var showQuietEnd by remember { mutableStateOf(false) }
     var includeKeyInBackup by remember { mutableStateOf(false) }
+    // Saving a key switches AI on, so the user must first agree to text going to Google.
+    fun withKeyConsent(action: () -> Unit) = if (apiKey.isBlank()) action() else aiConsentGate(action)
 
     val createDoc = rememberLauncherForActivityResult(
         ActivityResultContracts.CreateDocument("application/json")
@@ -318,27 +322,31 @@ fun SettingsScreen(
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Button(
                     onClick = {
-                        vm.saveApiKey(apiKey)
-                        vm.saveSystemPrompt(systemPrompt)
-                        vm.saveModel(model)
-                        scope.launch { snackbar.showSnackbar("AI settings saved") }
+                        withKeyConsent {
+                            vm.saveApiKey(apiKey)
+                            vm.saveSystemPrompt(systemPrompt)
+                            vm.saveModel(model)
+                            scope.launch { snackbar.showSnackbar("AI settings saved") }
+                        }
                     },
                     modifier = Modifier.weight(1f)
                 ) { Text("Save") }
                 OutlinedButton(
                     onClick = {
-                        vm.saveApiKey(apiKey)
-                        vm.saveModel(model)
-                        apiTestResult = null
-                        apiTestLoading = true
-                        scope.launch {
-                            val result = runCatching {
-                                geminiGenerate(apiKey.trim(), "", "Reply with only the word OK", model.trim())
+                        withKeyConsent {
+                            vm.saveApiKey(apiKey)
+                            vm.saveModel(model)
+                            apiTestResult = null
+                            apiTestLoading = true
+                            scope.launch {
+                                val result = runCatching {
+                                    geminiGenerate(apiKey.trim(), "", "Reply with only the word OK", model.trim())
+                                }
+                                apiTestLoading = false
+                                apiTestResult = result.getOrNull()
+                                    ?.let { "✅ Works: $it" }
+                                    ?: "❌ Error: ${result.exceptionOrNull()?.message}"
                             }
-                            apiTestLoading = false
-                            apiTestResult = result.getOrNull()
-                                ?.let { "✅ Works: $it" }
-                                ?: "❌ Error: ${result.exceptionOrNull()?.message}"
                         }
                     },
                     enabled = apiKey.isNotBlank() && !apiTestLoading,

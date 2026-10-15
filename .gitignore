@@ -8,3 +8,8 @@ captures/
 .externalNativeBuild/
 .cxx/
 .kotlin/
+
+# Release signing secrets
+keystore.properties
+*.jks
+*.keystore

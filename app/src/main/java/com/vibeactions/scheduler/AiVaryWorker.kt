@@ -8,6 +8,7 @@ import androidx.work.WorkerParameters
 import com.vibeactions.data.repository.MacroRepository
 import com.vibeactions.domain.model.AiSendMode
 import com.vibeactions.notifications.MacroNotificationManager
+import com.vibeactions.util.AiConsent
 import com.vibeactions.util.resolveGeminiModel
 import com.vibeactions.util.buildVaryPrompt
 import com.vibeactions.util.expandTemplate
@@ -54,7 +55,7 @@ class AiVaryWorker @AssistedInject constructor(
         val model = resolveGeminiModel(prefs.getString("gemini_model", null))
         // The per-macro instruction steers tone/style. The global Settings system prompt is NOT
         // used here — it is written for replying to incoming messages, not for rewriting.
-        val generated: String? = if (apiKey.isBlank()) null else try {
+        val generated: String? = if (apiKey.isBlank() || !AiConsent.given(applicationContext)) null else try {
             geminiGenerate(
                 apiKey, buildVaryPrompt(macro.aiReplyInstruction), fixedBody, model,
                 // Variations mirror the original's length; 300 gives headroom over the reply
