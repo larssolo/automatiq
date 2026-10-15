@@ -29,6 +29,9 @@ import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Send
 import com.vibeactions.BuildConfig
+import com.vibeactions.ui.common.ReportAiButton
+import com.vibeactions.ui.common.rememberAiConsentGate
+import com.vibeactions.util.AiReportSource
 import com.vibeactions.domain.model.AiSendMode
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -1051,6 +1054,7 @@ fun MacroEditorScreen(
     }
 
     if (showAiCompose) {
+        val aiConsentGate = rememberAiConsentGate()
         var aiPrompt by remember { mutableStateOf("") }
         var aiStyle  by remember { mutableStateOf("") }
         var aiState  by remember { mutableStateOf<AiState>(AiState.Idle) }
@@ -1093,7 +1097,7 @@ fun MacroEditorScreen(
                                     modifier = Modifier.fillMaxWidth()
                                 ) {
                                     Row(
-                                        Modifier.padding(12.dp),
+                                        Modifier.padding(start = 12.dp, end = 12.dp, top = 12.dp),
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
                                         Text(
@@ -1107,6 +1111,10 @@ fun MacroEditorScreen(
                                             showAiCompose = false
                                         }) { Text("Choose") }
                                     }
+                                    ReportAiButton(
+                                        suggestion, AiReportSource.COMPOSE,
+                                        Modifier.padding(start = 4.dp)
+                                    )
                                 }
                             }
                         }
@@ -1132,12 +1140,14 @@ fun MacroEditorScreen(
                                 return@TextButton
                             }
                             val model = resolveGeminiModel(prefs.getString("gemini_model", null))
-                            aiState = AiState.Loading
-                            scope.launch {
-                                val result = runCatching { geminiSuggest(key, aiPrompt, aiStyle, model) }
-                                aiState = result.getOrNull()
-                                    ?.let { AiState.Suggestions(it) }
-                                    ?: AiState.Err(result.exceptionOrNull()?.message ?: "Unknown error")
+                            aiConsentGate {
+                                aiState = AiState.Loading
+                                scope.launch {
+                                    val result = runCatching { geminiSuggest(key, aiPrompt, aiStyle, model) }
+                                    aiState = result.getOrNull()
+                                        ?.let { AiState.Suggestions(it) }
+                                        ?: AiState.Err(result.exceptionOrNull()?.message ?: "Unknown error")
+                                }
                             }
                         }
                     ) { Text("Generate") }
@@ -1191,8 +1201,9 @@ private fun AiVariationPreview(message: String, instruction: String) {
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
     var state by remember { mutableStateOf<AiState>(AiState.Idle) }
+    val aiConsentGate = rememberAiConsentGate()
     OutlinedButton(
-        onClick = {
+        onClick = { aiConsentGate {
             state = AiState.Loading
             scope.launch {
                 val prefs = ctx.getSharedPreferences("ai_settings", android.content.Context.MODE_PRIVATE)
@@ -1213,7 +1224,7 @@ private fun AiVariationPreview(message: String, instruction: String) {
                     onFailure = { AiState.Err(it.message?.take(120) ?: "Gemini-fejl") }
                 )
             }
-        },
+        } },
         enabled = message.isNotBlank() && state != AiState.Loading,
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -1232,6 +1243,7 @@ private fun AiVariationPreview(message: String, instruction: String) {
                 )
                 Spacer(Modifier.height(4.dp))
                 Text(st.items.first(), style = MaterialTheme.typography.bodyMedium, color = OnSurface)
+                ReportAiButton(st.items.first(), AiReportSource.PREVIEW)
             }
         }
         is AiState.Err -> Text(

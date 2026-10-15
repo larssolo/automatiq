@@ -49,7 +49,10 @@ import com.vibeactions.BuildConfig
 import com.vibeactions.data.AppSettings
 import com.vibeactions.ui.common.ProvideAmbientPulse
 import com.vibeactions.ui.common.StaticBackground
+import com.vibeactions.ui.common.AiConsentDialog
+import com.vibeactions.ui.common.rememberAiConsentGate
 import com.vibeactions.ui.setup.SetupChecklist
+import com.vibeactions.util.AiConsent
 import com.vibeactions.ui.setup.SetupController
 import com.vibeactions.ui.setup.rememberSetupController
 import com.vibeactions.ui.theme.*
@@ -101,7 +104,11 @@ fun OnboardingScreen(onFinish: () -> Unit) {
     val aiPrefs = remember { context.getSharedPreferences("ai_settings", Context.MODE_PRIVATE) }
     var apiKey by remember { mutableStateOf(aiPrefs.getString("gemini_api_key", "").orEmpty()) }
     var keyWorks by remember { mutableStateOf<Boolean?>(null) }
-    fun saveKey() { aiPrefs.edit().putString("gemini_api_key", apiKey.trim()).apply() }
+    // A key switches AI on, so it is only stored once the user agreed to text going to Google.
+    fun saveKey() {
+        if (AiConsent.given(context)) aiPrefs.edit().putString("gemini_api_key", apiKey.trim()).apply()
+    }
+    var askConsentThenNext by remember { mutableStateOf(false) }
 
     val burst = remember { Animatable(0f) }
     LaunchedEffect(pager.settledPage) {
@@ -119,6 +126,22 @@ fun OnboardingScreen(onFinish: () -> Unit) {
 
     BackHandler(enabled = pager.currentPage > 0) {
         scope.launch { pager.animateScrollToPage(pager.currentPage - 1) }
+    }
+
+    if (askConsentThenNext) {
+        // "Not now" still moves on — the key just isn't stored, so AI stays off.
+        AiConsentDialog(
+            onAccept = {
+                AiConsent.give(context)
+                askConsentThenNext = false
+                saveKey()
+                scope.launch { pager.animateScrollToPage(4) }
+            },
+            onDecline = {
+                askConsentThenNext = false
+                scope.launch { pager.animateScrollToPage(4) }
+            }
+        )
     }
 
     // The core shrinks on the two content-heavy pages to make room for their controls.
@@ -182,7 +205,7 @@ fun OnboardingScreen(onFinish: () -> Unit) {
                                 permsOk = setup.allDone,
                                 aiState = when {
                                     keyWorks == true -> "online"
-                                    apiKey.isNotBlank() -> "key saved"
+                                    apiKey.isNotBlank() && AiConsent.given(context) -> "key saved"
                                     else -> "skipped"
                                 }
                             )
@@ -196,6 +219,10 @@ fun OnboardingScreen(onFinish: () -> Unit) {
                     onNext = {
                         if (pager.currentPage == PAGES - 1) finish()
                         else {
+                            if (pager.currentPage == 3 && apiKey.isNotBlank() && !AiConsent.given(context)) {
+                                askConsentThenNext = true
+                                return@BottomBar
+                            }
                             if (pager.currentPage == 3 && apiKey.isNotBlank()) saveKey()
                             scope.launch { pager.animateScrollToPage(pager.currentPage + 1) }
                         }
@@ -372,6 +399,7 @@ private fun AiPage(
     val clipboard = LocalClipboardManager.current
     val scope = rememberCoroutineScope()
     var testing by remember { mutableStateOf(false) }
+    val aiConsentGate = rememberAiConsentGate()
     var error by remember { mutableStateOf<String?>(null) }
     val model = remember {
         resolveGeminiModel(
@@ -425,12 +453,14 @@ private fun AiPage(
     Spacer(Modifier.height(10.dp))
     OutlinedButton(
         onClick = {
-            testing = true; error = null
-            scope.launch {
-                val r = runCatching { geminiGenerate(apiKey.trim(), "", "Reply with only the word OK", model) }
-                testing = false
-                error = r.exceptionOrNull()?.message
-                onTested(r.isSuccess)
+            aiConsentGate {
+                testing = true; error = null
+                scope.launch {
+                    val r = runCatching { geminiGenerate(apiKey.trim(), "", "Reply with only the word OK", model) }
+                    testing = false
+                    error = r.exceptionOrNull()?.message
+                    onTested(r.isSuccess)
+                }
             }
         },
         enabled = apiKey.isNotBlank() && !testing,

@@ -8,6 +8,7 @@ import androidx.work.WorkerParameters
 import com.vibeactions.data.repository.MacroRepository
 import com.vibeactions.domain.model.AiSendMode
 import com.vibeactions.notifications.MacroNotificationManager
+import com.vibeactions.util.AiConsent
 import com.vibeactions.util.resolveGeminiModel
 import com.vibeactions.util.expandTemplate
 import com.vibeactions.util.geminiGenerate
@@ -46,8 +47,8 @@ class GeminiReplyWorker @AssistedInject constructor(
 
         val prefs = applicationContext.getSharedPreferences("ai_settings", Context.MODE_PRIVATE)
         val apiKey = prefs.getString("gemini_api_key", "").orEmpty()
-        if (apiKey.isBlank()) {
-            // No key configured — fall back to the fixed body.
+        if (apiKey.isBlank() || !AiConsent.given(applicationContext)) {
+            // No key, or the user hasn't agreed to send message text to Google — fixed body.
             firer.fire(macroId, enforceOncePerDay = false, overrideRecipient = sender)
             return Result.success()
         }
