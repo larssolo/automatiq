@@ -54,7 +54,7 @@ import com.vibeactions.ui.theme.OnSurface
 import com.vibeactions.ui.theme.Primary
 import com.vibeactions.util.CardColorPalette
 import com.vibeactions.util.expandTemplate
-import com.vibeactions.util.DEFAULT_GEMINI_MODEL
+import com.vibeactions.util.resolveGeminiModel
 import com.vibeactions.util.buildVaryPrompt
 import com.vibeactions.util.geminiGenerate
 import com.vibeactions.util.geminiSuggest
@@ -1128,9 +1128,7 @@ fun MacroEditorScreen(
                                 aiState = AiState.Err("No API key — add one in Settings")
                                 return@TextButton
                             }
-                            val model = prefs.getString("gemini_model", com.vibeactions.util.DEFAULT_GEMINI_MODEL)
-                                ?.ifBlank { com.vibeactions.util.DEFAULT_GEMINI_MODEL }
-                                ?: com.vibeactions.util.DEFAULT_GEMINI_MODEL
+                            val model = resolveGeminiModel(prefs.getString("gemini_model", null))
                             aiState = AiState.Loading
                             scope.launch {
                                 val result = runCatching { geminiSuggest(key, aiPrompt, aiStyle, model) }
@@ -1200,8 +1198,7 @@ private fun AiVariationPreview(message: String, instruction: String) {
                     state = AiState.Err("Ingen API-nøgle — tilføj den i Indstillinger.")
                     return@launch
                 }
-                val model = prefs.getString("gemini_model", DEFAULT_GEMINI_MODEL)
-                    ?.ifBlank { DEFAULT_GEMINI_MODEL } ?: DEFAULT_GEMINI_MODEL
+                val model = resolveGeminiModel(prefs.getString("gemini_model", null))
                 val body = expandTemplate(message, LocalDateTime.now(), "macro")
                 val res = withContext(Dispatchers.IO) {
                     runCatching {

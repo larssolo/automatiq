@@ -46,6 +46,33 @@ class GeminiClientTest {
         assertEquals("Her er en besked til dig.", result[0])
     }
 
+    @Test fun `resolveGeminiModel upgrades blank and legacy models to the default`() {
+        assertEquals(DEFAULT_GEMINI_MODEL, resolveGeminiModel(null))
+        assertEquals(DEFAULT_GEMINI_MODEL, resolveGeminiModel("  "))
+        assertEquals(DEFAULT_GEMINI_MODEL, resolveGeminiModel("gemini-2.5-flash"))
+        assertEquals(DEFAULT_GEMINI_MODEL, resolveGeminiModel("gemini-1.5-flash"))
+    }
+
+    @Test fun `resolveGeminiModel keeps current and custom models`() {
+        assertEquals("gemini-3.5-flash-lite", resolveGeminiModel("gemini-3.5-flash-lite"))
+        assertEquals("gemini-4-argon", resolveGeminiModel(" gemini-4-argon "))
+    }
+
+    @Test fun `thinkingConfigFor uses level on 3x, budget on 25, nothing on older`() {
+        assertEquals(ThinkingConfig(thinkingLevel = "low"), thinkingConfigFor("gemini-3.8-flash"))
+        assertEquals(ThinkingConfig(thinkingBudget = 0), thinkingConfigFor("gemini-2.5-flash"))
+        assertEquals(null, thinkingConfigFor("gemini-2.0-flash"))
+    }
+
+    @Test fun `request JSON for 3x carries only thinkingLevel`() {
+        val req = GeminiRequest(
+            contents = listOf(GeminiContent(parts = listOf(GeminiPart("hi")))),
+            generationConfig = GenConfig(thinkingConfig = thinkingConfigFor("gemini-3.8-flash"))
+        )
+        val json = kotlinx.serialization.json.Json.encodeToString(GeminiRequest.serializer(), req)
+        assert("\"thinkingConfig\":{\"thinkingLevel\":\"low\"}" in json) { json }
+    }
+
     @Test fun `parseSuggestions ignores preamble lines before numbered items`() {
         val raw = "Her er tre forslag:\n1. SMS en\n2. SMS to\n3. SMS tre"
         val result = parseSuggestions(raw)

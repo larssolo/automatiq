@@ -14,6 +14,7 @@ object AppSettings {
     const val KEY_QUIET_START = "quiet_start_minute"
     const val KEY_QUIET_END = "quiet_end_minute"
     private const val KEY_LAST_CATCHUP = "last_catchup_at"
+    private const val KEY_ONBOARDING_DONE = "onboarding_done"
 
     /** Default quiet window: 22:00 → 07:00. */
     const val DEFAULT_QUIET_START = 22 * 60
@@ -45,4 +46,10 @@ object AppSettings {
 
     fun setLastCatchUpAt(context: Context, at: Long) =
         prefs(context).edit().putLong(KEY_LAST_CATCHUP, at).apply()
+
+    fun onboardingDone(context: Context): Boolean =
+        prefs(context).getBoolean(KEY_ONBOARDING_DONE, false)
+
+    fun setOnboardingDone(context: Context) =
+        prefs(context).edit().putBoolean(KEY_ONBOARDING_DONE, true).apply()
 }

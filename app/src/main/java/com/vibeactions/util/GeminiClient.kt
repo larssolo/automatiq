@@ -8,17 +8,34 @@ import java.net.HttpURLConnection
 import java.net.URL
 
 /** Default model. Configurable in Settings because free-tier availability varies by model/region. */
-const val DEFAULT_GEMINI_MODEL = "gemini-2.5-flash"
+const val DEFAULT_GEMINI_MODEL = "gemini-3.6-flash"
+
+/** Where users create a Gemini API key. */
+const val GEMINI_API_KEY_URL = "https://aistudio.google.com/apikey"
 
 /** Models offered in the Settings picker — all normally free-tier eligible (some may show quota 0
  *  depending on the project/region, so the user can switch to one that works for their key). */
 val GEMINI_MODELS = listOf(
+    "gemini-3.6-flash",
+    "gemini-3.8-flash",
+    "gemini-3.5-flash-lite",
+    "gemini-3.1-flash-lite"
+)
+
+/** Earlier picker entries: retired or access-limited by Google, so a saved one is upgraded. */
+private val LEGACY_GEMINI_MODELS = setOf(
     "gemini-2.5-flash",
     "gemini-2.5-flash-lite",
     "gemini-2.0-flash",
     "gemini-2.0-flash-lite",
     "gemini-1.5-flash"
 )
+
+/** The model to call for a saved setting: blank or legacy → default; a custom model is kept. */
+fun resolveGeminiModel(saved: String?): String {
+    val m = saved?.trim().orEmpty()
+    return if (m.isEmpty() || m in LEGACY_GEMINI_MODELS) DEFAULT_GEMINI_MODEL else m
+}
 
 private fun endpointFor(model: String) =
     "https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent"
@@ -32,16 +49,24 @@ internal data class GeminiRequest(
 
 @Serializable internal data class GeminiContent(val parts: List<GeminiPart>, val role: String? = null)
 @Serializable internal data class GeminiPart(val text: String)
-@Serializable internal data class ThinkingConfig(val thinkingBudget: Int)
+@Serializable internal data class ThinkingConfig(
+    val thinkingBudget: Int? = null,
+    val thinkingLevel: String? = null
+)
 @Serializable internal data class GenConfig(
     val maxOutputTokens: Int = 400,
     val thinkingConfig: ThinkingConfig? = null
 )
 
-/** The 2.5 series reasons internally before writing the reply, and that reasoning shares
- *  maxOutputTokens with the visible text — on a short SMS budget it can eat the whole cap and
- *  leave the reply truncated mid-sentence. Only those models accept thinkingConfig at all. */
-private fun isThinkingModel(model: String) = model.startsWith("gemini-2.5")
+/** Thinking models reason before writing the reply, and that reasoning shares maxOutputTokens
+ *  with the visible text — on a short SMS budget it can eat the whole cap and leave the reply
+ *  truncated. 2.5 takes a budget (0 = off); 3.x only takes a level, and "low" is the lowest one
+ *  every 3.x Flash accepts (3.8 rejects "minimal"). Older models reject thinkingConfig entirely. */
+internal fun thinkingConfigFor(model: String): ThinkingConfig? = when {
+    model.startsWith("gemini-3") -> ThinkingConfig(thinkingLevel = "low")
+    model.startsWith("gemini-2.5") -> ThinkingConfig(thinkingBudget = 0)
+    else -> null
+}
 
 @Serializable
 internal data class GeminiResponse(val candidates: List<GeminiCandidate> = emptyList())
@@ -58,7 +83,7 @@ internal fun parseGeminiResponse(responseJson: String): String {
 }
 
 /**
- * Calls Gemini 2.0 Flash and returns the generated text.
+ * Calls the given Gemini model and returns the generated text.
  * Throws on network error or non-2xx HTTP status — callers should wrap in runCatching.
  */
 suspend fun geminiGenerate(
@@ -75,7 +100,7 @@ suspend fun geminiGenerate(
             contents = listOf(GeminiContent(parts = listOf(GeminiPart(userMessage)))),
             generationConfig = GenConfig(
                 maxOutputTokens = maxOutputTokens,
-                thinkingConfig = if (isThinkingModel(model)) ThinkingConfig(thinkingBudget = 0) else null
+                thinkingConfig = thinkingConfigFor(model)
             )
         )
         val body = geminiJson.encodeToString(GeminiRequest.serializer(), request)

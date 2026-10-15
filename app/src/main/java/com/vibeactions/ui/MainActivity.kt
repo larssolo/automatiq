@@ -31,7 +31,12 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.compose.*
+import androidx.compose.runtime.saveable.rememberSaveable
+import com.vibeactions.data.AppSettings
 import com.vibeactions.scheduler.AiReplyActionReceiver
+import com.vibeactions.ui.onboarding.OnboardingScreen
+import com.vibeactions.ui.setup.SetupScreen
+import com.vibeactions.ui.setup.missingSetupSteps
 import com.vibeactions.ui.common.PermissionBanner
 import com.vibeactions.ui.common.ProvideAmbientPulse
 import com.vibeactions.ui.common.StaticBackground
@@ -63,11 +68,24 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        pendingApproval.value = readApproval(intent)
-        pendingNav.value = intent.getStringExtra(EXTRA_NAV)
+        // On recreation (process death, config change) Android hands back the original launch
+        // intent; replaying it would yank the user back to the Log / approval dialog every time.
+        if (savedInstanceState == null) {
+            pendingApproval.value = readApproval(intent)
+            pendingNav.value = intent.getStringExtra(EXTRA_NAV)
+        }
         setContent {
             VibeActionsTheme {
-                AppRoot(pendingNav.value, onNavConsumed = { pendingNav.value = null })
+                var showGuide by rememberSaveable { mutableStateOf(!AppSettings.onboardingDone(this)) }
+                if (showGuide) {
+                    OnboardingScreen(onFinish = { showGuide = false })
+                } else {
+                    AppRoot(
+                        pendingNav.value,
+                        onNavConsumed = { pendingNav.value = null },
+                        onShowGuide = { showGuide = true }
+                    )
+                }
                 pendingApproval.value?.let { approval ->
                     AiApprovalDialog(approval, onDone = { pendingApproval.value = null })
                 }
@@ -166,48 +184,44 @@ private fun AiApprovalDialog(approval: AiApproval, onDone: () -> Unit) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun AppRoot(navTarget: String? = null, onNavConsumed: () -> Unit = {}) {
+private fun AppRoot(
+    navTarget: String? = null,
+    onNavConsumed: () -> Unit = {},
+    onShowGuide: () -> Unit = {}
+) {
     val nav = rememberNavController()
     val context = LocalContext.current
 
+    // Tab-style navigation: at most one instance of each tab, always on top of "list".
+    // "list" itself is reached by popping, not by navigate+restoreState: popUpTo("list") with
+    // saveState files the popped tabs under "list", so restoring "list" can re-push them and
+    // leave the user stuck on the Log.
+    fun navigateTab(target: String) {
+        if (target == "list") {
+            if (!nav.popBackStack("list", inclusive = false)) nav.navigate("list")
+            return
+        }
+        nav.navigate(target) {
+            popUpTo("list") { saveState = true }
+            launchSingleTop = true
+            restoreState = true
+        }
+    }
+
     // A notification asked us to open a specific tab (e.g. the Log). Navigate once, then clear it so
-    // it doesn't re-fire on recomposition or config change.
+    // it doesn't re-fire on recomposition.
     LaunchedEffect(navTarget) {
         if (navTarget != null) {
-            nav.navigate(navTarget) { launchSingleTop = true }
+            navigateTab(navTarget)
             onNavConsumed()
         }
     }
-    var smsGranted by remember {
-        mutableStateOf(
-            ContextCompat.checkSelfPermission(context, Manifest.permission.SEND_SMS) ==
-                PackageManager.PERMISSION_GRANTED
-        )
-    }
-
-    val smsPermLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestMultiplePermissions()
-    ) { result -> smsGranted = result[Manifest.permission.SEND_SMS] == true }
-
-    LaunchedEffect(Unit) {
-        val perms = mutableListOf(Manifest.permission.SEND_SMS, Manifest.permission.RECEIVE_SMS)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            perms += Manifest.permission.POST_NOTIFICATIONS
-        }
-        val missing = perms.filter {
-            ContextCompat.checkSelfPermission(context, it) != PackageManager.PERMISSION_GRANTED
-        }
-        if (missing.isNotEmpty()) smsPermLauncher.launch(missing.toTypedArray())
-    }
+    var missingSetup by remember { mutableIntStateOf(missingSetupSteps(context)) }
 
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME) {
-                smsGranted = ContextCompat.checkSelfPermission(
-                    context, Manifest.permission.SEND_SMS
-                ) == PackageManager.PERMISSION_GRANTED
-            }
+            if (event == Lifecycle.Event.ON_RESUME) missingSetup = missingSetupSteps(context)
         }
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
@@ -215,16 +229,6 @@ private fun AppRoot(navTarget: String? = null, onNavConsumed: () -> Unit = {}) {
 
     val backStack by nav.currentBackStackEntryAsState()
     val route = backStack?.destination?.route
-
-    // Tab-style navigation: don't stack a new copy of the destination on every tap — pop back to
-    // the start destination and keep at most one instance of each tab on the stack.
-    fun navigateTab(target: String) {
-        nav.navigate(target) {
-            popUpTo(nav.graph.startDestinationId) { saveState = true }
-            launchSingleTop = true
-            restoreState = true
-        }
-    }
 
     Box(Modifier.fillMaxSize()) {
       ProvideAmbientPulse {
@@ -265,18 +269,26 @@ private fun AppRoot(navTarget: String? = null, onNavConsumed: () -> Unit = {}) {
                 composable("list") {
                     MacroListScreen(
                         banner = {
-                            if (!smsGranted) {
+                            if (missingSetup > 0) {
                                 PermissionBanner(
-                                    "Automatiq needs SMS access before it can send anything.",
-                                    "Grant"
-                                ) { smsPermLauncher.launch(arrayOf(Manifest.permission.SEND_SMS)) }
+                                    if (missingSetup == 1) "1 setup step left before your macros run reliably."
+                                    else "$missingSetup setup steps left before your macros run reliably.",
+                                    "Fix"
+                                ) { nav.navigate("setup") { launchSingleTop = true } }
                             }
                         }
                     )
                 }
                 composable("log") { LogScreen() }
-                composable("settings") { SettingsScreen(onOpenHealth = { nav.navigate("health") }) }
+                composable("settings") {
+                    SettingsScreen(
+                        onOpenHealth = { nav.navigate("health") },
+                        onOpenSetup = { nav.navigate("setup") },
+                        onShowGuide = onShowGuide
+                    )
+                }
                 composable("health") { HealthScreen() }
+                composable("setup") { SetupScreen() }
             }
         }
       }
