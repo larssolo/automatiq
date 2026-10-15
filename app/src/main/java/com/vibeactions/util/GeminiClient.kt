@@ -58,15 +58,25 @@ internal data class GeminiRequest(
     val thinkingConfig: ThinkingConfig? = null
 )
 
+/** 3.x models verified to accept "minimal" (no thinking tokens at all). */
+private val MINIMAL_THINKING_MODELS = setOf("gemini-3.6-flash", "gemini-3.5-flash-lite", "gemini-3.1-flash-lite")
+
 /** Thinking models reason before writing the reply, and that reasoning shares maxOutputTokens
- *  with the visible text — on a short SMS budget it can eat the whole cap and leave the reply
- *  truncated. 2.5 takes a budget (0 = off); 3.x only takes a level, and "low" is the lowest one
- *  every 3.x Flash accepts (3.8 rejects "minimal"). Older models reject thinkingConfig entirely. */
+ *  with the visible text — on a short SMS budget it eats the cap and the reply is cut off
+ *  mid-sentence. 2.5 takes a budget (0 = off). 3.x takes a level: "minimal" turns thinking off
+ *  where supported; other 3.x (e.g. 3.8, which rejects "minimal") get "low" plus
+ *  [thinkingHeadroomFor]. Older models reject thinkingConfig entirely. */
 internal fun thinkingConfigFor(model: String): ThinkingConfig? = when {
+    model in MINIMAL_THINKING_MODELS -> ThinkingConfig(thinkingLevel = "minimal")
     model.startsWith("gemini-3") -> ThinkingConfig(thinkingLevel = "low")
     model.startsWith("gemini-2.5") -> ThinkingConfig(thinkingBudget = 0)
     else -> null
 }
+
+/** Extra output tokens for models that still think: "low" used ~200–300 tokens of reasoning on a
+ *  short SMS prompt, which would otherwise leave no room for the reply itself. */
+internal fun thinkingHeadroomFor(model: String): Int =
+    if (thinkingConfigFor(model)?.thinkingLevel == "low") 1024 else 0
 
 @Serializable
 internal data class GeminiResponse(val candidates: List<GeminiCandidate> = emptyList())
@@ -99,7 +109,7 @@ suspend fun geminiGenerate(
                 GeminiContent(parts = listOf(GeminiPart(systemPrompt))) else null,
             contents = listOf(GeminiContent(parts = listOf(GeminiPart(userMessage)))),
             generationConfig = GenConfig(
-                maxOutputTokens = maxOutputTokens,
+                maxOutputTokens = maxOutputTokens + thinkingHeadroomFor(model),
                 thinkingConfig = thinkingConfigFor(model)
             )
         )
