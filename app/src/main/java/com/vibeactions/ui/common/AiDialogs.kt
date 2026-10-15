@@ -20,6 +20,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.vibeactions.BuildConfig
+import com.vibeactions.scheduler.AiReportWorker
 import com.vibeactions.ui.theme.OnSurface
 import com.vibeactions.ui.theme.OnSurfaceVariant
 import com.vibeactions.util.AiConsent
@@ -95,7 +96,6 @@ fun AiReportDialog(aiText: String, source: AiReportSource, onDismiss: () -> Unit
     var reason by remember { mutableStateOf<AiReportReason?>(null) }
     var note by remember { mutableStateOf("") }
     var sending by remember { mutableStateOf(false) }
-    var error by remember { mutableStateOf<String?>(null) }
 
     AlertDialog(
         onDismissRequest = { if (!sending) onDismiss() },
@@ -135,10 +135,6 @@ fun AiReportDialog(aiText: String, source: AiReportSource, onDismiss: () -> Unit
                         "filters. No phone numbers or incoming messages are sent.",
                     color = OnSurfaceVariant, fontSize = 12.sp
                 )
-                error?.let {
-                    Spacer(Modifier.height(6.dp))
-                    Text(it, color = MaterialTheme.colorScheme.error, fontSize = 12.sp)
-                }
             }
         },
         confirmButton = {
@@ -147,22 +143,24 @@ fun AiReportDialog(aiText: String, source: AiReportSource, onDismiss: () -> Unit
                 onClick = {
                     val r = reason ?: return@Button
                     sending = true
-                    error = null
                     scope.launch {
                         val model = resolveGeminiModel(
                             context.getSharedPreferences("ai_settings", android.content.Context.MODE_PRIVATE)
                                 .getString("gemini_model", null)
                         )
-                        val result = runCatching {
-                            sendAiReport(buildAiReport(r, source, aiText, note, model, BuildConfig.VERSION_NAME))
-                        }
+                        val report = buildAiReport(r, source, aiText, note, model, BuildConfig.VERSION_NAME)
+                        val result = runCatching { sendAiReport(report) }
                         sending = false
                         if (result.isSuccess) {
                             Toast.makeText(context, "Thanks — report sent", Toast.LENGTH_SHORT).show()
-                            onDismiss()
                         } else {
-                            error = "Couldn't send — check your connection and try again."
+                            android.util.Log.w("AiReport", "Send failed, queued for retry", result.exceptionOrNull())
+                            AiReportWorker.enqueue(context, report)
+                            Toast.makeText(
+                                context, "Thanks — report saved, it's sent automatically", Toast.LENGTH_LONG
+                            ).show()
                         }
+                        onDismiss()
                     }
                 }
             ) {
