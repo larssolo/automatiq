@@ -7,7 +7,7 @@ import com.vibeactions.data.repository.FolderRepository
 import com.vibeactions.data.repository.MacroRepository
 import com.vibeactions.domain.usecase.SaveMacroUseCase
 import com.vibeactions.ui.common.BackgroundSetting
-import com.vibeactions.util.DEFAULT_GEMINI_MODEL
+import com.vibeactions.util.resolveGeminiModel
 import com.vibeactions.util.parseBackup
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -31,9 +31,7 @@ class SettingsViewModel @Inject constructor(
     fun saveApiKey(key: String) { prefs.edit().putString("gemini_api_key", key.trim()).apply() }
     fun getSystemPrompt(): String = prefs.getString("gemini_system_prompt", "") ?: ""
     fun saveSystemPrompt(p: String) { prefs.edit().putString("gemini_system_prompt", p.trim()).apply() }
-    fun getModel(): String =
-        prefs.getString("gemini_model", DEFAULT_GEMINI_MODEL)?.ifBlank { DEFAULT_GEMINI_MODEL }
-            ?: DEFAULT_GEMINI_MODEL
+    fun getModel(): String = resolveGeminiModel(prefs.getString("gemini_model", null))
     fun saveModel(m: String) { prefs.edit().putString("gemini_model", m.trim()).apply() }
 
     /** Full backup: every macro plus settings. [includeApiKey] opts into embedding the Gemini key

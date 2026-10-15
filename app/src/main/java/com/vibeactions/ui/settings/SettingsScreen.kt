@@ -21,6 +21,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.OpenInNew
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -32,6 +33,7 @@ import com.vibeactions.ui.theme.OnSurfaceVariant
 import com.vibeactions.ui.theme.Primary
 import com.vibeactions.ui.common.BackgroundSetting
 import com.vibeactions.ui.common.ThemedSwitch
+import com.vibeactions.util.GEMINI_API_KEY_URL
 import com.vibeactions.util.GEMINI_MODELS
 import com.vibeactions.util.formatMinuteOfDay
 import com.vibeactions.util.geminiGenerate
@@ -277,7 +279,7 @@ fun SettingsScreen(vm: SettingsViewModel = hiltViewModel(), onOpenHealth: () -> 
                 value = apiKey,
                 onValueChange = { apiKey = it },
                 label = { Text("Gemini API key") },
-                placeholder = { Text("Get one free at aistudio.google.com") },
+                placeholder = { Text("Paste your key here") },
                 visualTransformation = if (apiKeyVisible) VisualTransformation.None
                     else PasswordVisualTransformation(),
                 trailingIcon = {
@@ -290,6 +292,21 @@ fun SettingsScreen(vm: SettingsViewModel = hiltViewModel(), onOpenHealth: () -> 
                 },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()
+            )
+            OutlinedButton(
+                onClick = {
+                    context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(GEMINI_API_KEY_URL)))
+                },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Icon(Icons.Default.OpenInNew, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.width(8.dp))
+                Text("Get a free API key in Google AI Studio")
+            }
+            Text(
+                "Sign in with Google → \"Create API key\" → copy it and paste it above.",
+                style = MaterialTheme.typography.bodySmall,
+                color = OnSurfaceVariant
             )
             OutlinedTextField(
                 value = systemPrompt,
