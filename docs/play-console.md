@@ -66,10 +66,10 @@ PRIVACY
 Your macros, contacts and messages stay on your phone. Text only leaves it when you use an AI feature (sent directly to Google with your own key) or report an AI text.
 ```
 
-**Grafik** (skal laves):
-- [ ] App-ikon 512×512 PNG (findes: `app/src/main/res/mipmap-xxxhdpi/ic_launcher.png` skal skaleres op / gentegnes)
-- [ ] Feature graphic 1024×500
-- [ ] Mindst 2 telefon-skærmbilleder (forslag: intro-guidens første side, makro-listen, editoren med AI-forslag, Phone setup-tjeklisten, Log)
+**Grafik** (klar i `store/`, se `store/README.md`):
+- [x] App-ikon 512×512: `store/icon-512.png`
+- [x] Feature graphic 1024×500: `store/feature-1024x500.png`
+- [x] 5 telefon-skærmbilleder 1080×1920: `store/screenshots/01-…05-*.jpg`
 
 **Kategori:** Tools · **Kontakt-e-mail:** `hello@larssohl.dk` · **Privatlivspolitik:** URL fra afsnit 0.
 
@@ -132,7 +132,7 @@ Automatiq is a task-automation app whose core purpose is sending SMS messages au
 
 Every message is configured explicitly by the user. Without these permissions the app has no function.
 ```
-**Video** (≤ 30 sek, YouTube/Drive-link) — manus:
+**Video** (≤ 30 sek, YouTube/Drive-link): optaget som `declaration-sms-device-automation.mp4` (se `store/README.md`). Manus:
 1. Åbn appen → opret makro "Auto-reply" med nøgleord "status".
 2. Send en SMS med "status" fra en anden telefon → svaret ankommer.
 3. Vis en planlagt makro (08:30, hverdage) og "Missed call"-makro.
@@ -143,7 +143,7 @@ Every message is configured explicitly by the user. Without these permissions th
 ```
 TriggerMonitorService runs only while the user has at least one enabled device-state macro (charging, Bluetooth or Wi-Fi trigger). It listens for these system state changes so the macro fires immediately, which can't be done reliably with WorkManager or implicit broadcasts (most are no longer delivered to manifest receivers). A persistent notification shows while it runs, and it stops as soon as no such macro is enabled.
 ```
-Video: opret en "On charging"-makro → sæt opladeren i → beskeden sendes, og notifikationen vises.
+Video: `declaration-foreground-service.mp4` (se `store/README.md`). Viser tjenestens notifikation, oplader sættes i → makroen affyres.
 
 ### 4.3 Exact alarms (`SCHEDULE_EXACT_ALARM`)
 Hvis konsollen spørger:
