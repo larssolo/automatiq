@@ -4,9 +4,9 @@ title: Automatiq — Privacy Policy
 
 # Automatiq — Privacy Policy
 
-_Last updated: {{DATE}}_
+_Last updated: 15 October 2026_
 
-Automatiq ("the app") is an SMS automation app for Android, published by {{DEVELOPER_NAME}} ("we"). This policy explains what data the app uses, what leaves your phone, and why.
+Automatiq ("the app") is an SMS automation app for Android, published by Lars Sohl, founder of kodekid.app ("we"). This policy explains what data the app uses, what leaves your phone, and why.
 
 **In short:** Automatiq works on your phone. There is no account, no server of ours that stores your messages, no ads and no analytics. Text leaves your phone in only two cases, both started by you: when you use an **AI feature** (sent to Google's Gemini API with your own key), and when you **report an AI-written text** to us.
 
@@ -83,4 +83,4 @@ We will update this page if the app's data handling changes, and change the date
 
 ## 8. Contact
 
-{{DEVELOPER_NAME}} — {{CONTACT_EMAIL}}
+Lars Sohl, founder of kodekid.app — hello@larssohl.dk

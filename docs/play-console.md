@@ -9,8 +9,8 @@ Udkast til alt, der skal udfyldes i Play Console for `app.kodekid.automatiq`. Te
 ## 0. Før du starter
 
 - [ ] **Privatlivspolitik online.** `docs/privacy.md` udgives via GitHub Pages. URL: `https://larssolo.github.io/automatiq/privacy` (når Pages er slået til på `main` / `docs`).
-- [ ] Udfyld pladsholderne i `docs/privacy.md`: `{{DEVELOPER_NAME}}`, `{{CONTACT_EMAIL}}`, `{{DATE}}`.
-- [ ] **⚠ Beslut:** Rapporter slettes "senest efter 12 måneder" ifølge politikken. Det er et løfte, du skal kunne holde (manuel oprydning i Neon, eller en planlagt sletning).
+- [x] Pladsholderne i `docs/privacy.md` er udfyldt (Lars Sohl, founder of kodekid.app · hello@larssohl.dk).
+- [x] Rapporter slettes senest efter 12 måneder (besluttet). Husk oprydning i Neon: `DELETE FROM ai_reports WHERE created_at < now() - interval '12 months'`.
 - [ ] Upload-nøglen er sikkerhedskopieret (`~/.android/automatiq-upload.jks` + `keystore.properties`).
 - [ ] Byg: `./gradlew bundlePlayRelease` → `app/build/outputs/bundle/playRelease/app-play-release.aab`.
 - [ ] Slå **Play App Signing** til, når du opretter appen (standard).
@@ -71,7 +71,7 @@ Your macros, contacts and messages stay on your phone. Text only leaves it when 
 - [ ] Feature graphic 1024×500
 - [ ] Mindst 2 telefon-skærmbilleder (forslag: intro-guidens første side, makro-listen, editoren med AI-forslag, Phone setup-tjeklisten, Log)
 
-**Kategori:** Tools · **Kontakt-e-mail:** `{{CONTACT_EMAIL}}` · **Privatlivspolitik:** URL fra afsnit 0.
+**Kategori:** Tools · **Kontakt-e-mail:** `hello@larssohl.dk` · **Privatlivspolitik:** URL fra afsnit 0.
 
 ---
 
