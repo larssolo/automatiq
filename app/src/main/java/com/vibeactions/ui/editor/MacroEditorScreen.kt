@@ -1209,7 +1209,7 @@ private fun AiVariationPreview(message: String, instruction: String) {
                 val prefs = ctx.getSharedPreferences("ai_settings", android.content.Context.MODE_PRIVATE)
                 val key = prefs.getString("gemini_api_key", "").orEmpty()
                 if (key.isBlank()) {
-                    state = AiState.Err("Ingen API-nøgle — tilføj den i Indstillinger.")
+                    state = AiState.Err("No API key — add one in Settings.")
                     return@launch
                 }
                 val model = resolveGeminiModel(prefs.getString("gemini_model", null))
@@ -1221,14 +1221,14 @@ private fun AiVariationPreview(message: String, instruction: String) {
                 }
                 state = res.fold(
                     onSuccess = { AiState.Suggestions(listOf(it.trim())) },
-                    onFailure = { AiState.Err(it.message?.take(120) ?: "Gemini-fejl") }
+                    onFailure = { AiState.Err(it.message?.take(120) ?: "Gemini error") }
                 )
             }
         } },
         enabled = message.isNotBlank() && state != AiState.Loading,
         modifier = Modifier.fillMaxWidth()
     ) {
-        Text(if (state == AiState.Loading) "Genererer…" else "Forhåndsvis AI-variation")
+        Text(if (state == AiState.Loading) "Generating…" else "Preview AI variation")
     }
     when (val st = state) {
         is AiState.Suggestions -> Surface(
@@ -1238,7 +1238,7 @@ private fun AiVariationPreview(message: String, instruction: String) {
         ) {
             Column(Modifier.padding(12.dp)) {
                 Text(
-                    "AI-eksempel", style = MaterialTheme.typography.labelSmall,
+                    "AI example", style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Spacer(Modifier.height(4.dp))
