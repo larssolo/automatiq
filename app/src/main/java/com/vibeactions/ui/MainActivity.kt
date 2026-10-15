@@ -31,7 +31,12 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.compose.*
+import androidx.compose.runtime.saveable.rememberSaveable
+import com.vibeactions.data.AppSettings
 import com.vibeactions.scheduler.AiReplyActionReceiver
+import com.vibeactions.ui.onboarding.OnboardingScreen
+import com.vibeactions.ui.setup.SetupScreen
+import com.vibeactions.ui.setup.missingSetupSteps
 import com.vibeactions.ui.common.PermissionBanner
 import com.vibeactions.ui.common.ProvideAmbientPulse
 import com.vibeactions.ui.common.StaticBackground
@@ -71,7 +76,16 @@ class MainActivity : ComponentActivity() {
         }
         setContent {
             VibeActionsTheme {
-                AppRoot(pendingNav.value, onNavConsumed = { pendingNav.value = null })
+                var showGuide by rememberSaveable { mutableStateOf(!AppSettings.onboardingDone(this)) }
+                if (showGuide) {
+                    OnboardingScreen(onFinish = { showGuide = false })
+                } else {
+                    AppRoot(
+                        pendingNav.value,
+                        onNavConsumed = { pendingNav.value = null },
+                        onShowGuide = { showGuide = true }
+                    )
+                }
                 pendingApproval.value?.let { approval ->
                     AiApprovalDialog(approval, onDone = { pendingApproval.value = null })
                 }
@@ -170,7 +184,11 @@ private fun AiApprovalDialog(approval: AiApproval, onDone: () -> Unit) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun AppRoot(navTarget: String? = null, onNavConsumed: () -> Unit = {}) {
+private fun AppRoot(
+    navTarget: String? = null,
+    onNavConsumed: () -> Unit = {},
+    onShowGuide: () -> Unit = {}
+) {
     val nav = rememberNavController()
     val context = LocalContext.current
 
@@ -198,36 +216,12 @@ private fun AppRoot(navTarget: String? = null, onNavConsumed: () -> Unit = {}) {
             onNavConsumed()
         }
     }
-    var smsGranted by remember {
-        mutableStateOf(
-            ContextCompat.checkSelfPermission(context, Manifest.permission.SEND_SMS) ==
-                PackageManager.PERMISSION_GRANTED
-        )
-    }
-
-    val smsPermLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestMultiplePermissions()
-    ) { result -> smsGranted = result[Manifest.permission.SEND_SMS] == true }
-
-    LaunchedEffect(Unit) {
-        val perms = mutableListOf(Manifest.permission.SEND_SMS, Manifest.permission.RECEIVE_SMS)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            perms += Manifest.permission.POST_NOTIFICATIONS
-        }
-        val missing = perms.filter {
-            ContextCompat.checkSelfPermission(context, it) != PackageManager.PERMISSION_GRANTED
-        }
-        if (missing.isNotEmpty()) smsPermLauncher.launch(missing.toTypedArray())
-    }
+    var missingSetup by remember { mutableIntStateOf(missingSetupSteps(context)) }
 
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME) {
-                smsGranted = ContextCompat.checkSelfPermission(
-                    context, Manifest.permission.SEND_SMS
-                ) == PackageManager.PERMISSION_GRANTED
-            }
+            if (event == Lifecycle.Event.ON_RESUME) missingSetup = missingSetupSteps(context)
         }
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
@@ -275,18 +269,26 @@ private fun AppRoot(navTarget: String? = null, onNavConsumed: () -> Unit = {}) {
                 composable("list") {
                     MacroListScreen(
                         banner = {
-                            if (!smsGranted) {
+                            if (missingSetup > 0) {
                                 PermissionBanner(
-                                    "Automatiq needs SMS access before it can send anything.",
-                                    "Grant"
-                                ) { smsPermLauncher.launch(arrayOf(Manifest.permission.SEND_SMS)) }
+                                    if (missingSetup == 1) "1 setup step left before your macros run reliably."
+                                    else "$missingSetup setup steps left before your macros run reliably.",
+                                    "Fix"
+                                ) { nav.navigate("setup") { launchSingleTop = true } }
                             }
                         }
                     )
                 }
                 composable("log") { LogScreen() }
-                composable("settings") { SettingsScreen(onOpenHealth = { nav.navigate("health") }) }
+                composable("settings") {
+                    SettingsScreen(
+                        onOpenHealth = { nav.navigate("health") },
+                        onOpenSetup = { nav.navigate("setup") },
+                        onShowGuide = onShowGuide
+                    )
+                }
                 composable("health") { HealthScreen() }
+                composable("setup") { SetupScreen() }
             }
         }
       }

@@ -21,7 +21,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.OpenInNew
+import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -33,6 +33,7 @@ import com.vibeactions.ui.theme.OnSurfaceVariant
 import com.vibeactions.ui.theme.Primary
 import com.vibeactions.ui.common.BackgroundSetting
 import com.vibeactions.ui.common.ThemedSwitch
+import com.vibeactions.ui.setup.isXiaomi
 import com.vibeactions.util.GEMINI_API_KEY_URL
 import com.vibeactions.util.GEMINI_MODELS
 import com.vibeactions.util.formatMinuteOfDay
@@ -42,7 +43,12 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsScreen(vm: SettingsViewModel = hiltViewModel(), onOpenHealth: () -> Unit = {}) {
+fun SettingsScreen(
+    vm: SettingsViewModel = hiltViewModel(),
+    onOpenHealth: () -> Unit = {},
+    onOpenSetup: () -> Unit = {},
+    onShowGuide: () -> Unit = {}
+) {
     val context = LocalContext.current
     val snackbar = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
@@ -150,52 +156,10 @@ fun SettingsScreen(vm: SettingsViewModel = hiltViewModel(), onOpenHealth: () -> 
                 colors = ListItemDefaults.colors(
                     containerColor = androidx.compose.ui.graphics.Color.Transparent
                 ),
-                headlineContent = { Text("Exact alarm permission") },
-                supportingContent = { Text("Required for precise scheduled sends (Android 12+)") },
+                headlineContent = { Text("Phone setup") },
+                supportingContent = { Text("SMS, notifications, exact alarms, battery" + if (isXiaomi()) ", Xiaomi" else "") },
                 trailingContent = {
-                    TextButton(onClick = {
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                            // Deep-link straight to this app's toggle instead of the full app list.
-                            context.startActivity(
-                                Intent(
-                                    Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM,
-                                    Uri.parse("package:${context.packageName}")
-                                )
-                            )
-                        }
-                    }) { Text("Open") }
-                }
-            )
-            ListItem(
-                colors = ListItemDefaults.colors(
-                    containerColor = androidx.compose.ui.graphics.Color.Transparent
-                ),
-                headlineContent = { Text("Battery optimisation") },
-                supportingContent = { Text("Whitelist Automatiq so alarms are not delayed") },
-                trailingContent = {
-                    TextButton(onClick = {
-                        // One-tap allow dialog (permission is declared) instead of making the user
-                        // hunt for the app in the systemwide optimisation list.
-                        context.startActivity(
-                            Intent(
-                                Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
-                                Uri.parse("package:${context.packageName}")
-                            )
-                        )
-                    }) { Text("Open") }
-                }
-            )
-            ListItem(
-                colors = ListItemDefaults.colors(
-                    containerColor = androidx.compose.ui.graphics.Color.Transparent
-                ),
-                headlineContent = { Text("Notification settings") },
-                trailingContent = {
-                    TextButton(onClick = {
-                        val i = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
-                            .putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
-                        context.startActivity(i)
-                    }) { Text("Open") }
+                    TextButton(onClick = onOpenSetup) { Text("Open") }
                 }
             )
             ListItem(
@@ -206,6 +170,16 @@ fun SettingsScreen(vm: SettingsViewModel = hiltViewModel(), onOpenHealth: () -> 
                 supportingContent = { Text("Next fire times + permission status") },
                 trailingContent = {
                     TextButton(onClick = onOpenHealth) { Text("Open") }
+                }
+            )
+            ListItem(
+                colors = ListItemDefaults.colors(
+                    containerColor = androidx.compose.ui.graphics.Color.Transparent
+                ),
+                headlineContent = { Text("Intro guide") },
+                supportingContent = { Text("Setup, permissions and AI key — step by step") },
+                trailingContent = {
+                    TextButton(onClick = onShowGuide) { Text("Replay") }
                 }
             )
             HorizontalDivider()
@@ -299,7 +273,7 @@ fun SettingsScreen(vm: SettingsViewModel = hiltViewModel(), onOpenHealth: () -> 
                 },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Icon(Icons.Default.OpenInNew, contentDescription = null, modifier = Modifier.size(18.dp))
+                Icon(Icons.AutoMirrored.Filled.OpenInNew, contentDescription = null, modifier = Modifier.size(18.dp))
                 Spacer(Modifier.width(8.dp))
                 Text("Get a free API key in Google AI Studio")
             }
