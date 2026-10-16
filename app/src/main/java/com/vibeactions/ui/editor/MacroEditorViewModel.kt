@@ -195,8 +195,15 @@ class MacroEditorViewModel @Inject constructor(
     fun anyRecipientIsOwnNumber(numbers: List<String>): Boolean =
         numbers.any { it.isNotBlank() && contacts.isOwnNumber(it) }
 
+    /** The state as loaded, to tell whether the user has changed anything. */
+    private var baseline: EditorState? = null
+
+    /** True once the user has edited the form — closing should then ask before discarding. */
+    fun hasUnsavedChanges(): Boolean = baseline?.let { it != _state.value } ?: false
+
     fun load(macroId: String?) {
-        if (macroId == null) { _state.value = EditorState(); return }
+        if (macroId == null) { _state.value = EditorState(); baseline = _state.value; return }
+        baseline = null
         viewModelScope.launch {
             repo.getById(macroId)?.let { m ->
                 _state.value = EditorState(m.id, m.name, m.triggerType,
@@ -225,6 +232,7 @@ class MacroEditorViewModel @Inject constructor(
                     triggerOnConnect = m.triggerOnConnect,
                     triggerTarget = m.triggerTarget ?: "",
                     triggerTargetLabel = m.triggerTargetLabel ?: "")
+                baseline = _state.value
             }
         }
     }
