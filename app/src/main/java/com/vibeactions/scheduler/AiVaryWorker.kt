@@ -12,7 +12,7 @@ import com.vibeactions.util.AiConsent
 import com.vibeactions.util.resolveGeminiModel
 import com.vibeactions.util.buildVaryPrompt
 import com.vibeactions.util.expandTemplate
-import com.vibeactions.util.geminiGenerate
+import com.vibeactions.util.geminiGenerateWithFallback
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.CancellationException
@@ -56,12 +56,12 @@ class AiVaryWorker @AssistedInject constructor(
         // The per-macro instruction steers tone/style. The global Settings system prompt is NOT
         // used here — it is written for replying to incoming messages, not for rewriting.
         val generated: String? = if (apiKey.isBlank() || !AiConsent.given(applicationContext)) null else try {
-            geminiGenerate(
+            geminiGenerateWithFallback(
                 apiKey, buildVaryPrompt(macro.aiReplyInstruction), fixedBody, model,
                 // Variations mirror the original's length; 300 gives headroom over the reply
                 // pipeline's 150 for longer scheduled bodies without letting the model ramble.
                 maxOutputTokens = 300
-            ).trim().takeIf { it.isNotBlank() }
+            ).text.trim().takeIf { it.isNotBlank() }
         } catch (cancelled: CancellationException) {
             // The system stopped this worker mid-call. Must NOT be treated as a Gemini failure:
             // the fallback path below would consume the one-shot claim (plain SharedPreferences,

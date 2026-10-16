@@ -302,7 +302,9 @@ fun SettingsScreen(
                     value = model,
                     onValueChange = { model = it },
                     label = { Text("Model") },
-                    supportingText = { Text("Getting 'quota 0' with your key? Try a different model.") },
+                    supportingText = {
+                        Text("Busy or out of free quota? AI falls back to another Gemini model automatically. Test key checks only this one.")
+                    },
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = modelExpanded) },
                     singleLine = true,
                     modifier = Modifier.menuAnchor().fillMaxWidth()

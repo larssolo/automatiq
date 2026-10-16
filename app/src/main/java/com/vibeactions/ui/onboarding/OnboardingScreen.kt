@@ -57,7 +57,7 @@ import com.vibeactions.ui.setup.SetupController
 import com.vibeactions.ui.setup.rememberSetupController
 import com.vibeactions.ui.theme.*
 import com.vibeactions.util.GEMINI_API_KEY_URL
-import com.vibeactions.util.geminiGenerate
+import com.vibeactions.util.geminiGenerateWithFallback
 import com.vibeactions.util.resolveGeminiModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -456,7 +456,7 @@ private fun AiPage(
             aiConsentGate {
                 testing = true; error = null
                 scope.launch {
-                    val r = runCatching { geminiGenerate(apiKey.trim(), "", "Reply with only the word OK", model) }
+                    val r = runCatching { geminiGenerateWithFallback(apiKey.trim(), "", "Reply with only the word OK", model) }
                     testing = false
                     error = r.exceptionOrNull()?.message
                     onTested(r.isSuccess)
@@ -485,9 +485,8 @@ private fun AiPage(
     Spacer(Modifier.height(16.dp))
     InfoCard(
         "Model: $model",
-        "Fast and reliable, and it's the default. Seeing \"timeout\" or \"high demand\"? Google's " +
-            "newest models are sometimes overloaded — pick another one under Settings → AI. " +
-            "Your key stays on this phone."
+        "Fast and reliable, and it's the default. If it's busy or its free daily quota runs out, " +
+            "Automatiq automatically switches to another Gemini model. Your key stays on this phone."
     )
     Spacer(Modifier.height(8.dp))
     Text(

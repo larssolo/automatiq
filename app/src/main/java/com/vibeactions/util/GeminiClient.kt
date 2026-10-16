@@ -132,7 +132,7 @@ suspend fun geminiGenerate(
             if (code !in 200..299) {
                 // The real reason (e.g. "API key not valid") is in the error stream, not inputStream.
                 val errorText = conn.errorStream?.bufferedReader()?.use { it.readText() }.orEmpty()
-                error("HTTP $code: ${extractGeminiError(errorText).ifBlank { "unknown error" }}")
+                throw GeminiHttpException(code, extractGeminiError(errorText).ifBlank { "unknown error" })
             }
             parseGeminiResponse(conn.inputStream.bufferedReader().use { it.readText() })
         } finally {
@@ -156,7 +156,7 @@ suspend fun geminiSuggest(
         "Generate EXACTLY 3 short SMS variations in English (unless another language is specified).$style " +
         "Reply ONLY in this format — no introduction, no explanation:\n" +
         "1. [message]\n2. [message]\n3. [message]"
-    val raw = geminiGenerate(apiKey, systemPrompt, userMessage, model)
+    val raw = geminiGenerateWithFallback(apiKey, systemPrompt, userMessage, model).text
     return parseSuggestions(raw)
 }
 
@@ -176,6 +176,9 @@ internal fun extractGeminiError(errorJson: String): String {
         geminiJson.decodeFromString(GeminiErrorEnvelope.serializer(), errorJson).error?.message
     }.getOrNull() ?: errorJson.take(200)
 }
+
+/** A non-2xx answer from Gemini; [code] decides whether another model is worth trying. */
+class GeminiHttpException(val code: Int, detail: String) : Exception("HTTP $code: $detail")
 
 @Serializable internal data class GeminiErrorEnvelope(val error: GeminiErrorBody? = null)
 @Serializable internal data class GeminiErrorBody(val message: String? = null, val status: String? = null)

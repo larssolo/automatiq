@@ -60,7 +60,7 @@ import com.vibeactions.util.CardColorPalette
 import com.vibeactions.util.expandTemplate
 import com.vibeactions.util.resolveGeminiModel
 import com.vibeactions.util.buildVaryPrompt
-import com.vibeactions.util.geminiGenerate
+import com.vibeactions.util.geminiGenerateWithFallback
 import com.vibeactions.util.geminiSuggest
 import com.vibeactions.util.SENDER_TOKEN
 import com.vibeactions.util.TEMPLATE_TOKENS
@@ -1231,7 +1231,7 @@ private fun AiVariationPreview(message: String, instruction: String) {
                 val body = expandTemplate(message, LocalDateTime.now(), "macro")
                 val res = withContext(Dispatchers.IO) {
                     runCatching {
-                        geminiGenerate(key, buildVaryPrompt(instruction.ifBlank { null }), body, model, maxOutputTokens = 300)
+                        geminiGenerateWithFallback(key, buildVaryPrompt(instruction.ifBlank { null }), body, model, maxOutputTokens = 300).text
                     }
                 }
                 state = res.fold(
