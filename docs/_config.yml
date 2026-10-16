@@ -1,4 +1,0 @@
-# GitHub Pages: publish only the privacy policy, not internal docs.
-exclude:
-  - superpowers
-  - play-console.md
