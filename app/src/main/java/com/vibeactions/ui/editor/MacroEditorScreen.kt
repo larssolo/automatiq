@@ -86,7 +86,8 @@ fun MacroEditorScreen(
     vm: MacroEditorViewModel = hiltViewModel(),
     onDelete: (() -> Unit)? = null,
     onCopy: (() -> Unit)? = null,
-    onSend: (() -> Unit)? = null
+    onSend: (() -> Unit)? = null,
+    onCancel: () -> Unit = onDone
 ) {
     LaunchedEffect(macroId) { vm.load(macroId) }
     val s by vm.state.collectAsStateWithLifecycle()
@@ -166,7 +167,7 @@ fun MacroEditorScreen(
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = androidx.compose.ui.graphics.Color.Transparent
                 ),
-                navigationIcon = { TextButton(onClick = onDone) { Text("Cancel") } },
+                navigationIcon = { TextButton(onClick = onCancel) { Text("Cancel") } },
                 actions = { TextButton(enabled = s.canSave, onClick = { vm.save(onDone) }) { Text("Save") } }
             )
         },
@@ -190,12 +191,17 @@ fun MacroEditorScreen(
             Column {
                 Text("Widget color", style = MaterialTheme.typography.labelLarge, color = OnSurface)
                 Spacer(Modifier.height(8.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                // Swatches share the width so all of them show as full circles on narrow phones too.
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
                     CardColorPalette.forEach { swatch ->
                         val selected = s.cardColor == swatch
                         Box(
                             Modifier
-                                .size(32.dp)
+                                .weight(1f)
+                                .aspectRatio(1f)
                                 .clip(CircleShape)
                                 .background(androidx.compose.ui.graphics.Color(swatch))
                                 .border(

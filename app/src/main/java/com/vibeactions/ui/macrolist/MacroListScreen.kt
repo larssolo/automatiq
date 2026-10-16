@@ -35,6 +35,7 @@ import com.vibeactions.ui.common.FolderCard
 import com.vibeactions.ui.common.MacroCard
 import com.vibeactions.ui.common.ambientPulse
 import com.vibeactions.ui.editor.MacroEditorScreen
+import com.vibeactions.ui.editor.MacroEditorViewModel
 import com.vibeactions.ui.theme.JetBrainsMono
 import com.vibeactions.ui.theme.OnPrimary
 import com.vibeactions.ui.theme.OnSurface
@@ -346,16 +347,40 @@ fun MacroListScreen(
 
     if (showEditor) {
         val editingMacro: Macro? = macros.find { it.id == editorMacroId }
-        val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+        val editorVm: MacroEditorViewModel = hiltViewModel(key = editorMacroId ?: "new")
+        var confirmDiscard by remember { mutableStateOf(false) }
+        // A drag past the threshold, a scrim tap or Back would otherwise close the sheet and throw
+        // away what the user typed. With unsaved changes the sheet stays put and asks first.
+        val sheetState = rememberModalBottomSheetState(
+            skipPartiallyExpanded = true,
+            confirmValueChange = { target ->
+                if (target == SheetValue.Hidden && editorVm.hasUnsavedChanges()) {
+                    confirmDiscard = true
+                    false
+                } else true
+            }
+        )
+        val cancelEditor = {
+            if (editorVm.hasUnsavedChanges()) confirmDiscard = true else showEditor = false
+        }
+        val sheetScope = rememberCoroutineScope()
         ModalBottomSheet(
-            onDismissRequest = { showEditor = false },
+            // Back hides the sheet without consulting confirmValueChange. With unsaved changes,
+            // bring it straight back and ask instead of dropping the user's work.
+            onDismissRequest = {
+                if (editorVm.hasUnsavedChanges()) {
+                    confirmDiscard = true
+                    sheetScope.launch { sheetState.show() }
+                } else showEditor = false
+            },
             sheetState = sheetState,
             containerColor = Color(0xFF1C1C1E)
         ) {
             MacroEditorScreen(
                 macroId = editorMacroId,
-                vm = hiltViewModel(key = editorMacroId ?: "new"),
+                vm = editorVm,
                 onDone = { showEditor = false },
+                onCancel = cancelEditor,
                 onDelete = editingMacro?.let { macro ->
                     { deleteMacro(macro); showEditor = false }
                 },
@@ -364,6 +389,21 @@ fun MacroListScreen(
                 },
                 onSend = editingMacro?.let { macro ->
                     { sendMacro(macro); showEditor = false }
+                }
+            )
+        }
+        if (confirmDiscard) {
+            AlertDialog(
+                onDismissRequest = { confirmDiscard = false },
+                title = { Text("Discard changes?") },
+                text = { Text("You have unsaved changes to this macro.") },
+                confirmButton = {
+                    TextButton(onClick = { confirmDiscard = false; showEditor = false }) {
+                        Text("Discard", color = MaterialTheme.colorScheme.error)
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { confirmDiscard = false }) { Text("Keep editing") }
                 }
             )
         }
