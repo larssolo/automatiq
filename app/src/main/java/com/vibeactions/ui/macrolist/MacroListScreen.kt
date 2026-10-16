@@ -349,16 +349,12 @@ fun MacroListScreen(
         val editingMacro: Macro? = macros.find { it.id == editorMacroId }
         val editorVm: MacroEditorViewModel = hiltViewModel(key = editorMacroId ?: "new")
         var confirmDiscard by remember { mutableStateOf(false) }
-        // A drag past the threshold, a scrim tap or Back would otherwise close the sheet and throw
-        // away what the user typed. With unsaved changes the sheet stays put and asks first.
+        // The sheet never closes by gesture: a short drag or flick while scrolling the form used to
+        // dismiss it. It snaps back instead; Cancel, Save and Back are the ways out (they set
+        // showEditor directly, which doesn't go through confirmValueChange).
         val sheetState = rememberModalBottomSheetState(
             skipPartiallyExpanded = true,
-            confirmValueChange = { target ->
-                if (target == SheetValue.Hidden && editorVm.hasUnsavedChanges()) {
-                    confirmDiscard = true
-                    false
-                } else true
-            }
+            confirmValueChange = { target -> target != SheetValue.Hidden }
         )
         val cancelEditor = {
             if (editorVm.hasUnsavedChanges()) confirmDiscard = true else showEditor = false
@@ -374,7 +370,9 @@ fun MacroListScreen(
                 } else showEditor = false
             },
             sheetState = sheetState,
-            containerColor = Color(0xFF1C1C1E)
+            containerColor = Color(0xFF1C1C1E),
+            // No grab handle: the sheet isn't meant to be dragged away.
+            dragHandle = null
         ) {
             MacroEditorScreen(
                 macroId = editorMacroId,
