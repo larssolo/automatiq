@@ -27,6 +27,7 @@ import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.vibeactions.BuildConfig
 import com.vibeactions.data.AppSettings
 import com.vibeactions.ui.theme.OnSurface
 import com.vibeactions.ui.theme.OnSurfaceVariant
@@ -376,15 +377,15 @@ fun SettingsScreen(
                     .fillMaxWidth()
                     .clickable {
                         context.startActivity(
-                            Intent(Intent.ACTION_VIEW, Uri.parse("https://www.larssohl.dk"))
+                            Intent(Intent.ACTION_VIEW, Uri.parse("https://www.kodekid.app"))
                         )
                     }
                     .padding(vertical = 12.dp),
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("Claude & ", color = OnSurfaceVariant, fontSize = 13.sp, textAlign = TextAlign.Center)
-                Text("www.larssohl.dk", color = Primary, fontSize = 13.sp, textAlign = TextAlign.Center)
+                Text("Automatiq ${BuildConfig.VERSION_NAME} · ", color = OnSurfaceVariant, fontSize = 13.sp, textAlign = TextAlign.Center)
+                Text("kodekid.app", color = Primary, fontSize = 13.sp, textAlign = TextAlign.Center)
             }
         }
     }
