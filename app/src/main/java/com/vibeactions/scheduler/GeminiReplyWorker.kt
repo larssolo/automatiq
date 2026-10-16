@@ -11,7 +11,7 @@ import com.vibeactions.notifications.MacroNotificationManager
 import com.vibeactions.util.AiConsent
 import com.vibeactions.util.resolveGeminiModel
 import com.vibeactions.util.expandTemplate
-import com.vibeactions.util.geminiGenerate
+import com.vibeactions.util.geminiGenerateWithFallback
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.CancellationException
@@ -64,7 +64,7 @@ class GeminiReplyWorker @AssistedInject constructor(
             if (instruction != null) append("Reply like this: $instruction")
         }
         val generated = try {
-            geminiGenerate(apiKey, systemPrompt, body, model, maxOutputTokens = 220)
+            geminiGenerateWithFallback(apiKey, systemPrompt, body, model, maxOutputTokens = 220).text
         } catch (cancelled: CancellationException) {
             // A stopped worker must not consume the auto-send claim below (SharedPreferences
             // commits even under cancellation) and then abort — the re-run would dedupe on that
