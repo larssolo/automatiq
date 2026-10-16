@@ -114,6 +114,9 @@ fun SettingsScreen(
                 .padding(p)
                 .fillMaxSize()
                 .background(Color(0x80000000))
+                // The window no longer pans for the keyboard (adjustResize): shrink the scroll area
+                // instead, so the focused field scrolls into view and the title stays put.
+                .imePadding()
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
