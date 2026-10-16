@@ -305,9 +305,18 @@ fun MacroEditorScreen(
                                     dayLabels[day - 1],
                                     maxLines = 1,
                                     textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                                    modifier = Modifier.fillMaxWidth()
+                                    modifier = Modifier.fillMaxWidth(),
+                                    fontWeight = androidx.compose.ui.text.font.FontWeight.Medium
                                 )
                             },
+                            // Solid green/red so on/off reads at a glance on any background.
+                            colors = FilterChipDefaults.filterChipColors(
+                                containerColor = ErrorRed.copy(alpha = 0.85f),
+                                labelColor = androidx.compose.ui.graphics.Color.White,
+                                selectedContainerColor = Primary,
+                                selectedLabelColor = androidx.compose.ui.graphics.Color.Black
+                            ),
+                            border = null,
                             modifier = Modifier.weight(1f)
                         )
                     }
