@@ -27,6 +27,7 @@ class AiReplyActionReceiver : BroadcastReceiver() {
         // own recipient list instead of a reply counterparty.
         val recipient = intent.getStringExtra(EXTRA_RECIPIENT)
         val body = intent.getStringExtra(EXTRA_BODY) ?: return
+        val aiNote = intent.getStringExtra(EXTRA_AI_NOTE)
 
         // A notification action button doesn't dismiss on tap, so a quick double-tap on "Send"
         // delivers two broadcasts before the cancel above lands — swallow the duplicate.
@@ -39,7 +40,7 @@ class AiReplyActionReceiver : BroadcastReceiver() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 firer.fire(macroId, enforceOncePerDay = false,
-                    overrideRecipient = recipient, overrideBody = body)
+                    overrideRecipient = recipient, overrideBody = body, aiNote = aiNote)
             } finally {
                 pending.finish()
             }
@@ -53,6 +54,7 @@ class AiReplyActionReceiver : BroadcastReceiver() {
         const val EXTRA_RECIPIENT = "recipient"
         const val EXTRA_BODY = "body"
         const val EXTRA_NOTIF_ID = "notif_id"
+        const val EXTRA_AI_NOTE = "ai_note"
         private const val DOUBLE_TAP_WINDOW_MS = 5_000L
         // Thread-safe: two taps can dispatch overlapping onReceive calls.
         private val recentSends = ConcurrentHashMap<String, Long>()

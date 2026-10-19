@@ -127,9 +127,15 @@ fun LogScreen(vm: LogViewModel = hiltViewModel()) {
                         if (row.aiMacro && !log.messagePreview.isNullOrBlank()) {
                             ReportAiButton(log.messagePreview, AiReportSource.AUTO_REPLY)
                         }
-                        // On a sent message the text is an AI note (fixed text used), not an error.
+                        // "AI · model" = which model wrote it (grey); on a sent message any other text
+                        // is why the fixed text was used (amber); otherwise it's an error (red).
                         log.errorMessage?.let {
-                            Text(it, color = if (log.status == MacroStatus.SUCCESS) Amber else ErrorRed, fontSize = 12.sp)
+                            val color = when {
+                                it.startsWith("AI · ") -> OnSurfaceVariant
+                                log.status == MacroStatus.SUCCESS -> Amber
+                                else -> ErrorRed
+                            }
+                            Text(it, color = color, fontSize = 12.sp)
                         }
                         when (log.deliveryStatus) {
                             DeliveryStatus.DELIVERED ->

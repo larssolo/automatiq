@@ -68,7 +68,7 @@ class AiVaryWorker @AssistedInject constructor(
                 // Variations mirror the original's length; 300 gives headroom over the reply
                 // pipeline's 150 for longer scheduled bodies without letting the model ramble.
                 maxOutputTokens = 300
-            ).text.trim().takeIf { it.isNotBlank() }
+            ).also { aiNote = "AI · ${it.model}" }.text.trim().takeIf { it.isNotBlank() }
         } catch (cancelled: CancellationException) {
             // The system stopped this worker mid-call. Must NOT be treated as a Gemini failure:
             // the fallback path below would consume the one-shot claim (plain SharedPreferences,
@@ -88,6 +88,8 @@ class AiVaryWorker @AssistedInject constructor(
             // approval mode or not: there is nothing AI-written to approve, and the day's claim is
             // already consumed. The override body skips MacroFirer's vary hand-off (no loop).
             if (!autoSendClaim.claim(macroId, party = "", eventId = eventId)) return Result.success()
+            // Gemini answered but with nothing usable: the "AI · model" note would be wrong here.
+            if (aiNote?.startsWith("AI · ") == true) aiNote = "AI returned no text — fixed text sent"
             aiNote?.let { Log.i(TAG, it) }
             firer.fire(macroId, enforceOncePerDay = false, overrideBody = fixedBody, aiNote = aiNote)
             return Result.success()
@@ -97,14 +99,14 @@ class AiVaryWorker @AssistedInject constructor(
             // No recipient: approval sends to the macro's own recipient list. Send/edit/discard
             // happen in the notification or the in-app dialog; the day's send stays consumed even
             // if the user discards — that is what discard means.
-            AiSendMode.APPROVE -> notifications.notifyAiApproval(macro, null, generated)
+            AiSendMode.APPROVE -> notifications.notifyAiApproval(macro, null, generated, aiNote)
             AiSendMode.AUTO -> {
                 // Claim before sending so a WorkManager re-run after a mid-flight process death
                 // (identical inputData → identical event id) can't send the variation twice.
                 if (!autoSendClaim.claim(macroId, party = "", eventId = eventId)) return Result.success()
                 // The normal result notification announces what was sent (it shows the body), and
                 // a failure keeps its Retry action — no special AI notification needed.
-                firer.fire(macroId, enforceOncePerDay = false, overrideBody = generated)
+                firer.fire(macroId, enforceOncePerDay = false, overrideBody = generated, aiNote = aiNote)
             }
         }
         return Result.success()
