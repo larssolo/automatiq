@@ -17,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -54,6 +55,7 @@ fun SettingsScreen(
     val context = LocalContext.current
     val snackbar = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+    val focusManager = LocalFocusManager.current
     val aiConsentGate = rememberAiConsentGate()
     var pendingExport by remember { mutableStateOf<String?>(null) }
     var apiKey by remember { mutableStateOf(vm.getApiKey()) }
@@ -109,7 +111,8 @@ fun SettingsScreen(
                 )
             )
         },
-        snackbarHost = { SnackbarHost(snackbar) }) { p ->
+        // Above the keyboard if it is open, so "saved" / errors are never hidden behind it.
+        snackbarHost = { SnackbarHost(snackbar, Modifier.imePadding()) }) { p ->
         Column(
             Modifier
                 .padding(p)
@@ -328,6 +331,7 @@ fun SettingsScreen(
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Button(
                     onClick = {
+                        focusManager.clearFocus()
                         withKeyConsent {
                             vm.saveApiKey(apiKey)
                             vm.saveSystemPrompt(systemPrompt)
@@ -339,6 +343,7 @@ fun SettingsScreen(
                 ) { Text("Save") }
                 OutlinedButton(
                     onClick = {
+                        focusManager.clearFocus()
                         withKeyConsent {
                             vm.saveApiKey(apiKey)
                             vm.saveModel(model)

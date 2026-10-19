@@ -61,7 +61,8 @@ data class AiApproval(
     val recipient: String?,
     val toLabel: String,
     val body: String,
-    val notifId: Int
+    val notifId: Int,
+    val aiNote: String? = null
 )
 
 @AndroidEntryPoint
@@ -125,7 +126,10 @@ class MainActivity : ComponentActivity() {
         // Fallback chain covers notifications posted by an older app version without the label.
         val toLabel = intent.getStringExtra(EXTRA_TO_LABEL)
             ?: recipient?.let { maskPhone(it) } ?: "recipients"
-        return AiApproval(macroId, recipient, toLabel, body, intent.getIntExtra(EXTRA_NOTIF_ID, -1))
+        return AiApproval(
+            macroId, recipient, toLabel, body, intent.getIntExtra(EXTRA_NOTIF_ID, -1),
+            intent.getStringExtra(EXTRA_AI_NOTE)
+        )
     }
 
     private fun hasGeminiKey(context: Context) =
@@ -140,6 +144,7 @@ class MainActivity : ComponentActivity() {
         const val EXTRA_BODY = "body"
         const val EXTRA_NOTIF_ID = "notif_id"
         const val EXTRA_NAV = "nav"
+        const val EXTRA_AI_NOTE = "ai_note"
     }
 }
 
@@ -195,6 +200,7 @@ private fun AiApprovalDialog(approval: AiApproval, onDone: () -> Unit) {
                             }
                             putExtra(AiReplyActionReceiver.EXTRA_BODY, text)
                             putExtra(AiReplyActionReceiver.EXTRA_NOTIF_ID, approval.notifId)
+                            approval.aiNote?.let { putExtra(AiReplyActionReceiver.EXTRA_AI_NOTE, it) }
                         }
                     )
                     onDone()

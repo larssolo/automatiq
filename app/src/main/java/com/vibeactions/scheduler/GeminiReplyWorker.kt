@@ -8,7 +8,9 @@ import androidx.work.WorkerParameters
 import com.vibeactions.data.repository.MacroRepository
 import com.vibeactions.domain.model.AiSendMode
 import com.vibeactions.notifications.MacroNotificationManager
+import android.util.Log
 import com.vibeactions.util.AiConsent
+import com.vibeactions.util.aiFailureReason
 import com.vibeactions.util.resolveGeminiModel
 import com.vibeactions.util.expandTemplate
 import com.vibeactions.util.geminiGenerateWithFallback
@@ -49,7 +51,10 @@ class GeminiReplyWorker @AssistedInject constructor(
         val apiKey = prefs.getString("gemini_api_key", "").orEmpty()
         if (apiKey.isBlank() || !AiConsent.given(applicationContext)) {
             // No key, or the user hasn't agreed to send message text to Google — fixed body.
-            firer.fire(macroId, enforceOncePerDay = false, overrideRecipient = sender)
+            val note = if (apiKey.isBlank()) "AI off: no API key — fixed text sent"
+                else "AI paused: agree to AI in Settings — fixed text sent"
+            Log.i(TAG, note)
+            firer.fire(macroId, enforceOncePerDay = false, overrideRecipient = sender, aiNote = note)
             return Result.success()
         }
 
@@ -63,14 +68,21 @@ class GeminiReplyWorker @AssistedInject constructor(
             append("Reply ONLY with the message itself — no preamble, no explanation, no quotes. ")
             if (instruction != null) append("Reply like this: $instruction")
         }
+        var aiNote: String?
+        var fixedTextUsed = false
         val generated = try {
-            geminiGenerateWithFallback(apiKey, systemPrompt, body, model, maxOutputTokens = 220).text
+            val res = geminiGenerateWithFallback(apiKey, systemPrompt, body, model, maxOutputTokens = 220)
+            aiNote = "AI · ${res.model}"
+            res.text
         } catch (cancelled: CancellationException) {
             // A stopped worker must not consume the auto-send claim below (SharedPreferences
             // commits even under cancellation) and then abort — the re-run would dedupe on that
             // claim and never send the reply. Let WorkManager re-run this cleanly instead.
             throw cancelled
         } catch (t: Throwable) {
+            Log.w(TAG, "AI reply failed, sending fixed text: ${t.message}")
+            aiNote = "AI unavailable (${aiFailureReason(t)}) — fixed text sent"
+            fixedTextUsed = true
             // Gemini unreachable → send the fixed fallback body, expanded like any other reply
             // (MacroFirer never expands an overrideBody, so a raw {afsender}/{dato} would otherwise
             // go out literally — unlike the no-API-key path which expands via MacroFirer).
@@ -80,7 +92,7 @@ class GeminiReplyWorker @AssistedInject constructor(
         coroutineContext.ensureActive()
 
         when (macro.aiSendMode) {
-            AiSendMode.APPROVE -> notifications.notifyAiApproval(macro, sender, generated)
+            AiSendMode.APPROVE -> notifications.notifyAiApproval(macro, sender, generated, aiNote)
             AiSendMode.AUTO -> {
                 // Claim this (macro, sender, event, day) before sending. If WorkManager re-runs a
                 // worker that died mid-flight, the retry carries identical inputData → identical key
@@ -89,11 +101,14 @@ class GeminiReplyWorker @AssistedInject constructor(
                 val result = firer.fire(
                     macroId, enforceOncePerDay = false,
                     overrideRecipient = sender, overrideBody = generated,
-                    suppressResultNotification = true
+                    suppressResultNotification = true, aiNote = aiNote
                 )
                 // Only announce success when the send actually succeeded; a failed send would
                 // otherwise be reported as "AI reply sent" with no failure notice at all.
-                if (result?.status == com.vibeactions.domain.model.MacroStatus.SUCCESS) {
+                if (result?.status == com.vibeactions.domain.model.MacroStatus.SUCCESS && fixedTextUsed) {
+                    // Sent, but it's the fixed text — don't announce it as an AI reply.
+                    notifications.notifyResult(macro, result.status, null, listOf(sender), generated)
+                } else if (result?.status == com.vibeactions.domain.model.MacroStatus.SUCCESS) {
                     notifications.notifyAiSent(macro, sender, generated)
                 } else if (result != null) {
                     notifications.notifyResult(macro, result.status, result.error, listOf(sender), generated)
@@ -114,6 +129,7 @@ class GeminiReplyWorker @AssistedInject constructor(
     }
 
     companion object {
+        private const val TAG = "AutomatiqAI"
         const val KEY_MACRO_ID = "macro_id"
         const val KEY_SENDER = "sender"
         const val KEY_BODY = "body"

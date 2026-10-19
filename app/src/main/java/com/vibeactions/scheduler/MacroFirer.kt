@@ -41,6 +41,7 @@ class MacroFirer @Inject constructor(
      * [overrideRecipient] (auto-reply) sends to that number instead of the macro's own recipient list.
      * [overrideBody] when set, uses this text directly instead of expanding the macro's template.
      * [suppressResultNotification] when true, skips posting the result notification.
+     * [aiNote] explains why an AI macro sent its fixed text instead (shown on the log row).
      * Returns the outcome, or null when the fire was skipped (macro missing/disabled, no recipients,
      * or another path already claimed today's scheduled send) or handed off to [AiVaryWorker]
      * (AI-variation macros: the worker calls back with an overrideBody once the text exists).
@@ -50,7 +51,8 @@ class MacroFirer @Inject constructor(
         enforceOncePerDay: Boolean,
         overrideRecipient: String? = null,
         overrideBody: String? = null,
-        suppressResultNotification: Boolean = false
+        suppressResultNotification: Boolean = false,
+        aiNote: String? = null
     ): FireResult? {
         val macro = macroRepo.getById(macroId) ?: return null
         if (!macro.enabled) return null
@@ -102,7 +104,7 @@ class MacroFirer @Inject constructor(
         val logId = logRepo.add(
             MacroLog(
                 macroId = macro.id, triggeredAt = now, status = MacroStatus.PENDING,
-                messagePreview = previewBody, errorMessage = null
+                messagePreview = previewBody, errorMessage = aiNote
             )
         )
         // Send to every recipient; success only if all succeed, otherwise FAILED with a summary error.
@@ -120,10 +122,11 @@ class MacroFirer @Inject constructor(
         // Finalize the log first, then read it back: a fast radio failure receipt may already have
         // flipped the row to FAILED (terminal in updateResult), and the macro status and
         // notification must mirror that final outcome — not report SUCCESS for a dropped send.
-        logRepo.updateResult(logId, status, error)
+        logRepo.updateResult(logId, status, error ?: aiNote)
         val finalLog = logRepo.get(logId)
         val finalStatus = finalLog?.status ?: status
-        val finalError = finalLog?.errorMessage ?: error
+        // On success the log's message is only the AI note — not an error to notify about.
+        val finalError = if (finalStatus == MacroStatus.SUCCESS) null else finalLog?.errorMessage ?: error
         macroRepo.updateStatus(macro.id, now, finalStatus)
         // If the receipt won the race, SmsSentReceiver already posted a corrective notification.
         if (!suppressResultNotification && finalStatus == status) {

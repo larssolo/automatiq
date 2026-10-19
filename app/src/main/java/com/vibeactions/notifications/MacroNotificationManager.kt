@@ -130,7 +130,7 @@ class MacroNotificationManager @Inject constructor(
     /** Posts a notification with Send/Discard action buttons for APPROVE-mode AI texts.
      *  [recipient] is the counterparty for auto-replies; null for AI-variation macros (scheduled),
      *  whose approved text goes to the macro's own recipient list. */
-    fun notifyAiApproval(macro: Macro, recipient: String?, generatedBody: String) {
+    fun notifyAiApproval(macro: Macro, recipient: String?, generatedBody: String, aiNote: String? = null) {
         // Request-code/notification keys keep the recipient when present so parallel approvals for
         // different senders coexist; a macro's own variation has one pending draft at a time.
         val partyKey = recipient.orEmpty()
@@ -146,6 +146,7 @@ class MacroNotificationManager @Inject constructor(
             if (recipient != null) putExtra(AiReplyActionReceiver.EXTRA_RECIPIENT, recipient)
             putExtra(AiReplyActionReceiver.EXTRA_BODY, generatedBody)
             putExtra(AiReplyActionReceiver.EXTRA_NOTIF_ID, notifId)
+            aiNote?.let { putExtra(AiReplyActionReceiver.EXTRA_AI_NOTE, it) }
         }
         val sendPi = PendingIntent.getBroadcast(
             context, ("ai_send" + macro.id + partyKey).hashCode() and 0x7FFFFFFF, sendIntent,
@@ -168,6 +169,7 @@ class MacroNotificationManager @Inject constructor(
             putExtra(com.vibeactions.ui.MainActivity.EXTRA_TO_LABEL, toLabel)
             putExtra(com.vibeactions.ui.MainActivity.EXTRA_BODY, generatedBody)
             putExtra(com.vibeactions.ui.MainActivity.EXTRA_NOTIF_ID, notifId)
+            aiNote?.let { putExtra(com.vibeactions.ui.MainActivity.EXTRA_AI_NOTE, it) }
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
         }
         val openPi = PendingIntent.getActivity(
