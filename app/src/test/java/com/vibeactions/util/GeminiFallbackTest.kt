@@ -55,15 +55,24 @@ class GeminiFallbackTest {
         assertEquals(listOf("a"), tried)
     }
 
-    @Test fun `throws the last error when every model fails`() {
-        val e = assertFailsWith<GeminiHttpException> {
+    @Test fun `reports every model's error when all fail`() {
+        val e = assertFailsWith<GeminiAllModelsFailedException> {
             runBlocking {
                 generateWithFallback(listOf("a", "b")) { m ->
                     throw GeminiHttpException(if (m == "a") 429 else 503, m)
                 }
             }
         }
-        assertEquals(503, e.code)
+        assertEquals(listOf("a", "b"), e.attempts.map { it.first })
+        assertEquals("all Gemini models busy or unavailable", aiFailureReason(e))
+    }
+
+    @Test fun `failure reasons are short and specific`() {
+        val allQuota = GeminiAllModelsFailedException(listOf("a" to GeminiHttpException(429, "q"), "b" to GeminiHttpException(429, "q")))
+        assertEquals("free daily quota used up on all models", aiFailureReason(allQuota))
+        assertEquals("API key rejected (HTTP 403)", aiFailureReason(GeminiHttpException(403, "denied")))
+        assertEquals("Gemini didn't answer in time", aiFailureReason(SocketTimeoutException()))
+        assertEquals("no internet connection", aiFailureReason(java.net.UnknownHostException()))
     }
 
     @Test fun `a model that just hit its quota is tried last next time`() = runBlocking {

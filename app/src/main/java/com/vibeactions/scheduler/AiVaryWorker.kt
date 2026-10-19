@@ -8,7 +8,9 @@ import androidx.work.WorkerParameters
 import com.vibeactions.data.repository.MacroRepository
 import com.vibeactions.domain.model.AiSendMode
 import com.vibeactions.notifications.MacroNotificationManager
+import android.util.Log
 import com.vibeactions.util.AiConsent
+import com.vibeactions.util.aiFailureReason
 import com.vibeactions.util.resolveGeminiModel
 import com.vibeactions.util.buildVaryPrompt
 import com.vibeactions.util.expandTemplate
@@ -55,7 +57,12 @@ class AiVaryWorker @AssistedInject constructor(
         val model = resolveGeminiModel(prefs.getString("gemini_model", null))
         // The per-macro instruction steers tone/style. The global Settings system prompt is NOT
         // used here — it is written for replying to incoming messages, not for rewriting.
-        val generated: String? = if (apiKey.isBlank() || !AiConsent.given(applicationContext)) null else try {
+        var aiNote: String? = when {
+            apiKey.isBlank() -> "AI off: no API key — fixed text sent"
+            !AiConsent.given(applicationContext) -> "AI paused: agree to AI in Settings — fixed text sent"
+            else -> null
+        }
+        val generated: String? = if (aiNote != null) null else try {
             geminiGenerateWithFallback(
                 apiKey, buildVaryPrompt(macro.aiReplyInstruction), fixedBody, model,
                 // Variations mirror the original's length; 300 gives headroom over the reply
@@ -69,6 +76,8 @@ class AiVaryWorker @AssistedInject constructor(
             // WorkManager re-run would dedupe on that claim and silently drop the day's send.
             throw cancelled
         } catch (t: Throwable) {
+            Log.w(TAG, "AI variation failed, sending fixed text: ${t.message}")
+            aiNote = "AI unavailable (${aiFailureReason(t)}) — fixed text sent"
             null
         }
         // Same guard for a stop that lands after the call returned: claim only while still active.
@@ -79,7 +88,8 @@ class AiVaryWorker @AssistedInject constructor(
             // approval mode or not: there is nothing AI-written to approve, and the day's claim is
             // already consumed. The override body skips MacroFirer's vary hand-off (no loop).
             if (!autoSendClaim.claim(macroId, party = "", eventId = eventId)) return Result.success()
-            firer.fire(macroId, enforceOncePerDay = false, overrideBody = fixedBody)
+            aiNote?.let { Log.i(TAG, it) }
+            firer.fire(macroId, enforceOncePerDay = false, overrideBody = fixedBody, aiNote = aiNote)
             return Result.success()
         }
 
@@ -110,6 +120,7 @@ class AiVaryWorker @AssistedInject constructor(
     }
 
     companion object {
+        private const val TAG = "AutomatiqAI"
         const val KEY_MACRO_ID = "macro_id"
         const val KEY_EVENT_ID = "event_id"
 

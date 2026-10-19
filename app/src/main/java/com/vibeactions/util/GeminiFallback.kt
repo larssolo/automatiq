@@ -44,13 +44,33 @@ data class GeminiResult(val text: String, val model: String)
  * failure are tried last rather than skipped — a likely failure beats not trying at all.
  * Non-retryable errors (e.g. an invalid key) are thrown right away.
  */
+/** Every model in the chain failed with a retryable error; [attempts] says how each one failed. */
+class GeminiAllModelsFailedException(val attempts: List<Pair<String, Throwable>>) : Exception(
+    "All Gemini models failed: " + attempts.joinToString { (m, t) -> "$m ${t.message?.take(60) ?: t.javaClass.simpleName}" }
+)
+
+/** A short, user-facing reason for why AI couldn't write the text (shown in the Log). */
+fun aiFailureReason(t: Throwable): String = when (t) {
+    is GeminiAllModelsFailedException ->
+        if (t.attempts.all { (it.second as? GeminiHttpException)?.code == 429 }) "free daily quota used up on all models"
+        else "all Gemini models busy or unavailable"
+    is GeminiHttpException -> when (t.code) {
+        400, 401, 403 -> "API key rejected (HTTP ${t.code})"
+        429 -> "free quota used up"
+        else -> "Gemini error (HTTP ${t.code})"
+    }
+    is SocketTimeoutException -> "Gemini didn't answer in time"
+    is java.io.IOException -> "no internet connection"
+    else -> t.javaClass.simpleName
+}
+
 internal suspend fun generateWithFallback(
     models: List<String>,
     now: () -> Long = System::currentTimeMillis,
     call: suspend (model: String) -> String
 ): GeminiResult {
     val (cooling, ready) = models.partition { GeminiCooldown.isCooling(it, now()) }
-    var last: Throwable? = null
+    val attempts = mutableListOf<Pair<String, Throwable>>()
     for (model in ready + cooling) {
         try {
             return GeminiResult(call(model), model)
@@ -58,11 +78,11 @@ internal suspend fun generateWithFallback(
             throw cancelled
         } catch (t: Throwable) {
             if (!isRetryableOnOtherModel(t)) throw t
-            last = t
+            attempts += model to t
             GeminiCooldown.mark(model, now() + cooldownMillisFor(t))
         }
     }
-    throw last ?: IllegalStateException("No Gemini model to try")
+    throw GeminiAllModelsFailedException(attempts)
 }
 
 /** [geminiGenerate] with automatic fallback to other models on quota, overload or timeouts. */
