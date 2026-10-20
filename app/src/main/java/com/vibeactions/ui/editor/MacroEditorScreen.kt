@@ -1,5 +1,12 @@
 package com.vibeactions.ui.editor
 
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.material.icons.filled.DoNotDisturbOn
+import com.vibeactions.ui.theme.Amber
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -1422,20 +1429,12 @@ private fun ActionSection(s: EditorState, vm: MacroEditorViewModel) {
                     onDispose { owner.lifecycle.removeObserver(obs) }
                 }
                 if (!granted) {
-                    Text(
-                        "Automatiq needs Do Not Disturb access to switch to this mode.",
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                    OutlinedButton(
-                        onClick = {
-                            runCatching {
-                                ctx.startActivity(Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS))
-                            }
-                            Toast.makeText(ctx, "Find Automatiq and allow it, then go back", Toast.LENGTH_LONG).show()
-                        },
-                        modifier = Modifier.fillMaxWidth()
-                    ) { Text("Allow Do Not Disturb access") }
+                    DndAccessCard {
+                        runCatching {
+                            ctx.startActivity(Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS))
+                        }
+                        Toast.makeText(ctx, "Find Automatiq and allow it, then go back", Toast.LENGTH_LONG).show()
+                    }
                 }
             }
         }
@@ -1471,3 +1470,43 @@ private fun ActionSection(s: EditorState, vm: MacroEditorViewModel) {
 
 private fun dndGranted(ctx: android.content.Context) =
     ctx.getSystemService(android.app.NotificationManager::class.java).isNotificationPolicyAccessGranted
+
+/** "Needs permission" card in the style of the Phone setup rows, with a pulsing amber edge so it
+ *  stands apart from the editor's ordinary buttons. The whole card is the tap target. */
+@Composable
+private fun DndAccessCard(onAllow: () -> Unit) {
+    val pulse = rememberInfiniteTransition(label = "dnd").animateFloat(
+        0.35f, 1f, infiniteRepeatable(tween(900), RepeatMode.Reverse), label = "edge"
+    )
+    val shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp)
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .clip(shape)
+            .background(Amber.copy(alpha = 0.10f))
+            .border(1.5.dp, Amber.copy(alpha = pulse.value), shape)
+            .clickable(onClick = onAllow)
+            .padding(horizontal = 14.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            Modifier.size(36.dp).clip(CircleShape).background(Amber.copy(alpha = 0.18f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(Icons.Default.DoNotDisturbOn, null, tint = Amber, modifier = Modifier.size(19.dp))
+        }
+        Spacer(Modifier.width(12.dp))
+        Column(Modifier.weight(1f)) {
+            Text("Do Not Disturb access", color = OnSurface, fontWeight = FontWeight.Medium, fontSize = 15.sp)
+            Text(
+                "Needed to switch to this mode",
+                color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.5.sp
+            )
+        }
+        Spacer(Modifier.width(8.dp))
+        Text(
+            "ALLOW", color = Primary, fontFamily = JetBrainsMono,
+            fontWeight = FontWeight.Medium, fontSize = 12.sp, letterSpacing = 1.sp
+        )
+    }
+}
