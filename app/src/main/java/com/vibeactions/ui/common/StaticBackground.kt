@@ -16,6 +16,7 @@ import androidx.compose.ui.res.painterResource
 import com.vibeactions.R
 import com.vibeactions.ui.theme.Amber
 import com.vibeactions.ui.theme.Primary
+import com.vibeactions.util.brightnessColorMatrix
 import com.vibeactions.util.combineColorMatrices
 import com.vibeactions.util.hueRotationColorMatrix
 import com.vibeactions.util.saturationColorMatrix
@@ -31,9 +32,15 @@ private val Teal = Color(0xFF42D1CA)
 fun StaticBackground(modifier: Modifier = Modifier) {
     val hue = BackgroundSetting.hue
     val saturation = BackgroundSetting.saturation
-    val colorFilter = remember(hue, saturation) {
+    val brightness = BackgroundSetting.brightness
+    val colorFilter = remember(hue, saturation, brightness) {
         ColorFilter.colorMatrix(
-            ColorMatrix(combineColorMatrices(saturationColorMatrix(saturation), hueRotationColorMatrix(hue)))
+            ColorMatrix(
+                combineColorMatrices(
+                    combineColorMatrices(saturationColorMatrix(saturation), hueRotationColorMatrix(hue)),
+                    brightnessColorMatrix(brightness)
+                )
+            )
         )
     }
     Image(

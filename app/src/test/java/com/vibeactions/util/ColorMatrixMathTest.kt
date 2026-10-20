@@ -37,4 +37,13 @@ class ColorMatrixMathTest {
         assertArrayEquals(expectedRow, m.copyOfRange(5, 10), eps)
         assertArrayEquals(expectedRow, m.copyOfRange(10, 15), eps)
     }
+
+    @Test fun `brightness scales colour channels and leaves alpha alone`() {
+        val m = brightnessColorMatrix(0.5f)
+        org.junit.Assert.assertEquals(0.5f, m[0], 0f)
+        org.junit.Assert.assertEquals(0.5f, m[6], 0f)
+        org.junit.Assert.assertEquals(0.5f, m[12], 0f)
+        org.junit.Assert.assertEquals(1f, m[18], 0f)
+        org.junit.Assert.assertArrayEquals(IDENTITY_COLOR_MATRIX, brightnessColorMatrix(1f), 0f)
+    }
 }

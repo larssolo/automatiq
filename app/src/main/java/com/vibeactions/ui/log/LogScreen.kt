@@ -127,11 +127,11 @@ fun LogScreen(vm: LogViewModel = hiltViewModel()) {
                         if (row.aiMacro && !log.messagePreview.isNullOrBlank()) {
                             ReportAiButton(log.messagePreview, AiReportSource.AUTO_REPLY)
                         }
-                        // "AI · model" = which model wrote it (grey); on a sent message any other text
+                        // "AI · model" = which model wrote it (green); on a sent message any other text
                         // is why the fixed text was used (amber); otherwise it's an error (red).
                         log.errorMessage?.let {
                             val color = when {
-                                it.startsWith("AI · ") -> OnSurfaceVariant
+                                it.startsWith("AI · ") -> Primary
                                 log.status == MacroStatus.SUCCESS -> Amber
                                 else -> ErrorRed
                             }

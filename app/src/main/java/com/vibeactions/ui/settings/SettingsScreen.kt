@@ -129,38 +129,20 @@ fun SettingsScreen(
             Text(
                 "Appearance",
                 style = MaterialTheme.typography.titleSmall,
+                color = Color.White,
                 modifier = Modifier.padding(top = 4.dp)
             )
-            Text(
-                "Hue: ${BackgroundSetting.hue.toInt()}°",
-                style = MaterialTheme.typography.bodySmall,
-                color = OnSurfaceVariant
-            )
-            Slider(
-                value = BackgroundSetting.hue,
-                onValueChange = { v -> BackgroundSetting.setHue(context, v) },
-                valueRange = 0f..360f
-            )
-            Text(
-                "Saturation: ${(BackgroundSetting.saturation * 100).toInt()}%",
-                style = MaterialTheme.typography.bodySmall,
-                color = OnSurfaceVariant
-            )
-            Slider(
-                value = BackgroundSetting.saturation,
-                onValueChange = { v -> BackgroundSetting.setSaturation(context, v) },
-                valueRange = 0f..2f
-            )
-            Text(
-                "Card opacity: ${(BackgroundSetting.cardOpacity * 100).toInt()}%",
-                style = MaterialTheme.typography.bodySmall,
-                color = OnSurfaceVariant
-            )
-            Slider(
-                value = BackgroundSetting.cardOpacity,
-                onValueChange = { v -> BackgroundSetting.setCardOpacity(context, v) },
-                valueRange = 0f..1f
-            )
+            // Label · slider · value on one line, rows packed tight so four fit in the old space.
+            Column {
+                AppearanceSlider("Hue", "${BackgroundSetting.hue.toInt()}°",
+                    BackgroundSetting.hue, 0f..360f) { BackgroundSetting.setHue(context, it) }
+                AppearanceSlider("Saturation", "${(BackgroundSetting.saturation * 100).toInt()}%",
+                    BackgroundSetting.saturation, 0f..2f) { BackgroundSetting.setSaturation(context, it) }
+                AppearanceSlider("Brightness", "${(BackgroundSetting.brightness * 100).toInt()}%",
+                    BackgroundSetting.brightness, 0.3f..1.6f) { BackgroundSetting.setBrightness(context, it) }
+                AppearanceSlider("Cards", "${(BackgroundSetting.cardOpacity * 100).toInt()}%",
+                    BackgroundSetting.cardOpacity, 0f..1f) { BackgroundSetting.setCardOpacity(context, it) }
+            }
             HorizontalDivider()
 
             ListItem(
@@ -427,6 +409,29 @@ fun SettingsScreen(
             },
             dismissButton = { TextButton(onClick = { showQuietEnd = false }) { Text("Cancel") } },
             text = { TimePicker(state = tps) }
+        )
+    }
+}
+
+@Composable
+private fun AppearanceSlider(
+    label: String,
+    valueText: String,
+    value: Float,
+    range: ClosedFloatingPointRange<Float>,
+    onChange: (Float) -> Unit
+) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text(label, color = OnSurface, fontSize = 14.sp, modifier = Modifier.width(92.dp))
+        Slider(
+            value = value,
+            onValueChange = onChange,
+            valueRange = range,
+            modifier = Modifier.weight(1f).height(36.dp)
+        )
+        Text(
+            valueText, color = OnSurfaceVariant, fontSize = 13.sp, textAlign = TextAlign.End,
+            modifier = Modifier.width(48.dp)
         )
     }
 }
