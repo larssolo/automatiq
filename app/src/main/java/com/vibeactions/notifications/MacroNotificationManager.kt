@@ -130,7 +130,14 @@ class MacroNotificationManager @Inject constructor(
     /** Posts a notification with Send/Discard action buttons for APPROVE-mode AI texts.
      *  [recipient] is the counterparty for auto-replies; null for AI-variation macros (scheduled),
      *  whose approved text goes to the macro's own recipient list. */
-    fun notifyAiApproval(macro: Macro, recipient: String?, generatedBody: String, aiNote: String? = null) {
+    fun notifyAiApproval(
+        macro: Macro,
+        recipient: String?,
+        generatedBody: String,
+        aiNote: String? = null,
+        /** The incoming SMS an auto-reply answers — needed to write a new suggestion for it. */
+        incoming: String? = null
+    ) {
         // Request-code/notification keys keep the recipient when present so parallel approvals for
         // different senders coexist; a macro's own variation has one pending draft at a time.
         val partyKey = recipient.orEmpty()
@@ -160,6 +167,14 @@ class MacroNotificationManager @Inject constructor(
             context, ("ai_discard" + macro.id + partyKey).hashCode() and 0x7FFFFFFF, discardIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
+        // Asks AI for a different text; the new draft replaces this notification (same id).
+        val regenerateIntent = AiReplyActionReceiver.regenerateIntent(
+            context, macro.id, recipient, incoming, generatedBody, notifId
+        )
+        val regeneratePi = PendingIntent.getBroadcast(
+            context, ("ai_regen" + macro.id + partyKey).hashCode() and 0x7FFFFFFF, regenerateIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
         // Tapping the body opens an in-app approve/edit dialog — the reliable path on OEM skins
         // (MIUI) that collapse notifications and never render the Send/Discard action buttons.
         val openIntent = Intent(context, com.vibeactions.ui.MainActivity::class.java).apply {
@@ -170,6 +185,7 @@ class MacroNotificationManager @Inject constructor(
             putExtra(com.vibeactions.ui.MainActivity.EXTRA_BODY, generatedBody)
             putExtra(com.vibeactions.ui.MainActivity.EXTRA_NOTIF_ID, notifId)
             aiNote?.let { putExtra(com.vibeactions.ui.MainActivity.EXTRA_AI_NOTE, it) }
+            incoming?.let { putExtra(com.vibeactions.ui.MainActivity.EXTRA_INCOMING, it) }
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
         }
         val openPi = PendingIntent.getActivity(
@@ -194,6 +210,7 @@ class MacroNotificationManager @Inject constructor(
             // keep the old dismissable behaviour — a missed one is just an unanswered SMS.
             .setOngoing(recipient == null)
             .addAction(android.R.drawable.ic_menu_send, "Send", sendPi)
+            .addAction(android.R.drawable.ic_menu_rotate, "New suggestion", regeneratePi)
             .addAction(android.R.drawable.ic_menu_delete, "Discard", discardPi)
         manager.notify(notifId, builder.build())
     }

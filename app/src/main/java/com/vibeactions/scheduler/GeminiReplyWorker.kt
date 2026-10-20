@@ -43,12 +43,20 @@ class GeminiReplyWorker @AssistedInject constructor(
         val body = inputData.getString(KEY_BODY) ?: return Result.failure()
         // Fallback for jobs enqueued by an older app version whose inputData had no event id.
         val eventId = inputData.getString(KEY_EVENT_ID) ?: body.hashCode().toString()
+        // Set when the user asked for a new suggestion: write something different, and always
+        // come back for approval — never auto-send, and never fall back to sending fixed text.
+        val previous = inputData.getString(KEY_PREVIOUS)
 
         val macro = repo.getById(macroId) ?: return Result.success()
         if (!macro.enabled) return Result.success()
 
         val prefs = applicationContext.getSharedPreferences("ai_settings", Context.MODE_PRIVATE)
         val apiKey = prefs.getString("gemini_api_key", "").orEmpty()
+        if (previous != null && (apiKey.isBlank() || !AiConsent.given(applicationContext))) {
+            // Can't write a new suggestion — keep the current draft instead of sending anything.
+            notifications.notifyAiApproval(macro, sender, previous, incoming = body)
+            return Result.success()
+        }
         if (apiKey.isBlank() || !AiConsent.given(applicationContext)) {
             // No key, or the user hasn't agreed to send message text to Google — fixed body.
             val note = if (apiKey.isBlank()) "AI off: no API key — fixed text sent"
@@ -66,7 +74,9 @@ class GeminiReplyWorker @AssistedInject constructor(
         val systemPrompt = buildString {
             append("You write ONE short SMS reply (at most 2 sentences). ")
             append("Reply ONLY with the message itself — no preamble, no explanation, no quotes. ")
-            if (instruction != null) append("Reply like this: $instruction")
+            append("Use the language of the incoming message; Danish stays Danish — never Norwegian or Swedish. ")
+            if (instruction != null) append("Reply like this: $instruction ")
+            if (previous != null) append("Write a clearly different reply than this earlier one: \"$previous\"")
         }
         var aiNote: String?
         var fixedTextUsed = false
@@ -80,7 +90,12 @@ class GeminiReplyWorker @AssistedInject constructor(
             // claim and never send the reply. Let WorkManager re-run this cleanly instead.
             throw cancelled
         } catch (t: Throwable) {
-            Log.w(TAG, "AI reply failed, sending fixed text: ${t.message}")
+            Log.w(TAG, "AI reply failed: ${t.message}")
+            if (previous != null) {
+                // No new suggestion — show the previous one again rather than losing the draft.
+                notifications.notifyAiApproval(macro, sender, previous, incoming = body)
+                return Result.success()
+            }
             aiNote = "AI unavailable (${aiFailureReason(t)}) — fixed text sent"
             fixedTextUsed = true
             // Gemini unreachable → send the fixed fallback body, expanded like any other reply
@@ -91,8 +106,8 @@ class GeminiReplyWorker @AssistedInject constructor(
         // Same guard for a stop landing after the call returned.
         coroutineContext.ensureActive()
 
-        when (macro.aiSendMode) {
-            AiSendMode.APPROVE -> notifications.notifyAiApproval(macro, sender, generated, aiNote)
+        when (if (previous != null) AiSendMode.APPROVE else macro.aiSendMode) {
+            AiSendMode.APPROVE -> notifications.notifyAiApproval(macro, sender, generated, aiNote, incoming = body)
             AiSendMode.AUTO -> {
                 // Claim this (macro, sender, event, day) before sending. If WorkManager re-runs a
                 // worker that died mid-flight, the retry carries identical inputData → identical key
@@ -134,5 +149,6 @@ class GeminiReplyWorker @AssistedInject constructor(
         const val KEY_SENDER = "sender"
         const val KEY_BODY = "body"
         const val KEY_EVENT_ID = "event_id"
+        const val KEY_PREVIOUS = "previous"
     }
 }

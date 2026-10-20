@@ -16,10 +16,12 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -62,7 +64,9 @@ data class AiApproval(
     val toLabel: String,
     val body: String,
     val notifId: Int,
-    val aiNote: String? = null
+    val aiNote: String? = null,
+    /** The incoming SMS an auto-reply answers; lets the dialog ask for a new suggestion. */
+    val incoming: String? = null
 )
 
 @AndroidEntryPoint
@@ -128,7 +132,8 @@ class MainActivity : ComponentActivity() {
             ?: recipient?.let { maskPhone(it) } ?: "recipients"
         return AiApproval(
             macroId, recipient, toLabel, body, intent.getIntExtra(EXTRA_NOTIF_ID, -1),
-            intent.getStringExtra(EXTRA_AI_NOTE)
+            intent.getStringExtra(EXTRA_AI_NOTE),
+            intent.getStringExtra(EXTRA_INCOMING)
         )
     }
 
@@ -145,6 +150,7 @@ class MainActivity : ComponentActivity() {
         const val EXTRA_NOTIF_ID = "notif_id"
         const val EXTRA_NAV = "nav"
         const val EXTRA_AI_NOTE = "ai_note"
+        const val EXTRA_INCOMING = "incoming"
     }
 }
 
@@ -178,11 +184,30 @@ private fun AiApprovalDialog(approval: AiApproval, onDone: () -> Unit) {
                     label = { Text("Message (editable)") },
                     modifier = Modifier.fillMaxWidth()
                 )
-                // Reports what the AI wrote, not the user's edit of it.
-                ReportAiButton(
-                    approval.body,
-                    if (approval.recipient != null) AiReportSource.AUTO_REPLY else AiReportSource.VARIATION
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    // A reply can only be rewritten when we still know the message it answers.
+                    if (approval.recipient == null || approval.incoming != null) {
+                        TextButton(onClick = {
+                            context.sendBroadcast(
+                                AiReplyActionReceiver.regenerateIntent(
+                                    context, approval.macroId, approval.recipient, approval.incoming,
+                                    approval.body, approval.notifId
+                                )
+                            )
+                            onDone()
+                        }) {
+                            Icon(Icons.Default.Refresh, null, modifier = Modifier.size(16.dp))
+                            Spacer(Modifier.width(4.dp))
+                            Text("New suggestion")
+                        }
+                    }
+                    Spacer(Modifier.weight(1f))
+                    // Reports what the AI wrote, not the user's edit of it.
+                    ReportAiButton(
+                        approval.body,
+                        if (approval.recipient != null) AiReportSource.AUTO_REPLY else AiReportSource.VARIATION
+                    )
+                }
             }
         },
         confirmButton = {
