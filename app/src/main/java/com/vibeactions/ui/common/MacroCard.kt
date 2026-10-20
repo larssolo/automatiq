@@ -221,7 +221,7 @@ fun MacroCard(
 
 
 /** Trigger summary plus, for non-SMS macros, what they do (e.g. "08:00 · Weekdays · Silent"). */
-private fun compactSummary(macro: Macro): String {
+internal fun compactSummary(macro: Macro): String {
     val action = when (macro.actionType) {
         ActionType.SMS -> null
         ActionType.SOUND -> MacroActionRunner.soundModeLabel(macro.soundMode)

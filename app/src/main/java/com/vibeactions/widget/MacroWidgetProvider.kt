@@ -5,6 +5,7 @@ import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
 import android.content.Context
 import android.content.Intent
+import android.graphics.Color
 import android.os.Bundle
 import android.widget.RemoteViews
 import com.vibeactions.R
@@ -81,7 +82,15 @@ class MacroWidgetProvider : AppWidgetProvider() {
             if (macroId != null) {
                 val macro = ep.macroRepository().getById(macroId)
                 if (compact) {
-                    macro?.let { views.setInt(R.id.widget_compact_bg, "setColorFilter", accentColorFor(it).toInt()) }
+                    macro?.let {
+                        val accent = accentColorFor(it).toInt()
+                        views.setInt(R.id.widget_compact_bg, "setColorFilter", accent)
+                        // Same rule as the macro picker: white glyph on dark accents, black on bright.
+                        val glyph = if (Color.luminance(accent) > 0.4f) Color.BLACK else Color.WHITE
+                        views.setInt(R.id.widget_compact_icon, "setColorFilter", glyph)
+                    }
+                    // The name under the button tells several 1×1 widgets apart on the home screen.
+                    views.setTextViewText(R.id.widget_compact_name, macro?.name ?: "Macro")
                 } else {
                     macro?.let { views.setInt(R.id.widget_icon, "setColorFilter", accentColorFor(it).toInt()) }
                     views.setTextViewText(R.id.widget_name, macro?.name ?: "Macro")

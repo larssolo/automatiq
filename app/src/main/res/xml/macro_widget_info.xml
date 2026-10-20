@@ -4,6 +4,8 @@
     android:targetCellWidth="1" android:targetCellHeight="1"
     android:updatePeriodMillis="0"
     android:initialLayout="@layout/widget_macro"
+    android:previewLayout="@layout/widget_preview"
+    android:description="@string/widget_description"
     android:configure="com.vibeactions.widget.MacroWidgetConfigActivity"
     android:resizeMode="horizontal|vertical"
     android:widgetCategory="home_screen" />

@@ -23,16 +23,11 @@ class WidgetRefresher @Inject constructor(
     }
 
     /**
-     * Re-renders every widget the app owns. The app-shortcut widget draws the target app's real
-     * icon only when its provider runs; a reinstall or reboot leaves it showing the layout's
-     * placeholder arrow until the system happens to call onUpdate (which some OEM launchers skip).
-     * Calling this on app start rebuilds all widgets from their stored mapping, so their icons
-     * self-heal the same way alarms/geofences do.
+     * Re-renders every macro widget from its stored mapping. Called on app start, so widgets
+     * self-heal after a reinstall or reboot even on launchers that skip onUpdate.
      */
     suspend fun refreshAll() {
         val manager = AppWidgetManager.getInstance(context)
-        manager.getAppWidgetIds(ComponentName(context, AppShortcutWidgetProvider::class.java))
-            .forEach { AppShortcutWidgetProvider.renderWidget(context, manager, it) }
         manager.getAppWidgetIds(ComponentName(context, MacroWidgetProvider::class.java))
             .forEach { MacroWidgetProvider.renderWidget(context, manager, it) }
     }

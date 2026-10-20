@@ -21,13 +21,6 @@
 
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
-    <!-- Android 11+ package visibility: the app-shortcut widget lists launchable apps. -->
-    <queries>
-        <intent>
-            <action android:name="android.intent.action.MAIN" />
-            <category android:name="android.intent.category.LAUNCHER" />
-        </intent>
-    </queries>
 
     <application
         android:name=".VibeActionsApp"
@@ -107,6 +100,7 @@
 
         <receiver
             android:name=".widget.MacroWidgetProvider"
+            android:label="Macro button"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
@@ -129,25 +123,5 @@
             </intent-filter>
         </activity>
 
-        <receiver
-            android:name=".widget.AppShortcutWidgetProvider"
-            android:label="App shortcut"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-            </intent-filter>
-            <meta-data
-                android:name="android.appwidget.provider"
-                android:resource="@xml/app_shortcut_widget_info" />
-        </receiver>
-
-        <activity
-            android:name=".widget.AppShortcutConfigActivity"
-            android:exported="true"
-            android:theme="@style/Theme.VibeActions">
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
-            </intent-filter>
-        </activity>
     </application>
 </manifest>
