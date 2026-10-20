@@ -51,6 +51,9 @@ class AiVaryWorker @AssistedInject constructor(
         // date/time/weekday and the model can't mangle a literal {token}. No sender: this is the
         // macro's own send, not a reply.
         val fixedBody = expandTemplate(macro.messageBody, LocalDateTime.now(), macro.name)
+        // Set when the user asked for a new suggestion: write something different, always come
+        // back for approval, and never send the fixed text on failure (they only asked for a draft).
+        val previous = inputData.getString(KEY_PREVIOUS)
 
         val prefs = applicationContext.getSharedPreferences("ai_settings", Context.MODE_PRIVATE)
         val apiKey = prefs.getString("gemini_api_key", "").orEmpty()
@@ -64,7 +67,10 @@ class AiVaryWorker @AssistedInject constructor(
         }
         val generated: String? = if (aiNote != null) null else try {
             geminiGenerateWithFallback(
-                apiKey, buildVaryPrompt(macro.aiReplyInstruction), fixedBody, model,
+                apiKey,
+                buildVaryPrompt(macro.aiReplyInstruction) +
+                    (previous?.let { " Write a clearly different version than this earlier one: \"$it\"" } ?: ""),
+                fixedBody, model,
                 // Variations mirror the original's length; 300 gives headroom over the reply
                 // pipeline's 150 for longer scheduled bodies without letting the model ramble.
                 maxOutputTokens = 300
@@ -83,6 +89,10 @@ class AiVaryWorker @AssistedInject constructor(
         // Same guard for a stop that lands after the call returned: claim only while still active.
         coroutineContext.ensureActive()
 
+        if (generated == null && previous != null) {
+            notifications.notifyAiApproval(macro, null, previous)
+            return Result.success()
+        }
         if (generated == null) {
             // No key or Gemini unreachable → the fixed text goes out like a plain scheduled send,
             // approval mode or not: there is nothing AI-written to approve, and the day's claim is
@@ -95,7 +105,7 @@ class AiVaryWorker @AssistedInject constructor(
             return Result.success()
         }
 
-        when (macro.aiSendMode) {
+        when (if (previous != null) AiSendMode.APPROVE else macro.aiSendMode) {
             // No recipient: approval sends to the macro's own recipient list. Send/edit/discard
             // happen in the notification or the in-app dialog; the day's send stays consumed even
             // if the user discards — that is what discard means.
@@ -125,6 +135,7 @@ class AiVaryWorker @AssistedInject constructor(
         private const val TAG = "AutomatiqAI"
         const val KEY_MACRO_ID = "macro_id"
         const val KEY_EVENT_ID = "event_id"
+        const val KEY_PREVIOUS = "previous"
 
         /** Unique-work name per macro: yesterday's still-pending variation must be replaced, not
          *  stacked, when today's fire enqueues — two queued workers would double-send in AUTO. */
