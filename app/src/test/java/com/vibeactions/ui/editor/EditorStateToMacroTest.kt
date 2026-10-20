@@ -165,4 +165,43 @@ class EditorStateToMacroTest {
         )
         assertTrue(!state.canSave)
     }
+
+    // --- non-SMS actions ---
+
+    @Test fun `sound macro drops recipients and AI and needs no message`() {
+        val state = EditorState(
+            name = "Meeting", triggerType = TriggerType.SCHEDULED, scheduledTime = "09:00",
+            recipients = listOf("+4512345678"), message = "", aiReplyEnabled = true,
+            actionType = com.vibeactions.domain.model.ActionType.SOUND,
+            soundMode = com.vibeactions.domain.model.SoundMode.SILENT
+        )
+        assertTrue(state.canSave)
+        val m = state.toMacro("id")
+        assertEquals(com.vibeactions.domain.model.ActionType.SOUND, m.actionType)
+        assertTrue(m.recipients.isEmpty())
+        assertEquals(false, m.aiReplyEnabled)
+    }
+
+    @Test fun `reply triggers always send SMS whatever action was picked`() {
+        val state = EditorState(
+            name = "Away", triggerType = TriggerType.INCOMING, message = "Back Monday",
+            actionType = com.vibeactions.domain.model.ActionType.WEBHOOK
+        )
+        assertEquals(com.vibeactions.domain.model.ActionType.SMS, state.toMacro("id").actionType)
+    }
+
+    @Test fun `webhook needs an http(s) url, reminder needs text`() {
+        val hook = EditorState(
+            name = "Lights", triggerType = TriggerType.MANUAL,
+            actionType = com.vibeactions.domain.model.ActionType.WEBHOOK, webhookUrl = "home.local/on"
+        )
+        assertEquals(false, hook.canSave)
+        assertTrue(hook.copy(webhookUrl = "http://home.local/on").canSave)
+        val reminder = EditorState(
+            name = "Pills", triggerType = TriggerType.MANUAL,
+            actionType = com.vibeactions.domain.model.ActionType.REMINDER, message = ""
+        )
+        assertEquals(false, reminder.canSave)
+        assertTrue(reminder.copy(message = "Take your pills").canSave)
+    }
 }

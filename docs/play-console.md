@@ -32,38 +32,44 @@ Udkast til alt, der skal udfyldes i Play Console for `app.kodekid.automatiq`. Te
 
 **Short description** (maks 80 tegn):
 ```
-Schedule, auto-reply and trigger SMS — on your phone, with optional AI.
+Automate texts, sound mode, reminders and webhooks — right on your phone.
 ```
 
 **Full description** (maks 4000 tegn):
 ```
-Automatiq puts your text messages on autopilot.
+Automatiq puts your phone on autopilot.
 
-Set up a macro once — who it goes to, what it says and when — and Automatiq sends it for you. Everything runs on your phone: no account, no server, no ads.
+Set up a macro once — when it should run and what it should do — and Automatiq takes care of it. Everything runs on your phone: no account, no server, no ads.
 
-FIVE WAYS TO FIRE A MESSAGE
-• Schedule — at 08:30 on weekdays, every second week, until a date you choose
+FOUR WAYS TO TRIGGER A MACRO
+• Schedule — at 08:30 on weekdays, every second week, on 1–2 random days, until a date you choose
 • One tap — from the list or a home-screen widget
-• Auto-reply — answer incoming texts that match a sender or keyword
-• Missed call — text people back when you can't pick up
-• Device — when the charger is plugged in, or a Bluetooth device or Wi-Fi network connects
+• Incoming text — when a message from a chosen sender or with a keyword arrives
+• Missed call — when you can't pick up
+
+FOUR THINGS A MACRO CAN DO
+• Send a text — to one or many recipients, or reply to the sender or caller
+• Change sound mode — Normal, Vibrate, Silent or Do Not Disturb
+• Show a reminder — a notification with your own text
+• Call a web address — trigger your smart home (Home Assistant, IFTTT and more)
 
 MADE FOR REAL LIFE
 • Multiple recipients per macro, with contact names
 • Message variables like {dato}, {tid}, {ugedag} and {modtager}
+• Random send time and random days, so it never feels robotic
 • Folders with a master switch
 • Quiet hours for auto-replies
-• Delivery status and a full log of everything sent
+• Delivery status and a full log of everything that ran
 • Export and import backups
 
 OPTIONAL AI (GOOGLE GEMINI)
-Bring your own free Gemini API key and let AI write auto-replies, fresh variations of your scheduled texts, or suggestions for a new message. You choose per macro whether AI texts are sent automatically or wait for your approval. AI is off until you add a key and agree to send text to Google — and you can report any AI text that's wrong or offensive right in the app.
+Bring your own free Gemini API key and let AI write auto-replies, fresh variations of your scheduled texts, or suggestions for a new message. Approve each AI text before it's sent — or ask for a new suggestion right from the notification. AI is off until you add a key and agree to send text to Google, and you can report any AI text that's wrong or offensive right in the app.
 
 SET UP IN A MINUTE
-A guided setup walks you through every permission Android (and Xiaomi, Redmi and POCO phones) need for reliable background sending — one tap, and it tells you exactly what to switch on.
+A guided setup walks you through every permission Android (and Xiaomi, Redmi and POCO phones) need for reliable background automation — one tap, and it tells you exactly what to switch on.
 
 PRIVACY
-Your macros, contacts and messages stay on your phone. Text only leaves it when you use an AI feature (sent directly to Google with your own key) or report an AI text.
+Your macros, contacts and messages stay on your phone. Data only leaves it when you use an AI feature (sent directly to Google with your own key), report an AI text, or when a macro calls a web address you set up yourself.
 ```
 
 **Grafik** (klar i `store/`, se `store/README.md`):
@@ -109,6 +115,8 @@ Vælg **18+** (eller 13+). Ikke rettet mod børn.
 | Contacts | Nej | — | — | — | Læses kun på telefonen |
 | Phone numbers / call logs | Nej | — | — | — | Bruges kun på telefonen |
 
+**Webhook-handlingen:** sender en forespørgsel til en adresse, brugeren selv indtaster, med en tekst brugeren selv skriver. Det er brugerstyret overførsel til brugerens egen tjeneste og ikke indsamling hos dig. Hvis du vil være på den sikre side, kan du angive *App activity → Other user-generated content* som "delt, valgfri, brugerstyret".
+
 **Ingen** data behandles ephemeralt hos dig; rapporter gemmes. Gemini-data "deles" fordi teksten sendes til en tredjepart (Google).
 
 ### 3.7 Government apps / Financial features / Health
@@ -120,30 +128,31 @@ Nej til alle.
 
 ### 4.1 SMS og opkaldslog (`SEND_SMS`, `RECEIVE_SMS`, `READ_CALL_LOG`)
 
-Appen er ikke standard-SMS-app. Vælg undtagelsen **Device automation**.
+Appen er ikke standard-SMS-app. Vælg undtagelsen **Device automation**. Googles ordlyd: *"apps that enable the user to automate repetitive actions across multiple areas of the OS, based on one or more conditions (triggers) set by the user"* — teksten nedenfor er skrevet til netop den formulering.
 
 **Core functionality:**
 ```
-Automatiq is a task-automation app whose core purpose is sending SMS messages automatically based on conditions the user sets up in advance ("macros"): a schedule, an incoming SMS that matches a sender/keyword (auto-reply), a missed or declined call (text the caller back), or a device-state change (charger, Bluetooth, Wi-Fi).
+Automatiq is a device-automation app. The user builds "macros": a trigger they choose and an action the phone then performs automatically.
 
-- SEND_SMS: sends the user's own macro messages to recipients the user chose.
-- RECEIVE_SMS: detects incoming messages that match an auto-reply macro, so the app can reply to the sender.
-- READ_CALL_LOG: on Android 9+ the caller's number in the phone-state broadcast is only provided with this permission; it is needed to text back the caller of a missed call. The call log itself is not read or stored.
+Triggers: a time schedule (alarms), a one-tap/home-screen widget, an incoming SMS from a chosen sender or containing a keyword, or a missed or declined call.
+Actions: change the phone's sound mode or Do Not Disturb, show a reminder notification, call a web address (for example to control smart-home devices), or send an SMS.
 
-Every message is configured explicitly by the user. Without these permissions the app has no function.
+Triggers and actions therefore span several areas of the OS — alarms, telephony, messaging, audio and notification policy, notifications and the network. SMS and Call Log access is only used for the macros the user creates:
+
+- SEND_SMS: the "Send SMS" action sends the user's own message to recipients the user picked, or replies to the sender/caller of a trigger the user set up.
+- RECEIVE_SMS: the "incoming SMS" trigger detects messages that match the user's sender/keyword condition so the macro can run.
+- READ_CALL_LOG: the "missed call" trigger. On Android 9+ the caller's number in the phone-state broadcast is only provided with this permission; it is used only to reply to that caller. The call log is not read, stored or uploaded.
+
+SMS and call data is processed on the device and never uploaded, sold or shared — with one user-controlled exception: if the user turns on the optional AI reply feature and explicitly consents in the app, the text of the incoming message is sent to Google's Gemini API with the user's own API key to write the reply. Without these permissions the SMS and call triggers/actions cannot work; Android offers no alternative API for automated SMS.
 ```
-**Video** (≤ 30 sek, YouTube/Drive-link): optaget som `declaration-sms-device-automation.mp4` (se `store/README.md`). Manus:
-1. Åbn appen → opret makro "Auto-reply" med nøgleord "status".
-2. Send en SMS med "status" fra en anden telefon → svaret ankommer.
-3. Vis en planlagt makro (08:30, hverdage) og "Missed call"-makro.
-4. Vis tilladelsesdialogen i Phone setup.
+**Video** (≤ 30 sek, YouTube/Drive-link): `declaration-device-automation.mp4` (se `store/README.md`) viser flere handlinger + SMS-automatisering. Manus:
+1. Makro-listen med forskellige handlinger (lyd, påmindelse, webhook, SMS).
+2. "Quiet mode" køres → telefonen skifter til lydløs (ikon i statuslinjen).
+3. "Pills" køres → påmindelsen dukker op.
+4. En SMS kommer ind → auto-svaret sendes, og det ses i Log.
 
-### 4.2 Foreground service — `specialUse`
-
-```
-TriggerMonitorService runs only while the user has at least one enabled device-state macro (charging, Bluetooth or Wi-Fi trigger). It listens for these system state changes so the macro fires immediately, which can't be done reliably with WorkManager or implicit broadcasts (most are no longer delivered to manifest receivers). A persistent notification shows while it runs, and it stops as soon as no such macro is enabled.
-```
-Video: `declaration-foreground-service.mp4` (se `store/README.md`). Viser tjenestens notifikation, oplader sættes i → makroen affyres.
+### 4.2 Foreground service
+**Ikke relevant for Play-versionen.** Opladning/Bluetooth/Wi-Fi-triggerne (og tjenesten bag dem) er kun med i den delbare APK. Play-bundlen har ingen foreground service-type at erklære.
 
 ### 4.3 Exact alarms (`SCHEDULE_EXACT_ALARM`)
 Hvis konsollen spørger:
@@ -154,7 +163,7 @@ Scheduled macros send a user-set message at an exact user-set time (e.g. 08:30).
 ### 4.4 Batterioptimering (`REQUEST_IGNORE_BATTERY_OPTIMIZATIONS`)
 Ingen formular, men brugen skal holde politikken (Task automation app). Begrundelse ved review:
 ```
-Core function is scheduling automated actions (sending SMS at user-set times and on user-set conditions). Doze and App Standby would delay or drop these sends.
+Core function is running user-scheduled automated actions (sound mode, reminders, webhooks and SMS at user-set times and on user-set conditions). Doze and App Standby would delay or drop them.
 ```
 
 ---

@@ -23,8 +23,8 @@ android {
         applicationId = "app.kodekid.automatiq"
         minSdk = 26
         targetSdk = 36
-        versionCode = 5
-        versionName = "1.4"
+        versionCode = 6
+        versionName = "1.5"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -35,10 +35,13 @@ android {
         create("play") {
             dimension = "dist"
             buildConfigField("boolean", "LOCATION_TRIGGER", "false")
+            // Charging/Bluetooth/Wi-Fi need a specialUse foreground service — kept out of Play.
+            buildConfigField("boolean", "DEVICE_TRIGGERS", "false")
         }
         create("full") {
             dimension = "dist"
             buildConfigField("boolean", "LOCATION_TRIGGER", "true")
+            buildConfigField("boolean", "DEVICE_TRIGGERS", "true")
         }
     }
 

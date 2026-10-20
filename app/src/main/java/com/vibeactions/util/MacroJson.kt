@@ -1,8 +1,10 @@
 package com.vibeactions.util
 
+import com.vibeactions.domain.model.ActionType
 import com.vibeactions.domain.model.AiSendMode
 import com.vibeactions.domain.model.Macro
 import com.vibeactions.domain.model.MacroStatus
+import com.vibeactions.domain.model.SoundMode
 import com.vibeactions.domain.model.TriggerType
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -25,6 +27,10 @@ internal data class MacroDto(
     val radiusMeters: Float? = null, val geofenceTransition: Int? = null,
     val aiReplyEnabled: Boolean = false,
     val aiSendMode: String = "APPROVE",
+    val actionType: String = "SMS",
+    val soundMode: String = "SILENT",
+    val webhookUrl: String? = null,
+    val webhookMethod: String = "GET",
     val aiReplyInstruction: String? = null,
     val triggerOnConnect: Boolean = true,
     val triggerTarget: String? = null,
@@ -51,6 +57,10 @@ internal fun Macro.toDto() = MacroDto(
     radiusMeters = radiusMeters, geofenceTransition = geofenceTransition,
     aiReplyEnabled = aiReplyEnabled,
     aiSendMode = aiSendMode.name,
+    actionType = actionType.name,
+    soundMode = soundMode.name,
+    webhookUrl = webhookUrl,
+    webhookMethod = webhookMethod,
     aiReplyInstruction = aiReplyInstruction,
     triggerOnConnect = triggerOnConnect,
     triggerTarget = triggerTarget,
@@ -84,6 +94,10 @@ internal fun MacroDto.toMacro(): Macro {
         radiusMeters = radiusMeters, geofenceTransition = geofenceTransition,
         aiReplyEnabled = aiReplyEnabled,
         aiSendMode = AiSendMode.valueOf(aiSendMode),
+        actionType = runCatching { ActionType.valueOf(actionType) }.getOrDefault(ActionType.SMS),
+        soundMode = runCatching { SoundMode.valueOf(soundMode) }.getOrDefault(SoundMode.SILENT),
+        webhookUrl = webhookUrl,
+        webhookMethod = webhookMethod,
         aiReplyInstruction = aiReplyInstruction,
         triggerOnConnect = triggerOnConnect,
         triggerTarget = triggerTarget,

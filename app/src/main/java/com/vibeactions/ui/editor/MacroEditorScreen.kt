@@ -14,6 +14,7 @@ import android.net.Uri
 import android.os.Build
 import android.provider.ContactsContract
 import android.provider.Settings
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.text.KeyboardOptions
@@ -33,6 +34,9 @@ import com.vibeactions.ui.common.ReportAiButton
 import com.vibeactions.ui.common.rememberAiConsentGate
 import com.vibeactions.util.AiReportSource
 import com.vibeactions.domain.model.AiSendMode
+import com.vibeactions.scheduler.MacroActionRunner
+import com.vibeactions.domain.model.SoundMode
+import com.vibeactions.domain.model.ActionType
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -242,7 +246,9 @@ fun MacroEditorScreen(
                     onDismissRequest = { triggerExpanded = false }
                 ) {
                     TriggerType.entries.filter {
-                        it != TriggerType.LOCATION || BuildConfig.LOCATION_TRIGGER || s.triggerType == it
+                        s.triggerType == it ||
+                            (it != TriggerType.LOCATION || BuildConfig.LOCATION_TRIGGER) &&
+                            (it !in STATE_TRIGGERS || BuildConfig.DEVICE_TRIGGERS)
                     }.forEach { type ->
                         DropdownMenuItem(
                             text = { Text(triggerLabel(type)) },
@@ -253,6 +259,11 @@ fun MacroEditorScreen(
                         )
                     }
                 }
+            }
+
+            // What the macro does. Reply triggers always answer by SMS, so they don't get a choice.
+            if (s.triggerType != TriggerType.INCOMING && s.triggerType != TriggerType.MISSED_CALL) {
+                ActionSection(s, vm)
             }
 
             if (s.triggerType == TriggerType.SCHEDULED) {
@@ -803,7 +814,7 @@ fun MacroEditorScreen(
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
-            } else {
+            } else if (s.effectiveAction == ActionType.SMS) {
                 Text("Recipients", style = MaterialTheme.typography.labelLarge, color = OnSurface)
                 s.recipients.forEachIndexed { index, number ->
                     Row(
@@ -879,12 +890,17 @@ fun MacroEditorScreen(
                 }
             }
 
-            OutlinedTextField(
+            if (s.effectiveAction != ActionType.SOUND) OutlinedTextField(
                 value = s.message, onValueChange = { v -> vm.update { it.copy(message = v) } },
                 label = {
                     Text(
-                        if (s.triggerType == TriggerType.INCOMING ||
-                            s.triggerType == TriggerType.MISSED_CALL) "Reply message" else "Message"
+                        when {
+                            s.triggerType == TriggerType.INCOMING ||
+                                s.triggerType == TriggerType.MISSED_CALL -> "Reply message"
+                            s.effectiveAction == ActionType.REMINDER -> "Reminder text"
+                            s.effectiveAction == ActionType.WEBHOOK -> "Request body (POST, optional)"
+                            else -> "Message"
+                        }
                     )
                 },
                 supportingText = {
@@ -931,7 +947,7 @@ fun MacroEditorScreen(
                     }
                 }
             }
-            Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
+            if (s.effectiveAction == ActionType.SMS) Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
                 TextButton(onClick = { showAiCompose = true }) {
                     Icon(
                         Icons.Default.AutoAwesome,
@@ -943,7 +959,7 @@ fun MacroEditorScreen(
                 }
             }
 
-            if (s.triggerType == TriggerType.SCHEDULED) {
+            if (s.triggerType == TriggerType.SCHEDULED && s.effectiveAction == ActionType.SMS) {
                 // AI variation: every fire sends a fresh Gemini rewrite of the message above, so a
                 // recurring send never delivers the exact same text twice. Same APPROVE/AUTO modes
                 // as AI auto-replies; the fixed message doubles as the no-AI fallback.
@@ -1007,7 +1023,13 @@ fun MacroEditorScreen(
                 FilledTonalButton(onClick = onSend, modifier = Modifier.fillMaxWidth()) {
                     Icon(Icons.Default.Send, null, Modifier.size(16.dp))
                     Spacer(Modifier.width(6.dp))
-                    Text(if (s.triggerType == TriggerType.MANUAL) "Send now" else "Send now (test)")
+                    Text(
+                        when {
+                            s.effectiveAction != ActionType.SMS -> "Run now"
+                            s.triggerType == TriggerType.MANUAL -> "Send now"
+                            else -> "Send now (test)"
+                        }
+                    )
                 }
             }
 
@@ -1337,3 +1359,115 @@ private fun SmallNumberMenu(value: Int, range: IntRange, onPick: (Int) -> Unit) 
         }
     }
 }
+
+private val ACTION_LABELS = listOf(
+    ActionType.SMS to "Send SMS",
+    ActionType.SOUND to "Change sound mode",
+    ActionType.REMINDER to "Show reminder",
+    ActionType.WEBHOOK to "Call a web address (webhook)"
+)
+
+/** Action picker plus the settings of the chosen non-SMS action. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ActionSection(s: EditorState, vm: MacroEditorViewModel) {
+    val ctx = LocalContext.current
+    var actionOpen by remember { mutableStateOf(false) }
+    ExposedDropdownMenuBox(expanded = actionOpen, onExpandedChange = { actionOpen = it }) {
+        OutlinedTextField(
+            value = ACTION_LABELS.first { it.first == s.actionType }.second,
+            onValueChange = {}, readOnly = true,
+            label = { Text("Action") },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = actionOpen) },
+            modifier = Modifier.menuAnchor().fillMaxWidth()
+        )
+        ExposedDropdownMenu(expanded = actionOpen, onDismissRequest = { actionOpen = false }) {
+            ACTION_LABELS.forEach { (type, label) ->
+                DropdownMenuItem(text = { Text(label) }, onClick = {
+                    vm.update { it.copy(actionType = type) }
+                    actionOpen = false
+                })
+            }
+        }
+    }
+    when (s.actionType) {
+        ActionType.SOUND -> {
+            var modeOpen by remember { mutableStateOf(false) }
+            ExposedDropdownMenuBox(expanded = modeOpen, onExpandedChange = { modeOpen = it }) {
+                OutlinedTextField(
+                    value = MacroActionRunner.soundModeLabel(s.soundMode),
+                    onValueChange = {}, readOnly = true,
+                    label = { Text("Switch to") },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = modeOpen) },
+                    modifier = Modifier.menuAnchor().fillMaxWidth()
+                )
+                ExposedDropdownMenu(expanded = modeOpen, onDismissRequest = { modeOpen = false }) {
+                    SoundMode.entries.forEach { m ->
+                        DropdownMenuItem(text = { Text(MacroActionRunner.soundModeLabel(m)) }, onClick = {
+                            vm.update { it.copy(soundMode = m) }
+                            modeOpen = false
+                        })
+                    }
+                }
+            }
+            if (MacroActionRunner.needsDndAccess(s.soundMode)) {
+                // Re-checked on resume: the user grants it in system settings and comes back.
+                var granted by remember { mutableStateOf(dndGranted(ctx)) }
+                val owner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+                DisposableEffect(owner) {
+                    val obs = androidx.lifecycle.LifecycleEventObserver { _, e ->
+                        if (e == androidx.lifecycle.Lifecycle.Event.ON_RESUME) granted = dndGranted(ctx)
+                    }
+                    owner.lifecycle.addObserver(obs)
+                    onDispose { owner.lifecycle.removeObserver(obs) }
+                }
+                if (!granted) {
+                    Text(
+                        "Automatiq needs Do Not Disturb access to switch to this mode.",
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                    OutlinedButton(
+                        onClick = {
+                            runCatching {
+                                ctx.startActivity(Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS))
+                            }
+                            Toast.makeText(ctx, "Find Automatiq and allow it, then go back", Toast.LENGTH_LONG).show()
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) { Text("Allow Do Not Disturb access") }
+                }
+            }
+        }
+        ActionType.WEBHOOK -> {
+            OutlinedTextField(
+                value = s.webhookUrl,
+                onValueChange = { v -> vm.update { it.copy(webhookUrl = v) } },
+                label = { Text("URL") },
+                placeholder = { Text("https://…") },
+                isError = s.webhookUrl.isNotBlank() && !s.webhookValid,
+                supportingText = { Text("Called when the macro fires. Variables like {dato} work here too.") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
+                singleLine = true, modifier = Modifier.fillMaxWidth()
+            )
+            SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+                listOf("GET", "POST").forEachIndexed { i, method ->
+                    SegmentedButton(
+                        selected = s.webhookMethod == method,
+                        onClick = { vm.update { it.copy(webhookMethod = method) } },
+                        shape = SegmentedButtonDefaults.itemShape(i, 2)
+                    ) { Text(method) }
+                }
+            }
+        }
+        ActionType.REMINDER -> Text(
+            "Shows a notification with the text below when the macro fires.",
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.bodySmall
+        )
+        ActionType.SMS -> {}
+    }
+}
+
+private fun dndGranted(ctx: android.content.Context) =
+    ctx.getSystemService(android.app.NotificationManager::class.java).isNotificationPolicyAccessGranted

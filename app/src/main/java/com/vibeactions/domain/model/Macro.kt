@@ -3,6 +3,10 @@ package com.vibeactions.domain.model
 enum class TriggerType { SCHEDULED, MANUAL, INCOMING, LOCATION, CHARGING, BLUETOOTH, WIFI, MISSED_CALL }
 enum class MacroStatus { SUCCESS, FAILED, PENDING }
 enum class AiSendMode { APPROVE, AUTO }
+/** What a macro does when it fires. Reply triggers (auto-reply, missed call) always send SMS. */
+enum class ActionType { SMS, SOUND, REMINDER, WEBHOOK }
+/** SOUND action target: ringer mode, or Do Not Disturb on/off. */
+enum class SoundMode { NORMAL, VIBRATE, SILENT, DND_ON, DND_OFF }
 
 /** Radio delivery-report outcome for a sent SMS; null = the carrier reported nothing. */
 enum class DeliveryStatus { DELIVERED, FAILED }
@@ -76,7 +80,14 @@ data class Macro(
     /** BLUETOOTH/WIFI: human-readable label for [triggerTarget] shown in the UI (e.g. the device name). */
     val triggerTargetLabel: String? = null,
     /** Folder this macro lives in; null = top level ("root") of the list. */
-    val folderId: String? = null
+    val folderId: String? = null,
+    /** What firing does; [ActionType.SMS] is the original behaviour. */
+    val actionType: ActionType = ActionType.SMS,
+    /** SOUND: the mode to switch to. */
+    val soundMode: SoundMode = SoundMode.SILENT,
+    /** WEBHOOK: URL to call ({dato}/{tid}/… tokens are filled in) and "GET" or "POST". */
+    val webhookUrl: String? = null,
+    val webhookMethod: String = "GET"
 ) {
     /** Stable positive Int request code for PendingIntent, derived from the UUID. */
     fun alarmRequestCode(): Int = (id.hashCode() and 0x7FFFFFFF)

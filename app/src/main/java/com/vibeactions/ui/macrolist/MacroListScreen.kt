@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.vibeactions.domain.model.ActionType
 import com.vibeactions.domain.model.Folder
 import com.vibeactions.domain.model.Macro
 import com.vibeactions.ui.common.FolderCard
@@ -127,7 +128,11 @@ fun MacroListScreen(
             macro.triggerType, macro.aiReplyEnabled,
             hasOverrideBody = false, hasOverrideRecipient = false
         )
-        val message = if (varying) "Writing AI message — ${macro.name}…" else "On its way — ${macro.name}"
+        val message = when {
+            varying -> "Writing AI message — ${macro.name}…"
+            macro.actionType != ActionType.SMS -> "Running — ${macro.name}"
+            else -> "On its way — ${macro.name}"
+        }
         scope.launch { snackbar.showSnackbar(message) }
     }
     fun dropped() {

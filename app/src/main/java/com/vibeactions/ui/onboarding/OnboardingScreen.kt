@@ -75,7 +75,11 @@ private val TRIGGERS = listOf(
     Trigger(Icons.AutoMirrored.Filled.PhoneMissed, "Missed call", "Text people back when you can't pick up."),
     Trigger(Icons.Default.LocationOn, "Location", "Arriving at or leaving a place you choose."),
     Trigger(Icons.Default.BatteryChargingFull, "Device", "Charger plugged in, Bluetooth or Wi-Fi connects.")
-).filter { it.name != "Location" || BuildConfig.LOCATION_TRIGGER }
+).filter {
+    (it.name != "Location" || BuildConfig.LOCATION_TRIGGER) && (it.name != "Device" || BuildConfig.DEVICE_TRIGGERS)
+}
+
+private val NUMBER_WORDS = listOf("Zero", "One", "Two", "Three", "Four", "Five", "Six", "Seven")
 
 /**
  * First-run guide. One live [SignalCore] sits above a pager and morphs with the swipe; each page
@@ -340,7 +344,7 @@ private fun Pill(icon: ImageVector, text: String) {
 @Composable
 private fun TriggersPage(index: Int) {
     Kicker("// 02 · TRIGGERS", Amber)
-    Title("${if (TRIGGERS.size == 6) "Six" else "Five"} ways\nto fire a message.")
+    Title("${NUMBER_WORDS[TRIGGERS.size]} ways\nto fire a macro.")
     // Ticker follows whichever trigger the orbit above has brought to the top.
     AnimatedContent(
         targetState = index,
@@ -373,7 +377,10 @@ private fun TriggersPage(index: Int) {
         }
     }
     Spacer(Modifier.height(14.dp))
-    Body("Mix them with message variables like {name} or {weekday}, multiple recipients and folders.")
+    Body(
+        "And not just texts: a macro can also switch your sound mode or Do Not Disturb, show a " +
+            "reminder, or call a web address for your smart home."
+    )
 }
 
 @Composable
