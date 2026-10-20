@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Automatiq</string>
+    <string name="widget_description">One-tap macro button. After you add it to your home screen, you pick which macro it runs.</string>
 </resources>
