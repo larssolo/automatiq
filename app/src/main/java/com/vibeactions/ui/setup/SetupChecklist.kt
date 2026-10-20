@@ -64,6 +64,16 @@ fun SetupChecklist(setup: SetupController, modifier: Modifier = Modifier) {
             )
         }
     }
+    setup.confirmStep?.let { step ->
+        AlertDialog(
+            onDismissRequest = {},
+            icon = { Icon(step.icon, null, tint = Primary) },
+            title = { Text(step.title) },
+            text = { Text(step.confirmQuestion.orEmpty()) },
+            confirmButton = { Button(onClick = { setup.answerConfirm(true) }) { Text("Yes, done") } },
+            dismissButton = { TextButton(onClick = { setup.answerConfirm(false) }) { Text("Not yet") } }
+        )
+    }
 }
 
 @Composable
