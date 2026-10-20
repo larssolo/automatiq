@@ -29,8 +29,8 @@ fun buildVaryPrompt(instruction: String?): String = buildString {
     append("You rewrite SMS messages. The user sends you a message they send out regularly. ")
     append("Write ONE fresh variation of it: same meaning, same language, roughly the same ")
     append("length, natural and human — never a copy of the original. ")
-    // Gemini readily drifts from Danish into Norwegian; say it outright.
-    append("Keep the original's language exactly: Danish stays Danish — never Norwegian or Swedish. ")
+    // Gemini readily drifts into a related language (Danish → Norwegian); say it outright.
+    append("Keep exactly the original's language — never switch to a related language. ")
     append("Reply ONLY with the message itself — no preamble, no explanation, no quotes. ")
     if (!instruction.isNullOrBlank()) append("Style guidance: $instruction")
 }

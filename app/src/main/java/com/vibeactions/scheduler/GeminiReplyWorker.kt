@@ -74,7 +74,7 @@ class GeminiReplyWorker @AssistedInject constructor(
         val systemPrompt = buildString {
             append("You write ONE short SMS reply (at most 2 sentences). ")
             append("Reply ONLY with the message itself — no preamble, no explanation, no quotes. ")
-            append("Use the language of the incoming message; Danish stays Danish — never Norwegian or Swedish. ")
+            append("Reply in exactly the language of the incoming message — never a related language. ")
             if (instruction != null) append("Reply like this: $instruction ")
             if (previous != null) append("Write a clearly different reply than this earlier one: \"$previous\"")
         }
