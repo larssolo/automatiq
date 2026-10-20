@@ -141,3 +141,13 @@ val MIGRATION_14_15 = object : Migration(14, 15) {
         db.execSQL("ALTER TABLE macros ADD COLUMN random_days_max INTEGER NOT NULL DEFAULT 0")
     }
 }
+
+/** v15 → v16: macros can do more than send SMS — sound mode, reminder notification, webhook. */
+val MIGRATION_15_16 = object : Migration(15, 16) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE macros ADD COLUMN action_type TEXT NOT NULL DEFAULT 'SMS'")
+        db.execSQL("ALTER TABLE macros ADD COLUMN sound_mode TEXT NOT NULL DEFAULT 'SILENT'")
+        db.execSQL("ALTER TABLE macros ADD COLUMN webhook_url TEXT")
+        db.execSQL("ALTER TABLE macros ADD COLUMN webhook_method TEXT NOT NULL DEFAULT 'GET'")
+    }
+}

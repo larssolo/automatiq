@@ -4,11 +4,11 @@ title: Automatiq — Privacy Policy
 
 # Automatiq — Privacy Policy
 
-_Last updated: 15 October 2026_
+_Last updated: 20 October 2026_
 
-Automatiq ("the app") is an SMS automation app for Android, published by Lars Sohl, founder of kodekid.app ("we"). This policy explains what data the app uses, what leaves your phone, and why.
+Automatiq ("the app") is an automation app for Android, published by Lars Sohl, founder of kodekid.app ("we"). This policy explains what data the app uses, what leaves your phone, and why.
 
-**In short:** Automatiq works on your phone. There is no account, no server of ours that stores your messages, no ads and no analytics. Text leaves your phone in only two cases, both started by you: when you use an **AI feature** (sent to Google's Gemini API with your own key), and when you **report an AI-written text** to us.
+**In short:** Automatiq works on your phone. There is no account, no server of ours that stores your messages, no ads and no analytics. Data leaves your phone only in cases you set up yourself: when you use an **AI feature** (sent to Google's Gemini API with your own key), when you **report an AI-written text** to us, and when a macro **calls a web address** you entered.
 
 ## 1. Data the app uses on your phone
 
@@ -21,6 +21,7 @@ To do its job, the app reads and stores the following **only on your device**:
 | Phone state and call log | To detect a missed or declined call and text the caller back (missed-call macros). |
 | Contacts | To show contact names for recipient numbers and personalise messages (`{modtager}`). Contacts are read on the device and never uploaded. |
 | Bluetooth and Wi-Fi state, charging state | For device-state triggers (e.g. "when my car's Bluetooth connects"). |
+| Sound mode and Do Not Disturb access | For the "change sound mode" action, which switches your phone to Normal, Vibrate, Silent or Do Not Disturb when a macro runs. |
 | Notifications, exact alarms, battery-optimisation exemption | So scheduled messages are sent on time and you can see/approve what was sent. |
 
 None of this is sent to us.
@@ -51,9 +52,13 @@ If an AI-written text is offensive, harmful or wrong, you can tap **Report**. Th
 
 No phone numbers, contact names or incoming messages are included, and no identifier of you or your device. Reports are stored in a database hosted by Neon (EU, Frankfurt) and used only to improve the app's AI safeguards. They are deleted when no longer needed, and at the latest after 12 months. If a report can't be sent right away, the app keeps it on your phone and retries automatically.
 
-### 2.3 Location (only in the separately distributed "full" version)
+### 2.3 Web addresses you set up (optional)
 
-The version of Automatiq on Google Play does **not** use location. A separately distributed version offers a location trigger; there, the place you set and your location are processed on your device by Google Play services geofencing and are not sent to us.
+If you create a macro with the **"call a web address"** action, the app sends a request to the URL you entered — including any text you wrote for it — when the macro runs. It goes directly from your phone to that address; we never receive it. What happens to it there is up to whoever runs that address (for example your own smart-home system).
+
+### 2.4 Location and device triggers (only in the separately distributed "full" version)
+
+The version of Automatiq on Google Play does **not** use location, Bluetooth or Wi-Fi triggers. A separately distributed version offers a location trigger; there, the place you set and your location are processed on your device by Google Play services geofencing and are not sent to us.
 
 ## 3. What we don't do
 

@@ -14,6 +14,7 @@ Recorded on the same emulator; kept locally in `~/Downloads/automatiq-store/vide
 
 | File | Use | Length |
 |---|---|---|
-| `declaration-sms-device-automation.mp4` | SMS/Call Log declaration: incoming SMS → AI auto-reply; missed call → text-back | 29 s |
-| `declaration-foreground-service.mp4` | `specialUse` FGS declaration: monitor notification, charger plugged in → macro fires | 28 s |
+| `declaration-device-automation.mp4` | **SMS/Call Log declaration (use this one):** sound → Silent, reminder notification, incoming SMS → auto-reply, Log | 30 s |
+| `declaration-sms-device-automation.mp4` | Older SMS-only demo (auto-reply + missed call) | 29 s |
+| `declaration-foreground-service.mp4` | Not needed for the Play build (no foreground service there) | 28 s |
 | `intro-guide.mp4` | Promo / store listing video, or just for sharing | 39 s |

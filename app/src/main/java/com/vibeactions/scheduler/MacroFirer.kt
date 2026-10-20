@@ -9,6 +9,7 @@ import androidx.work.workDataOf
 import com.vibeactions.data.repository.MacroLogRepository
 import com.vibeactions.data.repository.MacroRepository
 import com.vibeactions.domain.startOfDayMillis
+import com.vibeactions.domain.model.ActionType
 import com.vibeactions.domain.model.Macro
 import com.vibeactions.domain.model.MacroLog
 import com.vibeactions.domain.model.MacroStatus
@@ -33,7 +34,8 @@ class MacroFirer @Inject constructor(
     private val notifications: MacroNotificationManager,
     private val alarmScheduler: AlarmScheduler,
     private val widgets: WidgetRefresher,
-    private val contacts: ContactResolver
+    private val contacts: ContactResolver,
+    private val actionRunner: MacroActionRunner
 ) {
     /**
      * Sends the macro's SMS, logs, notifies, updates status, and (for scheduled+repeat) re-arms tomorrow.
@@ -57,6 +59,12 @@ class MacroFirer @Inject constructor(
         val macro = macroRepo.getById(macroId) ?: return null
         if (!macro.enabled) return null
         val now = System.currentTimeMillis()
+        // Sound / reminder / webhook macros don't send SMS: run the action instead. Reply triggers
+        // always answer by SMS, so they never take this path.
+        if (macro.actionType != ActionType.SMS && overrideRecipient == null) {
+            if (enforceOncePerDay && !macroRepo.tryClaimScheduledFire(macro.id, now, startOfDayMillis(now))) return null
+            return runAction(macro, now)
+        }
         // Auto-reply targets the incoming sender; everything else uses the macro's recipient list.
         // Checked before the claim below: an unsendable macro must not consume the day's send.
         val targets = overrideRecipient?.let { listOf(it) } ?: macro.recipients
@@ -139,6 +147,33 @@ class MacroFirer @Inject constructor(
         // Keep bound home-screen widgets' "Last: …" subtitle in sync for scheduled/auto fires too.
         widgets.refreshFor(macro.id)
         return FireResult(finalStatus, finalError)
+    }
+
+    /** Runs a non-SMS action, logs it like a send, and keeps schedule and widgets in step. */
+    private suspend fun runAction(macro: Macro, now: Long): FireResult {
+        val result = runCatching { actionRunner.run(macro) }
+        val status = if (result.isSuccess) MacroStatus.SUCCESS else MacroStatus.FAILED
+        val error = result.exceptionOrNull()?.let { it.message ?: it.javaClass.simpleName }
+        logRepo.add(
+            MacroLog(
+                macroId = macro.id, triggeredAt = now, status = status,
+                messagePreview = result.getOrNull() ?: actionLabel(macro), errorMessage = error
+            )
+        )
+        macroRepo.updateStatus(macro.id, now, status)
+        if (error != null) notifications.notifyActionFailed(macro, error)
+        if (macro.triggerType == TriggerType.SCHEDULED && macro.repeatDaily) {
+            alarmScheduler.schedule(macro.copy(lastTriggeredAt = now, lastStatus = status))
+        }
+        widgets.refreshFor(macro.id)
+        return FireResult(status, error)
+    }
+
+    private fun actionLabel(macro: Macro) = when (macro.actionType) {
+        ActionType.SOUND -> "Sound → ${MacroActionRunner.soundModeLabel(macro.soundMode)}"
+        ActionType.REMINDER -> "Reminder"
+        ActionType.WEBHOOK -> "${macro.webhookMethod} ${macro.webhookUrl.orEmpty()}"
+        ActionType.SMS -> "SMS"
     }
 
     /** Hands an AI-variation fire to [AiVaryWorker]. The fresh event id makes a WorkManager retry

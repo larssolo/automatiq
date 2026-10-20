@@ -37,6 +37,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.vibeactions.domain.model.ActionType
+import com.vibeactions.scheduler.MacroActionRunner
 import com.vibeactions.domain.model.GeofenceTransition
 import com.vibeactions.domain.model.Macro
 import com.vibeactions.domain.model.TriggerType
@@ -218,7 +220,19 @@ fun MacroCard(
 }
 
 
-private fun compactSummary(macro: Macro): String = when (macro.triggerType) {
+/** Trigger summary plus, for non-SMS macros, what they do (e.g. "08:00 · Weekdays · Silent"). */
+private fun compactSummary(macro: Macro): String {
+    val action = when (macro.actionType) {
+        ActionType.SMS -> null
+        ActionType.SOUND -> MacroActionRunner.soundModeLabel(macro.soundMode)
+        ActionType.REMINDER -> "Reminder"
+        ActionType.WEBHOOK -> "Webhook"
+    }
+    val trigger = triggerSummary(macro)
+    return if (action == null) trigger else "$trigger · $action"
+}
+
+private fun triggerSummary(macro: Macro): String = when (macro.triggerType) {
     TriggerType.SCHEDULED -> buildString {
         append(macro.scheduledTime ?: "--:--")
         // A one-off (repeatDaily=false) shows its single date; recurring shows its weekday rhythm.

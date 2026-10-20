@@ -3,6 +3,8 @@ package com.vibeactions.ui.editor
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vibeactions.data.repository.MacroRepository
+import com.vibeactions.domain.model.ActionType
+import com.vibeactions.domain.model.SoundMode
 import com.vibeactions.domain.model.randomDays
 import com.vibeactions.domain.model.AiSendMode
 import com.vibeactions.domain.model.GeofenceTransition
@@ -51,6 +53,11 @@ data class EditorState(
     val randomSpreadMinutes: Int = 5,
     /** SCHEDULED (repeating): send on only [randomDaysMin]–[randomDaysMax] random days of the
      *  selected ones each week. Values are kept while toggled off so turning it back on restores them. */
+    /** What the macro does. Reply triggers (auto-reply, missed call) always send SMS. */
+    val actionType: ActionType = ActionType.SMS,
+    val soundMode: SoundMode = SoundMode.SILENT,
+    val webhookUrl: String = "",
+    val webhookMethod: String = "GET",
     val randomDaysEnabled: Boolean = false,
     val randomDaysMin: Int = 1,
     val randomDaysMax: Int = 2,
@@ -76,7 +83,14 @@ data class EditorState(
     /** Non-blank numbers (blanks are ignored on save); at least one, and every non-blank one valid. */
     val cleanRecipients get() = recipients.map { it.trim() }.filter { it.isNotBlank() }
     val phoneValid get() = cleanRecipients.isNotEmpty() && cleanRecipients.all { isValidPhone(it) }
-    val messageValid get() = message.isNotBlank()
+    /** Reply triggers answer by SMS; everything else does the chosen action. */
+    val effectiveAction get() =
+        if (triggerType == TriggerType.INCOMING || triggerType == TriggerType.MISSED_CALL) ActionType.SMS else actionType
+    /** SMS and reminders need text; a webhook body is optional and sound needs none. */
+    val messageValid get() = message.isNotBlank() ||
+        (effectiveAction != ActionType.SMS && effectiveAction != ActionType.REMINDER)
+    val webhookValid get() = effectiveAction != ActionType.WEBHOOK ||
+        Regex("^https?://\\S+$", RegexOption.IGNORE_CASE).matches(webhookUrl.trim())
     // A one-off has no weekday selection (it fires on a single date), so the weekday rule doesn't
     // apply — without this exemption the hidden weekday picker could block save with no visible error.
     val daysValid get() = triggerType != TriggerType.SCHEDULED || oneOff || daysOfWeek.isNotEmpty()
@@ -86,11 +100,11 @@ data class EditorState(
     val randomDaysValid get() = !randomDaysEnabled || oneOff || triggerType != TriggerType.SCHEDULED ||
         (randomDaysMin in 1..randomDaysMax && randomDaysMax <= daysOfWeek.size)
     /** Reply macros (auto-reply / missed call) answer the other party, so no recipient list. */
-    val recipientsRequired get() =
+    val recipientsRequired get() = effectiveAction == ActionType.SMS &&
         triggerType != TriggerType.INCOMING && triggerType != TriggerType.MISSED_CALL
     /** Location macros need a chosen point. */
     val locationValid get() = triggerType != TriggerType.LOCATION || (latitude != null && longitude != null)
-    val canSave get() = nameValid && messageValid && daysValid && locationValid &&
+    val canSave get() = nameValid && messageValid && daysValid && locationValid && webhookValid &&
         randomSpreadValid && randomDaysValid && (!recipientsRequired || phoneValid)
 }
 
@@ -125,7 +139,7 @@ fun EditorState.toMacro(id: String): Macro {
         // Auto-reply macros answer the incoming sender. A recipient list left over from a previous
         // trigger type must be dropped: the failed-send Retry action re-fires via macro.recipients
         // and would resend the fixed body to numbers that no longer apply.
-        recipients = if (reply) emptyList() else cleanRecipients,
+        recipients = if (reply || effectiveAction != ActionType.SMS) emptyList() else cleanRecipients,
         messageBody = message,
         enabled = enabled,
         createdAt = createdAt,
@@ -134,6 +148,10 @@ fun EditorState.toMacro(id: String): Macro {
         lastScheduledFireAt = lastScheduledFireAt,
         sortOrder = sortOrder,
         folderId = folderId,
+        actionType = effectiveAction,
+        soundMode = soundMode,
+        webhookUrl = if (effectiveAction == ActionType.WEBHOOK) webhookUrl.trim() else null,
+        webhookMethod = webhookMethod,
         daysOfWeek = when {
             oneOffDate != null -> setOf(oneOffDate.dayOfWeek.value)
             scheduled -> daysOfWeek
@@ -149,7 +167,7 @@ fun EditorState.toMacro(id: String): Macro {
         cardColor = cardColor,
         // AI fields apply to auto-replies (Gemini answers the incoming SMS) and to scheduled
         // macros (Gemini writes a fresh variation of the fixed message on every fire).
-        aiReplyEnabled = if (incoming || scheduled) aiReplyEnabled else false,
+        aiReplyEnabled = if ((incoming || scheduled) && effectiveAction == ActionType.SMS) aiReplyEnabled else false,
         aiSendMode = aiSendMode,
         aiReplyInstruction = if ((incoming || scheduled) && aiReplyEnabled)
             aiReplyInstruction.trim().ifBlank { null } else null,
@@ -232,6 +250,10 @@ class MacroEditorViewModel @Inject constructor(
                         (m.anchorEpochDay ?: m.validUntilEpochDay) else null,
                     randomSpreadEnabled = m.randomSpreadMinutes > 0,
                     randomSpreadMinutes = if (m.randomSpreadMinutes > 0) m.randomSpreadMinutes else 5,
+                    actionType = m.actionType,
+                    soundMode = m.soundMode,
+                    webhookUrl = m.webhookUrl.orEmpty(),
+                    webhookMethod = m.webhookMethod,
                     randomDaysEnabled = m.randomDaysMax > 0,
                     randomDaysMin = if (m.randomDaysMax > 0) m.randomDaysMin else 1,
                     randomDaysMax = if (m.randomDaysMax > 0) m.randomDaysMax else 2,

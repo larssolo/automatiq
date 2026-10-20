@@ -2,6 +2,8 @@
 -keep class com.vibeactions.domain.model.TriggerType { *; }
 -keep class com.vibeactions.domain.model.MacroStatus { *; }
 -keep class com.vibeactions.domain.model.AiSendMode { *; }
+-keep class com.vibeactions.domain.model.ActionType { *; }
+-keep class com.vibeactions.domain.model.SoundMode { *; }
 
 # kotlinx-serialization: keep generated $serializer companions (Gemini API client)
 -keepattributes *Annotation*, InnerClasses

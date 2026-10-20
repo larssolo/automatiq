@@ -4,4 +4,24 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
+
+    <!-- Device-state triggers (charging / Bluetooth / Wi-Fi) — also "full" only: they need a
+         specialUse foreground service, which Play would require a separate declaration for. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
+
+    <application>
+        <!-- Watches power/Bluetooth/Wi-Fi for state-trigger macros. Runs only while such a macro is
+             enabled; specialUse is the appropriate FGS type for an automation monitor. -->
+        <service
+            android:name="com.vibeactions.scheduler.TriggerMonitorService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Device-state automation triggers (charging, Bluetooth, Wi-Fi)" />
+        </service>
+    </application>
 </manifest>

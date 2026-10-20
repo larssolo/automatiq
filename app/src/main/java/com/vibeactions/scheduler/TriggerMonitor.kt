@@ -2,6 +2,7 @@ package com.vibeactions.scheduler
 
 import android.content.Context
 import android.content.Intent
+import com.vibeactions.BuildConfig
 import androidx.core.content.ContextCompat
 import com.vibeactions.data.repository.MacroRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -19,6 +20,8 @@ class TriggerMonitor @Inject constructor(
     private val repo: MacroRepository
 ) {
     suspend fun sync() {
+        // The Play build ships without the service (and its specialUse declaration).
+        if (!BuildConfig.DEVICE_TRIGGERS) return
         val intent = Intent(context, TriggerMonitorService::class.java)
         if (repo.hasEnabledStateTriggers()) {
             // Starting from the background is restricted on API 31+; if it's disallowed right now the

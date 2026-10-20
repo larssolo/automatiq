@@ -42,6 +42,39 @@ class MacroNotificationManager @Inject constructor(
         )
         workChannel.description = "Shown briefly while Gemini writes a message"
         manager.createNotificationChannel(workChannel)
+        val reminderChannel = NotificationChannel(
+            CHANNEL_ID_REMINDER, "Reminders", NotificationManager.IMPORTANCE_HIGH
+        )
+        reminderChannel.description = "Reminder notifications from your macros"
+        manager.createNotificationChannel(reminderChannel)
+    }
+
+    /** The REMINDER action itself: a heads-up notification with the macro's text. */
+    fun notifyReminder(macro: Macro, text: String) {
+        val n = NotificationCompat.Builder(context, CHANNEL_ID_REMINDER)
+            .setSmallIcon(android.R.drawable.ic_popup_reminder)
+            .setContentTitle(macro.name)
+            .setContentText(text)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(text))
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setCategory(NotificationCompat.CATEGORY_REMINDER)
+            .setAutoCancel(true)
+            .build()
+        manager.notify(("reminder" + macro.id).hashCode(), n)
+    }
+
+    /** A non-SMS action (sound / webhook / reminder) that failed — so it doesn't fail silently. */
+    fun notifyActionFailed(macro: Macro, error: String) {
+        val n = NotificationCompat.Builder(context, CHANNEL_ID)
+            .setSmallIcon(android.R.drawable.stat_notify_error)
+            .setContentTitle("Failed: ${macro.name}")
+            .setContentText(error)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(error))
+            .setContentIntent(openLogIntent())
+            .setAutoCancel(true)
+            .addAction(0, "View Log", openLogIntent())
+            .build()
+        manager.notify(macro.id.hashCode(), n)
     }
 
     /**
@@ -246,5 +279,6 @@ class MacroNotificationManager @Inject constructor(
         const val CHANNEL_ID = "macro_actions"
         const val CHANNEL_ID_AI = "macro_ai"
         const val CHANNEL_ID_AI_WORK = "macro_ai_work"
+        const val CHANNEL_ID_REMINDER = "macro_reminders"
     }
 }
