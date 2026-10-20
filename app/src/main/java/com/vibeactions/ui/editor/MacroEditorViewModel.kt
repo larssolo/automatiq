@@ -3,6 +3,7 @@ package com.vibeactions.ui.editor
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vibeactions.data.repository.MacroRepository
+import com.vibeactions.domain.model.randomDays
 import com.vibeactions.domain.model.AiSendMode
 import com.vibeactions.domain.model.GeofenceTransition
 import com.vibeactions.domain.model.Macro
@@ -48,6 +49,11 @@ data class EditorState(
      *  value so clearing the number field (→ 0) doesn't collapse the input and lock the user out. */
     val randomSpreadEnabled: Boolean = false,
     val randomSpreadMinutes: Int = 5,
+    /** SCHEDULED (repeating): send on only [randomDaysMin]–[randomDaysMax] random days of the
+     *  selected ones each week. Values are kept while toggled off so turning it back on restores them. */
+    val randomDaysEnabled: Boolean = false,
+    val randomDaysMin: Int = 1,
+    val randomDaysMax: Int = 2,
     val validUntilEpochDay: Long? = null,
     val matchSender: String = "",
     val matchKeyword: String = "",
@@ -76,13 +82,16 @@ data class EditorState(
     val daysValid get() = triggerType != TriggerType.SCHEDULED || oneOff || daysOfWeek.isNotEmpty()
     /** When the spread is enabled it needs a value of at least 1 minute. */
     val randomSpreadValid get() = !randomSpreadEnabled || randomSpreadMinutes >= 1
+    /** Random days need 1 ≤ min ≤ max ≤ number of selected weekdays. */
+    val randomDaysValid get() = !randomDaysEnabled || oneOff || triggerType != TriggerType.SCHEDULED ||
+        (randomDaysMin in 1..randomDaysMax && randomDaysMax <= daysOfWeek.size)
     /** Reply macros (auto-reply / missed call) answer the other party, so no recipient list. */
     val recipientsRequired get() =
         triggerType != TriggerType.INCOMING && triggerType != TriggerType.MISSED_CALL
     /** Location macros need a chosen point. */
     val locationValid get() = triggerType != TriggerType.LOCATION || (latitude != null && longitude != null)
     val canSave get() = nameValid && messageValid && daysValid && locationValid &&
-        randomSpreadValid && (!recipientsRequired || phoneValid)
+        randomSpreadValid && randomDaysValid && (!recipientsRequired || phoneValid)
 }
 
 /** Pure mapping from editor state to a saveable [Macro]; testable without Android. */
@@ -134,6 +143,9 @@ fun EditorState.toMacro(id: String): Macro {
         anchorEpochDay = anchor,
         // Random send-time spread only applies to scheduled macros, and only when toggled on.
         randomSpreadMinutes = if (scheduled && randomSpreadEnabled) randomSpreadMinutes.coerceAtLeast(0) else 0,
+        // Random days only apply to a repeating scheduled macro.
+        randomDaysMin = if (scheduled && !oneOff && randomDaysEnabled) randomDaysMin else 0,
+        randomDaysMax = if (scheduled && !oneOff && randomDaysEnabled) randomDaysMax else 0,
         cardColor = cardColor,
         // AI fields apply to auto-replies (Gemini answers the incoming SMS) and to scheduled
         // macros (Gemini writes a fresh variation of the fixed message on every fire).
@@ -220,6 +232,9 @@ class MacroEditorViewModel @Inject constructor(
                         (m.anchorEpochDay ?: m.validUntilEpochDay) else null,
                     randomSpreadEnabled = m.randomSpreadMinutes > 0,
                     randomSpreadMinutes = if (m.randomSpreadMinutes > 0) m.randomSpreadMinutes else 5,
+                    randomDaysEnabled = m.randomDaysMax > 0,
+                    randomDaysMin = if (m.randomDaysMax > 0) m.randomDaysMin else 1,
+                    randomDaysMax = if (m.randomDaysMax > 0) m.randomDaysMax else 2,
                     validUntilEpochDay = m.validUntilEpochDay,
                     matchSender = m.matchSender ?: "", matchKeyword = m.matchKeyword ?: "",
                     latitude = m.latitude, longitude = m.longitude,
@@ -253,7 +268,8 @@ class MacroEditorViewModel @Inject constructor(
                 macro = macro.copy(
                     lastScheduledFireAt = consumedFireStampForNewMacro(
                         macro.scheduledTime, macro.daysOfWeek, macro.weekInterval,
-                        macro.anchorEpochDay, macro.validUntilEpochDay
+                        macro.anchorEpochDay, macro.validUntilEpochDay,
+                        randomDays = macro.randomDays()
                     )
                 )
             }

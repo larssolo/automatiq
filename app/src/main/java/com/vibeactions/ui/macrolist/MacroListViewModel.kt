@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vibeactions.data.repository.FolderRepository
 import com.vibeactions.data.repository.MacroRepository
+import com.vibeactions.domain.model.randomDays
 import com.vibeactions.domain.model.Folder
 import com.vibeactions.domain.model.Macro
 import com.vibeactions.domain.usecase.DeleteMacroUseCase
@@ -57,9 +58,10 @@ class MacroListViewModel @Inject constructor(
     /** Duplicate a macro: new id, "(copy)" name, cleared run history; same trigger/recipient/body.
      *  Goes through SaveMacroUseCase so a scheduled+enabled copy is armed like any other. */
     fun onCopy(macro: Macro) = viewModelScope.launch {
+        val copyId = UUID.randomUUID().toString()
         save(
             macro.copy(
-                id = UUID.randomUUID().toString(),
+                id = copyId,
                 name = macro.name + " (copy)",
                 lastTriggeredAt = null,
                 lastStatus = null,
@@ -68,7 +70,8 @@ class MacroListViewModel @Inject constructor(
                 lastScheduledFireAt = if (macro.triggerType == TriggerType.SCHEDULED)
                     consumedFireStampForNewMacro(
                         macro.scheduledTime, macro.daysOfWeek, macro.weekInterval,
-                        macro.anchorEpochDay, macro.validUntilEpochDay
+                        macro.anchorEpochDay, macro.validUntilEpochDay,
+                        randomDays = macro.copy(id = copyId).randomDays()
                     ) else null,
                 createdAt = System.currentTimeMillis(),
                 cardColor = randomCardColor()

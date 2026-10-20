@@ -226,7 +226,7 @@ private fun compactSummary(macro: Macro): String = when (macro.triggerType) {
             val day = macro.anchorEpochDay ?: macro.validUntilEpochDay
             append(" · ${day?.let { java.time.LocalDate.ofEpochDay(it).toString() } ?: "once"} (once)")
         } else {
-            val days = formatRecurrence(macro.daysOfWeek, macro.weekInterval)
+            val days = formatRecurrence(macro.daysOfWeek, macro.weekInterval, macro.randomDaysMin, macro.randomDaysMax)
             if (days.isNotBlank()) append(" · $days")
         }
     }

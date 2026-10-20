@@ -8,6 +8,7 @@ import com.vibeactions.data.AppSettings
 import com.vibeactions.data.repository.MacroLogRepository
 import com.vibeactions.data.repository.MacroRepository
 import com.vibeactions.domain.alreadySentToday
+import com.vibeactions.domain.model.randomDays
 import com.vibeactions.util.isScheduledDay
 import com.vibeactions.util.parseHhMmOrNull
 import com.vibeactions.util.scheduledJitterMinutes
@@ -45,7 +46,7 @@ class MacroCatchUpWorker @AssistedInject constructor(
             // the (jittered) time has passed.
             val passedToday = !nowTime.isBefore(jitteredTime) &&
                 isScheduledDay(today, macro.daysOfWeek, macro.weekInterval, macro.anchorEpochDay,
-                    macro.validUntilEpochDay)
+                    macro.validUntilEpochDay, macro.randomDays())
             // Dedupe on the scheduled-fire marker (not lastTriggeredAt), so a manual tap today
             // doesn't suppress the catch-up of a missed scheduled fire.
             if (passedToday && !alreadySentToday(macro.lastScheduledFireAt, now)) {

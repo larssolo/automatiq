@@ -47,7 +47,7 @@ class HealthViewModel @Inject constructor(
 
     private fun scheduledHealth(m: com.vibeactions.domain.model.Macro): MacroHealth {
         val time = m.scheduledTime
-        val trigger = "${time ?: "--:--"} · ${formatRecurrence(m.daysOfWeek, m.weekInterval)}"
+        val trigger = "${time ?: "--:--"} · ${formatRecurrence(m.daysOfWeek, m.weekInterval, m.randomDaysMin, m.randomDaysMax)}"
         if (time == null || parseHhMmOrNull(time) == null) {
             return MacroHealth(m.name, trigger, null, note = "Invalid time — won't fire")
         }

@@ -8,7 +8,7 @@ import com.vibeactions.data.db.entities.MacroLogEntity
 
 @Database(
     entities = [MacroEntity::class, MacroLogEntity::class, FolderEntity::class],
-    version = 14,
+    version = 15,
     exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {

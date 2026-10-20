@@ -29,6 +29,8 @@ data class MacroEntity(
     @ColumnInfo(name = "random_window_min_minutes", defaultValue = "0") val randomWindowMinMinutes: Int = 0,
     /** SCHEDULED: symmetric ± send-time spread in minutes (0 = exactly on time). */
     @ColumnInfo(name = "random_window_max_minutes", defaultValue = "0") val randomSpreadMinutes: Int = 0,
+    @ColumnInfo(name = "random_days_min", defaultValue = "0") val randomDaysMin: Int = 0,
+    @ColumnInfo(name = "random_days_max", defaultValue = "0") val randomDaysMax: Int = 0,
     @ColumnInfo(name = "card_color", defaultValue = "0") val cardColor: Long = 0L,
     @ColumnInfo(name = "valid_until_epoch_day") val validUntilEpochDay: Long? = null,
     @ColumnInfo(name = "match_sender") val matchSender: String? = null,

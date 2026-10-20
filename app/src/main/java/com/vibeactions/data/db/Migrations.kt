@@ -133,3 +133,11 @@ val MIGRATION_13_14 = object : Migration(13, 14) {
         db.execSQL("ALTER TABLE macros ADD COLUMN random_window_max_minutes INTEGER NOT NULL DEFAULT 0")
     }
 }
+
+/** v14 → v15: "N random days a week" for SCHEDULED macros. 0/0 = off (every selected day). */
+val MIGRATION_14_15 = object : Migration(14, 15) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE macros ADD COLUMN random_days_min INTEGER NOT NULL DEFAULT 0")
+        db.execSQL("ALTER TABLE macros ADD COLUMN random_days_max INTEGER NOT NULL DEFAULT 0")
+    }
+}

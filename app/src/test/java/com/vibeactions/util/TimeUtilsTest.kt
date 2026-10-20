@@ -205,4 +205,52 @@ class TimeUtilsTest {
         assertTrue("expected -5..5 min offset, was $offsetMin", offsetMin in -5..5)
         assertEquals(LocalDate.of(2026, 6, 15), fireAt(jittered).toLocalDate())
     }
+
+    // --- random days a week ---
+
+    private val weekdays = setOf(1, 2, 3, 4, 5)
+
+    @Test fun `random days pick between min and max of the selected days, every week`() {
+        val rd = RandomDays("macro-1", 1, 2)
+        var monday = java.time.LocalDate.of(2026, 10, 19)
+        repeat(30) {
+            val week = (0..6).map { monday.plusDays(it.toLong()) }
+            val picked = week.filter { isScheduledDay(it, weekdays, randomDays = rd) }
+            org.junit.Assert.assertTrue("week $monday picked ${picked.size}", picked.size in 1..2)
+            org.junit.Assert.assertTrue(picked.all { it.dayOfWeek.value in weekdays })
+            monday = monday.plusWeeks(1)
+        }
+    }
+
+    @Test fun `the pick is stable for a given macro and week`() {
+        val rd = RandomDays("macro-1", 1, 2)
+        val monday = java.time.LocalDate.of(2026, 10, 19)
+        val a = randomDaysOfWeek(monday, rd) { it.dayOfWeek.value in weekdays }
+        val b = randomDaysOfWeek(monday, rd) { it.dayOfWeek.value in weekdays }
+        org.junit.Assert.assertEquals(a, b)
+    }
+
+    @Test fun `min and max are clamped to the days available`() {
+        val rd = RandomDays("m", 3, 5)
+        val monday = java.time.LocalDate.of(2026, 10, 19)
+        val picked = randomDaysOfWeek(monday, rd) { it.dayOfWeek.value in setOf(1, 3) }
+        org.junit.Assert.assertEquals(2, picked.size)
+    }
+
+    @Test fun `next fire time lands on a picked day`() {
+        val rd = RandomDays("macro-2", 1, 1)
+        val now = java.time.LocalDateTime.of(2026, 10, 19, 6, 0)
+        val zone = java.time.ZoneId.of("Europe/Copenhagen")
+        val next = calculateNextFireTime("09:00", now, zone, weekdays, randomDays = rd)
+        val date = java.time.Instant.ofEpochMilli(next).atZone(zone).toLocalDate()
+        org.junit.Assert.assertTrue(isScheduledDay(date, weekdays, randomDays = rd))
+        val picked = randomDaysOfWeek(date.with(java.time.DayOfWeek.MONDAY), rd) { it.dayOfWeek.value in weekdays }
+        org.junit.Assert.assertEquals(setOf(date), picked)
+    }
+
+    @Test fun `recurrence label mentions random days`() {
+        org.junit.Assert.assertEquals("1–2 random of Weekdays", formatRecurrence(weekdays, 1, 1, 2))
+        org.junit.Assert.assertEquals("Every 2 weeks · 1 random of Weekdays", formatRecurrence(weekdays, 2, 1, 1))
+        org.junit.Assert.assertEquals("Weekdays", formatRecurrence(weekdays, 1))
+    }
 }
