@@ -30,6 +30,14 @@ fun saturationColorMatrix(saturation: Float): FloatArray {
     )
 }
 
+/** Scales RGB: <1 darkens, 1 = unchanged, >1 brightens. */
+fun brightnessColorMatrix(scale: Float): FloatArray = floatArrayOf(
+    scale, 0f, 0f, 0f, 0f,
+    0f, scale, 0f, 0f, 0f,
+    0f, 0f, scale, 0f, 0f,
+    0f, 0f, 0f, 1f, 0f
+)
+
 /** Luminance-preserving hue rotation, [degrees] clockwise around the color wheel. */
 fun hueRotationColorMatrix(degrees: Float): FloatArray {
     val radians = degrees * kotlin.math.PI.toFloat() / 180f

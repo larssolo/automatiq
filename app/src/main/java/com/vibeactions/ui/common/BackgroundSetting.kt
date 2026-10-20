@@ -15,10 +15,12 @@ object BackgroundSetting {
     private const val KEY_HUE = "bg_hue"
     private const val KEY_SATURATION = "bg_saturation"
     private const val KEY_CARD_OPACITY = "card_opacity"
+    private const val KEY_BRIGHTNESS = "bg_brightness"
 
     private const val DEFAULT_HUE = 0f
     private const val DEFAULT_SATURATION = 1f
     private const val DEFAULT_CARD_OPACITY = 0.93f
+    private const val DEFAULT_BRIGHTNESS = 1f
 
     /** Degrees, 0..360. */
     var hue by mutableFloatStateOf(DEFAULT_HUE)
@@ -26,6 +28,10 @@ object BackgroundSetting {
 
     /** 0 = grayscale, 1 = unchanged, up to 2 = oversaturated. */
     var saturation by mutableFloatStateOf(DEFAULT_SATURATION)
+        private set
+
+    /** Background image brightness: 0.3 = much darker, 1 = unchanged, up to 1.6 = brighter. */
+    var brightness by mutableFloatStateOf(DEFAULT_BRIGHTNESS)
         private set
 
     /** 0 = fully transparent card background, 1 = fully opaque. */
@@ -37,6 +43,13 @@ object BackgroundSetting {
         hue = prefs.getFloat(KEY_HUE, DEFAULT_HUE)
         saturation = prefs.getFloat(KEY_SATURATION, DEFAULT_SATURATION)
         cardOpacity = prefs.getFloat(KEY_CARD_OPACITY, DEFAULT_CARD_OPACITY)
+        brightness = prefs.getFloat(KEY_BRIGHTNESS, DEFAULT_BRIGHTNESS)
+    }
+
+    fun setBrightness(context: Context, value: Float) {
+        brightness = value
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putFloat(KEY_BRIGHTNESS, value).apply()
     }
 
     fun setHue(context: Context, value: Float) {

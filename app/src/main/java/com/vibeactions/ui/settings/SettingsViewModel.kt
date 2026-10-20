@@ -73,6 +73,7 @@ class SettingsViewModel @Inject constructor(
         m["ui:bg_hue"] = uiPrefs.getFloat("bg_hue", 0f).toString()
         m["ui:bg_saturation"] = uiPrefs.getFloat("bg_saturation", 1f).toString()
         m["ui:card_opacity"] = uiPrefs.getFloat("card_opacity", 0.93f).toString()
+        m["ui:bg_brightness"] = uiPrefs.getFloat("bg_brightness", 1f).toString()
         m["app:quiet_hours_enabled"] = appPrefs.getBoolean("quiet_hours_enabled", false).toString()
         m["app:quiet_start_minute"] = appPrefs.getInt("quiet_start_minute", 22 * 60).toString()
         m["app:quiet_end_minute"] = appPrefs.getInt("quiet_end_minute", 7 * 60).toString()
