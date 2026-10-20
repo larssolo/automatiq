@@ -11,18 +11,54 @@ import java.time.temporal.ChronoUnit
 val ALL_DAYS: Set<Int> = setOf(1, 2, 3, 4, 5, 6, 7)
 private val DAY_ABBR = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
 
+/** "Send on [min]–[max] random days of the allowed ones each week", seeded per macro by [seed]. */
+data class RandomDays(val seed: String, val min: Int, val max: Int)
+
 /**
  * Whether [date] is an active scheduled day for a macro: its weekday is in [days] (empty = all),
  * it is on/after the anchor, and — for a multi-week interval — its Monday-based week aligns with
  * the anchor week modulo [weekInterval]. Interval/anchor only apply when [weekInterval] > 1 and an
- * anchor is set; otherwise every matching weekday qualifies (unchanged weekly behaviour).
+ * anchor is set; otherwise every matching weekday qualifies (unchanged weekly behaviour). With
+ * [randomDays], only the days picked for that week by [randomDaysOfWeek] qualify.
  */
 fun isScheduledDay(
     date: LocalDate,
     days: Set<Int>,
     weekInterval: Int = 1,
     anchorEpochDay: Long? = null,
-    validUntilEpochDay: Long? = null
+    validUntilEpochDay: Long? = null,
+    randomDays: RandomDays? = null
+): Boolean {
+    if (!isEligibleDay(date, days, weekInterval, anchorEpochDay, validUntilEpochDay)) return false
+    if (randomDays == null || randomDays.max <= 0) return true
+    val weekStart = date.with(DayOfWeek.MONDAY)
+    return date in randomDaysOfWeek(weekStart, randomDays) {
+        isEligibleDay(it, days, weekInterval, anchorEpochDay, validUntilEpochDay)
+    }
+}
+
+/**
+ * The days picked in the week starting [weekStart] (a Monday): between min and max of the [eligible]
+ * days, chosen at random. Deterministic in (seed, week) so the alarm, the catch-up worker and the
+ * next-fire calculation always agree on the same days — a different week gives a different pick.
+ */
+fun randomDaysOfWeek(weekStart: LocalDate, randomDays: RandomDays, eligible: (LocalDate) -> Boolean): Set<LocalDate> {
+    val candidates = (0..6).map { weekStart.plusDays(it.toLong()) }.filter(eligible)
+    if (candidates.isEmpty()) return emptySet()
+    val rnd = kotlin.random.Random(randomDays.seed.hashCode().toLong() * 1_000_003L + weekStart.toEpochDay())
+    val lo = randomDays.min.coerceIn(1, candidates.size)
+    val hi = randomDays.max.coerceIn(lo, candidates.size)
+    val count = lo + rnd.nextInt(hi - lo + 1)
+    return candidates.shuffled(rnd).take(count).toSet()
+}
+
+/** Weekday, anchor, expiry and week-interval checks — everything except the random-day pick. */
+private fun isEligibleDay(
+    date: LocalDate,
+    days: Set<Int>,
+    weekInterval: Int,
+    anchorEpochDay: Long?,
+    validUntilEpochDay: Long?
 ): Boolean {
     if (validUntilEpochDay != null && date.toEpochDay() > validUntilEpochDay) return false
     val allowed = if (days.isEmpty()) ALL_DAYS else days
@@ -67,7 +103,8 @@ fun calculateNextFireTime(
     anchorEpochDay: Long? = null,
     validUntilEpochDay: Long? = null,
     jitterSeed: String = "",
-    jitterSpreadMinutes: Int = 0
+    jitterSpreadMinutes: Int = 0,
+    randomDays: RandomDays? = null
 ): Long {
     val target = LocalTime.parse(hhmm)
     val horizon = weekInterval.coerceAtLeast(1) * 7 + 7
@@ -79,7 +116,7 @@ fun calculateNextFireTime(
     val scanStart = if (anchor != null && anchor.isAfter(date)) anchor else date
     for (i in 0..horizon) {
         val d = scanStart.plusDays(i.toLong())
-        if (!isScheduledDay(d, days, weekInterval, anchorEpochDay, validUntilEpochDay)) continue
+        if (!isScheduledDay(d, days, weekInterval, anchorEpochDay, validUntilEpochDay, randomDays)) continue
         val offset = scheduledJitterMinutes(jitterSeed, d, jitterSpreadMinutes)
         val candidate = d.atTime(target).plusMinutes(offset.toLong())
         if (candidate.isAfter(now)) {
@@ -108,13 +145,14 @@ fun consumedFireStampForNewMacro(
     anchorEpochDay: Long? = null,
     validUntilEpochDay: Long? = null,
     now: LocalDateTime = LocalDateTime.now(),
-    zone: ZoneId = ZoneId.systemDefault()
+    zone: ZoneId = ZoneId.systemDefault(),
+    randomDays: RandomDays? = null
 ): Long? {
     val time = hhmm?.let { parseHhMmOrNull(it) } ?: return null
     val today = now.toLocalDate()
     val passedToday = !now.toLocalTime().isBefore(time)
     return if (passedToday &&
-        isScheduledDay(today, days, weekInterval, anchorEpochDay, validUntilEpochDay))
+        isScheduledDay(today, days, weekInterval, anchorEpochDay, validUntilEpochDay, randomDays))
         now.atZone(zone).toInstant().toEpochMilli() else null
 }
 
@@ -142,6 +180,12 @@ fun formatDays(days: Set<Int>): String {
     }
 }
 
-/** Recurrence label combining interval and days, e.g. "Every 2 weeks · Mon" or just "Weekdays". */
-fun formatRecurrence(days: Set<Int>, weekInterval: Int): String =
-    if (weekInterval <= 1) formatDays(days) else "Every $weekInterval weeks · ${formatDays(days)}"
+/** Recurrence label combining interval, random days and days, e.g. "Every 2 weeks · 1–2 random of Weekdays". */
+fun formatRecurrence(days: Set<Int>, weekInterval: Int, randomMin: Int = 0, randomMax: Int = 0): String {
+    val dayPart = when {
+        randomMax <= 0 -> formatDays(days)
+        randomMin == randomMax -> "$randomMax random of ${formatDays(days)}"
+        else -> "$randomMin–$randomMax random of ${formatDays(days)}"
+    }
+    return if (weekInterval <= 1) dayPart else "Every $weekInterval weeks · $dayPart"
+}

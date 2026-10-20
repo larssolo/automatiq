@@ -335,6 +335,46 @@ fun MacroEditorScreen(
                     )
                 }
 
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f)) {
+                        Text("Random days", color = OnSurface, style = MaterialTheme.typography.bodyLarge)
+                        Text(
+                            "Send on only some of the selected days — picked at random each week",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                    Spacer(Modifier.width(8.dp))
+                    ThemedSwitch(
+                        checked = s.randomDaysEnabled,
+                        onCheckedChange = { on -> vm.update { it.copy(randomDaysEnabled = on) } }
+                    )
+                }
+                if (s.randomDaysEnabled) {
+                    val maxDays = s.daysOfWeek.size.coerceAtLeast(1)
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text("Between", color = OnSurface)
+                        SmallNumberMenu(s.randomDaysMin, 1..maxDays) { v ->
+                            vm.update { it.copy(randomDaysMin = v, randomDaysMax = maxOf(v, it.randomDaysMax)) }
+                        }
+                        Text("and", color = OnSurface)
+                        SmallNumberMenu(s.randomDaysMax, 1..maxDays) { v ->
+                            vm.update { it.copy(randomDaysMax = v, randomDaysMin = minOf(v, it.randomDaysMin)) }
+                        }
+                        Text("days a week", color = OnSurface)
+                    }
+                    if (!s.randomDaysValid) {
+                        Text(
+                            "Select at least ${s.randomDaysMax} days above",
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                }
+
                 ExposedDropdownMenuBox(
                     expanded = intervalExpanded,
                     onExpandedChange = { intervalExpanded = it }
@@ -1280,4 +1320,20 @@ private fun triggerLabel(type: TriggerType): String = when (type) {
     TriggerType.BLUETOOTH -> "On Bluetooth"
     TriggerType.WIFI -> "On Wi-Fi"
     TriggerType.MISSED_CALL -> "Missed call"
+}
+
+/** A compact number button that opens a menu of [range]. */
+@Composable
+private fun SmallNumberMenu(value: Int, range: IntRange, onPick: (Int) -> Unit) {
+    var open by remember { mutableStateOf(false) }
+    Box {
+        OutlinedButton(onClick = { open = true }, contentPadding = PaddingValues(horizontal = 14.dp)) {
+            Text("$value")
+        }
+        DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+            range.forEach { n ->
+                DropdownMenuItem(text = { Text("$n") }, onClick = { onPick(n); open = false })
+            }
+        }
+    }
 }

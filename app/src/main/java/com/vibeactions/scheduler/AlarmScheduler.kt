@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import com.vibeactions.domain.model.Macro
+import com.vibeactions.domain.model.randomDays
 import com.vibeactions.util.calculateNextFireTime
 import com.vibeactions.util.parseHhMmOrNull
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -35,7 +36,8 @@ class AlarmScheduler @Inject constructor(
             anchorEpochDay = macro.anchorEpochDay,
             validUntilEpochDay = macro.validUntilEpochDay,
             jitterSeed = macro.id,
-            jitterSpreadMinutes = macro.randomSpreadMinutes
+            jitterSpreadMinutes = macro.randomSpreadMinutes,
+            randomDays = macro.randomDays()
         )
         // Don't arm an alarm for a date past the macro's expiry (the fallback day may overrun it).
         val validUntil = macro.validUntilEpochDay

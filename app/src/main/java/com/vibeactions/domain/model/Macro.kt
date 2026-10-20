@@ -42,6 +42,10 @@ data class Macro(
      *  random offset in [-value, +value] around [scheduledTime], so it isn't the same minute every
      *  day (e.g. 5 fires within ±5 min of the time). 0 = fire exactly on time. */
     val randomSpreadMinutes: Int = 0,
+    /** SCHEDULED: send on only [randomDaysMin]–[randomDaysMax] randomly picked days of [daysOfWeek]
+     *  each week. [randomDaysMax] 0 = off (every selected day, as before). */
+    val randomDaysMin: Int = 0,
+    val randomDaysMax: Int = 0,
     /** ARGB card accent color (from CardColorPalette). 0 = not yet assigned → UI falls back to primary. */
     val cardColor: Long = 0L,
     /** Last day (epoch day) the macro may fire on, inclusive; null = no expiry. */
@@ -77,3 +81,7 @@ data class Macro(
     /** Stable positive Int request code for PendingIntent, derived from the UUID. */
     fun alarmRequestCode(): Int = (id.hashCode() and 0x7FFFFFFF)
 }
+
+/** The macro's random-days setting for scheduling, or null when it sends on every selected day. */
+fun Macro.randomDays(): com.vibeactions.util.RandomDays? =
+    if (randomDaysMax > 0) com.vibeactions.util.RandomDays(id, randomDaysMin, randomDaysMax) else null
