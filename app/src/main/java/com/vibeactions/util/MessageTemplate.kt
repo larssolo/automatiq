@@ -4,8 +4,6 @@ import java.time.LocalDateTime
 import java.time.format.TextStyle
 import java.util.Locale
 
-private val DANISH = Locale("da", "DK")
-
 /** Tokens the user can put in a message body; shown as a hint in the editor. */
 val TEMPLATE_TOKENS = listOf("{dato}", "{tid}", "{ugedag}", "{navn}", "{modtager}")
 
@@ -20,7 +18,7 @@ const val RECIPIENT_TOKEN = "{modtager}"
  * Expands template tokens in [body] using [now] and [macroName]:
  *   {dato}     -> dd-MM-yyyy
  *   {tid}      -> HH:mm
- *   {ugedag}   -> Danish weekday (e.g. "mandag")
+ *   {ugedag}   -> weekday in [locale], the phone's language by default ("mandag" / "Monday")
  *   {navn}     -> the macro's name
  *   {modtager} -> [recipientName] (the recipient's contact name / number); left untouched when null.
  *   {afsender} -> [sender] (the other party's number); left untouched when no sender applies
@@ -32,11 +30,12 @@ fun expandTemplate(
     now: LocalDateTime,
     macroName: String,
     sender: String? = null,
-    recipientName: String? = null
+    recipientName: String? = null,
+    locale: Locale = Locale.getDefault()
 ): String {
     val date = "%02d-%02d-%04d".format(now.dayOfMonth, now.monthValue, now.year)
     val time = "%02d:%02d".format(now.hour, now.minute)
-    val weekday = now.dayOfWeek.getDisplayName(TextStyle.FULL, DANISH)
+    val weekday = now.dayOfWeek.getDisplayName(TextStyle.FULL, locale)
     var expanded = body
         .replace("{dato}", date)
         .replace("{tid}", time)
