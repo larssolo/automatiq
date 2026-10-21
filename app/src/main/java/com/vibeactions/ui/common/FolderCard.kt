@@ -36,7 +36,7 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.sp
 import com.vibeactions.R
 import com.vibeactions.domain.model.Folder
-import com.vibeactions.ui.theme.JetBrainsMono
+import com.vibeactions.ui.theme.DmSans
 import com.vibeactions.ui.theme.OnSurface
 import com.vibeactions.ui.theme.OnSurfaceVariant
 import com.vibeactions.ui.theme.Surface
@@ -97,8 +97,8 @@ fun FolderCard(
             verticalArrangement = Arrangement.Center
         ) {
             Text(
-                folder.name, fontFamily = JetBrainsMono, fontWeight = FontWeight.Medium,
-                color = OnSurface, fontSize = 15.sp, maxLines = 1, overflow = TextOverflow.Ellipsis
+                folder.name, fontFamily = DmSans, fontWeight = FontWeight.SemiBold,
+                color = OnSurface, fontSize = 16.sp, maxLines = 1, overflow = TextOverflow.Ellipsis
             )
             Spacer(Modifier.height(3.dp))
             Text(
