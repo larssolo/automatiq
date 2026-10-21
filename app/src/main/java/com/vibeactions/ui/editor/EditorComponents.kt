@@ -28,6 +28,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -107,20 +110,19 @@ internal fun <T> ChoiceTiles(
                     Column(
                         Modifier
                             .weight(1f)
+                            // Fixed height: every tile is the same size whatever its label.
+                            .height(58.dp)
                             .clip(shape)
                             .background(bg)
                             .border(if (on) 1.5.dp else 1.dp, if (on) accent else Color.White.copy(alpha = 0.08f), shape)
                             .clickable { onSelect(value) }
-                            .padding(vertical = 12.dp, horizontal = 4.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
+                            .padding(horizontal = 4.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
                     ) {
-                        Icon(icon, null, tint = if (on) accent else Muted, modifier = Modifier.size(22.dp))
-                        Spacer(Modifier.height(6.dp))
-                        Text(
-                            label, fontSize = 12.sp, lineHeight = 14.sp, textAlign = TextAlign.Center,
-                            color = if (on) Color.White else Muted, maxLines = 2,
-                            overflow = TextOverflow.Ellipsis
-                        )
+                        Icon(icon, null, tint = if (on) accent else Muted, modifier = Modifier.size(20.dp))
+                        Spacer(Modifier.height(4.dp))
+                        FitText(label, color = if (on) Color.White else Muted)
                     }
                 }
                 // Keep tile widths equal on a short last row.
@@ -128,6 +130,18 @@ internal fun <T> ChoiceTiles(
             }
         }
     }
+}
+
+/** One line of label text that shrinks (down to 9sp) instead of wrapping, so a long label like
+ *  "Missed call" can't make its tile taller than the rest — also with a larger system font. */
+@Composable
+private fun FitText(text: String, color: Color) {
+    var size by remember(text) { mutableStateOf(12f) }
+    Text(
+        text, color = color, fontSize = size.sp, lineHeight = (size + 2).sp,
+        maxLines = 1, softWrap = false, textAlign = TextAlign.Center,
+        onTextLayout = { if (it.didOverflowWidth && size > 9f) size -= 0.5f }
+    )
 }
 
 /** Fold-out header for the less-used options; [summary] says what's on while it's closed. */
