@@ -145,11 +145,13 @@ Triggers and actions therefore span several areas of the OS — alarms, telephon
 
 SMS and call data is processed on the device and never uploaded, sold or shared — with one user-controlled exception: if the user turns on the optional AI reply feature and explicitly consents in the app, the text of the incoming message is sent to Google's Gemini API with the user's own API key to write the reply. Without these permissions the SMS and call triggers/actions cannot work; Android offers no alternative API for automated SMS.
 ```
-**Video** (≤ 30 sek, YouTube/Drive-link): `declaration-device-automation.mp4` (se `store/README.md`) viser flere handlinger + SMS-automatisering. Manus:
+**Video** (YouTube/Drive-link, 43 sek): `declaration-device-automation.mp4` (se `store/README.md`), optaget på `play`-buildet 1.6. Den viser hver erklæret tilladelse i brug:
 1. Makro-listen med forskellige handlinger (lyd, påmindelse, webhook, SMS).
-2. "Quiet mode" køres → telefonen skifter til lydløs (ikon i statuslinjen).
-3. "Pills" køres → påmindelsen dukker op.
-4. En SMS kommer ind → auto-svaret sendes, og det ses i Log.
+2. "Pills" køres → påmindelsen dukker op.
+3. En SMS kommer ind (`RECEIVE_SMS`) → "Out of office" sender auto-svaret (`SEND_SMS`).
+4. Et opkald ringer og bliver ikke besvaret (`READ_CALL_LOG`) → "Missed call text-back" sender en SMS til den, der ringede.
+5. "Quiet mode" køres → telefonen skifter til lydløs.
+6. Log viser alle fire som SUCCESS, med "Delivered ✓✓" på de to SMS'er.
 
 ### 4.2 Foreground service
 **Ikke relevant for Play-versionen.** Opladning/Bluetooth/Wi-Fi-triggerne (og tjenesten bag dem) er kun med i den delbare APK. Play-bundlen har ingen foreground service-type at erklære.
@@ -177,11 +179,11 @@ Core function is running user-scheduled automated actions (sound mode, reminders
 
 ## 6. Første produktionsudgivelse
 
-- [ ] Release name: `1.3`
+- [ ] Release name: `1.6`
 - [ ] Release notes:
 ```
 First Play Store release of Automatiq.
-• Scheduled, one-tap, auto-reply, missed-call and device-state SMS macros
+• Scheduled, one-tap, auto-reply and missed-call macros
 • Guided phone setup for reliable background sending
 • Optional AI (Google Gemini) with approval mode and in-app reporting
 ```
