@@ -250,7 +250,7 @@ fun MacroListScreen(
                             "$active of ${macros.size} live",
                             fontFamily = JetBrainsMono,
                             fontSize = 12.sp,
-                            color = OnSurfaceVariant
+                            color = Color(0xFFE6E6E6)
                         )
                         Spacer(Modifier.width(2.dp))
                         IconButton(onClick = { searchOpen = true }, modifier = Modifier.size(32.dp)) {

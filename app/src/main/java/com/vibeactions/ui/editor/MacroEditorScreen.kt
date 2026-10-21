@@ -36,6 +36,21 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Send
+import androidx.compose.material.icons.filled.Bolt
+import androidx.compose.material.icons.filled.ChatBubbleOutline
+import androidx.compose.material.icons.filled.DoNotDisturbOff
+import androidx.compose.material.icons.filled.Label
+import androidx.compose.material.icons.filled.Link
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.NotificationsActive
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Sms
+import androidx.compose.material.icons.filled.Vibration
+import androidx.compose.material.icons.filled.VolumeOff
+import androidx.compose.material.icons.filled.VolumeUp
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
 import com.vibeactions.BuildConfig
 import com.vibeactions.ui.common.ReportAiButton
 import com.vibeactions.ui.common.rememberAiConsentGate
@@ -108,8 +123,6 @@ fun MacroEditorScreen(
     var showDate by remember { mutableStateOf(false) }
     var showOneOffDate by remember { mutableStateOf(false) }
     var showExpiry by remember { mutableStateOf(false) }
-    var intervalExpanded by remember { mutableStateOf(false) }
-    var triggerExpanded by remember { mutableStateOf(false) }
     var showAiCompose by remember { mutableStateOf(false) }
     // -1 = matchSender field; 0+ = recipient index
     var pendingContactIndex by remember { mutableStateOf<Int?>(null) }
@@ -170,16 +183,46 @@ fun MacroEditorScreen(
         else contactPermLauncher.launch(Manifest.permission.READ_CONTACTS)
     }
 
+    val accent = androidx.compose.ui.graphics.Color(s.cardColor)
+    val replyTrigger = s.triggerType == TriggerType.INCOMING || s.triggerType == TriggerType.MISSED_CALL
+    var menuOpen by remember { mutableStateOf(false) }
+
     Scaffold(
         containerColor = androidx.compose.ui.graphics.Color.Transparent,
         topBar = {
             TopAppBar(
-                title = { Text(if (macroId == null) "New Macro" else "Edit Macro") },
+                title = { Text(if (macroId == null) "New macro" else "Edit macro") },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = androidx.compose.ui.graphics.Color.Transparent
                 ),
                 navigationIcon = { TextButton(onClick = onCancel) { Text("Cancel") } },
-                actions = { TextButton(enabled = s.canSave, onClick = { vm.save(onDone) }) { Text("Save") } }
+                actions = {
+                    Button(
+                        enabled = s.canSave, onClick = { vm.save(onDone) },
+                        contentPadding = PaddingValues(horizontal = 20.dp)
+                    ) { Text("Save") }
+                    // Duplicate/Delete are rare, so they live in an overflow menu instead of
+                    // big buttons at the bottom of the form.
+                    if (macroId != null && (onDelete != null || onCopy != null)) {
+                        Box {
+                            IconButton(onClick = { menuOpen = true }) {
+                                Icon(Icons.Default.MoreVert, "More", tint = OnSurface)
+                            }
+                            DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+                                if (onCopy != null) DropdownMenuItem(
+                                    text = { Text("Duplicate") },
+                                    leadingIcon = { Icon(Icons.Default.ContentCopy, null) },
+                                    onClick = { menuOpen = false; onCopy() }
+                                )
+                                if (onDelete != null) DropdownMenuItem(
+                                    text = { Text("Delete", color = ErrorRed) },
+                                    leadingIcon = { Icon(Icons.Default.Delete, null, tint = ErrorRed) },
+                                    onClick = { menuOpen = false; onDelete() }
+                                )
+                            }
+                        }
+                    } else Spacer(Modifier.width(12.dp))
+                }
             )
         },
         contentWindowInsets = WindowInsets(0)
@@ -189,19 +232,30 @@ fun MacroEditorScreen(
                 .padding(p)
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .padding(horizontal = 12.dp, vertical = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
 
-            OutlinedTextField(
-                value = s.name, onValueChange = { v -> vm.update { it.copy(name = v) } },
-                label = { Text("Name") }, isError = s.name.isNotEmpty() && !s.nameValid,
-                singleLine = true, modifier = Modifier.fillMaxWidth()
-            )
-
-            Column {
-                Text("Widget color", style = MaterialTheme.typography.labelLarge, color = OnSurface)
-                Spacer(Modifier.height(8.dp))
+            // ── Name, colour and on/off ──────────────────────────────────────────────────
+            EditorSection(Icons.Default.Label, "MACRO", accent, trailing = {
+                Text(
+                    if (s.enabled) "Active" else "Paused",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.labelMedium
+                )
+                Spacer(Modifier.width(8.dp))
+                ThemedSwitch(
+                    checked = s.enabled, width = 48.dp, height = 26.dp,
+                    onCheckedChange = { v -> vm.update { it.copy(enabled = v) } }
+                )
+            }) {
+                OutlinedTextField(
+                    value = s.name, onValueChange = { v -> vm.update { it.copy(name = v) } },
+                    placeholder = { Text("Name, e.g. Good morning, Mom") },
+                    isError = s.name.isNotEmpty() && !s.nameValid,
+                    textStyle = MaterialTheme.typography.titleMedium,
+                    singleLine = true, modifier = Modifier.fillMaxWidth()
+                )
                 // Swatches share the width so all of them show as full circles on narrow phones too.
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
@@ -213,6 +267,7 @@ fun MacroEditorScreen(
                             Modifier
                                 .weight(1f)
                                 .aspectRatio(1f)
+                                .padding(if (selected) 0.dp else 3.dp)
                                 .clip(CircleShape)
                                 .background(androidx.compose.ui.graphics.Color(swatch))
                                 .border(
@@ -236,273 +291,249 @@ fun MacroEditorScreen(
                 }
             }
 
-            ExposedDropdownMenuBox(
-                expanded = triggerExpanded,
-                onExpandedChange = { triggerExpanded = it }
-            ) {
-                OutlinedTextField(
-                    value = triggerLabel(s.triggerType),
-                    onValueChange = {},
-                    readOnly = true,
-                    label = { Text("Trigger") },
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = triggerExpanded) },
-                    modifier = Modifier.menuAnchor().fillMaxWidth()
-                )
-                ExposedDropdownMenu(
-                    expanded = triggerExpanded,
-                    onDismissRequest = { triggerExpanded = false }
-                ) {
-                    TriggerType.entries.filter {
-                        s.triggerType == it ||
-                            (it != TriggerType.LOCATION || BuildConfig.LOCATION_TRIGGER) &&
-                            (it !in STATE_TRIGGERS || BuildConfig.DEVICE_TRIGGERS)
-                    }.forEach { type ->
-                        DropdownMenuItem(
-                            text = { Text(triggerLabel(type)) },
-                            onClick = {
-                                vm.update { it.copy(triggerType = type) }
-                                triggerExpanded = false
-                            }
-                        )
-                    }
+            // ── When ─────────────────────────────────────────────────────────────────────
+            EditorSection(Icons.Default.Bolt, "WHEN", accent) {
+                val triggers = TriggerType.entries.filter {
+                    s.triggerType == it ||
+                        (it != TriggerType.LOCATION || BuildConfig.LOCATION_TRIGGER) &&
+                        (it !in STATE_TRIGGERS || BuildConfig.DEVICE_TRIGGERS)
                 }
-            }
+                ChoiceTiles(
+                    options = triggers.map { Triple(it, triggerIcon(it), triggerLabel(it)) },
+                    selected = s.triggerType, accent = accent
+                ) { type -> vm.update { it.copy(triggerType = type) } }
 
-            // What the macro does. Reply triggers always answer by SMS, so they don't get a choice.
-            if (s.triggerType != TriggerType.INCOMING && s.triggerType != TriggerType.MISSED_CALL) {
-                ActionSection(s, vm)
-            }
-
-            if (s.triggerType == TriggerType.SCHEDULED) {
-                OutlinedButton(onClick = { showTime = true }, modifier = Modifier.fillMaxWidth()) {
-                    Text("Time: ${s.scheduledTime}")
-                }
-
-                // Recurring (weekly rhythm) vs one-time (a single date). One-time reuses the
-                // recurring engine under the hood — see EditorState.toMacro.
-                SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
-                    SegmentedButton(
-                        selected = !s.oneOff,
-                        onClick = { vm.update { it.copy(oneOff = false) } },
-                        shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2)
-                    ) { Text("Repeat") }
-                    SegmentedButton(
-                        selected = s.oneOff,
-                        onClick = {
-                            vm.update {
-                                it.copy(
-                                    oneOff = true,
-                                    oneOffEpochDay = it.oneOffEpochDay ?: LocalDate.now().toEpochDay()
-                                )
-                            }
-                        },
-                        shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2)
-                    ) { Text("One-time") }
-                }
-
-                if (s.oneOff) {
-                    val d = s.oneOffEpochDay ?: LocalDate.now().toEpochDay()
-                    OutlinedButton(onClick = { showOneOffDate = true }, modifier = Modifier.fillMaxWidth()) {
-                        Text("Date: ${LocalDate.ofEpochDay(d)}")
-                    }
-                } else {
-
-                Text("Repeat on", style = MaterialTheme.typography.labelLarge, color = OnSurface)
-                // Single letters (Mon→Sun) so all seven fit across; fixed order disambiguates T/T, S/S.
-                val dayLabels = listOf("M", "T", "W", "T", "F", "S", "S")
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(4.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    (1..7).forEach { day ->
-                        val selected = s.daysOfWeek.contains(day)
-                        FilterChip(
-                            selected = selected,
-                            onClick = {
-                                vm.update {
-                                    val next = if (selected) it.daysOfWeek - day else it.daysOfWeek + day
-                                    it.copy(daysOfWeek = next)
-                                }
-                            },
-                            label = {
-                                Text(
-                                    dayLabels[day - 1],
-                                    maxLines = 1,
-                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                                    modifier = Modifier.fillMaxWidth(),
-                                    fontWeight = androidx.compose.ui.text.font.FontWeight.Medium
-                                )
-                            },
-                            // Solid green/red so on/off reads at a glance on any background.
-                            colors = FilterChipDefaults.filterChipColors(
-                                containerColor = ErrorRed.copy(alpha = 0.85f),
-                                labelColor = androidx.compose.ui.graphics.Color.White,
-                                selectedContainerColor = Primary,
-                                selectedLabelColor = androidx.compose.ui.graphics.Color.Black
-                            ),
-                            border = null,
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                }
-                if (!s.daysValid) {
-                    Text(
-                        "Pick at least one day",
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                }
-
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Column(Modifier.weight(1f)) {
-                        Text("Random days", color = OnSurface, style = MaterialTheme.typography.bodyLarge)
-                        Text(
-                            "Send on only some of the selected days — picked at random each week",
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            style = MaterialTheme.typography.bodySmall
-                        )
-                    }
-                    Spacer(Modifier.width(8.dp))
-                    ThemedSwitch(
-                        checked = s.randomDaysEnabled,
-                        onCheckedChange = { on -> vm.update { it.copy(randomDaysEnabled = on) } }
-                    )
-                }
-                if (s.randomDaysEnabled) {
-                    val maxDays = s.daysOfWeek.size.coerceAtLeast(1)
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Text("Between", color = OnSurface)
-                        SmallNumberMenu(s.randomDaysMin, 1..maxDays) { v ->
-                            vm.update { it.copy(randomDaysMin = v, randomDaysMax = maxOf(v, it.randomDaysMax)) }
+                if (s.triggerType == TriggerType.SCHEDULED) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        // The time is the heart of a scheduled macro: big, mono, tap to change.
+                        Column(
+                            Modifier
+                                .clip(androidx.compose.foundation.shape.RoundedCornerShape(12.dp))
+                                .clickable { showTime = true }
+                                .padding(horizontal = 6.dp, vertical = 2.dp)
+                        ) {
+                            Text(
+                                s.scheduledTime, fontFamily = JetBrainsMono, fontWeight = FontWeight.Medium,
+                                fontSize = 40.sp, color = androidx.compose.ui.graphics.Color.White
+                            )
+                            Text(
+                                "Tap to change", color = accent,
+                                style = MaterialTheme.typography.labelSmall
+                            )
                         }
-                        Text("and", color = OnSurface)
-                        SmallNumberMenu(s.randomDaysMax, 1..maxDays) { v ->
-                            vm.update { it.copy(randomDaysMax = v, randomDaysMin = minOf(v, it.randomDaysMin)) }
-                        }
-                        Text("days a week", color = OnSurface)
-                    }
-                    if (!s.randomDaysValid) {
-                        Text(
-                            "Select at least ${s.randomDaysMax} days above",
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodySmall
-                        )
-                    }
-                }
-
-                ExposedDropdownMenuBox(
-                    expanded = intervalExpanded,
-                    onExpandedChange = { intervalExpanded = it }
-                ) {
-                    OutlinedTextField(
-                        value = intervalLabel(s.weekInterval),
-                        onValueChange = {},
-                        readOnly = true,
-                        label = { Text("Repeat") },
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = intervalExpanded) },
-                        modifier = Modifier.menuAnchor().fillMaxWidth()
-                    )
-                    ExposedDropdownMenu(
-                        expanded = intervalExpanded,
-                        onDismissRequest = { intervalExpanded = false }
-                    ) {
-                        (1..4).forEach { n ->
-                            DropdownMenuItem(
-                                text = { Text(intervalLabel(n)) },
+                        Spacer(Modifier.weight(1f))
+                        // Recurring (weekly rhythm) vs one-time (a single date). One-time reuses the
+                        // recurring engine under the hood — see EditorState.toMacro.
+                        SingleChoiceSegmentedButtonRow {
+                            SegmentedButton(
+                                selected = !s.oneOff,
+                                onClick = { vm.update { it.copy(oneOff = false) } },
+                                shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
+                                colors = segColors(accent),
+                                icon = {}
+                            ) { Text("Repeat") }
+                            SegmentedButton(
+                                selected = s.oneOff,
                                 onClick = {
-                                    vm.update { st ->
-                                        st.copy(
-                                            weekInterval = n,
-                                            startEpochDay = if (n > 1 && st.startEpochDay == null)
-                                                LocalDate.now().toEpochDay() else st.startEpochDay
+                                    vm.update {
+                                        it.copy(
+                                            oneOff = true,
+                                            oneOffEpochDay = it.oneOffEpochDay ?: LocalDate.now().toEpochDay()
                                         )
                                     }
-                                    intervalExpanded = false
+                                },
+                                shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
+                                colors = segColors(accent),
+                                icon = {}
+                            ) { Text("Once") }
+                        }
+                    }
+
+                    if (s.oneOff) {
+                        val d = s.oneOffEpochDay ?: LocalDate.now().toEpochDay()
+                        OutlinedButton(onClick = { showOneOffDate = true }, modifier = Modifier.fillMaxWidth()) {
+                            Text("On ${prettyDate(d)}")
+                        }
+                    } else {
+                        // Single letters (Mon→Sun) so all seven fit across; fixed order disambiguates T/T, S/S.
+                        val dayLabels = listOf("M", "T", "W", "T", "F", "S", "S")
+                        Row(
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            (1..7).forEach { day ->
+                                val selected = s.daysOfWeek.contains(day)
+                                // Solid green/red so on/off reads at a glance on any background.
+                                Box(
+                                    Modifier
+                                        .size(40.dp)
+                                        .clip(CircleShape)
+                                        .background(if (selected) Primary else ErrorRed.copy(alpha = 0.85f))
+                                        .clickable {
+                                            vm.update {
+                                                val next = if (selected) it.daysOfWeek - day else it.daysOfWeek + day
+                                                it.copy(daysOfWeek = next)
+                                            }
+                                        },
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        dayLabels[day - 1], fontWeight = FontWeight.Medium,
+                                        color = if (selected) androidx.compose.ui.graphics.Color.Black
+                                            else androidx.compose.ui.graphics.Color.White
+                                    )
                                 }
+                            }
+                        }
+                        if (!s.daysValid) {
+                            Text(
+                                "Pick at least one day",
+                                color = MaterialTheme.colorScheme.error,
+                                style = MaterialTheme.typography.bodySmall
                             )
                         }
                     }
-                }
 
-                if (s.weekInterval > 1) {
-                    val startDay = s.startEpochDay ?: LocalDate.now().toEpochDay()
-                    OutlinedButton(onClick = { showDate = true }, modifier = Modifier.fillMaxWidth()) {
-                        Text("Starts: ${LocalDate.ofEpochDay(startDay)}")
+                    // The less-used scheduling knobs fold away; the summary says what's switched on.
+                    val extras = buildList {
+                        if (!s.oneOff && s.randomDaysEnabled) add("${s.randomDaysMin}–${s.randomDaysMax} random days")
+                        if (!s.oneOff && s.weekInterval > 1) add(intervalLabel(s.weekInterval).lowercase())
+                        if (!s.oneOff && s.validUntilEpochDay != null) add("until ${prettyDate(s.validUntilEpochDay!!)}")
+                        if (s.randomSpreadEnabled) add("±${s.randomSpreadMinutes} min")
                     }
-                }
+                    var moreOpen by remember { mutableStateOf(false) }
+                    MoreOptionsRow(
+                        open = moreOpen,
+                        summary = extras.joinToString(" · ").ifEmpty { "Random days, every N weeks, end date, vary time" },
+                        accent = accent
+                    ) { moreOpen = !moreOpen }
+                    androidx.compose.animation.AnimatedVisibility(moreOpen) {
+                        Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                            if (!s.oneOff) {
+                                SwitchRow(
+                                    "Random days",
+                                    "Send on only some of the selected days — picked at random each week",
+                                    s.randomDaysEnabled
+                                ) { on -> vm.update { it.copy(randomDaysEnabled = on) } }
+                                if (s.randomDaysEnabled) {
+                                    val maxDays = s.daysOfWeek.size.coerceAtLeast(1)
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        Text("Between", color = OnSurface)
+                                        SmallNumberMenu(s.randomDaysMin, 1..maxDays) { v ->
+                                            vm.update { it.copy(randomDaysMin = v, randomDaysMax = maxOf(v, it.randomDaysMax)) }
+                                        }
+                                        Text("and", color = OnSurface)
+                                        SmallNumberMenu(s.randomDaysMax, 1..maxDays) { v ->
+                                            vm.update { it.copy(randomDaysMax = v, randomDaysMin = minOf(v, it.randomDaysMin)) }
+                                        }
+                                        Text("days a week", color = OnSurface)
+                                    }
+                                    if (!s.randomDaysValid) {
+                                        Text(
+                                            "Select at least ${s.randomDaysMax} days above",
+                                            color = MaterialTheme.colorScheme.error,
+                                            style = MaterialTheme.typography.bodySmall
+                                        )
+                                    }
+                                }
 
-                // Optional expiry: after this date the macro stops firing.
-                val expiry = s.validUntilEpochDay
-                if (expiry == null) {
-                    OutlinedButton(onClick = { showExpiry = true }, modifier = Modifier.fillMaxWidth()) {
-                        Text("Set expiry date (optional)")
-                    }
-                } else {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        OutlinedButton(onClick = { showExpiry = true }, modifier = Modifier.weight(1f)) {
-                            Text("Expires: ${LocalDate.ofEpochDay(expiry)}")
-                        }
-                        IconButton(onClick = { vm.update { it.copy(validUntilEpochDay = null) } }) {
-                            Icon(Icons.Default.Close, contentDescription = "Clear expiry",
-                                tint = OnSurface)
-                        }
-                    }
-                }
-                } // end recurring-only controls (else of s.oneOff)
+                                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    Text("Repeat", color = OnSurface, style = MaterialTheme.typography.bodyLarge)
+                                    SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+                                        (1..4).forEach { n ->
+                                            SegmentedButton(
+                                                selected = s.weekInterval == n,
+                                                onClick = {
+                                                    vm.update { st ->
+                                                        st.copy(
+                                                            weekInterval = n,
+                                                            startEpochDay = if (n > 1 && st.startEpochDay == null)
+                                                                LocalDate.now().toEpochDay() else st.startEpochDay
+                                                        )
+                                                    }
+                                                },
+                                                shape = SegmentedButtonDefaults.itemShape(n - 1, 4),
+                                                colors = segColors(accent),
+                                                icon = {}
+                                            ) { Text(if (n == 1) "Weekly" else "${n} wk") }
+                                        }
+                                    }
+                                }
 
-                // Random send-time spread: fire within ±N minutes of the exact time so the send
-                // isn't recognisably on-the-dot every day. The field's visibility is tied to the
-                // switch, not to the value, so clearing the number doesn't collapse the input.
-                HorizontalDivider()
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Vary send time", modifier = Modifier.weight(1f), color = OnSurface)
-                    ThemedSwitch(
-                        checked = s.randomSpreadEnabled,
-                        onCheckedChange = { on ->
-                            vm.update {
-                                it.copy(
-                                    randomSpreadEnabled = on,
-                                    // Restore a sensible default when turning on after clearing to 0.
-                                    randomSpreadMinutes = if (on && it.randomSpreadMinutes < 1) 5
-                                        else it.randomSpreadMinutes
+                                if (s.weekInterval > 1) {
+                                    val startDay = s.startEpochDay ?: LocalDate.now().toEpochDay()
+                                    OutlinedButton(onClick = { showDate = true }, modifier = Modifier.fillMaxWidth()) {
+                                        Text("Counting from ${prettyDate(startDay)}")
+                                    }
+                                }
+
+                                // Optional expiry: after this date the macro stops firing.
+                                val expiry = s.validUntilEpochDay
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    OutlinedButton(onClick = { showExpiry = true }, modifier = Modifier.weight(1f)) {
+                                        Text(if (expiry == null) "Set end date (optional)" else "Ends ${prettyDate(expiry)}")
+                                    }
+                                    if (expiry != null) {
+                                        IconButton(onClick = { vm.update { it.copy(validUntilEpochDay = null) } }) {
+                                            Icon(Icons.Default.Close, contentDescription = "Clear end date",
+                                                tint = OnSurface)
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Random send-time spread: fire within ±N minutes of the exact time so the send
+                            // isn't recognisably on-the-dot every day. The field's visibility is tied to the
+                            // switch, not to the value, so clearing the number doesn't collapse the input.
+                            SwitchRow(
+                                "Vary send time",
+                                "Fire at a slightly different time each day",
+                                s.randomSpreadEnabled
+                            ) { on ->
+                                vm.update {
+                                    it.copy(
+                                        randomSpreadEnabled = on,
+                                        // Restore a sensible default when turning on after clearing to 0.
+                                        randomSpreadMinutes = if (on && it.randomSpreadMinutes < 1) 5
+                                            else it.randomSpreadMinutes
+                                    )
+                                }
+                            }
+                            if (s.randomSpreadEnabled) {
+                                OutlinedTextField(
+                                    // Show blank rather than "0" so the field can be cleared and retyped.
+                                    value = if (s.randomSpreadMinutes == 0) "" else s.randomSpreadMinutes.toString(),
+                                    onValueChange = { v ->
+                                        val n = v.filter { it.isDigit() }.take(3).toIntOrNull() ?: 0
+                                        vm.update { it.copy(randomSpreadMinutes = n) }
+                                    },
+                                    label = { Text("± minutes") },
+                                    isError = !s.randomSpreadValid,
+                                    supportingText = {
+                                        Text(
+                                            if (!s.randomSpreadValid) "Enter at least 1 minute."
+                                            else "Each send fires within ±${s.randomSpreadMinutes} min of ${s.scheduledTime}."
+                                        )
+                                    },
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                    singleLine = true, modifier = Modifier.fillMaxWidth()
                                 )
                             }
                         }
-                    )
+                    }
                 }
-                if (s.randomSpreadEnabled) {
-                    OutlinedTextField(
-                        // Show blank rather than "0" so the field can be cleared and retyped.
-                        value = if (s.randomSpreadMinutes == 0) "" else s.randomSpreadMinutes.toString(),
-                        onValueChange = { v ->
-                            val n = v.filter { it.isDigit() }.take(3).toIntOrNull() ?: 0
-                            vm.update { it.copy(randomSpreadMinutes = n) }
-                        },
-                        label = { Text("± minutes") },
-                        isError = !s.randomSpreadValid,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        singleLine = true, modifier = Modifier.fillMaxWidth()
-                    )
-                    Text(
-                        if (!s.randomSpreadValid)
-                            "Enter at least 1 minute."
-                        else
-                            "Each send fires within ±${s.randomSpreadMinutes} min of ${s.scheduledTime} " +
-                                "(a fresh random time each day).",
-                        color = if (!s.randomSpreadValid) MaterialTheme.colorScheme.error
-                            else MaterialTheme.colorScheme.onSurfaceVariant,
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                }
-            }
 
-            if (s.triggerType == TriggerType.LOCATION) {
+                if (s.triggerType == TriggerType.MANUAL) {
+                    Hint("Runs only when you start it — from the list or a home-screen widget.")
+                }
+
+                if (s.triggerType == TriggerType.LOCATION) {
                 val fused = remember { LocationServices.getFusedLocationProviderClient(ctx) }
                 fun fetchLocation() {
                     try {
@@ -574,7 +605,9 @@ fun MacroEditorScreen(
                         SegmentedButton(
                             selected = s.geofenceTransition == value,
                             onClick = { vm.update { it.copy(geofenceTransition = value) } },
-                            shape = SegmentedButtonDefaults.itemShape(i, options.size)
+                            shape = SegmentedButtonDefaults.itemShape(i, options.size),
+                            colors = segColors(accent),
+                            icon = {},
                         ) { Text(label) }
                     }
                 }
@@ -665,9 +698,9 @@ fun MacroEditorScreen(
                         )
                     }
                 }
-            }
+                }
 
-            if (s.triggerType in STATE_TRIGGERS) {
+                if (s.triggerType in STATE_TRIGGERS) {
                 val onLabel: String
                 val offLabel: String
                 when (s.triggerType) {
@@ -680,7 +713,9 @@ fun MacroEditorScreen(
                         SegmentedButton(
                             selected = s.triggerOnConnect == value,
                             onClick = { vm.update { it.copy(triggerOnConnect = value) } },
-                            shape = SegmentedButtonDefaults.itemShape(i, options.size)
+                            shape = SegmentedButtonDefaults.itemShape(i, options.size),
+                            colors = segColors(accent),
+                            icon = {},
                         ) { Text(label) }
                     }
                 }
@@ -754,10 +789,9 @@ fun MacroEditorScreen(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     style = MaterialTheme.typography.bodySmall
                 )
-            }
+                }
 
-            if (s.triggerType == TriggerType.MISSED_CALL) {
-                // Missed-call auto-text: the reply goes to whoever you didn't pick up for.
+                if (s.triggerType == TriggerType.MISSED_CALL) {
                 OutlinedTextField(
                     value = s.matchSender,
                     onValueChange = { v -> vm.update { it.copy(matchSender = v) } },
@@ -771,10 +805,9 @@ fun MacroEditorScreen(
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                     singleLine = true, modifier = Modifier.fillMaxWidth()
                 )
-            }
+                }
 
-            if (s.triggerType == TriggerType.INCOMING) {
-                // Auto-reply: match on the incoming sender/keyword; reply goes back to the sender.
+                if (s.triggerType == TriggerType.INCOMING) {
                 OutlinedTextField(
                     value = s.matchSender,
                     onValueChange = { v -> vm.update { it.copy(matchSender = v) } },
@@ -795,34 +828,20 @@ fun MacroEditorScreen(
                     supportingText = { Text("Leave blank to reply to any message") },
                     singleLine = true, modifier = Modifier.fillMaxWidth()
                 )
-                HorizontalDivider()
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("AI reply (Gemini)", modifier = Modifier.weight(1f), color = OnSurface)
-                    ThemedSwitch(
-                        checked = s.aiReplyEnabled,
-                        onCheckedChange = { v -> vm.update { it.copy(aiReplyEnabled = v) } }
-                    )
                 }
-                if (s.aiReplyEnabled) {
-                    AiSendModeField(s.aiSendMode) { mode -> vm.update { it.copy(aiSendMode = mode) } }
-                    OutlinedTextField(
-                        value = s.aiReplyInstruction,
-                        onValueChange = { v -> vm.update { it.copy(aiReplyInstruction = v) } },
-                        label = { Text("How the AI should reply (optional)") },
-                        placeholder = { Text("e.g.: Reply short and friendly, max 1 sentence") },
-                        supportingText = {
-                            Text("Controls tone and length. Leave blank to use the system prompt from Settings.")
-                        },
-                        minLines = 2, modifier = Modifier.fillMaxWidth()
-                    )
-                    Text(
-                        "The message field below is used as a fallback if Gemini doesn't respond.",
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        style = MaterialTheme.typography.bodySmall
-                    )
+            }
+
+            // ── What it does ─────────────────────────────────────────────────────────────
+            // Reply triggers always answer by SMS, so they don't get a choice.
+            if (!replyTrigger) {
+                EditorSection(Icons.Default.PlayArrow, "DO THIS", accent) {
+                    ActionSection(s, vm, accent)
                 }
-            } else if (s.effectiveAction == ActionType.SMS) {
-                Text("Recipients", style = MaterialTheme.typography.labelLarge, color = OnSurface)
+            }
+
+            // ── Recipients ───────────────────────────────────────────────────────────────
+            if (!replyTrigger && s.effectiveAction == ActionType.SMS) {
+                EditorSection(Icons.Default.Person, "SEND TO", accent) {
                 s.recipients.forEachIndexed { index, number ->
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
@@ -895,141 +914,145 @@ fun MacroEditorScreen(
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
+                }
+            } else if (replyTrigger) {
+                Hint(
+                    "The reply goes back to whoever " +
+                        (if (s.triggerType == TriggerType.INCOMING) "texted you." else "called you."),
+                    Modifier.padding(horizontal = 8.dp)
+                )
             }
 
-            if (s.effectiveAction != ActionType.SOUND) OutlinedTextField(
-                value = s.message, onValueChange = { v -> vm.update { it.copy(message = v) } },
-                label = {
-                    Text(
-                        when {
-                            s.triggerType == TriggerType.INCOMING ||
-                                s.triggerType == TriggerType.MISSED_CALL -> "Reply message"
-                            s.effectiveAction == ActionType.REMINDER -> "Reminder text"
-                            s.effectiveAction == ActionType.WEBHOOK -> "Request body (POST, optional)"
-                            else -> "Message"
+            // ── Message ──────────────────────────────────────────────────────────────────
+            if (s.effectiveAction != ActionType.SOUND) {
+                val tokens = if (replyTrigger) TEMPLATE_TOKENS + SENDER_TOKEN else TEMPLATE_TOKENS
+                EditorSection(
+                    Icons.Default.ChatBubbleOutline,
+                    when {
+                        replyTrigger -> "REPLY"
+                        s.effectiveAction == ActionType.REMINDER -> "REMINDER TEXT"
+                        s.effectiveAction == ActionType.WEBHOOK -> "REQUEST BODY"
+                        else -> "MESSAGE"
+                    },
+                    accent,
+                    trailing = if (s.effectiveAction == ActionType.SMS) {
+                        {
+                            TextButton(onClick = { showAiCompose = true }) {
+                                Icon(Icons.Default.AutoAwesome, null, Modifier.size(16.dp))
+                                Spacer(Modifier.width(4.dp))
+                                Text("AI write", style = MaterialTheme.typography.labelMedium)
+                            }
                         }
-                    )
-                },
-                supportingText = {
-                    // Reply macros additionally get {afsender} — the other party's number.
-                    val tokens = if (s.triggerType == TriggerType.INCOMING ||
-                        s.triggerType == TriggerType.MISSED_CALL)
-                        TEMPLATE_TOKENS + SENDER_TOKEN else TEMPLATE_TOKENS
-                    Text("${s.message.length} chars · variables: ${tokens.joinToString(" ")}")
-                },
-                minLines = 3, modifier = Modifier.fillMaxWidth()
-            )
-            // Live preview: show the message with {dato}/{tid}/{ugedag}/{navn} filled in, so the
-            // user can see exactly what will be sent before saving. Only shown when a token is used.
-            if ((TEMPLATE_TOKENS + SENDER_TOKEN).any { s.message.contains(it) }) {
-                val replyType = s.triggerType == TriggerType.INCOMING ||
-                    s.triggerType == TriggerType.MISSED_CALL
-                // Resolve the first recipient's name so {modtager} previews as a real name, not a token.
-                val firstRecipient = s.recipients.firstOrNull { it.isNotBlank() }?.trim()
-                val sampleRecipient by produceState(firstRecipient, firstRecipient) {
-                    value = firstRecipient?.let { vm.recipientName(it) }
-                }
-                val preview = remember(s.message, s.name, replyType, sampleRecipient) {
-                    // Reply macros fill {afsender} with the counterparty; show a sample number so the
-                    // preview isn't a literal {afsender}. Non-reply macros have no counterparty.
-                    val sampleSender = if (replyType) "12345678" else null
-                    expandTemplate(
-                        s.message, LocalDateTime.now(), s.name.ifBlank { "macro" },
-                        sender = sampleSender, recipientName = sampleRecipient
-                    )
-                }
-                Surface(
-                    color = MaterialTheme.colorScheme.surfaceVariant,
-                    shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp),
-                    modifier = Modifier.fillMaxWidth()
+                    } else null
                 ) {
-                    Column(Modifier.padding(12.dp)) {
-                        Text(
-                            "Preview (right now)",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Spacer(Modifier.height(4.dp))
-                        Text(preview, style = MaterialTheme.typography.bodyMedium, color = OnSurface)
-                    }
-                }
-            }
-            if (s.effectiveAction == ActionType.SMS) Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
-                TextButton(onClick = { showAiCompose = true }) {
-                    Icon(
-                        Icons.Default.AutoAwesome,
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(Modifier.width(4.dp))
-                    Text("AI write", style = MaterialTheme.typography.labelMedium)
-                }
-            }
-
-            if (s.triggerType == TriggerType.SCHEDULED && s.effectiveAction == ActionType.SMS) {
-                // AI variation: every fire sends a fresh Gemini rewrite of the message above, so a
-                // recurring send never delivers the exact same text twice. Same APPROVE/AUTO modes
-                // as AI auto-replies; the fixed message doubles as the no-AI fallback.
-                HorizontalDivider()
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("AI variation (Gemini)", modifier = Modifier.weight(1f), color = OnSurface)
-                    ThemedSwitch(
-                        checked = s.aiReplyEnabled,
-                        onCheckedChange = { v -> vm.update { it.copy(aiReplyEnabled = v) } }
-                    )
-                }
-                if (s.aiReplyEnabled) {
-                    Text(
-                        "Every send gets a fresh AI-written variation of the message above, so " +
-                            "recipients never get the exact same text twice.",
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                    AiSendModeField(s.aiSendMode) { mode -> vm.update { it.copy(aiSendMode = mode) } }
-                    if (s.aiSendMode == AiSendMode.APPROVE) {
-                        Text(
-                            "At send time a notification lets you review, edit or discard the " +
-                                "message before it goes out.",
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            style = MaterialTheme.typography.bodySmall
-                        )
+                    // Local TextFieldValue so a tapped variable lands at the cursor, not the end.
+                    var field by remember { mutableStateOf(TextFieldValue(s.message)) }
+                    LaunchedEffect(s.message) {
+                        if (field.text != s.message) field = TextFieldValue(s.message, TextRange(s.message.length))
                     }
                     OutlinedTextField(
-                        value = s.aiReplyInstruction,
-                        onValueChange = { v -> vm.update { it.copy(aiReplyInstruction = v) } },
-                        label = { Text("How the AI should vary it (optional)") },
-                        placeholder = { Text("e.g.: warm and casual, keep it short") },
-                        supportingText = { Text("Controls tone and style of the variations.") },
-                        minLines = 2, modifier = Modifier.fillMaxWidth()
+                        value = field,
+                        onValueChange = { v -> field = v; vm.update { it.copy(message = v.text) } },
+                        placeholder = {
+                            Text(
+                                if (s.effectiveAction == ActionType.WEBHOOK) "Optional, sent with POST"
+                                else "Write the text…"
+                            )
+                        },
+                        supportingText = { Text("${s.message.length} characters") },
+                        minLines = 3, modifier = Modifier.fillMaxWidth()
                     )
                     Text(
-                        "If Gemini doesn't respond, the original message is sent unchanged.",
+                        "Tap to insert",
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        style = MaterialTheme.typography.bodySmall
+                        style = MaterialTheme.typography.labelSmall
                     )
-                    // Try the AI now: generate one sample variation so you can see what kind of text
-                    // it produces before enabling AUTO mode — without sending anything.
-                    AiVariationPreview(message = s.message, instruction = s.aiReplyInstruction)
+                    Row(
+                        Modifier.horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        tokens.forEach { token ->
+                            AssistChip(
+                                onClick = {
+                                    val sel = field.selection
+                                    val text = field.text.replaceRange(sel.min, sel.max, token)
+                                    field = TextFieldValue(text, TextRange(sel.min + token.length))
+                                    vm.update { it.copy(message = text) }
+                                },
+                                label = { Text(tokenLabel(token), style = MaterialTheme.typography.labelMedium) }
+                            )
+                        }
+                    }
+                    // Live preview: show the message with {dato}/{tid}/{ugedag}/{navn} filled in, so the
+                    // user can see exactly what will be sent before saving. Only shown when a token is used.
+                    if ((TEMPLATE_TOKENS + SENDER_TOKEN).any { s.message.contains(it) }) {
+                        // Resolve the first recipient's name so {modtager} previews as a real name, not a token.
+                        val firstRecipient = s.recipients.firstOrNull { it.isNotBlank() }?.trim()
+                        val sampleRecipient by produceState(firstRecipient, firstRecipient) {
+                            value = firstRecipient?.let { vm.recipientName(it) }
+                        }
+                        val preview = remember(s.message, s.name, replyTrigger, sampleRecipient) {
+                            // Reply macros fill {afsender} with the counterparty; show a sample number so the
+                            // preview isn't a literal {afsender}. Non-reply macros have no counterparty.
+                            val sampleSender = if (replyTrigger) "12345678" else null
+                            expandTemplate(
+                                s.message, LocalDateTime.now(), s.name.ifBlank { "macro" },
+                                sender = sampleSender, recipientName = sampleRecipient
+                            )
+                        }
+                        MessageBubble(preview, accent)
+                    }
                 }
             }
 
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("Enabled", modifier = Modifier.weight(1f), color = OnSurface)
-                ThemedSwitch(
-                    checked = s.enabled,
-                    onCheckedChange = { v -> vm.update { it.copy(enabled = v) } }
-                )
+            // ── AI ───────────────────────────────────────────────────────────────────────
+            val aiAvailable = s.triggerType == TriggerType.INCOMING ||
+                (s.triggerType == TriggerType.SCHEDULED && s.effectiveAction == ActionType.SMS)
+            if (aiAvailable) {
+                val isReply = s.triggerType == TriggerType.INCOMING
+                EditorSection(Icons.Default.AutoAwesome, if (isReply) "AI REPLY" else "AI VARIATION", accent, trailing = {
+                    ThemedSwitch(
+                        checked = s.aiReplyEnabled, width = 48.dp, height = 26.dp,
+                        onCheckedChange = { v -> vm.update { it.copy(aiReplyEnabled = v) } }
+                    )
+                }) {
+                    Hint(
+                        if (isReply) "Gemini writes each reply. The text above is sent if Gemini doesn't answer."
+                        // AI variation: every fire sends a fresh Gemini rewrite of the message above, so a
+                        // recurring send never delivers the exact same text twice.
+                        else "Every send gets a fresh rewrite of your message, so it never reads the same twice. " +
+                            "If Gemini doesn't answer, your text is sent unchanged."
+                    )
+                    if (s.aiReplyEnabled) {
+                        AiSendModeField(s.aiSendMode, accent) { mode -> vm.update { it.copy(aiSendMode = mode) } }
+                        OutlinedTextField(
+                            value = s.aiReplyInstruction,
+                            onValueChange = { v -> vm.update { it.copy(aiReplyInstruction = v) } },
+                            label = { Text(if (isReply) "How to reply (optional)" else "Tone and style (optional)") },
+                            placeholder = {
+                                Text(if (isReply) "e.g. short and friendly, max 1 sentence" else "e.g. warm and casual, keep it short")
+                            },
+                            supportingText = if (isReply) {
+                                { Text("Blank = the system prompt from Settings.") }
+                            } else null,
+                            minLines = 2, modifier = Modifier.fillMaxWidth()
+                        )
+                        // Try the AI now: generate one sample variation so you can see what kind of text
+                        // it produces before enabling AUTO mode — without sending anything.
+                        if (!isReply) AiVariationPreview(message = s.message, instruction = s.aiReplyInstruction)
+                    }
+                }
             }
 
             // Reply macros (auto-reply / missed call) send to the incoming counterparty, so a manual
             // test-send has no recipient and would be a silent no-op — hide it for those.
-            val canTestSend = s.triggerType != TriggerType.INCOMING &&
-                s.triggerType != TriggerType.MISSED_CALL
-            if (macroId != null && onSend != null && canTestSend) {
-                HorizontalDivider()
-                FilledTonalButton(onClick = onSend, modifier = Modifier.fillMaxWidth()) {
-                    Icon(Icons.Default.Send, null, Modifier.size(16.dp))
-                    Spacer(Modifier.width(6.dp))
+            if (macroId != null && onSend != null && !replyTrigger) {
+                FilledTonalButton(
+                    onClick = onSend,
+                    modifier = Modifier.fillMaxWidth().height(52.dp)
+                ) {
+                    Icon(Icons.Default.Send, null, Modifier.size(18.dp))
+                    Spacer(Modifier.width(8.dp))
                     Text(
                         when {
                             s.effectiveAction != ActionType.SMS -> "Run now"
@@ -1039,33 +1062,7 @@ fun MacroEditorScreen(
                     )
                 }
             }
-
-            if (macroId != null && (onDelete != null || onCopy != null)) {
-                HorizontalDivider()
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    if (onCopy != null) {
-                        OutlinedButton(onClick = onCopy, modifier = Modifier.weight(1f)) {
-                            Icon(Icons.Default.ContentCopy, null, Modifier.size(16.dp))
-                            Spacer(Modifier.width(6.dp))
-                            Text("Duplicate")
-                        }
-                    }
-                    if (onDelete != null) {
-                        Button(
-                            onClick = onDelete,
-                            modifier = Modifier.weight(1f),
-                            colors = ButtonDefaults.buttonColors(containerColor = ErrorRed)
-                        ) {
-                            Icon(Icons.Default.Delete, null, Modifier.size(16.dp))
-                            Spacer(Modifier.width(6.dp))
-                            Text("Delete")
-                        }
-                    }
-                }
-            }
+            Spacer(Modifier.height(24.dp))
         }
     }
 
@@ -1253,28 +1250,25 @@ fun MacroEditorScreen(
 /** Shared APPROVE/AUTO picker for AI macros — auto-replies and scheduled variations. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun AiSendModeField(mode: AiSendMode, onModeChange: (AiSendMode) -> Unit) {
-    var expanded by remember { mutableStateOf(false) }
-    ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = it }) {
-        OutlinedTextField(
-            value = if (mode == AiSendMode.AUTO)
-                "Send automatically and notify" else "Approve before sending",
-            onValueChange = {},
-            readOnly = true,
-            label = { Text("AI sending", color = OnSurface) },
-            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-            modifier = Modifier.menuAnchor().fillMaxWidth()
-        )
-        ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-            DropdownMenuItem(
-                text = { Text("Approve before sending") },
-                onClick = { onModeChange(AiSendMode.APPROVE); expanded = false }
-            )
-            DropdownMenuItem(
-                text = { Text("Send automatically and notify") },
-                onClick = { onModeChange(AiSendMode.AUTO); expanded = false }
-            )
+private fun AiSendModeField(mode: AiSendMode, accent: androidx.compose.ui.graphics.Color, onModeChange: (AiSendMode) -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+            listOf(AiSendMode.APPROVE to "Ask me first", AiSendMode.AUTO to "Send automatically")
+                .forEachIndexed { i, (value, label) ->
+                    SegmentedButton(
+                        selected = mode == value,
+                        onClick = { onModeChange(value) },
+                        shape = SegmentedButtonDefaults.itemShape(i, 2),
+                        colors = segColors(accent),
+                        icon = {}
+                    ) { Text(label) }
+                }
         }
+        Hint(
+            if (mode == AiSendMode.APPROVE)
+                "A notification lets you review, edit or discard the text before it goes out."
+            else "The AI text is sent right away and you get a notification with what was sent."
+        )
     }
 }
 
@@ -1345,9 +1339,9 @@ private fun triggerLabel(type: TriggerType): String = when (type) {
     TriggerType.MANUAL -> "Manual"
     TriggerType.INCOMING -> "Auto-reply"
     TriggerType.LOCATION -> "Location"
-    TriggerType.CHARGING -> "On charging"
-    TriggerType.BLUETOOTH -> "On Bluetooth"
-    TriggerType.WIFI -> "On Wi-Fi"
+    TriggerType.CHARGING -> "Charging"
+    TriggerType.BLUETOOTH -> "Bluetooth"
+    TriggerType.WIFI -> "Wi-Fi"
     TriggerType.MISSED_CALL -> "Missed call"
 }
 
@@ -1367,56 +1361,34 @@ private fun SmallNumberMenu(value: Int, range: IntRange, onPick: (Int) -> Unit) 
     }
 }
 
-private val ACTION_LABELS = listOf(
-    ActionType.SMS to "Send SMS",
-    ActionType.SOUND to "Change sound mode",
-    ActionType.REMINDER to "Show reminder",
-    ActionType.WEBHOOK to "Call a web address (webhook)"
+private val ACTION_OPTIONS = listOf(
+    Triple(ActionType.SMS, Icons.Default.Sms, "Send SMS"),
+    Triple(ActionType.SOUND, Icons.Default.VolumeUp, "Sound mode"),
+    Triple(ActionType.REMINDER, Icons.Default.NotificationsActive, "Reminder"),
+    Triple(ActionType.WEBHOOK, Icons.Default.Link, "Webhook")
 )
+
+private fun soundIcon(mode: SoundMode) = when (mode) {
+    SoundMode.NORMAL -> Icons.Default.VolumeUp
+    SoundMode.VIBRATE -> Icons.Default.Vibration
+    SoundMode.SILENT -> Icons.Default.VolumeOff
+    SoundMode.DND_ON -> Icons.Default.DoNotDisturbOn
+    SoundMode.DND_OFF -> Icons.Default.DoNotDisturbOff
+}
 
 /** Action picker plus the settings of the chosen non-SMS action. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun ActionSection(s: EditorState, vm: MacroEditorViewModel) {
+private fun ActionSection(s: EditorState, vm: MacroEditorViewModel, accent: androidx.compose.ui.graphics.Color) {
     val ctx = LocalContext.current
-    var actionOpen by remember { mutableStateOf(false) }
-    ExposedDropdownMenuBox(expanded = actionOpen, onExpandedChange = { actionOpen = it }) {
-        OutlinedTextField(
-            value = ACTION_LABELS.first { it.first == s.actionType }.second,
-            onValueChange = {}, readOnly = true,
-            label = { Text("Action") },
-            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = actionOpen) },
-            modifier = Modifier.menuAnchor().fillMaxWidth()
-        )
-        ExposedDropdownMenu(expanded = actionOpen, onDismissRequest = { actionOpen = false }) {
-            ACTION_LABELS.forEach { (type, label) ->
-                DropdownMenuItem(text = { Text(label) }, onClick = {
-                    vm.update { it.copy(actionType = type) }
-                    actionOpen = false
-                })
-            }
-        }
-    }
+    ChoiceTiles(ACTION_OPTIONS, s.actionType, accent) { type -> vm.update { it.copy(actionType = type) } }
     when (s.actionType) {
         ActionType.SOUND -> {
-            var modeOpen by remember { mutableStateOf(false) }
-            ExposedDropdownMenuBox(expanded = modeOpen, onExpandedChange = { modeOpen = it }) {
-                OutlinedTextField(
-                    value = MacroActionRunner.soundModeLabel(s.soundMode),
-                    onValueChange = {}, readOnly = true,
-                    label = { Text("Switch to") },
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = modeOpen) },
-                    modifier = Modifier.menuAnchor().fillMaxWidth()
-                )
-                ExposedDropdownMenu(expanded = modeOpen, onDismissRequest = { modeOpen = false }) {
-                    SoundMode.entries.forEach { m ->
-                        DropdownMenuItem(text = { Text(MacroActionRunner.soundModeLabel(m)) }, onClick = {
-                            vm.update { it.copy(soundMode = m) }
-                            modeOpen = false
-                        })
-                    }
-                }
-            }
+            Text("Switch the phone to", color = OnSurface, style = MaterialTheme.typography.bodyLarge)
+            ChoiceTiles(
+                SoundMode.entries.map { Triple(it, soundIcon(it), MacroActionRunner.soundModeLabel(it)) },
+                s.soundMode, accent, perRow = 3
+            ) { m -> vm.update { it.copy(soundMode = m) } }
             if (MacroActionRunner.needsDndAccess(s.soundMode)) {
                 // Re-checked on resume: the user grants it in system settings and comes back.
                 var granted by remember { mutableStateOf(dndGranted(ctx)) }
@@ -1454,16 +1426,14 @@ private fun ActionSection(s: EditorState, vm: MacroEditorViewModel) {
                     SegmentedButton(
                         selected = s.webhookMethod == method,
                         onClick = { vm.update { it.copy(webhookMethod = method) } },
-                        shape = SegmentedButtonDefaults.itemShape(i, 2)
+                        shape = SegmentedButtonDefaults.itemShape(i, 2),
+                        colors = segColors(accent),
+                        icon = {}
                     ) { Text(method) }
                 }
             }
         }
-        ActionType.REMINDER -> Text(
-            "Shows a notification with the text below when the macro fires.",
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            style = MaterialTheme.typography.bodySmall
-        )
+        ActionType.REMINDER -> Hint("Shows a notification with the text below when the macro fires.")
         ActionType.SMS -> {}
     }
 }

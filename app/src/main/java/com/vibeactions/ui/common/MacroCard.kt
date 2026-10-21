@@ -46,6 +46,8 @@ import com.vibeactions.ui.theme.*
 import com.vibeactions.util.accentColorFor
 import com.vibeactions.util.formatRecurrence
 import com.vibeactions.util.maskPhone
+import com.vibeactions.ui.editor.actionIcon
+import com.vibeactions.ui.editor.triggerIcon
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -103,6 +105,24 @@ fun MacroCard(
                 .fillMaxHeight()
                 .background(vein)
         )
+        // What kind of macro this is, at a glance: the trigger's icon in the macro's colour.
+        Box(
+            Modifier
+                .padding(start = 12.dp)
+                .align(Alignment.CenterVertically)
+                .size(38.dp)
+                .alpha(if (macro.enabled) 1f else 0.5f)
+                .clip(androidx.compose.foundation.shape.CircleShape)
+                .background(accent.copy(alpha = 0.18f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                if (macro.triggerType == TriggerType.MANUAL || macro.actionType == ActionType.SMS ||
+                    macro.triggerType == TriggerType.INCOMING || macro.triggerType == TriggerType.MISSED_CALL)
+                    triggerIcon(macro.triggerType) else actionIcon(macro.actionType),
+                contentDescription = null, tint = accent, modifier = Modifier.size(20.dp)
+            )
+        }
         Column(
             Modifier
                 .weight(1f)
@@ -114,10 +134,10 @@ fun MacroCard(
         ) {
             Text(
                 macro.name,
-                fontFamily = JetBrainsMono,
-                fontWeight = FontWeight.Medium,
+                fontFamily = DmSans,
+                fontWeight = FontWeight.SemiBold,
                 color = OnSurface,
-                fontSize = 15.sp,
+                fontSize = 16.sp,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -167,7 +187,7 @@ fun MacroCard(
             Icon(
                 Icons.Default.DragHandle,
                 contentDescription = "Reorder",
-                tint = OnSurfaceVariant,
+                tint = OnSurfaceVariant.copy(alpha = 0.45f),
                 modifier = dragHandleModifier.padding(6.dp)
             )
         }
