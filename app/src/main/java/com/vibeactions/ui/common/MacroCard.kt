@@ -252,13 +252,23 @@ internal fun compactSummary(macro: Macro): String {
     return if (action == null) trigger else "$trigger · $action"
 }
 
+private val ShortDateFmt = java.time.format.DateTimeFormatter.ofPattern("EEE d MMM", java.util.Locale.ENGLISH)
+private val ShortDateYearFmt = java.time.format.DateTimeFormatter.ofPattern("EEE d MMM yyyy", java.util.Locale.ENGLISH)
+
+/** "Wed 21 Oct"; the year is only added when it isn't this year. */
+private fun shortDate(epochDay: Long): String {
+    val date = java.time.LocalDate.ofEpochDay(epochDay)
+    val fmt = if (date.year == java.time.LocalDate.now().year) ShortDateFmt else ShortDateYearFmt
+    return date.format(fmt)
+}
+
 private fun triggerSummary(macro: Macro): String = when (macro.triggerType) {
     TriggerType.SCHEDULED -> buildString {
         append(macro.scheduledTime ?: "--:--")
         // A one-off (repeatDaily=false) shows its single date; recurring shows its weekday rhythm.
         if (!macro.repeatDaily) {
             val day = macro.anchorEpochDay ?: macro.validUntilEpochDay
-            append(" · ${day?.let { java.time.LocalDate.ofEpochDay(it).toString() } ?: "once"} (once)")
+            append(" · ${day?.let { "${shortDate(it)} (once)" } ?: "once"}")
         } else {
             val days = formatRecurrence(macro.daysOfWeek, macro.weekInterval, macro.randomDaysMin, macro.randomDaysMax)
             if (days.isNotBlank()) append(" · $days")
