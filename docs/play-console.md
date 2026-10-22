@@ -39,7 +39,7 @@ Automate texts, sound mode, reminders and webhooks — right on your phone.
 ```
 Automatiq puts your phone on autopilot.
 
-Set up a macro once — when it should run and what it should do — and Automatiq takes care of it. Everything runs on your phone: no account, no server, no ads.
+Set up a macro once — when it should run and what it should do — and Automatiq takes care of it. Everything runs on your phone: no account, no ads.
 
 FOUR WAYS TO TRIGGER A MACRO
 • Schedule — at 08:30 on weekdays, every second week, on 1–2 random days, until a date you choose
