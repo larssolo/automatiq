@@ -310,7 +310,11 @@ private fun LogCard(row: LogRow) {
                     maxLines = if (expanded) Int.MAX_VALUE else 2, overflow = TextOverflow.Ellipsis
                 )
             }
-            if (row.aiMacro && !log.messagePreview.isNullOrBlank()) {
+            // Only text the AI wrote can be reported: tagged with its model, or a failed send of an AI
+            // macro (the send error replaces the tag) — never a "fixed text sent" fallback.
+            val aiWritten = aiModel != null ||
+                (log.status == MacroStatus.FAILED && note?.contains("fixed text") != true)
+            if (row.aiMacro && aiWritten && !log.messagePreview.isNullOrBlank()) {
                 ReportAiButton(
                     log.messagePreview, AiReportSource.AUTO_REPLY,
                     modifier = Modifier.offset(x = (-12).dp).height(32.dp)
