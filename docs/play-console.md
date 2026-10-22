@@ -155,7 +155,7 @@ SMS and call data is processed on the device and never uploaded, sold or shared 
 7. Pills (påmindelse), Ping (webhook) og Quiet mode (lydløs) køres fra listen, og påmindelsen ses i notifikationspanelet. *sound mode · notifications · network*
 8. Loggen: alle 5 kørsler SUCCESS, og "Delivered" på begge SMS'er.
 
-YouTube-indstillinger: **Unlisted**, "No, it's not made for kids", ingen monetisering, ingen aldersbegrænsning, indlejring tilladt. Titel: "Automatiq — SMS & Call Log declaration (device automation)". Indsæt linket i watch-format (`https://www.youtube.com/watch?v=…`).
+YouTube-indstillinger: **Unlisted**, "No, it's not made for kids", ingen monetisering, ingen aldersbegrænsning, indlejring tilladt. Titel: "Automatiq — SMS & Call Log declaration (device automation)". Link (unlisted, uploadet 22. okt. 2026): **https://www.youtube.com/watch?v=eEs4n2vKViU**. YouTube viser den som Short, fordi den er lodret og under 60 s, men watch-linket virker som en almindelig video.
 
 ### 4.2 Foreground service
 **Ikke relevant for Play-versionen.** Opladning/Bluetooth/Wi-Fi-triggerne (og tjenesten bag dem) er kun med i den delbare APK. Play-bundlen har ingen foreground service-type at erklære.
