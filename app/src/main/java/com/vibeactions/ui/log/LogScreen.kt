@@ -14,6 +14,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.DoneAll
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.outlined.DeleteSweep
@@ -246,30 +249,31 @@ private fun LogCard(row: LogRow) {
     Row(
         Modifier
             .fillMaxWidth()
-            .height(IntrinsicSize.Min)
             .clip(LeafShape)
             .background(Surface.copy(alpha = BackgroundSetting.cardOpacity))
             .background(Brush.horizontalGradient(listOf(accent.copy(alpha = 0.13f), accent.copy(alpha = 0.02f))))
             .clickable { expanded = !expanded }
             .animateContentSize()
     ) {
-        Box(Modifier.width(4.dp).fillMaxHeight().background(statusColor(log.status).copy(alpha = 0.8f)))
-        Box(
-            Modifier
-                .padding(start = 12.dp, top = 12.dp)
-                .size(34.dp)
-                .clip(CircleShape)
-                .background(accent.copy(alpha = 0.18f)),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                when {
-                    macro == null -> Icons.Default.History
-                    macro.actionType == com.vibeactions.domain.model.ActionType.SMS -> triggerIcon(macro.triggerType)
-                    else -> actionIcon(macro.actionType)
-                },
-                contentDescription = null, tint = accent, modifier = Modifier.size(18.dp)
-            )
+        // The macro's icon, with how the run went as a small badge on its corner.
+        Box(Modifier.padding(start = 14.dp, top = 12.dp).size(40.dp)) {
+            Box(
+                Modifier
+                    .size(36.dp)
+                    .clip(CircleShape)
+                    .background(accent.copy(alpha = 0.18f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    when {
+                        macro == null -> Icons.Default.History
+                        macro.actionType == com.vibeactions.domain.model.ActionType.SMS -> triggerIcon(macro.triggerType)
+                        else -> actionIcon(macro.actionType)
+                    },
+                    contentDescription = null, tint = accent, modifier = Modifier.size(19.dp)
+                )
+            }
+            StatusBadge(log.status, Modifier.align(Alignment.BottomEnd))
         }
         Column(
             Modifier.weight(1f).padding(start = 12.dp, end = 14.dp, top = 10.dp, bottom = 10.dp),
@@ -288,8 +292,10 @@ private fun LogCard(row: LogRow) {
                     fontFamily = JetBrainsMono, fontSize = 12.sp, color = OnSurfaceVariant
                 )
             }
+            if (log.status != MacroStatus.SUCCESS || log.deliveryStatus != null || aiModel != null)
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
-                StatusTag(statusLabel(log.status), statusColor(log.status))
+                // Success is the badge alone; a failed or pending run also says so in words.
+                if (log.status != MacroStatus.SUCCESS) StatusTag(statusLabel(log.status), statusColor(log.status))
                 when (log.deliveryStatus) {
                     DeliveryStatus.DELIVERED -> StatusTag("Delivered", Primary, Icons.Default.DoneAll)
                     DeliveryStatus.FAILED -> StatusTag("Not delivered", ErrorRed)
@@ -341,3 +347,29 @@ private fun StatusTag(text: String, color: Color, icon: androidx.compose.ui.grap
         Text(text, color = color, fontSize = 11.sp, fontFamily = JetBrainsMono, maxLines = 1)
     }
 }
+
+/** Check, cross or clock in the status colour, ringed in the card's dark tone so it sits cleanly
+ *  on the corner of the macro icon. */
+@Composable
+private fun StatusBadge(status: MacroStatus, modifier: Modifier) {
+    Box(
+        modifier
+            .size(18.dp)
+            .clip(CircleShape)
+            .background(Color(0xFF1A1A1A))
+            .padding(2.dp)
+            .clip(CircleShape)
+            .background(statusColor(status)),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            when (status) {
+                MacroStatus.SUCCESS -> Icons.Default.Check
+                MacroStatus.FAILED -> Icons.Default.Close
+                MacroStatus.PENDING -> Icons.Default.Schedule
+            },
+            contentDescription = statusLabel(status), tint = Color(0xFF101010), modifier = Modifier.size(11.dp)
+        )
+    }
+}
+
