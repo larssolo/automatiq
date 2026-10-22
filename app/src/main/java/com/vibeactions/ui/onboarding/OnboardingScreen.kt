@@ -314,8 +314,10 @@ private fun WelcomePage(active: Boolean) {
     Typewriter("> automatiq.init()", active, Primary)
     Title("Your phone,\non autopilot.")
     Body(
-        "Automatiq sends text messages for you — on a schedule, as a reply, when you miss a call " +
-            "or when you arrive somewhere. Set it up once, and it just runs."
+        "Automatiq sends text messages for you — on a schedule, as a reply" +
+            (if (BuildConfig.LOCATION_TRIGGER) ", when you miss a call or when you arrive somewhere. "
+            else " or when you miss a call. ") +
+            "Set it up once, and it just runs."
     )
     Spacer(Modifier.height(16.dp))
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
