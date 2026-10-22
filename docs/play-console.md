@@ -183,7 +183,7 @@ Core function is running user-scheduled automated actions (sound mode, reminders
 - [ ] Release notes:
 ```
 First Play Store release of Automatiq.
-• Scheduled, one-tap, auto-reply and missed-call macros
+• Scheduled, one-tap, auto-reply and missed-call SMS macros
 • Guided phone setup for reliable background sending
 • Optional AI (Google Gemini) with approval mode and in-app reporting
 ```
