@@ -14,7 +14,6 @@ Recorded on the same emulator; kept locally in `~/Downloads/automatiq-store/vide
 
 | File | Use | Length |
 |---|---|---|
-| `declaration-device-automation.mp4` | **SMS/Call Log declaration (use this one), `play` 1.6:** reminder, incoming SMS → auto-reply, missed call → SMS to caller, sound → Silent, Log | 43 s |
-| `intro-guide.mp4` | Intro guide from the `play` 1.6 build (no location trigger, needs PR #36). Promo / store listing video, or for sharing | 37 s |
-| `declaration-sms-device-automation.mp4` | Old (1.3 design), not used | 29 s |
-| `declaration-foreground-service.mp4` | Old, not needed for the Play build (no foreground service there) | 28 s |
+| `declaration-device-automation.mp4` | **SMS/Call Log declaration (use this one), `play` 1.6 (versionCode 7), 1080×1920 9:16, 30 fps:** the macro list → SMS permission in Phone setup → the user's "Out of office" trigger and reply → an incoming SMS fires the auto-reply, shown sent in Messages → the call-log/phone permission dialogs when opening "Missed call text-back" → a missed call texts the caller back (notification + Messages) → Pills / Ping / Quiet mode run other parts of the OS → Log with every run SUCCESS and both SMS "Delivered" | 54 s |
+| `declaration-device-automation-v1.mp4` | Old version (no permission dialogs, no editor for the SMS macros). Not used | 43 s |
+| `intro-guide.mp4` | Intro guide from the `play` 1.6 build (no location trigger). Promo / store listing video, or for sharing | 37 s |
