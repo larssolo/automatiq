@@ -19,7 +19,7 @@
 
 Automatiq lets you define SMS macros — a name, one or more recipients, and a message — and fire them automatically. A macro can trigger on a **schedule**, on a **button tap**, as an **auto-reply** to an incoming SMS, when you **miss (or decline) a call**, when you **arrive at / leave a place**, or on a **device state change** — plugging in the charger, connecting a Bluetooth device or a Wi-Fi network. Macros can be organized into nameable **folders** with a per-folder master switch. Auto-replies can answer with a fixed text or with an **AI-generated reply** (Gemini) — either sent automatically or held for your approval.
 
-Everything runs on-device. No account, no server. Only two optional features reach outside the phone: the **location trigger** (Google Play Services geofencing) and **AI replies** (Google's Gemini API, with your own free key).
+Everything runs on-device. No account, no ads. Only two optional features reach outside the phone: the **location trigger** (Google Play Services geofencing) and **AI replies** (Google's Gemini API, with your own free key).
 
 ```
 ┌─────────────────────────────────────────────────────────┐

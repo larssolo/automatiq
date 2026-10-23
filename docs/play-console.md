@@ -39,7 +39,7 @@ Automate texts, sound mode, reminders and webhooks — right on your phone.
 ```
 Automatiq puts your phone on autopilot.
 
-Set up a macro once — when it should run and what it should do — and Automatiq takes care of it. Everything runs on your phone: no account, no server, no ads.
+Set up a macro once — when it should run and what it should do — and Automatiq takes care of it. Everything runs on your phone: no account, no ads.
 
 FOUR WAYS TO TRIGGER A MACRO
 • Schedule — at 08:30 on weekdays, every second week, on 1–2 random days, until a date you choose
@@ -145,13 +145,17 @@ Triggers and actions therefore span several areas of the OS — alarms, telephon
 
 SMS and call data is processed on the device and never uploaded, sold or shared — with one user-controlled exception: if the user turns on the optional AI reply feature and explicitly consents in the app, the text of the incoming message is sent to Google's Gemini API with the user's own API key to write the reply. Without these permissions the SMS and call triggers/actions cannot work; Android offers no alternative API for automated SMS.
 ```
-**Video** (YouTube/Drive-link, 43 sek): `declaration-device-automation.mp4` (se `store/README.md`), optaget på `play`-buildet 1.6. Den viser hver erklæret tilladelse i brug:
-1. Makro-listen med forskellige handlinger (lyd, påmindelse, webhook, SMS).
-2. "Pills" køres → påmindelsen dukker op.
-3. En SMS kommer ind (`RECEIVE_SMS`) → "Out of office" sender auto-svaret (`SEND_SMS`).
-4. Et opkald ringer og bliver ikke besvaret (`READ_CALL_LOG`) → "Missed call text-back" sender en SMS til den, der ringede.
-5. "Quiet mode" køres → telefonen skifter til lydløs.
-6. Log viser alle fire som SUCCESS, med "Delivered ✓✓" på de to SMS'er.
+**Video** (YouTube, unlisted, 54 sek, 1080×1920): `declaration-device-automation.mp4` (se `store/README.md`), optaget på præcis den `play`-bundle 1.6 (versionCode 7), der uploades. Statuslinjens ur og loggen viser samme tid, der er ingen musemarkør (kun synlige tryk), og alle numre er fiktive 555-01xx-numre. Hvert trin har en engelsk tekst øverst:
+1. Makrolisten med 6 makroer: SMS, auto-svar, ubesvaret opkald, lyd, påmindelse og webhook. *"Automatiq: macros the user builds"*
+2. Phone setup → "1. Send & receive SMS" → systemdialogen → Allow. *SEND_SMS · RECEIVE_SMS*
+3. "Out of office" åbnes: WHEN = Auto-reply med afsender- og nøgleordsbetingelsen, og svarteksten under REPLY. *incoming SMS (condition) → send SMS*
+4. En SMS kommer ind → notifikationen → Messages-tråden, hvor auto-svaret står som sendt. *RECEIVE_SMS → SEND_SMS*
+5. "Missed call text-back" åbnes → dialogerne for opkaldslog og telefon → Allow → WHEN = Missed call og svarteksten. *READ_PHONE_STATE · READ_CALL_LOG*
+6. Et opkald ringer og bliver ikke besvaret → notifikationerne "Sent: Missed call text-back" og "Missed call" (… 7 s senere) → Messages-tråden med svaret. *READ_CALL_LOG → caller's number only*
+7. Pills (påmindelse), Ping (webhook) og Quiet mode (lydløs) køres fra listen, og påmindelsen ses i notifikationspanelet. *sound mode · notifications · network*
+8. Loggen: alle 5 kørsler SUCCESS, og "Delivered" på begge SMS'er.
+
+YouTube-indstillinger: **Unlisted**, "No, it's not made for kids", ingen monetisering, ingen aldersbegrænsning, indlejring tilladt. Titel: "Automatiq — SMS & Call Log declaration (device automation)". Link (unlisted, uploadet 22. okt. 2026): **https://www.youtube.com/watch?v=eEs4n2vKViU**. YouTube viser den som Short, fordi den er lodret og under 60 s, men watch-linket virker som en almindelig video.
 
 ### 4.2 Foreground service
 **Ikke relevant for Play-versionen.** Opladning/Bluetooth/Wi-Fi-triggerne (og tjenesten bag dem) er kun med i den delbare APK. Play-bundlen har ingen foreground service-type at erklære.

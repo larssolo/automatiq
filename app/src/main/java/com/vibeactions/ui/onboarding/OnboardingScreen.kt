@@ -323,7 +323,7 @@ private fun WelcomePage(active: Boolean) {
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         Pill(Icons.Default.PhoneAndroid, "On-device")
         Pill(Icons.Default.PersonOff, "No account")
-        Pill(Icons.Default.CloudOff, "No server")
+        Pill(Icons.Default.Block, "No ads")
     }
 }
 
