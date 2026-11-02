@@ -145,7 +145,7 @@ Triggers and actions therefore span several areas of the OS — alarms, telephon
 
 SMS and call data is processed on the device and never uploaded, sold or shared — with one user-controlled exception: if the user turns on the optional AI reply feature and explicitly consents in the app, the text of the incoming message is sent to Google's Gemini API with the user's own API key to write the reply. Without these permissions the SMS and call triggers/actions cannot work; Android offers no alternative API for automated SMS.
 ```
-**Video** (YouTube, unlisted, 54 sek, 1080×1920): `declaration-device-automation.mp4` (se `store/README.md`), optaget på præcis den `play`-bundle 1.6 (versionCode 7), der uploades. Statuslinjens ur og loggen viser samme tid, der er ingen musemarkør (kun synlige tryk), og alle numre er fiktive 555-01xx-numre. Hvert trin har en engelsk tekst øverst:
+**Video** (YouTube, unlisted, 54 sek, 1080×1920): `declaration-device-automation.mp4` (se `store/README.md`), optaget på `play`-bundlen 1.6 (versionCode 7). 1.7 (versionCode 8) ændrer intet af det, videoen viser; den tilføjer kun "Next …"-linjen ved planlagte makroer. Statuslinjens ur og loggen viser samme tid, der er ingen musemarkør (kun synlige tryk), og alle numre er fiktive 555-01xx-numre. Hvert trin har en engelsk tekst øverst:
 1. Makrolisten med 6 makroer: SMS, auto-svar, ubesvaret opkald, lyd, påmindelse og webhook. *"Automatiq: macros the user builds"*
 2. Phone setup → "1. Send & receive SMS" → systemdialogen → Allow. *SEND_SMS · RECEIVE_SMS*
 3. "Out of office" åbnes: WHEN = Auto-reply med afsender- og nøgleordsbetingelsen, og svarteksten under REPLY. *incoming SMS (condition) → send SMS*
@@ -183,11 +183,12 @@ Core function is running user-scheduled automated actions (sound mode, reminders
 
 ## 6. Første produktionsudgivelse
 
-- [ ] Release name: `1.6`
+- [ ] Release name: `1.7` (1.6 / versionCode 7 er allerede uploadet til den lukkede test, så næste bundle er 1.7 / versionCode 8)
 - [ ] Release notes:
 ```
 First Play Store release of Automatiq.
 • Scheduled, one-tap, auto-reply and missed-call SMS macros
+• See when each scheduled macro runs next
 • Guided phone setup for reliable background sending
 • Optional AI (Google Gemini) with approval mode and in-app reporting
 ```
