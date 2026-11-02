@@ -6,6 +6,8 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.material.icons.filled.DoNotDisturbOn
+import com.vibeactions.util.nextFireAt
+import androidx.compose.material.icons.filled.Schedule
 import com.vibeactions.ui.theme.Amber
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -393,6 +395,9 @@ fun MacroEditorScreen(
                             )
                         }
                     }
+
+                    // What these settings mean in practice: the exact next run, recalculated on every change.
+                    NextRunPreview(s, accent)
 
                     // The less-used scheduling knobs fold away; the summary says what's switched on.
                     val extras = buildList {
@@ -1480,3 +1485,41 @@ private fun DndAccessCard(onAllow: () -> Unit) {
         )
     }
 }
+
+/** "NEXT RUN · Tue 3 Nov 08:15" under the schedule, from the same calculation that arms the alarm,
+ *  so a day pattern, interval or end date that skips this week shows up before saving. */
+@Composable
+private fun NextRunPreview(s: EditorState, accent: androidx.compose.ui.graphics.Color) {
+    val now = remember(s) { java.time.LocalDateTime.now() }
+    val next = remember(s) { runCatching { s.toMacro(s.id ?: "preview").nextFireAt(now) }.getOrNull() }
+    val text = when {
+        com.vibeactions.util.parseHhMmOrNull(s.scheduledTime) == null || !s.daysValid -> null
+        next == null -> "No more runs — the end date has passed"
+        else -> buildString {
+            if (s.randomSpreadEnabled) append("around ")
+            append(com.vibeactions.util.formatNextFire(next, now))
+            if (!s.enabled) append(" (paused — turn on to run)")
+        }
+    } ?: return
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .clip(androidx.compose.foundation.shape.RoundedCornerShape(12.dp))
+            .background(accent.copy(alpha = 0.12f))
+            .padding(horizontal = 12.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(Icons.Default.Schedule, null, tint = accent, modifier = Modifier.size(16.dp))
+        Spacer(Modifier.width(8.dp))
+        Text(
+            "NEXT RUN", fontFamily = JetBrainsMono, fontSize = 11.sp, letterSpacing = 1.5.sp,
+            color = accent
+        )
+        Spacer(Modifier.width(10.dp))
+        Text(
+            text, color = if (next == null) Amber else androidx.compose.ui.graphics.Color.White,
+            style = MaterialTheme.typography.bodyMedium
+        )
+    }
+}
+

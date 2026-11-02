@@ -46,6 +46,9 @@ import com.vibeactions.ui.theme.*
 import com.vibeactions.util.accentColorFor
 import com.vibeactions.util.formatRecurrence
 import com.vibeactions.util.maskPhone
+import com.vibeactions.util.formatNextFire
+import com.vibeactions.util.nextFireAt
+import androidx.compose.runtime.produceState
 import com.vibeactions.ui.editor.actionIcon
 import com.vibeactions.ui.editor.triggerIcon
 
@@ -148,7 +151,8 @@ fun MacroCard(
                 fontSize = 12.sp,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
-            )
+            )            // When an armed schedule runs next, so the user can check their settings at a glance.
+            if (macro.triggerType == TriggerType.SCHEDULED && macro.enabled) NextRunLine(macro)
         }
         // AI badge for any macro whose text Gemini writes: auto-replies and scheduled variations.
         if (macro.aiReplyEnabled) {
@@ -297,3 +301,27 @@ private fun triggerSummary(macro: Macro): String = when (macro.triggerType) {
         macro.triggerTargetLabel?.takeIf { it.isNotBlank() }?.let { append(" · $it") }
     }
 }
+
+/** "▸ Next today 14:55" under a scheduled macro, or "No more runs" once its end date has passed.
+ *  Re-reads the clock on each minute so "today"/"tomorrow" and the next run roll over by
+ *  themselves while the list is open. */
+@Composable
+private fun NextRunLine(macro: Macro) {
+    val now by produceState(java.time.LocalDateTime.now(), macro) {
+        while (true) {
+            kotlinx.coroutines.delay(60_000 - System.currentTimeMillis() % 60_000)
+            value = java.time.LocalDateTime.now()
+        }
+    }
+    val next = remember(macro, now) { macro.nextFireAt(now) }
+    Spacer(Modifier.height(2.dp))
+    Text(
+        if (next != null) "▸ Next ${formatNextFire(next, now)}" else "No more runs",
+        color = if (next != null) Primary else Amber,
+        fontFamily = JetBrainsMono,
+        fontSize = 11.sp,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis
+    )
+}
+

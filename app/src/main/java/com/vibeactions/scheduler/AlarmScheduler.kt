@@ -6,12 +6,8 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import com.vibeactions.domain.model.Macro
-import com.vibeactions.domain.model.randomDays
-import com.vibeactions.util.calculateNextFireTime
-import com.vibeactions.util.parseHhMmOrNull
+import com.vibeactions.util.nextFireAt
 import dagger.hilt.android.qualifiers.ApplicationContext
-import java.time.Instant
-import java.time.ZoneId
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -25,26 +21,10 @@ class AlarmScheduler @Inject constructor(
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) alarmManager.canScheduleExactAlarms() else true
 
     fun schedule(macro: Macro) {
-        val time = macro.scheduledTime ?: return
-        // A malformed time (possible via a hand-edited import file) must not throw here: this runs
-        // on every app start via rescheduleAll, and a throw would be a permanent crash loop.
-        if (parseHhMmOrNull(time) == null) return
-        val triggerAt = calculateNextFireTime(
-            time,
-            days = macro.daysOfWeek,
-            weekInterval = macro.weekInterval,
-            anchorEpochDay = macro.anchorEpochDay,
-            validUntilEpochDay = macro.validUntilEpochDay,
-            jitterSeed = macro.id,
-            jitterSpreadMinutes = macro.randomSpreadMinutes,
-            randomDays = macro.randomDays()
-        )
-        // Don't arm an alarm for a date past the macro's expiry (the fallback day may overrun it).
-        val validUntil = macro.validUntilEpochDay
-        if (validUntil != null) {
-            val fireDate = Instant.ofEpochMilli(triggerAt).atZone(ZoneId.systemDefault()).toLocalDate()
-            if (fireDate.toEpochDay() > validUntil) return
-        }
+        // The shared calculation (also behind the "Next" labels): null for a malformed time — which
+        // must not throw here, as this runs on every app start via rescheduleAll — or once the
+        // macro's end date has passed.
+        val triggerAt = macro.nextFireAt() ?: return
         val pi = pendingIntent(macro)
         // setAlarmClock fires at the exact wall-clock time and is exempt from Doze and battery
         // optimisation — the only reliable way to hit a daily time on stock + OEM Android. It does
