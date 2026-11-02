@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vibeactions.data.repository.MacroRepository
 import com.vibeactions.domain.model.TriggerType
-import com.vibeactions.util.calculateNextFireTime
+import com.vibeactions.util.nextFireAt
 import com.vibeactions.util.formatRecurrence
 import com.vibeactions.util.parseHhMmOrNull
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -12,8 +12,6 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import java.time.Instant
-import java.time.ZoneId
 import javax.inject.Inject
 
 /** One enabled macro's readiness: its trigger summary and, for scheduled macros, the next fire time
@@ -51,15 +49,8 @@ class HealthViewModel @Inject constructor(
         if (time == null || parseHhMmOrNull(time) == null) {
             return MacroHealth(m.name, trigger, null, note = "Invalid time — won't fire")
         }
-        val next = calculateNextFireTime(
-            time, days = m.daysOfWeek, weekInterval = m.weekInterval,
-            anchorEpochDay = m.anchorEpochDay, validUntilEpochDay = m.validUntilEpochDay
-        )
-        val validUntil = m.validUntilEpochDay
-        if (validUntil != null) {
-            val fireDay = Instant.ofEpochMilli(next).atZone(ZoneId.systemDefault()).toLocalDate().toEpochDay()
-            if (fireDay > validUntil) return MacroHealth(m.name, trigger, null, note = "Expired")
-        }
+        // Same calculation as the armed alarm, incl. random days and varied time.
+        val next = m.nextFireAt() ?: return MacroHealth(m.name, trigger, null, note = "Ended — no more runs")
         return MacroHealth(m.name, trigger, next)
     }
 }
