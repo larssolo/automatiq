@@ -97,7 +97,7 @@ a{color:inherit}
 .sms b::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--c);flex:none}
 .sms small{font:500 10.5px/1 var(--mono);color:#5D6A63;padding-left:15px}
 .sms small span{color:#00A653}
-@media (max-width:900px){.hero{padding-top:84px}.hero-grid{grid-template-columns:1fr;gap:0}.fox-stage{order:-1;width:100%;max-width:440px;margin:-4% auto -8%}.fox-stage .rings{transform:scaleX(.7)}.fox-wrap{width:36%}.sms{font-size:12px;max-width:140px;padding:7px 10px 6px;border-radius:13px 13px 13px 4px}.sms small{font-size:9.5px;padding-left:13px}.scroll-cue{display:none}}
+@media (max-width:900px){.hero{padding-top:84px}.hero-grid{grid-template-columns:1fr;gap:0}.fox-stage{order:-1;width:100%;max-width:440px;margin:-13% auto -10%}.fox-stage .rings{transform:scaleX(.7)}.fox-wrap{width:36%}.sms{font-size:12px;max-width:140px;padding:7px 10px 6px;border-radius:13px 13px 13px 4px}.sms small{font-size:9.5px;padding-left:13px}.scroll-cue{display:none}}
 .scroll-cue{position:absolute;left:50%;bottom:24px;translate:-50% 0;font:500 11px/1 var(--mono);color:var(--dim);letter-spacing:.14em;text-transform:uppercase;display:flex;flex-direction:column;align-items:center;gap:10px}
 .scroll-cue i{width:1px;height:40px;background:linear-gradient(var(--green),transparent);animation:cue 1.8s ease-in-out infinite;transform-origin:top}
 @keyframes cue{0%{transform:scaleY(0)}50%{transform:scaleY(1)}100%{transform:scaleY(1);opacity:0}}
@@ -365,5 +365,7 @@ footer{border-top:1px solid var(--line);padding-block:56px calc(36px + env(safe-
   /* body copy ends before the fox stage; the headline keeps its width (it never reaches the stage) */
   .hero-copy{max-width:min(620px,calc(98.5vw - var(--S) * .94 - (100vw - min(100vw,1240px)) / 2 - 44px))}
   .h1{font-size:clamp(46px,7.6vw,112px);width:min(640px,44vw)}
-  .fox-stage{--S:min(816px,57vw);position:absolute;width:var(--S);max-width:none;margin:0;right:calc(1.5vw - var(--S) * .06);top:calc(47% - var(--S) / 2)}
+  .fox-stage{--S:min(816px,57vw);position:absolute;width:var(--S);max-width:none;margin:0;right:calc(1.5vw - var(--S) * .06);top:calc(39% - var(--S) / 2)}
 }
+/* SplitText word masks clip with overflow:clip; give glyph overhangs (tight tracking, "e", ".") room so nothing is cut */
+#h1 div[style*="overflow: clip"],[data-words] div[style*="overflow: clip"]{padding-right:.14em;margin-right:-.14em}
