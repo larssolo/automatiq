@@ -4,7 +4,7 @@ title: TextFox — Privacy Policy
 
 # TextFox — Privacy Policy
 
-_Last updated: 20 October 2026_
+_Last updated: 4 November 2026_
 
 TextFox ("the app") is an automation app for Android, published by Lars Sohl, founder of kodekid.app ("we"). This policy explains what data the app uses, what leaves your phone, and why.
 
