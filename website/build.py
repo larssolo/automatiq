@@ -194,6 +194,7 @@ def render(meta, body):
     body = (body.replace("{{PLAY}}", PLAY).replace("{{CTA_NOTE}}", CTA_NOTE).replace("{{FAQ}}", faq_html(meta.get("faq", "home")))
             .replace("{{RELATED}}", related(meta["path"])).replace("{{FINAL}}", FINAL))
     scripts = "".join(f'<script src="{s}?v={ver(s)}" defer></script>' for s in ["/assets/site.js"] + meta.get("scripts", []))
+    scripts += "".join(f'<script type="module" src="{s}?v={ver(s)}"></script>' for s in meta.get("modules", []))
     return f"""{head(meta, url)}
 <body>
 {ICONS}

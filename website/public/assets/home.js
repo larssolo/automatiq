@@ -27,9 +27,13 @@ window.TF = window.TF || {boom: 0};
   }
   function place(b, now) {
     const {rx, ry, tilt} = b.ring, S = size; b.a = phase + b.slot * 2 * Math.PI / SLOTS;
-    const nx = S < 520 ? .7 : 1;                                 // narrower orbit on phones
-    let x = Math.cos(b.a) * rx * nx * S, y = Math.sin(b.a) * ry * S;
-    [x, y] = [x * Math.cos(tilt) - y * Math.sin(tilt), x * Math.sin(tilt) + y * Math.cos(tilt)];
+    let x, y;
+    if (TF.project3d) ({x, y} = TF.project3d(b.a));              // 3D orbit is live: follow its real perspective
+    else {
+      const nx = S < 520 ? .7 : 1;                               // narrower orbit on phones
+      x = Math.cos(b.a) * rx * nx * S; y = Math.sin(b.a) * ry * S;
+      [x, y] = [x * Math.cos(tilt) - y * Math.sin(tilt), x * Math.sin(tilt) + y * Math.cos(tilt)];
+    }
     b.w2 = b.w2 || b.el.offsetWidth / 2; const lim = S / 2 - b.w2 * .8; x = Math.max(-lim, Math.min(lim, x));   // keep texts inside the stage
     const depth = (Math.sin(b.a) + 1) / 2;                      // 0 = behind the fox, 1 = in front
     let k = 1, o = .35 + .65 * depth;
@@ -63,8 +67,9 @@ window.TF = window.TF || {boom: 0};
   new IntersectionObserver(([e]) => { visible = e.isIntersecting; }).observe(stage);
   function send() {
     stage.classList.remove('typing'); void stage.offsetWidth; stage.classList.add('typing');
+    TF.onSend && TF.onSend();
     const slot = cursor++ % SLOTS;                                          // replace the oldest text
-    setTimeout(() => add(slot, performance.now()), 1000);
+    setTimeout(() => { add(slot, performance.now()); TF.onLaunch && TF.onLaunch(); }, 1000);
   }
   (function tick(now) {
     const dt = Math.min(.05, (now - last) / 1000); last = now;
