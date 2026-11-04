@@ -6,7 +6,7 @@
 | `feature-1024x500.png` | Feature graphic | 1024×500 |
 | `screenshots/01-autopilot.jpg` … `05-log.jpg` | Phone screenshots (in this order) | 1080×1920 |
 
-The screenshots are real captures of the `play` release build 1.6 on an Android 16 emulator (Pixel 7) with fictional demo macros, framed with a caption. They show no location or device triggers, which the `play` build doesn't have.
+The screenshots are real captures of the `play` release build (01 and 02 re-captured on 1.8 for the TextFox name) on an Android 16 emulator (Pixel 7) with fictional demo macros, framed with a caption. They show no location or device triggers, which the `play` build doesn't have.
 
 ## Videos (not in git — too large)
 
@@ -14,6 +14,7 @@ Recorded on the same emulator; kept locally in `~/Downloads/automatiq-store/vide
 
 | File | Use | Length |
 |---|---|---|
-| `declaration-device-automation.mp4` | **SMS/Call Log declaration (use this one), `play` 1.6 (versionCode 7), 1080×1920 9:16, 30 fps:** the macro list → SMS permission in Phone setup → the user's "Out of office" trigger and reply → an incoming SMS fires the auto-reply, shown sent in Messages → the call-log/phone permission dialogs when opening "Missed call text-back" → a missed call texts the caller back (notification + Messages) → Pills / Ping / Quiet mode run other parts of the OS → Log with every run SUCCESS and both SMS "Delivered" | 54 s |
+| `declaration-device-automation.mp4` | **SMS/Call Log declaration (use this one), `play` 1.8 (versionCode 9), 1080×1920 9:16, 30 fps:** the macro list → SMS permission in Phone setup → the user's "Out of office" trigger and reply → an incoming SMS fires the auto-reply, shown sent in Messages → the call-log/phone permission dialogs when opening "Missed call text-back" → a missed call texts the caller back (notification + Messages) → Pills / Ping / Quiet mode run other parts of the OS → Log with every run SUCCESS and both SMS "Delivered" | 53 s |
+| `../old/pre-textfox/` | The same videos and graphics with the Automatiq name. Not used | |
 | `declaration-device-automation-v1.mp4` | Old version (no permission dialogs, no editor for the SMS macros). Not used | 43 s |
-| `intro-guide.mp4` | Intro guide from the `play` 1.6 build (no location trigger). Promo / store listing video, or for sharing | 37 s |
+| `intro-guide.mp4` | Intro guide from the `play` 1.8 build (no location trigger). Promo / store listing video, or for sharing | 37 s |

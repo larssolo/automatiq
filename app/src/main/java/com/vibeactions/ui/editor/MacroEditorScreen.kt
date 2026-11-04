@@ -1410,7 +1410,7 @@ private fun ActionSection(s: EditorState, vm: MacroEditorViewModel, accent: andr
                         runCatching {
                             ctx.startActivity(Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS))
                         }
-                        Toast.makeText(ctx, "Find Automatiq and allow it, then go back", Toast.LENGTH_LONG).show()
+                        Toast.makeText(ctx, "Find TextFox and allow it, then go back", Toast.LENGTH_LONG).show()
                     }
                 }
             }

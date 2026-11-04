@@ -144,7 +144,7 @@ class GeminiReplyWorker @AssistedInject constructor(
     }
 
     companion object {
-        private const val TAG = "AutomatiqAI"
+        private const val TAG = "TextFoxAI"
         const val KEY_MACRO_ID = "macro_id"
         const val KEY_SENDER = "sender"
         const val KEY_BODY = "body"

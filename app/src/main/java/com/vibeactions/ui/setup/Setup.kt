@@ -140,9 +140,9 @@ fun setupSteps(context: Context): List<SetupStep> = buildList {
             SetupStep(
                 "xiaomi_autostart", Icons.Default.RocketLaunch, "Xiaomi: Autostart",
                 "Xiaomi stops apps that aren't allowed to start by themselves.",
-                "Find Automatiq and switch it on, then go back",
+                "Find TextFox and switch it on, then go back",
                 check = { xiaomiAutostartEnabled(it) },
-                confirmQuestion = "Did you switch Automatiq on under Autostart?",
+                confirmQuestion = "Did you switch TextFox on under Autostart?",
                 intent = {
                     Intent().setComponent(
                         ComponentName(
@@ -158,7 +158,7 @@ fun setupSteps(context: Context): List<SetupStep> = buildList {
                 "xiaomi_perms", Icons.Default.Security, "Xiaomi: Extra permissions",
                 "Xiaomi has its own SMS gate on top of Android's.",
                 "Under \"Other permissions\": allow everything about SMS, then go back",
-                confirmQuestion = "Did you allow the SMS permissions for Automatiq?",
+                confirmQuestion = "Did you allow the SMS permissions for TextFox?",
                 intent = {
                     Intent("miui.intent.action.APP_PERM_EDITOR")
                         .setClassName(

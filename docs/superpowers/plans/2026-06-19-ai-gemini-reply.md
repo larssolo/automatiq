@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Integrate Gemini 2.0 Flash into Automatiq so INCOMING macros can generate contextual AI replies (approve-before-send or auto-send-with-notification), and any macro's message body can be AI-composed in the editor.
+**Goal:** Integrate Gemini 2.0 Flash into TextFox so INCOMING macros can generate contextual AI replies (approve-before-send or auto-send-with-notification), and any macro's message body can be AI-composed in the editor.
 
 **Architecture:** A new `util/GeminiClient.kt` handles all HTTP calls to the Gemini REST API using `HttpURLConnection` and the existing `kotlinx-serialization-json` dependency. `SmsReplyReceiver` gains an AI branch: when `macro.aiReplyEnabled`, it calls Gemini and either posts an approval notification (APPROVE mode) or fires immediately and posts an info notification (AUTO mode). A new `AiReplyActionReceiver` handles the approve/discard actions. The editor gets an AI-compose button backed by the same client.
 

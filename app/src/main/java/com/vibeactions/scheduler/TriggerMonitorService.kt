@@ -162,7 +162,7 @@ class TriggerMonitorService : android.app.Service() {
         }
         val notification: Notification = NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.stat_notify_sync)
-            .setContentTitle("Automatiq is watching for triggers")
+            .setContentTitle("TextFox is watching for triggers")
             .setContentText("Charging / Bluetooth / Wi-Fi macros")
             .setOngoing(true)
             .setPriority(NotificationCompat.PRIORITY_MIN)

@@ -1,6 +1,6 @@
 # AI Gemini Reply — Design Spec
 **Date:** 2026-06-19  
-**App:** Automatiq (com.vibeactions)  
+**App:** TextFox (com.vibeactions)  
 **DB version after:** 9
 
 ---
