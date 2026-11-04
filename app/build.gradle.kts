@@ -62,6 +62,10 @@ android {
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             signingConfigs.findByName("release")?.let { signingConfig = it }
+            // Native debug symbols for Play (needs the NDK installed). Today the only .so is
+            // androidx.graphics.path, which ships already stripped, so no symbols come out of it
+            // and Play's "no debug symbols" notice stays; any native code with symbols is covered.
+            ndk { debugSymbolLevel = "SYMBOL_TABLE" }
         }
     }
     compileOptions {
