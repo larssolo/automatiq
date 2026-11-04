@@ -1,14 +1,16 @@
-/* Hero, 3D layer: the TextFox logo as a real object. Progressive enhancement over the SVG fox:
-   loads three.js only after the page is idle, skips reduced motion, save-data and missing WebGL. */
+/* Hero, 3D layer: the TextFox logo as a real object.
+   three.js is preloaded with the page and boots as soon as it arrives; until then only the glow shows.
+   Reduced motion, save-data, missing WebGL or a failure fall back to the flat SVG fox (.no-3d). */
 const stage = document.getElementById('foxStage');
 const TF = (window.TF = window.TF || {boom: 0});
+const fallback = () => { if (stage && !stage.classList.contains('is-3d')) stage.classList.add('no-3d'); };
 const webgl = (() => { try { const c = document.createElement('canvas'); return !!(c.getContext('webgl2') || c.getContext('webgl')); } catch { return false; } })();
 if (stage && webgl && !matchMedia('(prefers-reduced-motion: reduce)').matches && !(navigator.connection && navigator.connection.saveData)) {
-  const go = () => Promise.all([import('./js/three/three.module.min.js'), import('./js/three/SVGLoader.min.js'), import('./js/three/RoomEnvironment.min.js')])
-    .then(([THREE, {SVGLoader}, {RoomEnvironment}]) => boot(THREE, SVGLoader, RoomEnvironment)).catch(() => {});
-  const idle = cb => ('requestIdleCallback' in window ? requestIdleCallback(cb, {timeout: 2500}) : setTimeout(cb, 900));
-  if (document.readyState === 'complete') idle(go); else addEventListener('load', () => idle(go), {once: true});
-}
+  Promise.all([import('./js/three/three.module.min.js'), import('./js/three/SVGLoader.min.js'), import('./js/three/RoomEnvironment.min.js')])
+    .then(([THREE, {SVGLoader}, {RoomEnvironment}]) => boot(THREE, SVGLoader, RoomEnvironment) === false && fallback())
+    .catch(fallback);
+  setTimeout(fallback, 8000);                                   // very slow network: show the flat fox instead
+} else fallback();
 
 const OUTLINE = 'M3.03,167.98l108.55,18.34c18.05,15.38,83.78,26.23,102.7,10.13l136.86-28.13c1.06-.91,4.45-1.28,2.38-4.76l-16.81-47.49L327.15,0l-99.48,74.39h-100.38S27.76,0,27.76,0l-8.57,116.06L.88,163.68c-.59.82-1,1.64-.84,2.21.25.92,1.26,1.41,3,2.1Z', HEAD = 'M351.14,168.32c-2.58-.26-5.33.02-8.35,1.16l-87.63,24.45-77.62,102.84-77.78-102.9-88.64-24.75c-3.04-.85-5.58-1.5-8.09-1.14-1.73-.69-2.74-1.18-3-2.1-.16-.57.25-1.38.84-2.21l18.32-47.61L27.76,0l99.53,74.39h100.38S327.15,0,327.15,0l9.56,116.08,16.81,47.49c2.07,3.48-1.32,3.86-2.38,4.76Z', MUZZLE = 'M351.14,168.32l-144.48,122.95c-18.92,16.1-43.45,13.15-61.5-2.22L3.03,167.98c2.51-.36,5.05.29,8.09,1.14l88.64,24.75,77.78,102.9,77.62-102.84,87.63-24.45c3.03-1.14,5.77-1.43,8.35-1.16Z';
 const EYES = [121.96, 177.51, 233.04], EYE_Y = 149.52, CX = 177.09, CY = 151.02;
@@ -18,7 +20,7 @@ function boot(THREE, SVGLoader, RoomEnvironment) {
   const canvas = document.createElement('canvas');
   canvas.className = 'fox3d'; canvas.setAttribute('aria-hidden', 'true');
   let renderer;
-  try { renderer = new THREE.WebGLRenderer({canvas, alpha: true, antialias: !lo, powerPreference: 'high-performance'}); } catch { return; }
+  try { renderer = new THREE.WebGLRenderer({canvas, alpha: true, antialias: !lo, powerPreference: 'high-performance'}); } catch { return false; }
   renderer.setPixelRatio(Math.min(devicePixelRatio, lo ? 1.25 : small ? 1.75 : 2));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.NoToneMapping;                 // keep the brand green saturated
@@ -160,7 +162,7 @@ function boot(THREE, SVGLoader, RoomEnvironment) {
     canvas.style.opacity = TF.boom > .02 ? String(Math.max(0, 1 - Math.pow(TF.boom / .7, 2))) : '';   // gone before the parts get huge
 
     renderer.render(scene, camera);
-    if (++frames === 1) stage.classList.add('is-3d');
+    if (++frames === 1) { stage.classList.remove('no-3d'); stage.classList.add('is-3d'); }
     // keep it smooth on slow phones: drop resolution if frames are long
     if (frames < 90) { slow += dt > .034 ? 1 : 0; if (frames === 89 && slow > 45) renderer.setPixelRatio(1); }
   }

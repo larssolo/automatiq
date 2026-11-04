@@ -322,3 +322,6 @@ footer{border-top:1px solid var(--line);padding-block:56px calc(36px + env(safe-
 .fox-stage.is-3d .fox3d{opacity:1}
 .fox-stage .fox-wrap,.fox-stage .fox-glow,.fox-stage .rings,.fox-stage .orb{transition:opacity .5s ease}
 .fox-stage.is-3d .fox-wrap,.fox-stage.is-3d .fox-glow,.fox-stage.is-3d .rings,.fox-stage.is-3d .orb{opacity:0!important}
+/* load order: only the glow shows until we know whether the 3D fox runs, so the flat fox never flashes */
+.fox-stage .bubbles{transition:opacity .7s ease}
+.fox-stage:not(.is-3d):not(.no-3d) .fox-wrap,.fox-stage:not(.is-3d):not(.no-3d) .rings,.fox-stage:not(.is-3d):not(.no-3d) .orb,.fox-stage:not(.is-3d):not(.no-3d) .bubbles{opacity:0}
