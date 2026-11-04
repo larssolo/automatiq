@@ -7,6 +7,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import androidx.core.app.NotificationCompat
+import com.vibeactions.R
 import com.vibeactions.domain.model.Macro
 import com.vibeactions.domain.model.MacroStatus
 import com.vibeactions.domain.model.TriggerType
@@ -52,7 +53,7 @@ class MacroNotificationManager @Inject constructor(
     /** The REMINDER action itself: a heads-up notification with the macro's text. */
     fun notifyReminder(macro: Macro, text: String) {
         val n = NotificationCompat.Builder(context, CHANNEL_ID_REMINDER)
-            .setSmallIcon(android.R.drawable.ic_popup_reminder)
+            .setSmallIcon(R.drawable.ic_stat_textfox)
             .setContentTitle(macro.name)
             .setContentText(text)
             .setStyle(NotificationCompat.BigTextStyle().bigText(text))
@@ -66,7 +67,7 @@ class MacroNotificationManager @Inject constructor(
     /** A non-SMS action (sound / webhook / reminder) that failed — so it doesn't fail silently. */
     fun notifyActionFailed(macro: Macro, error: String) {
         val n = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setSmallIcon(android.R.drawable.stat_notify_error)
+            .setSmallIcon(R.drawable.ic_stat_textfox)
             .setContentTitle("Failed: ${macro.name}")
             .setContentText(error)
             .setStyle(NotificationCompat.BigTextStyle().bigText(error))
@@ -84,7 +85,7 @@ class MacroNotificationManager @Inject constructor(
      */
     fun aiWorkingNotification(title: String): Notification =
         NotificationCompat.Builder(context, CHANNEL_ID_AI_WORK)
-            .setSmallIcon(android.R.drawable.stat_notify_sync)
+            .setSmallIcon(R.drawable.ic_stat_textfox)
             .setContentTitle(title)
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setOngoing(true)
@@ -109,7 +110,7 @@ class MacroNotificationManager @Inject constructor(
         }
 
         val builder = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setSmallIcon(android.R.drawable.stat_notify_chat)
+            .setSmallIcon(R.drawable.ic_stat_textfox)
             .setContentTitle(title)
             .setContentText("To $to")
             .setStyle(NotificationCompat.BigTextStyle().bigText(detail))
@@ -134,7 +135,7 @@ class MacroNotificationManager @Inject constructor(
     /** Lock-screen-safe version of a result notification: title only, no recipient or message body. */
     private fun redactedResult(title: String): Notification =
         NotificationCompat.Builder(context, CHANNEL_ID)
-            .setSmallIcon(android.R.drawable.stat_notify_chat)
+            .setSmallIcon(R.drawable.ic_stat_textfox)
             .setContentTitle(title)
             .setAutoCancel(true)
             .build()
@@ -227,7 +228,7 @@ class MacroNotificationManager @Inject constructor(
         )
 
         val builder = NotificationCompat.Builder(context, CHANNEL_ID_AI)
-            .setSmallIcon(android.R.drawable.stat_notify_chat)
+            .setSmallIcon(R.drawable.ic_stat_textfox)
             .setContentTitle(
                 if (recipient != null) "AI reply ready for $toLabel"
                 else "AI message ready: ${macro.name}"
@@ -254,7 +255,7 @@ class MacroNotificationManager @Inject constructor(
         val detail = "\"${macro.name}\" won't fire: ${reason ?: "the location trigger couldn't be registered"}. " +
             "Open the macro and set location access to \"Allow all the time\"."
         val builder = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setSmallIcon(android.R.drawable.stat_sys_warning)
+            .setSmallIcon(R.drawable.ic_stat_textfox)
             .setContentTitle("Location macro not active: ${macro.name}")
             .setContentText(reason ?: "Couldn't register the location trigger")
             .setStyle(NotificationCompat.BigTextStyle().bigText(detail))
@@ -267,7 +268,7 @@ class MacroNotificationManager @Inject constructor(
     fun notifyAiSent(macro: Macro, recipient: String, sentBody: String) {
         val preview = if (sentBody.length > 200) sentBody.take(200) + "…" else sentBody
         val builder = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setSmallIcon(android.R.drawable.stat_notify_chat)
+            .setSmallIcon(R.drawable.ic_stat_textfox)
             .setContentTitle("AI reply sent to ${maskPhone(recipient)}")
             .setContentText(preview)
             .setStyle(NotificationCompat.BigTextStyle().bigText(preview))
