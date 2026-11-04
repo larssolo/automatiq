@@ -4,6 +4,7 @@
 |---|---|---|
 | `icon-512.png` | App icon | 512×512 |
 | `feature-1024x500.png` | Feature graphic | 1024×500 |
+| `logo/textfox-icon.svg`, `logo/textfox-tile.svg` | Vector masters of the fox logo (full-bleed and rounded tile) | — |
 | `screenshots/01-autopilot.jpg` … `05-log.jpg` | Phone screenshots (in this order) | 1080×1920 |
 
 The screenshots are real captures of the `play` release build (01 and 02 re-captured on 1.8 for the TextFox name) on an Android 16 emulator (Pixel 7) with fictional demo macros, framed with a caption. They show no location or device triggers, which the `play` build doesn't have.
