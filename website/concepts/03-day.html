@@ -1,0 +1,381 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>TextFox · Concept 03 · A Day on Autopilot</title>
+<meta name="description" content="TextFox design concept 03: scroll through one day while your phone sends texts for you.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300..800&family=JetBrains+Mono:wght@200..700&display=swap">
+<style>
+/* Layout: scroll = time. One pinned "day" stage: live clock + event caption left, phone log right, 24h rail below. */
+:root{
+  --ink:#090B0A; --ink-2:#0F1311; --card:#161C19; --card-2:#1C2420; --line:rgba(214,255,232,.10);
+  --fg:#EEF3EF; --mute:#9AA79F; --dim:#5D6A63;
+  --green:#00E676; --amber:#FFB300; --teal:#42D1CA; --rose:#FF5C8A; --indigo:#7B88FF; --red:#FF5252;
+  --sans:"DM Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono:"JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --gut:max(16px, env(safe-area-inset-left, 0px));
+  --gut-r:max(16px, env(safe-area-inset-right, 0px));
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{background:var(--ink);-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--ink);color:var(--fg);font:400 17px/1.55 var(--sans);-webkit-font-smoothing:antialiased;overflow-x:clip}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--green);outline-offset:3px;border-radius:6px}
+.wrap{max-width:1240px;margin-inline:auto;padding-left:var(--gut);padding-right:var(--gut-r)}
+.mono{font-family:var(--mono)}
+.grain{position:fixed;inset:0;pointer-events:none;z-index:90;opacity:.06;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+/* nav */
+.nav{position:fixed;inset:0 0 auto;z-index:50;padding-top:env(safe-area-inset-top,0px)}
+.nav .wrap{display:flex;align-items:center;justify-content:space-between;height:64px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;font:500 19px/1 var(--mono);letter-spacing:-.02em}
+.brand svg{width:26px;height:26px;color:var(--green)}
+.nav-links{display:flex;gap:28px;font-size:14px;color:var(--mute)}
+.nav-links a{text-decoration:none}
+.nav-links a:hover{color:var(--fg)}
+.btn{display:inline-flex;align-items:center;gap:10px;border-radius:999px;font:600 15px/1 var(--sans);text-decoration:none;padding:14px 22px;transition:transform .2s, background .2s}
+.btn-g{background:var(--green);color:#03140A}
+.btn-g:hover{transform:translateY(-2px)}
+.btn-ghost{border:1px solid var(--line);color:var(--fg)}
+.btn-sm{padding:10px 16px;font-size:14px}
+@media (max-width:820px){.nav-links{display:none}}
+
+/* hero */
+.hero{position:relative;min-height:92svh;display:grid;align-items:center;padding-block:120px 64px;overflow:hidden}
+.hero-ghost{position:absolute;right:-2vw;bottom:-4vw;font:200 clamp(140px,30vw,460px)/.8 var(--mono);letter-spacing:-.06em;color:transparent;-webkit-text-stroke:1px rgba(0,230,118,.22);pointer-events:none;user-select:none}
+.hero-glow{position:absolute;inset:auto auto -30% -20%;width:80vw;height:80vw;background:radial-gradient(closest-side,rgba(255,150,40,.20),transparent);pointer-events:none}
+.kicker{font:500 15px/1 var(--mono);color:var(--green);margin:0 0 22px;letter-spacing:.02em}
+.caret{display:inline-block;width:.55em;height:1.05em;background:var(--green);vertical-align:-3px;margin-left:4px;animation:blink 1.05s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.h1{font:700 clamp(46px,8.4vw,124px)/.95 var(--sans);letter-spacing:-.045em;margin:0;max-width:11ch;text-wrap:balance}
+.h1 .g{color:var(--green)}
+.lede{max-width:56ch;color:var(--mute);font-size:clamp(17px,1.5vw,20px);margin:28px 0 36px}
+.lede strong{color:var(--fg);font-weight:500}
+.cta-row{display:flex;flex-wrap:wrap;gap:14px;align-items:center}
+.facts{display:flex;flex-wrap:wrap;gap:8px;margin-top:28px}
+.facts span{font:500 13px/1 var(--mono);color:var(--mute);border:1px solid var(--line);border-radius:999px;padding:9px 13px}
+.scroll-cue{position:absolute;left:50%;bottom:28px;translate:-50% 0;font:500 12px/1 var(--mono);color:var(--dim);letter-spacing:.14em;text-transform:uppercase;display:flex;flex-direction:column;align-items:center;gap:10px}
+.scroll-cue i{width:1px;height:42px;background:linear-gradient(var(--green),transparent);animation:cue 1.8s ease-in-out infinite;transform-origin:top}
+@keyframes cue{0%{transform:scaleY(0)}50%{transform:scaleY(1)}100%{transform:scaleY(1);opacity:0}}
+
+/* the day stage */
+.day{position:relative;height:100svh;min-height:600px;overflow:hidden;background:var(--ink)}
+.sky{position:absolute;inset:0;--a:rgba(255,128,32,.42);--b:rgba(0,230,118,.04);pointer-events:none}
+.sky .glow{position:absolute;border-radius:50%;filter:blur(10px)}
+.sky .g1{width:90vmax;height:90vmax;left:-30vmax;bottom:-45vmax;background:radial-gradient(closest-side,var(--a),transparent)}
+.sky .g2{width:70vmax;height:70vmax;right:-25vmax;top:-30vmax;background:radial-gradient(closest-side,var(--b),transparent)}
+.day-inner{position:relative;height:100%;display:grid;grid-template-rows:1fr auto;padding-top:calc(72px + env(safe-area-inset-top,0px));padding-bottom:28px}
+.day-grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:48px;align-items:center;min-height:0}
+.clock{font:200 clamp(84px,13.5vw,210px)/.85 var(--mono);letter-spacing:-.06em;font-variant-numeric:tabular-nums;display:flex;align-items:baseline}
+.clock .colon{animation:blink 2s steps(1) infinite;color:var(--green)}
+.label{margin-top:28px;max-width:30rem;min-height:9.5em}
+.ev-k{font:500 13px/1 var(--mono);text-transform:uppercase;letter-spacing:.14em;color:var(--green);margin:0 0 14px;display:flex;align-items:center;gap:10px}
+.ev-k i{width:8px;height:8px;border-radius:50%;background:currentColor;box-shadow:0 0 12px currentColor}
+.ev-t{font:600 clamp(26px,3vw,40px)/1.08 var(--sans);letter-spacing:-.03em;margin:0 0 12px;text-wrap:balance}
+.ev-d{color:var(--mute);margin:0;max-width:44ch}
+.stats{display:flex;gap:36px;margin-top:26px}
+.stat b{display:block;font:300 44px/1 var(--mono);font-variant-numeric:tabular-nums;letter-spacing:-.04em}
+.stat span{font:500 12px/1.3 var(--mono);color:var(--dim);text-transform:uppercase;letter-spacing:.12em}
+.stat.zero b{color:var(--green)}
+
+/* phone */
+.phone{justify-self:center;width:min(100%,340px);aspect-ratio:9/18.6;max-height:calc(100svh - 230px);border-radius:46px;padding:10px;background:linear-gradient(160deg,#2A332E,#0E1210 40%,#1A211D);box-shadow:0 40px 120px -30px rgba(0,0,0,.8),inset 0 0 0 1px rgba(255,255,255,.08);position:relative}
+.screen{height:100%;border-radius:37px;overflow:hidden;background:linear-gradient(180deg,#14201A,#0D1411 60%);position:relative;display:flex;flex-direction:column}
+.sbar{display:flex;justify-content:space-between;align-items:center;padding:14px 24px 6px;font:500 13px/1 var(--sans);font-variant-numeric:tabular-nums}
+.sbar svg{height:12px;width:auto;fill:var(--fg)}
+.app-head{display:flex;align-items:center;justify-content:space-between;padding:12px 18px 10px}
+.app-head h3{font:500 22px/1 var(--mono);margin:0;letter-spacing:-.02em}
+.pills{display:flex;gap:6px;padding:0 14px 12px}
+.pills span{font:500 11px/1 var(--sans);padding:7px 10px;border-radius:99px;background:rgba(255,255,255,.06);color:var(--mute)}
+.pills span.on{outline:1px solid var(--green);color:var(--fg);background:rgba(0,230,118,.08)}
+.pills b{font-weight:500;color:var(--green);margin-left:4px}
+.feed{flex:1;overflow:hidden;padding:0 10px;display:flex;flex-direction:column}
+.empty{position:absolute;left:0;right:0;top:46%;text-align:center;font:500 12px/1.5 var(--mono);color:var(--dim);transition:opacity .3s}
+.empty.off{opacity:0}
+.lw{display:grid;grid-template-rows:0fr;opacity:0;transition:grid-template-rows .5s cubic-bezier(.2,.8,.2,1),opacity .35s,transform .5s cubic-bezier(.2,.8,.2,1);transform:translateY(-8px) scale(.98)}
+.lw.on{grid-template-rows:1fr;opacity:1;transform:none}
+.lw>div{overflow:hidden;min-height:0}
+.lc{display:grid;grid-template-columns:40px 1fr;gap:12px;padding:13px 12px;margin-bottom:8px;border-radius:18px;background:color-mix(in srgb,var(--c) 10%,#151B18);font-size:13px;line-height:1.4}
+.ic{position:relative;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:color-mix(in srgb,var(--c) 22%,transparent);color:var(--c)}
+.ic svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.ic .ok{position:absolute;right:-3px;bottom:-3px;width:17px;height:17px;border-radius:50%;background:var(--green);border:2px solid #151B18;display:grid;place-items:center}
+.ic .ok svg{width:9px;height:9px;stroke:#03140A;stroke-width:3.4}
+.lc-top{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.lc-top b{font-weight:500;font-size:14px}
+.lc-top time{font:400 11px/1 var(--mono);color:var(--mute)}
+.badges{display:flex;flex-wrap:wrap;gap:5px;margin:6px 0}
+.badges span{font:500 10px/1 var(--mono);padding:5px 7px;border-radius:6px;background:rgba(0,230,118,.12);color:var(--green)}
+.badges .ai{background:rgba(123,136,255,.16);color:#B9C1FF}
+.badges .info{background:rgba(255,255,255,.07);color:var(--mute)}
+.lc p{margin:0;color:#DCE4DF}
+.lc .in{color:var(--mute);font-style:italic;margin-bottom:4px}
+
+/* 24h rail */
+.rail{position:relative;padding-top:8px}
+.track{position:relative;height:44px}
+.track .base{position:absolute;left:0;right:0;top:20px;height:2px;background:var(--line);border-radius:2px}
+.track .fill{position:absolute;left:0;right:0;top:20px;height:2px;background:linear-gradient(90deg,var(--amber),var(--green),var(--teal),var(--indigo));transform-origin:left;transform:scaleX(.06);border-radius:2px}
+.tick{position:absolute;top:14px;width:1px;height:14px;background:var(--line)}
+.tick span{position:absolute;top:20px;left:50%;translate:-50% 0;font:400 10px/1 var(--mono);color:var(--dim)}
+.dot{position:absolute;top:15px;width:12px;height:12px;margin-left:-6px;border-radius:50%;background:var(--ink);border:2px solid var(--dim);transition:background .3s,border-color .3s,box-shadow .3s,transform .3s}
+.dot.on{background:var(--c);border-color:var(--c);box-shadow:0 0 16px var(--c);transform:scale(1.15)}
+
+@media (max-width:820px){
+  .day-inner{padding-top:calc(64px + env(safe-area-inset-top,0px));padding-bottom:16px}
+  .day-grid{grid-template-columns:1fr;grid-template-rows:auto minmax(0,1fr);gap:14px;align-content:stretch}
+  .clock{font-size:clamp(56px,17vw,88px)}
+  .label{margin-top:10px;min-height:6.6em}
+  .ev-t{font-size:22px;margin-bottom:6px}
+  .ev-d{font-size:14px;line-height:1.45}
+  .ev-k{margin-bottom:8px;font-size:11px}
+  .stats{display:none}
+  .phone{height:100%;max-height:none;width:auto;aspect-ratio:auto;max-width:300px;width:100%;border-radius:34px;padding:7px}
+  .screen{border-radius:28px}
+  .tick span{font-size:9px}
+  .tick:nth-of-type(even) span{display:none}
+}
+
+/* recap */
+.section{padding-block:clamp(96px,14vw,180px)}
+.h2{font:700 clamp(38px,6vw,84px)/.98 var(--sans);letter-spacing:-.045em;margin:0 0 56px;max-width:14ch;text-wrap:balance}
+.h2 em{font-style:normal;color:var(--green)}
+.tgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.tcard{background:var(--ink-2);border:1px solid var(--line);border-radius:24px;padding:26px 24px 24px;display:flex;flex-direction:column;gap:14px;min-height:300px}
+.tcard .ic{width:48px;height:48px}
+.tcard h3{font:600 22px/1.1 var(--sans);letter-spacing:-.02em;margin:8px 0 0}
+.tcard p{margin:0;color:var(--mute);font-size:15px}
+.tcard code{margin-top:auto;font:500 12px/1.5 var(--mono);color:var(--c);background:color-mix(in srgb,var(--c) 10%,transparent);border-radius:10px;padding:10px 12px}
+.also{margin-top:28px;color:var(--mute);display:flex;flex-wrap:wrap;gap:10px;align-items:center;font-size:15px}
+.also span{font:500 13px/1 var(--mono);color:var(--fg);border:1px dashed var(--line);border-radius:999px;padding:9px 13px}
+@media (max-width:980px){.tgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:520px){.tgrid{grid-template-columns:1fr}.tcard{min-height:0}}
+
+/* final */
+.final{padding-block:40px 120px}
+.panel{position:relative;overflow:hidden;border-radius:40px;padding:clamp(48px,9vw,120px) clamp(24px,6vw,96px);background:radial-gradient(120% 120% at 0% 100%,rgba(255,179,0,.18),transparent 50%),radial-gradient(90% 90% at 100% 0%,rgba(0,230,118,.22),transparent 55%),#0E1512;border:1px solid var(--line)}
+.panel h2{font:700 clamp(44px,8vw,120px)/.92 var(--sans);letter-spacing:-.05em;margin:0 0 28px;text-wrap:balance}
+.panel p{color:var(--mute);max-width:52ch;margin:0 0 36px}
+footer{border-top:1px solid var(--line);padding-block:28px calc(28px + env(safe-area-inset-bottom,0px));color:var(--dim);font:400 13px/1.5 var(--mono)}
+footer .wrap{display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between}
+
+/* concept chrome (not part of the design) */
+.cchip{position:fixed;left:max(14px,env(safe-area-inset-left,0px));bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:95;background:#F4F6F4;color:#0A0D0B;font:600 12px/1 var(--sans);padding:10px 14px;border-radius:999px;text-decoration:none;box-shadow:0 8px 30px rgba(0,0,0,.4)}
+@media (prefers-reduced-motion:reduce){.caret,.clock .colon,.scroll-cue i{animation:none}.lw{transition:none}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="fox" viewBox="0 0 64 64"><path d="M5 3 23 16.5h18L59 3l1.5 21L64 33 37.2 55.6a8 8 0 0 1-10.4 0L0 33l3.5-9Z" fill="currentColor"/><path d="M0 33 18 38l14 18.6L46 38l18-5-26.8 22.6a8 8 0 0 1-10.4 0Z" fill="#EAF7EF"/><circle cx="22" cy="30" r="3.5" fill="#090B0A"/><circle cx="32" cy="30" r="3.5" fill="#090B0A"/><circle cx="42" cy="30" r="3.5" fill="#090B0A"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6.5 16v-5a5.5 5.5 0 0 1 11 0v5l1.5 2h-14z"/><path d="M10 20.5a2 2 0 0 0 4 0"/></symbol>
+  <symbol id="i-reply" viewBox="0 0 24 24"><path d="M10 7 5 12l5 5"/><path d="M5 12h9a5 5 0 0 1 5 5v1"/></symbol>
+  <symbol id="i-missed" viewBox="0 0 24 24"><path d="M3.5 16.5c4.7-4 12.3-4 17 0l-1.8 2.7-3.2-1.3v-2.5a10 10 0 0 0-7 0v2.5l-3.2 1.3z"/><path d="m6 5 5 5 4-4m0 0h-3m3 0v3"/></symbol>
+  <symbol id="i-tap" viewBox="0 0 24 24"><path d="M9.5 12V5.8a1.6 1.6 0 0 1 3.2 0V11"/><path d="M12.7 10.6a1.6 1.6 0 0 1 3.2 0v1.2a1.6 1.6 0 0 1 3.2 0V15a6 6 0 0 1-6 6h-.6a6 6 0 0 1-5-2.7L4.6 14.6a1.6 1.6 0 0 1 2.6-1.9l2.3 2.6"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M19.5 14.5A7.5 7.5 0 1 1 9.5 4.5a6 6 0 0 0 10 10z"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
+</svg>
+<div class="grain" aria-hidden="true"></div>
+
+<header class="nav">
+  <div class="wrap">
+    <a class="brand" href="#top" aria-label="TextFox home"><svg aria-hidden="true"><use href="#fox"/></svg>textfox</a>
+    <nav class="nav-links" aria-label="Main"><a href="#day">A day</a><a href="#triggers">Triggers</a><a href="#ai">AI</a><a href="#privacy">Privacy</a></nav>
+    <a class="btn btn-g btn-sm" href="#get">Get the app</a>
+  </div>
+</header>
+
+<main>
+<section class="hero" id="top">
+  <div class="hero-glow" aria-hidden="true"></div>
+  <div class="hero-ghost" aria-hidden="true" data-speed="0.55">06:59</div>
+  <div class="wrap">
+    <p class="kicker">&gt; textfox.init()<span class="caret" aria-hidden="true"></span></p>
+    <h1 class="h1" id="h1">Your phone texts for you. <span class="g">All day.</span></h1>
+    <p class="lede"><strong>TextFox is an Android app that sends text messages automatically</strong> — on a schedule, as a reply to a text, or when you miss a call. Scroll through one ordinary day and watch it work.</p>
+    <div class="cta-row">
+      <a class="btn btn-g" href="#get"><svg width="16" height="18" viewBox="0 0 16 18" aria-hidden="true"><path d="M1 1.2v15.6c0 .5.5.8.9.6L15 9.6a.7.7 0 0 0 0-1.2L1.9.6C1.5.4 1 .7 1 1.2Z" fill="currentColor"/></svg>Get it on Google Play</a>
+      <a class="btn btn-ghost" href="#day">Start the day ↓</a>
+    </div>
+    <div class="facts"><span>on-device</span><span>no account</span><span>no ads</span><span>android 8.0+</span></div>
+  </div>
+  <div class="scroll-cue" aria-hidden="true">scroll<i></i></div>
+</section>
+
+<section class="day" id="day" aria-label="One day with TextFox">
+  <div class="sky" aria-hidden="true"><i class="glow g1"></i><i class="glow g2"></i></div>
+  <div class="day-inner wrap">
+    <div class="day-grid">
+      <div class="day-copy">
+        <div class="clock" aria-hidden="true"><span id="hh">23</span><span class="colon">:</span><span id="mm">00</span></div>
+        <div class="label" id="label">
+          <p class="ev-k"><i></i><span id="evk">23:00 · end of day</span></p>
+          <h2 class="ev-t" id="evt">Five texts sent. You typed none.</h2>
+          <p class="ev-d" id="evd">That was one ordinary day with TextFox.</p>
+        </div>
+        <div class="stats">
+          <div class="stat"><b id="sent">5</b><span>texts sent<br>for you</span></div>
+          <div class="stat zero"><b>0</b><span>texts you<br>typed</span></div>
+        </div>
+      </div>
+      <div class="phone" aria-label="TextFox log screen">
+        <div class="screen">
+          <div class="sbar"><span id="sclock">23:00</span><svg viewBox="0 0 46 12" aria-hidden="true"><path d="M0 4.5a11 11 0 0 1 14 0L7 12Z"/><path d="M18 12 28 2v10Z"/><rect x="34" y="1" width="7" height="11" rx="1.5"/></svg></div>
+          <div class="app-head"><h3>log</h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9AA79F" stroke-width="1.8" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg></div>
+          <div class="pills"><span class="on">All<b id="cAll">7</b></span><span>Success<b id="cOk">7</b></span><span>Failed<b>0</b></span></div>
+          <div class="feed" id="feed">
+            <div class="lw on" data-i="6"><div><article class="lc" style="--c:var(--indigo)"><div class="ic"><svg><use href="#i-moon"/></svg><span class="ok"><svg><use href="#i-check"/></svg></span></div><div><div class="lc-top"><b>Quiet mode</b><time>22:30</time></div><div class="badges"><span class="info">sound mode → do not disturb</span></div></div></article></div></div>
+            <div class="lw on" data-i="5"><div><article class="lc" style="--c:var(--indigo)"><div class="ic"><svg><use href="#i-clock"/></svg><span class="ok"><svg><use href="#i-check"/></svg></span></div><div><div class="lc-top"><b>Kids' bedtime</b><time>20:15</time></div><div class="badges"><span>✓✓ Delivered</span></div><p>Bedtime in 15 minutes 🌙 Teeth, pyjamas, story.</p></div></article></div></div>
+            <div class="lw on" data-i="4"><div><article class="lc" style="--c:var(--rose)"><div class="ic"><svg><use href="#i-tap"/></svg><span class="ok"><svg><use href="#i-check"/></svg></span></div><div><div class="lc-top"><b>Running late</b><time>17:40</time></div><div class="badges"><span>✓✓ Delivered</span><span class="info">one tap</span></div><p>Stuck in traffic, be there in 15!</p></div></article></div></div>
+            <div class="lw on" data-i="3"><div><article class="lc" style="--c:var(--green)"><div class="ic"><svg><use href="#i-missed"/></svg><span class="ok"><svg><use href="#i-check"/></svg></span></div><div><div class="lc-top"><b>Missed call text-back</b><time>11:27</time></div><div class="badges"><span>✓✓ Delivered</span></div><p>Sorry I missed your call. I'll ring you back soon.</p></div></article></div></div>
+            <div class="lw on" data-i="2"><div><article class="lc" style="--c:var(--teal)"><div class="ic"><svg><use href="#i-reply"/></svg><span class="ok"><svg><use href="#i-check"/></svg></span></div><div><div class="lc-top"><b>Out of office</b><time>10:41</time></div><div class="badges"><span>✓✓ Delivered</span></div><p class="in">“Are you free for a quick call?”</p><p>Thanks for your message. I'm away and back Monday.</p></div></article></div></div>
+            <div class="lw on" data-i="1"><div><article class="lc" style="--c:var(--amber)"><div class="ic"><svg><use href="#i-bell"/></svg><span class="ok"><svg><use href="#i-check"/></svg></span></div><div><div class="lc-top"><b>Pills</b><time>09:00</time></div><p>Reminder: Take your vitamins 💊</p></div></article></div></div>
+            <div class="lw on" data-i="0"><div><article class="lc" style="--c:var(--amber)"><div class="ic"><svg><use href="#i-clock"/></svg><span class="ok"><svg><use href="#i-check"/></svg></span></div><div><div class="lc-top"><b>Good morning, Mom</b><time>08:00</time></div><div class="badges"><span>✓✓ Delivered</span><span class="ai">✦ gemini variation</span></div><p>Good morning! ☀️ Hope your Thursday is off to a lovely start.</p></div></article></div></div>
+          </div>
+          <div class="empty off" id="empty">nothing yet today<br>zzz</div>
+        </div>
+      </div>
+    </div>
+    <div class="rail" aria-hidden="true"><div class="track" id="track"><div class="base"></div><div class="fill" id="fill"></div></div></div>
+  </div>
+</section>
+
+<section class="section" id="triggers">
+  <div class="wrap">
+    <p class="kicker">// what just happened</p>
+    <h2 class="h2 split">One day. Five texts. <em>You typed none.</em></h2>
+    <div class="tgrid" id="tgrid">
+      <article class="tcard" style="--c:var(--amber)"><div class="ic"><svg><use href="#i-clock"/></svg></div><h3>On a schedule</h3><p>Pick a time, weekdays, every N weeks, or a random day. TextFox fires on the minute, even after a reboot.</p><code>08:00 · Mon–Fri → Mom</code></article>
+      <article class="tcard" style="--c:var(--rose)"><div class="ic"><svg><use href="#i-tap"/></svg></div><h3>With one tap</h3><p>A home-screen widget per macro. Tap it and a ready-made text goes to everyone on the list.</p><code>widget → "Running late"</code></article>
+      <article class="tcard" style="--c:var(--teal)"><div class="ic"><svg><use href="#i-reply"/></svg></div><h3>As a reply</h3><p>When a text arrives from a chosen sender or with a keyword, TextFox answers it. Quiet hours included.</p><code>text contains "meeting" → reply</code></article>
+      <article class="tcard" style="--c:var(--green)"><div class="ic"><svg><use href="#i-missed"/></svg></div><h3>After a missed call</h3><p>Couldn't pick up? The caller gets a text a few seconds later. Declined calls count too.</p><code>missed call → text back</code></article>
+    </div>
+    <p class="also">A macro can also <span>change sound mode</span><span>show a reminder</span><span>call a web address</span></p>
+  </div>
+</section>
+
+<section class="final" id="get">
+  <div class="wrap">
+    <div class="panel" id="panel">
+      <h2>Set it up once.<br>It just runs.</h2>
+      <p>Free on Google Play for Android 8.0 and newer. Everything runs on your phone: no account, no ads, no tracking. AI is optional and uses your own free Google Gemini key.</p>
+      <div class="cta-row">
+        <a class="btn btn-g" href="#get"><svg width="16" height="18" viewBox="0 0 16 18" aria-hidden="true"><path d="M1 1.2v15.6c0 .5.5.8.9.6L15 9.6a.7.7 0 0 0 0-1.2L1.9.6C1.5.4 1 .7 1 1.2Z" fill="currentColor"/></svg>Get it on Google Play</a>
+        <a class="btn btn-ghost" href="#day">Replay the day ↺</a>
+      </div>
+    </div>
+  </div>
+</section>
+</main>
+<footer><div class="wrap"><span>© 2026 TextFox</span><span>Privacy · Contact · hello@textfox.app</span></div></footer>
+<a class="cchip" href="index.html">← Alle 4 retninger · 03 Døgnet</a>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/ScrollTrigger.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/SplitText.min.js"></script>
+<script>
+(() => {
+  const EVENTS = [
+    {t:480,  k:'Scheduled',   c:'--amber',  title:'Good morning, Mom',     desc:'Set for 08:00 on weekdays. Gemini rewrites it every morning, so it never reads the same twice.', sms:true},
+    {t:540,  k:'Reminder',    c:'--amber',  title:'Pills',                 desc:'Not every macro sends a text. This one just reminds you.', sms:false},
+    {t:641,  k:'Auto-reply',  c:'--teal',   title:'Out of office',         desc:'A text came in while you were in a meeting. TextFox answered it for you.', sms:true},
+    {t:687,  k:'Missed call', c:'--green',  title:'Missed call text-back', desc:"You couldn't pick up. The caller got a text a few seconds later.", sms:true},
+    {t:1060, k:'One tap',     c:'--rose',   title:'Running late',          desc:'One tap on the home-screen widget, and a ready-made text goes out.', sms:true},
+    {t:1215, k:'Scheduled',   c:'--indigo', title:"Kids' bedtime",         desc:'Every other week, Monday to Thursday. Set up once, still running.', sms:true},
+    {t:1350, k:'Sound mode',  c:'--indigo', title:'Quiet mode',            desc:'At 22:30 the phone switches to Do Not Disturb. Macros can do that too.', sms:false},
+  ];
+  const START = 419, END = 1380;
+  const $ = s => document.querySelector(s);
+  const hh = $('#hh'), mm = $('#mm'), sclock = $('#sclock'), evk = $('#evk'), evt = $('#evt'), evd = $('#evd'), label = $('#label');
+  const sentEl = $('#sent'), cAll = $('#cAll'), cOk = $('#cOk'), fill = $('#fill'), empty = $('#empty'), track = $('#track');
+  const cards = []; document.querySelectorAll('.lw').forEach(el => cards[+el.dataset.i] = el);
+  const evDot = label.querySelector('.ev-k');
+
+  // 24h rail: ticks 06–24 and one dot per event
+  const pct = m => ((m - 360) / 1080) * 100;
+  for (let h = 6; h <= 24; h += 1) {
+    if (h % 2) continue;
+    const t = document.createElement('i'); t.className = 'tick'; t.style.left = pct(h * 60) + '%';
+    t.innerHTML = '<span>' + String(h).padStart(2, '0') + '</span>'; track.appendChild(t);
+  }
+  const dots = EVENTS.map(e => { const d = document.createElement('i'); d.className = 'dot'; d.style.left = pct(e.t) + '%'; d.style.setProperty('--c', `var(${e.c})`); track.appendChild(d); return d; });
+
+  const fmt = m => String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0');
+  const INTRO = {k:'06:59 · before the alarm', title:'Your phone is asleep. So are you.', desc:'Everything that follows happens without you opening the app.', c:'--dim'};
+  const OUTRO = {k:'23:00 · end of day', title:'Five texts sent. You typed none.', desc:'That was one ordinary day with TextFox. Keep scrolling for how it works.', c:'--green'};
+
+  let lastMin = -1, lastIdx = -99, skyTl = null;
+  function setLabel(idx, animate) {
+    const e = idx < 0 ? INTRO : idx >= EVENTS.length ? OUTRO : {...EVENTS[idx], k: fmt(EVENTS[idx].t) + ' · ' + EVENTS[idx].k};
+    evk.textContent = e.k; evt.textContent = e.title; evd.textContent = e.desc;
+    evDot.style.color = `var(${e.c})`;
+    if (animate && window.gsap) gsap.fromTo([evt, evd], {y: 14, opacity: 0}, {y: 0, opacity: 1, duration: .45, stagger: .05, ease: 'power3.out', overwrite: true});
+  }
+  function render(m, animate = true) {
+    const mi = Math.round(m); if (mi === lastMin) return; lastMin = mi;
+    const s = fmt(mi); const [H, M] = s.split(':');
+    hh.textContent = H; mm.textContent = M; sclock.textContent = s;
+    let idx = -1, sent = 0, n = 0;
+    EVENTS.forEach((e, i) => { const on = mi >= e.t; cards[i].classList.toggle('on', on); dots[i].classList.toggle('on', on); if (on) { idx = i; n++; if (e.sms) sent++; } });
+    if (mi >= END) idx = EVENTS.length;
+    sentEl.textContent = sent; cAll.textContent = n; cOk.textContent = n;
+    empty.classList.toggle('off', n > 0);
+    fill.style.transform = `scaleX(${Math.max(0, (mi - 360) / 1080)})`;
+    if (skyTl) skyTl.seek(Math.min(Math.max(mi - START, 0), END - START));
+    if (idx !== lastIdx) { lastIdx = idx; setLabel(idx, animate); }
+  }
+
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!window.gsap || reduce) { render(END, false); return; }   // static, complete day
+  gsap.registerPlugin(ScrollTrigger, SplitText);
+  ScrollTrigger.config({ignoreMobileResize: true});
+
+  // sky: one paused timeline whose time axis is minutes of the day
+  const sky = $('.sky');
+  const SK = [[419,'rgba(255,128,32,.42)','rgba(0,230,118,.04)'],[540,'rgba(255,179,0,.30)','rgba(0,230,118,.16)'],[720,'rgba(0,230,118,.26)','rgba(66,209,202,.18)'],[1040,'rgba(255,179,0,.26)','rgba(66,209,202,.20)'],[1200,'rgba(123,136,255,.26)','rgba(66,209,202,.12)'],[1380,'rgba(70,80,190,.16)','rgba(0,230,118,.05)']];
+  gsap.set(sky, {'--a': SK[0][1], '--b': SK[0][2]});
+  skyTl = gsap.timeline({paused: true});
+  for (let i = 1; i < SK.length; i++) skyTl.to(sky, {'--a': SK[i][1], '--b': SK[i][2], duration: SK[i][0] - SK[i - 1][0], ease: 'none'});
+
+  render(START, false);
+
+  // scroll → minute, with the clock slowing down and holding at every event
+  const pts = [[0, START]]; let u = 0, prev = START;
+  EVENTS.forEach(e => { u += .55 + (e.t - prev) / 420; pts.push([u, e.t]); u += .9; pts.push([u, e.t]); prev = e.t; });
+  u += .7; pts.push([u, END]); u += .7; pts.push([u, END]);
+  pts.forEach(p => p[0] /= u);
+  const minuteAt = p => { for (let i = 1; i < pts.length; i++) if (p <= pts[i][0]) { const [u0, m0] = pts[i - 1], [u1, m1] = pts[i]; return u1 === u0 ? m1 : m0 + (m1 - m0) * (p - u0) / (u1 - u0); } return END; };
+
+  const mm2 = gsap.matchMedia();
+  mm2.add({desk: '(min-width: 821px)', mob: '(max-width: 820px)'}, ctx => {
+    const D = ctx.conditions.mob ? .45 : 1;
+    const state = {p: 0};
+    ScrollTrigger.create({
+      trigger: '.day', start: 'top top', end: () => '+=' + Math.round(innerHeight * (ctx.conditions.mob ? 5 : 6.5)),
+      pin: true, anticipatePin: 1,
+      onUpdate: s => gsap.to(state, {p: s.progress, duration: .3, ease: 'power2.out', overwrite: true, onUpdate: () => render(minuteAt(state.p))}),
+    });
+    // phone tilts in as the day section arrives
+    gsap.fromTo('.phone', {y: 120 * D, rotateX: 18, opacity: .3}, {y: 0, rotateX: 0, opacity: 1, ease: 'none', scrollTrigger: {trigger: '.day', start: 'top bottom', end: 'top top', scrub: true}});
+    // hero depth layers
+    gsap.utils.toArray('[data-speed]').forEach(el => { const s = parseFloat(el.dataset.speed); gsap.fromTo(el, {y: 0}, {y: (1 - s) * 260 * D, ease: 'none', scrollTrigger: {trigger: '.hero', start: 'top top', end: 'bottom top', scrub: true}}); });
+    gsap.to('.hero .wrap', {y: -90 * D, opacity: .15, ease: 'none', scrollTrigger: {trigger: '.hero', start: 'top top', end: 'bottom top', scrub: true}});
+    // recap: scrubbed word reveal + cards rise with scroll
+    document.querySelectorAll('.split').forEach(h => SplitText.create(h, {type: 'words', mask: 'words', autoSplit: true, onSplit: self => gsap.from(self.words, {yPercent: 115, stagger: .05, ease: 'none', scrollTrigger: {trigger: h, start: 'top 88%', end: 'top 50%', scrub: true}})}));
+    gsap.from('.tcard', {y: 80 * D, opacity: 0, stagger: .1, ease: 'none', scrollTrigger: {trigger: '#tgrid', start: 'top 92%', end: 'top 45%', scrub: true}});
+    // final panel unfolds
+    gsap.fromTo('#panel', {clipPath: 'inset(14% 10% 14% 10% round 64px)'}, {clipPath: 'inset(0% 0% 0% 0% round 40px)', ease: 'none', scrollTrigger: {trigger: '#panel', start: 'top 95%', end: 'top 40%', scrub: true}});
+  });
+
+  // page-load sequence
+  SplitText.create('#h1', {type: 'words', mask: 'words', onSplit: self => gsap.from(self.words, {yPercent: 110, duration: 1.1, ease: 'power4.out', stagger: .07, delay: .15})});
+  gsap.from(['.kicker', '.lede', '.cta-row', '.facts'], {y: 24, opacity: 0, duration: .9, ease: 'power3.out', stagger: .08, delay: .5});
+  gsap.from('.hero-ghost', {opacity: 0, x: 80, duration: 1.6, ease: 'expo.out', delay: .2});
+})();
+</script>
+</body>
+</html>
