@@ -135,6 +135,10 @@ def head(meta, url):
     ld = json.dumps({"@context": "https://schema.org", "@graph": graph}, ensure_ascii=False).replace("</", "<\\/")
     robots = "noindex, follow" if meta.get("noindex") else "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"
     e = html.escape
+    preload = "".join(f'\n<link rel="modulepreload" href="{m}">' for m in (["/assets/js/three/three.module.min.js", "/assets/js/three/SVGLoader.min.js", "/assets/js/three/RoomEnvironment.min.js"] if meta.get("modules") else []))
+    preload += "".join(f'\n<link rel="modulepreload" href="{m}?v={ver(m)}">' for m in meta.get("modules", []))
+    noscript = '\n<noscript><style>.fox-stage .fox-wrap,.fox-stage .rings{opacity:1!important}</style></noscript>' if meta.get("modules") else ""
+    preload += noscript
     return f"""<!doctype html>
 <html lang="en">
 <head>
@@ -152,7 +156,7 @@ def head(meta, url):
 <link rel="manifest" href="/site.webmanifest">
 <link rel="preload" href="/assets/fonts/DMSans.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/assets/fonts/JetBrainsMono.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/assets/site.css?v={ver('/assets/site.css')}">
+<link rel="stylesheet" href="/assets/site.css?v={ver('/assets/site.css')}">{preload}
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="TextFox">
 <meta property="og:locale" content="en_US">
