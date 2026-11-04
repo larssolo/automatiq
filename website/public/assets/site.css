@@ -332,8 +332,8 @@ footer{border-top:1px solid var(--line);padding-block:56px calc(36px + env(safe-
 /* load order: only the glow shows until we know whether the 3D fox runs, so the flat fox never flashes */
 .fox-stage .bubbles{transition:opacity .7s ease}
 .fox-stage:not(.is-3d):not(.no-3d) .fox-wrap,.fox-stage:not(.is-3d):not(.no-3d) .rings,.fox-stage:not(.is-3d):not(.no-3d) .orb,.fox-stage:not(.is-3d):not(.no-3d) .bubbles{opacity:0}
-/* load burst: a solid green disc fills the hero, holds a beat, then snaps back into the glow */
-.fox-burst{position:absolute;left:50%;top:50%;width:62%;aspect-ratio:1;translate:-50% -50%;border-radius:50%;z-index:6;pointer-events:none;
+/* load burst: a solid green disc fills the hero behind the fox, holds a beat, then snaps back into the glow */
+.fox-burst{position:absolute;left:50%;top:50%;width:62%;aspect-ratio:1;translate:-50% -50%;border-radius:50%;z-index:0;pointer-events:none;
   background:radial-gradient(circle,#00E676 0 58%,rgba(0,230,118,.55) 66%,rgba(0,230,118,0) 72%);
   transform:scale(.9);opacity:0;animation:burst 1.15s cubic-bezier(.75,0,.18,1) .05s both}
 @keyframes burst{0%{transform:scale(11);opacity:1}28%{transform:scale(11);opacity:1}82%{opacity:.9}100%{transform:scale(.9);opacity:0}}
