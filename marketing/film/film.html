@@ -1,0 +1,465 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>TextFox film</title>
+<!-- 1920×1080 motion film. Deterministic: window.renderAt(seconds) draws one frame. Rendered by render.js, scored by sfx.py.
+     Scenes sit on the soundtrack's 4-bar phrases (bar 2.4 s, first downbeat 1.18 s). -->
+<style>
+@font-face{font-family:"DM Sans";font-weight:300 700;src:url(../../website/public/assets/fonts/DMSans.woff2) format("woff2")}
+@font-face{font-family:"JetBrains Mono";font-weight:200 700;src:url(../../website/public/assets/fonts/JetBrainsMono.woff2) format("woff2")}
+:root{--ink:#070908;--fg:#EEF3EF;--mute:#9AA79F;--dim:#56635B;--green:#00E676;--amber:#FFB300;--teal:#42D1CA;--rose:#FF5C8A;--indigo:#7B88FF;
+  --sans:"DM Sans",sans-serif;--mono:"JetBrains Mono",monospace}
+*{box-sizing:border-box}
+html,body{margin:0;width:1920px;height:1080px;overflow:hidden;background:var(--ink);color:var(--fg);font-family:var(--sans);-webkit-font-smoothing:antialiased}
+#film{position:relative;width:1920px;height:1080px;overflow:hidden;background:var(--ink)}
+.layer{position:absolute;inset:0}
+#bg{background:radial-gradient(55% 60% at var(--gx,50%) var(--gy,50%),rgba(var(--gc,0,230,118),var(--ga,.10)),transparent 70%),radial-gradient(40% 50% at 12% 95%,rgba(255,150,40,var(--wa,.05)),transparent 70%)}
+#gl{position:absolute;inset:0;width:1920px;height:1080px}
+#grain{position:absolute;inset:0;width:1920px;height:1080px;opacity:.07;mix-blend-mode:overlay;image-rendering:auto}
+#vig{background:radial-gradient(ellipse at center,transparent 55%,rgba(0,0,0,.55))}
+#flash{background:var(--green);opacity:0}
+.hud{position:absolute;font:500 18px/1 var(--mono);color:var(--dim);letter-spacing:.06em}
+.scene{position:absolute;inset:0;opacity:0}
+.k{font:500 26px/1 var(--mono);color:var(--green);letter-spacing:.02em}
+.h{font:700 132px/.95 var(--sans);letter-spacing:-.05em;margin:0}
+.h.m{font-size:104px}
+.g{color:var(--green)}
+.sub{font:400 38px/1.35 var(--sans);color:var(--mute);margin:0}
+.w{display:inline-block;overflow:hidden;vertical-align:top;padding:0 .12em .08em 0;margin:0 -.12em -.08em 0}
+.w>span{display:inline-block}
+.caret{display:inline-block;width:.55em;height:1em;background:var(--green);vertical-align:-.12em;margin-left:6px}
+
+/* S0/S1 */
+#dot{position:absolute;left:960px;top:540px;width:14px;height:14px;margin:-7px;border-radius:50%;background:var(--green);box-shadow:0 0 30px 6px rgba(0,230,118,.6)}
+#s1 .copy{position:absolute;left:150px;top:300px;width:780px}
+#hello{position:absolute;left:1230px;top:210px;padding:20px 26px;border-radius:30px 30px 30px 8px;background:#EEF3EF;color:#0B110E;font:500 30px/1.25 var(--sans);box-shadow:0 30px 70px -20px rgba(0,0,0,.7);transform-origin:0 100%;white-space:nowrap}
+#hello small{display:block;font:500 17px/1 var(--mono);color:#00A653;margin-top:8px}
+
+/* S2: a day */
+#clock{position:absolute;left:960px;top:540px;font:200 300px/1 var(--mono);letter-spacing:-.06em;font-variant-numeric:tabular-nums;transform:translate(-50%,-50%);white-space:nowrap}
+#clock .c{color:var(--green)}
+#evk{position:absolute;left:150px;top:560px;font:500 24px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--green);display:flex;gap:14px;align-items:center}
+#evk i{width:12px;height:12px;border-radius:50%;background:currentColor;box-shadow:0 0 16px currentColor}
+#evt{position:absolute;left:150px;top:610px;font:600 72px/1.05 var(--sans);letter-spacing:-.035em;width:820px}
+#evd{position:absolute;left:150px;top:710px;font:400 32px/1.4 var(--sans);color:var(--mute);width:760px}
+#phone{position:absolute;left:1210px;top:80px;width:470px;height:920px;border-radius:66px;padding:14px;background:linear-gradient(160deg,#2A332E,#0E1210 40%,#1A211D);box-shadow:0 60px 140px -40px rgba(0,0,0,.9),inset 0 0 0 1px rgba(255,255,255,.08),0 0 140px -50px rgba(0,230,118,.5)}
+#phone .scr{position:relative;height:100%;border-radius:53px;overflow:hidden;background:linear-gradient(180deg,#14201A,#0D1411 60%);padding:22px 16px}
+.sb{display:flex;justify-content:space-between;font:500 19px/1 var(--sans);padding:0 18px 18px;font-variant-numeric:tabular-nums}
+.ah{font:500 32px/1 var(--mono);padding:8px 10px 18px;display:flex;justify-content:space-between;align-items:center}
+.ah span{font:500 16px/1 var(--mono);color:var(--mute)}
+.card{display:grid;grid-template-columns:54px 1fr;gap:14px;padding:16px;margin-bottom:12px;border-radius:24px;background:color-mix(in srgb,var(--c) 12%,#151B18);font-size:19px;line-height:1.35;transform-origin:50% 0}
+.ic{width:54px;height:54px;border-radius:50%;display:grid;place-items:center;background:color-mix(in srgb,var(--c) 24%,transparent);color:var(--c);position:relative}
+.ic svg{width:26px;height:26px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.card b{font-weight:600;font-size:20px;display:flex;justify-content:space-between}
+.card b time{font:400 15px/1.6 var(--mono);color:var(--mute)}
+.card .in{color:var(--mute);font-style:italic}
+.card p{margin:4px 0 0;color:#DCE4DF}
+.tick{display:inline-block;margin-top:8px;font:500 14px/1 var(--mono);padding:6px 9px;border-radius:8px;background:rgba(0,230,118,.14);color:var(--green)}
+#ring{position:absolute;left:50%;top:44%;width:150px;height:150px;margin:-75px;border-radius:50%;background:rgba(255,82,82,.16);display:grid;place-items:center;opacity:0}
+#ring svg{width:64px;height:64px;fill:#FF6B6B}
+#ring::before,#ring::after{content:"";position:absolute;inset:-14px;border-radius:50%;border:3px solid rgba(255,107,107,.6);transform:scale(var(--r1,1));opacity:var(--o1,0)}
+#tally{position:absolute;left:150px;top:860px;display:flex;gap:70px}
+#tally div b{display:block;font:300 92px/1 var(--mono);letter-spacing:-.04em;font-variant-numeric:tabular-nums}
+#tally div span{font:500 18px/1.3 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+#tally .z b{color:var(--green)}
+
+/* S3: triggers */
+#s3 .head{position:absolute;left:150px;top:130px}
+#s3 .grid{position:absolute;left:150px;right:150px;top:400px;display:grid;grid-template-columns:repeat(4,1fr);gap:28px}
+.tc{position:relative;height:520px;border-radius:40px;padding:42px 36px;overflow:hidden;background:linear-gradient(165deg,color-mix(in srgb,var(--c) 26%,#111813),color-mix(in srgb,var(--c) 7%,#0F1411) 55%,#0D120F);box-shadow:inset 0 1px 0 color-mix(in srgb,var(--c) 35%,transparent),0 40px 90px -40px color-mix(in srgb,var(--c) 70%,transparent);transform-origin:50% 100%}
+.tc::after{content:"";position:absolute;right:-30%;bottom:-36%;width:90%;aspect-ratio:1;border-radius:50%;background:radial-gradient(closest-side,color-mix(in srgb,var(--c) 40%,transparent),transparent)}
+.tc .ic{width:80px;height:80px}
+.tc .ic svg{width:38px;height:38px}
+.tc .n{position:absolute;right:36px;top:42px;font:500 22px/1 var(--mono);color:color-mix(in srgb,var(--c) 70%,#fff)}
+.tc h3{font:600 44px/1.05 var(--sans);letter-spacing:-.03em;margin:40px 0 18px}
+.tc p{font:400 23px/1.45 var(--sans);color:#B3BFB8;margin:0}
+.tc code{position:absolute;left:36px;right:36px;bottom:40px;font:500 19px/1.4 var(--mono);color:var(--c);background:rgba(0,0,0,.3);border-radius:16px;padding:16px 18px}
+
+/* S4: AI */
+#s4 .head{position:absolute;left:150px;top:200px;width:820px}
+#ai{position:absolute;left:1000px;top:270px;width:780px}
+#ai .lab{display:flex;justify-content:space-between;font:500 22px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--amber);margin-bottom:26px}
+#ai .lab span{color:var(--dim);letter-spacing:0;text-transform:none}
+#bub{font:500 46px/1.3 var(--sans);background:#5A4220;color:#FFF3DC;border-radius:44px 44px 44px 14px;padding:38px 42px;min-height:300px;box-shadow:0 40px 100px -40px rgba(255,179,0,.5)}
+#seg{display:grid;grid-template-columns:1fr 1fr;margin-top:34px;border-radius:999px;border:1px solid rgba(214,255,232,.12);padding:6px;position:relative}
+#seg span{position:relative;z-index:1;text-align:center;padding:20px;font:500 24px/1 var(--sans);color:var(--mute)}
+#seg i{position:absolute;top:6px;bottom:6px;left:6px;width:calc(50% - 6px);border-radius:999px;background:#5A4220;box-shadow:inset 0 0 0 1.5px var(--amber)}
+#ai .note{font:400 24px/1.4 var(--sans);color:var(--mute);margin-top:24px;min-height:70px}
+
+/* S5 */
+#s5 .row{position:absolute;left:150px;right:150px}
+.big{font:700 120px/1 var(--sans);letter-spacing:-.05em;margin:0}
+#rail{position:absolute;left:150px;right:150px;top:640px;height:4px;border-radius:4px;background:rgba(0,230,118,.14)}
+#rail i{position:absolute;inset:0;border-radius:4px;background:linear-gradient(90deg,var(--amber),var(--green),var(--teal));transform-origin:left;transform:scaleX(var(--p,0));box-shadow:0 0 18px rgba(0,230,118,.6)}
+#rail b{position:absolute;top:-10px;width:24px;height:24px;margin-left:-12px;border-radius:50%;background:var(--green);box-shadow:0 0 22px var(--green);opacity:0}
+#rail em{position:absolute;top:30px;font:500 20px/1 var(--mono);font-style:normal;color:var(--dim);transform:translateX(-50%)}
+.chips{display:flex;gap:22px}
+.chip{font:500 40px/1 var(--sans);padding:30px 42px;border-radius:999px;background:rgba(0,230,118,.12);color:var(--fg);display:flex;align-items:center;gap:18px}
+.chip i{width:16px;height:16px;border-radius:50%;background:var(--green);box-shadow:0 0 14px var(--green)}
+
+/* S6 */
+#s6 .copy{position:absolute;left:150px;top:230px;width:760px}
+#lock{position:absolute;left:150px;bottom:110px;display:flex;align-items:center;gap:26px}
+#lock svg{width:96px;height:82px}
+#lock b{font:500 64px/1 var(--mono);letter-spacing:-.03em}
+#lock span{display:block;font:400 26px/1.3 var(--sans);color:var(--mute);margin-left:22px;padding-left:28px;border-left:1px solid rgba(214,255,232,.18)}
+#play{position:absolute;left:150px;top:720px;display:inline-flex;align-items:center;gap:16px;background:var(--green);color:#03140A;border-radius:999px;padding:24px 36px;font:600 30px/1 var(--sans);box-shadow:0 20px 60px -16px rgba(0,230,118,.8)}
+#play small{display:block;font:500 15px/1 var(--sans);letter-spacing:.06em;text-transform:uppercase;opacity:.75;margin-bottom:4px}
+.orb{position:absolute;left:0;top:0;display:flex;flex-direction:column;gap:5px;padding:14px 20px 12px;border-radius:24px 24px 24px 7px;background:#EEF3EF;color:#0B110E;font:500 24px/1.25 var(--sans);white-space:nowrap;box-shadow:0 18px 40px -12px rgba(0,0,0,.7);will-change:transform}
+.orb b{font-weight:500;display:flex;align-items:center;gap:10px}
+.orb b::before{content:"";width:12px;height:12px;border-radius:50%;background:var(--c)}
+.orb small{font:500 15px/1 var(--mono);color:#5D6A63;padding-left:22px}
+.orb small span{color:#00A653}
+</style>
+</head>
+<body>
+<div id="film">
+  <div class="layer" id="bg"></div>
+  <canvas id="gl" width="1920" height="1080"></canvas>
+  <div class="layer" id="ui">
+    <div id="dot"></div>
+
+    <section class="scene" id="s1">
+      <div class="copy">
+        <p class="k" id="k1"></p>
+        <h1 class="h" id="h1" style="margin-top:34px"><span class="w"><span>Meet</span></span> <span class="w"><span class="g">TextFox.</span></span></h1>
+        <p class="sub" id="sub1" style="margin-top:36px">A tiny SMS robot that lives in your Android phone.</p>
+      </div>
+      <div id="hello">Hi! I send your texts for you. 🦊<small>✓✓ delivered</small></div>
+    </section>
+
+    <section class="scene" id="s2">
+      <div id="clock"><span id="hh">06</span><span class="c">:</span><span id="mm">59</span></div>
+      <div id="evk"><i></i><span id="evkt"></span></div>
+      <div id="evt"></div>
+      <div id="evd"></div>
+      <div id="phone"><div class="scr">
+        <div class="sb"><span id="pclock">06:59</span><span>▾ ◢ ▮</span></div>
+        <div class="ah"><span style="font:500 32px/1 var(--mono);color:var(--fg)">log</span><span>today</span></div>
+        <div id="feed"></div>
+        <div id="ring"><svg viewBox="0 0 24 24"><path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1z"/></svg></div>
+      </div></div>
+      <div id="tally"><div><b id="sent">0</b><span>texts sent<br>for you</span></div><div class="z"><b>0</b><span>texts you<br>typed</span></div></div>
+    </section>
+
+    <section class="scene" id="s3">
+      <div class="head"><p class="k">// four ways to fire a macro</p><h2 class="h m" id="h3" style="margin-top:28px"><span class="w"><span>Set</span></span> <span class="w"><span>it</span></span> <span class="w"><span>up</span></span> <span class="w"><span class="g">once.</span></span></h2></div>
+      <div class="grid">
+        <div class="tc" style="--c:var(--amber)"><span class="n">01</span><span class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg></span><h3>On a schedule</h3><p>A time, the weekdays, every few weeks or one date.</p><code>08:00 · Mon–Fri → Mom</code></div>
+        <div class="tc" style="--c:var(--rose)"><span class="n">02</span><span class="ic"><svg viewBox="0 0 24 24"><path d="M9.5 12V5.8a1.6 1.6 0 0 1 3.2 0V11"/><path d="M12.7 10.6a1.6 1.6 0 0 1 3.2 0v1.2a1.6 1.6 0 0 1 3.2 0V15a6 6 0 0 1-6 6h-.6a6 6 0 0 1-5-2.7L4.6 14.6a1.6 1.6 0 0 1 2.6-1.9l2.3 2.6"/></svg></span><h3>With one tap</h3><p>A home-screen widget sends a ready-made text.</p><code>widget → "Running late"</code></div>
+        <div class="tc" style="--c:var(--teal)"><span class="n">03</span><span class="ic"><svg viewBox="0 0 24 24"><path d="M10 7 5 12l5 5"/><path d="M5 12h9a5 5 0 0 1 5 5v1"/></svg></span><h3>As a reply</h3><p>Answers texts from chosen people or with a keyword.</p><code>has "meeting" → reply</code></div>
+        <div class="tc" style="--c:var(--green)"><span class="n">04</span><span class="ic"><svg viewBox="0 0 24 24"><path d="M3.5 16.5c4.7-4 12.3-4 17 0l-1.8 2.7-3.2-1.3v-2.5a10 10 0 0 0-7 0v2.5l-3.2 1.3z"/><path d="m6 5 5 5 4-4m0 0h-3m3 0v3"/></svg></span><h3>After a missed call</h3><p>The caller gets a text a few seconds later.</p><code>missed call → text back</code></div>
+      </div>
+    </section>
+
+    <section class="scene" id="s4">
+      <div class="head"><p class="k" style="color:var(--amber)">// ai built in</p><h2 class="h m" id="h4" style="margin-top:28px"><span class="w"><span>AI</span></span> <span class="w"><span>writes</span></span> <span class="w"><span>it.</span></span><br><span class="w"><span class="g">You</span></span> <span class="w"><span class="g">approve</span></span> <span class="w"><span class="g">it.</span></span></h2>
+        <p class="sub" id="sub4" style="margin-top:40px;font-size:32px">Google Gemini rewrites your scheduled text every time, so it never reads the same twice.</p></div>
+      <div id="ai">
+        <div class="lab">✦ AI variation <span id="vn">variant 1 / 4</span></div>
+        <div id="bub"></div>
+        <div id="seg"><i></i><span>Ask me first</span><span>Send automatically</span></div>
+        <p class="note" id="note">A notification lets you review, edit or discard it before it goes out.</p>
+      </div>
+    </section>
+
+    <section class="scene" id="s5">
+      <div class="row" id="r1" style="top:330px"><p class="k">// reliable</p><p class="big" style="margin-top:30px">Fires on the <span class="g">minute.</span></p></div>
+      <div id="rail"><i></i><b style="left:11%"></b><b style="left:28%"></b><b style="left:47%"></b><b style="left:73%"></b><b style="left:90%"></b><em style="left:0">06:00</em><em style="left:25%">10:00</em><em style="left:50%">14:00</em><em style="left:75%">18:00</em><em style="left:100%">22:00</em></div>
+      <div class="row" id="r2" style="top:360px"><p class="big">Delivered <span class="g" id="ticks">✓✓</span></p><p class="sub" style="margin-top:30px">A full log of every text, confirmed by your carrier.</p></div>
+      <div class="row" id="r3" style="top:330px"><p class="k">// private by design</p><div class="chips" style="margin-top:44px"><span class="chip"><i></i>Runs on your phone</span><span class="chip"><i></i>No account</span><span class="chip"><i></i>No ads</span></div></div>
+    </section>
+
+    <section class="scene" id="s6">
+      <div class="copy">
+        <p class="k">&gt; textfox.app</p>
+        <h2 class="h" id="h6" style="margin-top:34px;font-size:112px"><span class="w"><span>Your</span></span> <span class="w"><span>phone</span></span> <span class="w"><span>texts</span></span> <span class="w"><span>for</span></span> <span class="w"><span>you.</span></span> <span class="w"><span class="g">All</span></span> <span class="w"><span class="g">day.</span></span></h2>
+      </div>
+      <div id="play"><svg width="24" height="28" viewBox="0 0 16 18"><path d="M1 1.2v15.6c0 .5.5.8.9.6L15 9.6a.7.7 0 0 0 0-1.2L1.9.6C1.5.4 1 .7 1 1.2Z" fill="currentColor"/></svg><span><small>Free on</small>Google Play</span></div>
+      <div id="lock"><svg viewBox="0 0 354.18 302.05" style="color:#00E676"><path d="M3.03,167.98l108.55,18.34c18.05,15.38,83.78,26.23,102.7,10.13l136.86-28.13c1.06-.91,4.45-1.28,2.38-4.76l-16.81-47.49L327.15,0l-99.48,74.39h-100.38S27.76,0,27.76,0l-8.57,116.06L.88,163.68c-.59.82-1,1.64-.84,2.21.25.92,1.26,1.41,3,2.1Z" fill="#121815"/><path d="M351.14,168.32c-2.58-.26-5.33.02-8.35,1.16l-87.63,24.45-77.62,102.84-77.78-102.9-88.64-24.75c-3.04-.85-5.58-1.5-8.09-1.14-1.73-.69-2.74-1.18-3-2.1-.16-.57.25-1.38.84-2.21l18.32-47.61L27.76,0l99.53,74.39h100.38S327.15,0,327.15,0l9.56,116.08,16.81,47.49c2.07,3.48-1.32,3.86-2.38,4.76Z" fill="currentColor"/><path d="M351.14,168.32l-144.48,122.95c-18.92,16.1-43.45,13.15-61.5-2.22L3.03,167.98c2.51-.36,5.05.29,8.09,1.14l88.64,24.75,77.78,102.9,77.62-102.84,87.63-24.45c3.03-1.14,5.77-1.43,8.35-1.16Z" fill="#E5F3EA"/><circle cx="121.96" cy="149.52" r="19.4" fill="#121815"/><circle cx="177.51" cy="149.52" r="19.4" fill="#121815"/><circle cx="233.04" cy="149.52" r="19.4" fill="#121815"/></svg><b>textfox</b><span>Scheduled texts · auto-reply<br>missed-call text-back · Android</span></div>
+      <div id="orbs"></div>
+    </section>
+
+    <div class="hud" style="left:60px;top:54px" id="hudL">TEXTFOX · SMS ROBOT</div>
+    <div class="hud" style="right:60px;top:54px" id="hudR">00:00</div>
+  </div>
+  <div class="layer" id="vig"></div>
+  <canvas id="grain" width="960" height="540"></canvas>
+  <div class="layer" id="flash"></div>
+</div>
+
+<script src="../../website/public/assets/js/gsap.min.js"></script>
+<script type="module">
+import * as THREE from '../../website/public/assets/js/three/three.module.min.js';
+import {SVGLoader} from '../../website/public/assets/js/three/SVGLoader.min.js';
+import {RoomEnvironment} from '../../website/public/assets/js/three/RoomEnvironment.min.js';
+
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+const BAR = 2.4, D0 = 1.18, bar = n => D0 + n * BAR, beat = n => D0 + n * BAR / 4;
+const END = 59.3;
+const CUES = [];                                   // [time, sound, gain] for sfx.py
+const cue = (t, s, g = 1) => CUES.push([+t.toFixed(3), s, g]);
+
+/* ---------------- three.js: the fox, its orbit and dust ---------------- */
+const OUTLINE = 'M3.03,167.98l108.55,18.34c18.05,15.38,83.78,26.23,102.7,10.13l136.86-28.13c1.06-.91,4.45-1.28,2.38-4.76l-16.81-47.49L327.15,0l-99.48,74.39h-100.38S27.76,0,27.76,0l-8.57,116.06L.88,163.68c-.59.82-1,1.64-.84,2.21.25.92,1.26,1.41,3,2.1Z';
+const HEAD = 'M351.14,168.32c-2.58-.26-5.33.02-8.35,1.16l-87.63,24.45-77.62,102.84-77.78-102.9-88.64-24.75c-3.04-.85-5.58-1.5-8.09-1.14-1.73-.69-2.74-1.18-3-2.1-.16-.57.25-1.38.84-2.21l18.32-47.61L27.76,0l99.53,74.39h100.38S327.15,0,327.15,0l9.56,116.08,16.81,47.49c2.07,3.48-1.32,3.86-2.38,4.76Z';
+const MUZZLE = 'M351.14,168.32l-144.48,122.95c-18.92,16.1-43.45,13.15-61.5-2.22L3.03,167.98c2.51-.36,5.05.29,8.09,1.14l88.64,24.75,77.78,102.9,77.62-102.84,87.63-24.45c3.03-1.14,5.77-1.43,8.35-1.16Z';
+const EYES = [121.96, 177.51, 233.04], EYE_Y = 149.52, CX = 177.09, CY = 151.02;
+
+const renderer = new THREE.WebGLRenderer({canvas: $('#gl'), alpha: true, antialias: true, preserveDrawingBuffer: true});
+renderer.setPixelRatio(1); renderer.setSize(1920, 1080, false);
+renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.NoToneMapping;
+const scene = new THREE.Scene();
+scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), .04).texture;
+scene.environmentIntensity = .34;
+const camera = new THREE.PerspectiveCamera(30, 1920 / 1080, .1, 80); camera.position.set(0, 0, 10);
+scene.add(new THREE.HemisphereLight('#d8ffeb', '#041009', .35));
+const key = new THREE.DirectionalLight('#ffffff', 1.5); key.position.set(3, 4, 6); scene.add(key);
+const rim = new THREE.DirectionalLight('#42D1CA', 4); rim.position.set(-5, 2, -4); scene.add(rim);
+const warm = new THREE.DirectionalLight('#FFB300', .7); warm.position.set(-3, -4, 3); scene.add(warm);
+
+const SC = 2.1 / 354.18;
+const [pOut, pHead, pMuz] = new SVGLoader().parse(`<svg xmlns="http://www.w3.org/2000/svg"><g transform="scale(1,-1)"><path d="${OUTLINE}"/><path d="${HEAD}"/><path d="${MUZZLE}"/></g></svg>`).paths;
+const ext = (p, depth, bev) => { const g = new THREE.ExtrudeGeometry(SVGLoader.createShapes(p), {depth, bevelEnabled: true, bevelThickness: bev, bevelSize: bev * .55, bevelSegments: 8, curveSegments: 18}); g.translate(-CX, CY, -depth / 2); g.computeVertexNormals(); return g; };
+const MAT = {
+  green: new THREE.MeshPhysicalMaterial({color: '#00E676', roughness: .32, clearcoat: 1, clearcoatRoughness: .1, emissive: '#00E676', emissiveIntensity: .16}),
+  cream: new THREE.MeshPhysicalMaterial({color: '#DCEDE2', roughness: .45, clearcoat: .6, clearcoatRoughness: .25}),
+  dark: new THREE.MeshPhysicalMaterial({color: '#141b17', roughness: .45, metalness: .5, clearcoat: .4}),
+  eye: new THREE.MeshPhysicalMaterial({color: '#050807', roughness: .05, metalness: .25, clearcoat: 1, clearcoatRoughness: .02}),
+};
+const fox = new THREE.Group(); scene.add(fox);
+const part = (geo, mat, z) => { const h = new THREE.Group(), m = new THREE.Mesh(geo, mat); m.scale.setScalar(SC); m.position.z = z * SC; h.add(m); fox.add(h); return h; };
+const outline = part(ext(pOut, 26, 4), MAT.dark, -16), head = part(ext(pHead, 44, 11), MAT.green, 0), muzzle = part(ext(pMuz, 44, 11), MAT.cream, 5);
+const eyeGeo = new THREE.SphereGeometry(19.4, 48, 28); eyeGeo.scale(1, 1, .62);
+const eyes = EYES.map(x => { const h = new THREE.Group(); const em = new THREE.Mesh(eyeGeo, MAT.eye); em.scale.setScalar(SC); h.add(em); h.position.set((x - CX) * SC, (CY - EYE_Y) * SC, 29 * SC); fox.add(h); return h; });
+const BLAST = [[outline, [-.5, -.4, -3], [.2, 1.1, -.35]], [head, [1.1, 1.3, .6], [-.45, -.75, .45]], [muzzle, [-1.3, -1.5, .9], [1.1, .5, -.5]],
+  ...eyes.map((e, i) => [e, [(i - 1) * 2.1, 1 + .4 * i, 1.4 + .3 * i], [i * 2 - 1, 2.5, i]])];
+BLAST.forEach(([o]) => o.userData.base = o.position.clone());
+
+const radial = (a, b) => { const c = document.createElement('canvas'); c.width = c.height = 128; const g = c.getContext('2d'), gr = g.createRadialGradient(64, 64, 0, 64, 64, 64); gr.addColorStop(0, a); gr.addColorStop(.35, b); gr.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = gr; g.fillRect(0, 0, 128, 128); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t; };
+const dotTex = radial('rgba(255,255,255,1)', 'rgba(120,255,190,.5)');
+const glow = new THREE.Sprite(new THREE.SpriteMaterial({map: radial('rgba(0,230,118,.55)', 'rgba(0,230,118,.16)'), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending}));
+glow.scale.setScalar(5); glow.position.z = -1.2; fox.add(glow);
+
+const R = 2.2, orbit = new THREE.Group(); orbit.rotation.set(.62, 0, -9 * Math.PI / 180, 'ZYX'); scene.add(orbit);
+const ringMat = new THREE.MeshBasicMaterial({color: '#00E676', transparent: true, opacity: 0, depthWrite: false});
+const ringGlowMat = new THREE.MeshBasicMaterial({color: '#00E676', transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending});
+const tg = (r, w) => { const g = new THREE.TorusGeometry(r, w, 10, 320); g.rotateX(Math.PI / 2); return g; };
+orbit.add(new THREE.Mesh(tg(R, .014), ringMat), new THREE.Mesh(tg(R, .055), ringGlowMat));
+const ball = new THREE.Group(); orbit.add(ball);
+const ballMat = new THREE.MeshBasicMaterial({color: '#eafff3', transparent: true, opacity: 0});
+ball.add(new THREE.Mesh(new THREE.SphereGeometry(.07, 24, 16), ballMat));
+const halo = new THREE.Sprite(new THREE.SpriteMaterial({map: dotTex, color: '#00E676', transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending})); halo.scale.setScalar(.7); ball.add(halo);
+const ballLight = new THREE.PointLight('#5dffb0', 0, 4.5, 1.6); ball.add(ballLight);
+const TRAIL = 22, trail = Array.from({length: TRAIL}, (_, i) => { const s = new THREE.Sprite(new THREE.SpriteMaterial({map: dotTex, color: '#00E676', transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending})); s.scale.setScalar(.26 * (1 - i / TRAIL) + .04); orbit.add(s); return s; });
+
+let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+const N = 420, pos = new Float32Array(N * 3);
+for (let i = 0; i < N; i++) { const r = 2.6 + rnd() * 5, a = rnd() * 6.283, h = (rnd() - .5) * 6; pos.set([Math.cos(a) * r, h, Math.sin(a) * r - 2], i * 3); }
+const dg = new THREE.BufferGeometry(); dg.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+const dust = new THREE.Points(dg, new THREE.PointsMaterial({map: dotTex, color: '#3dffa0', size: .06, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending}));
+scene.add(dust);
+
+/* ---------------- state animated by the timeline ---------------- */
+const F = {x: 0, y: 0, z: 0, s: 1, rx: 0, ry: 0, rz: 0, ex: 1, op: 0, type: -9, hop: 0, ring: 0, dust: 0, ball: 0, cam: 10};
+const S = {min: 419, sent: 0, bub: 0, vn: 1, rail: 0, orbs: 0, flash: 0};
+const tl = gsap.timeline({paused: true, defaults: {ease: 'power3.out'}});
+const show = (sel, t, d = .6) => tl.fromTo(sel, {autoAlpha: 0}, {autoAlpha: 1, duration: d, ease: 'power2.out'}, t);
+const hide = (sel, t, d = .5) => tl.to(sel, {autoAlpha: 0, duration: d, ease: 'power2.in'}, t);
+const words = (sel, t, st = .09) => { tl.fromTo(`${sel} .w>span`, {yPercent: 110}, {yPercent: 0, duration: 1.1, ease: 'expo.out', stagger: st}, t); };
+const type = (el, text, t, d) => { const o = {n: 0}; tl.to(o, {n: text.length, duration: d, ease: 'none', onUpdate: () => { el.innerHTML = text.slice(0, Math.round(o.n)) + '<span class="caret"></span>'; }}, t); };
+const rise = (sel, t, y = 40) => tl.fromTo(sel, {y, autoAlpha: 0}, {y: 0, autoAlpha: 1, duration: .9}, t);
+
+/* S0 · boot dot */
+tl.fromTo('#dot', {scale: 0, autoAlpha: 0}, {scale: 1, autoAlpha: 1, duration: .5, ease: 'back.out(3)'}, .25); cue(.25, 'boot');
+tl.to('#dot', {opacity: .2, duration: .15, yoyo: true, repeat: 3, ease: 'none'}, .6);
+tl.to('#dot', {scale: 9, autoAlpha: 0, duration: .5, ease: 'power2.in'}, D0 - .3);
+tl.to('#bg', {'--ga': .16, duration: 1.4}, D0 - .2);
+
+/* S1 · Meet TextFox (bars 0–3) */
+show('#s1', D0, .01);
+tl.fromTo(F, {ex: 1, op: 0, ry: -2.6, s: .7}, {ex: 0, op: 1, ry: 0, s: 1, duration: 2.3, ease: 'expo.out'}, D0); cue(D0, 'servo', .9); cue(D0 + 2.05, 'clunk');
+tl.to(F, {type: 0, duration: 1.4, ease: 'none'}, beat(4)); [0, .12, .24].forEach(o => cue(beat(4) + o, 'blip', .7));
+tl.fromTo(F, {x: 0, s: 1}, {x: 2.05, s: .88, duration: 1.6, ease: 'power3.inOut'}, beat(6));
+type($('#k1'), '> textfox.init()', beat(7), .7); cue(beat(7), 'type', .6);
+words('#h1', bar(2) + .2, .14); cue(bar(2) + .2, 'swoosh', .6);
+rise('#sub1', bar(2) + 1.1);
+tl.fromTo('#hello', {scale: .3, autoAlpha: 0}, {scale: 1, autoAlpha: 1, duration: .7, ease: 'back.out(1.8)'}, bar(3)); cue(bar(3), 'send');
+tl.to(F, {hop: 1, duration: .7, ease: 'none'}, bar(3) - .05);
+cue(bar(3) + .8, 'ding', .7);
+// zoom into the middle eye → next scene
+hide(['#s1 .copy', '#hello'], bar(4) - 1.2, .5);
+tl.to(F, {x: 0, y: -.42, s: 9, rx: 0, ry: 0, duration: 1.2, ease: 'power3.in'}, bar(4) - 1.2); cue(bar(4) - 1.0, 'whoosh');
+tl.to(F, {op: 0, duration: .25, ease: 'none'}, bar(4) - .2);
+hide('#s1', bar(4), .01);
+
+/* S2 · a day on autopilot (bars 4–7) */
+const EV = [
+  {t: bar(5) - .4, m: 480, c: '--amber', k: '08:00 · scheduled', h: 'Good morning, Mom', d: 'Gemini rewrites it every morning.', title: 'Good morning, Mom', icon: 'clock', body: 'Good morning! ☀️ Hope your Thursday is off to a lovely start.'},
+  {t: bar(6) - .4, m: 641, c: '--teal', k: '10:41 · auto-reply', h: 'Out of office', d: 'A text came in. TextFox answered it.', title: 'Out of office', icon: 'reply', inc: '“Free for a quick call?”', body: "Thanks! I'm away and back Monday."},
+  {t: bar(7) - .4, m: 687, c: '--green', k: '11:27 · missed call', h: 'Missed call text-back', d: 'The caller got a text seconds later.', title: 'Missed call', icon: 'missed', body: "Sorry I missed your call. I'll ring you back soon.", ring: true},
+  {t: bar(7) + 1.0, m: 1060, c: '--rose', k: '17:40 · one tap', h: 'Running late', d: 'One tap on the widget. Done.', title: 'Running late', icon: 'tap', body: 'Stuck in traffic, be there in 15!'},
+];
+const ICON = {clock: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>', reply: '<path d="M10 7 5 12l5 5"/><path d="M5 12h9a5 5 0 0 1 5 5v1"/>', missed: '<path d="M3.5 16.5c4.7-4 12.3-4 17 0l-1.8 2.7-3.2-1.3v-2.5a10 10 0 0 0-7 0v2.5l-3.2 1.3z"/><path d="m6 5 5 5 4-4m0 0h-3m3 0v3"/>', tap: '<path d="M9.5 12V5.8a1.6 1.6 0 0 1 3.2 0V11"/><path d="M12.7 10.6a1.6 1.6 0 0 1 3.2 0v1.2a1.6 1.6 0 0 1 3.2 0V15a6 6 0 0 1-6 6h-.6a6 6 0 0 1-5-2.7L4.6 14.6a1.6 1.6 0 0 1 2.6-1.9l2.3 2.6"/>'};
+const feed = $('#feed');
+EV.slice().reverse().forEach(e => { const d = document.createElement('div'); d.className = 'card'; d.style.setProperty('--c', `var(${e.c})`);
+  d.innerHTML = `<span class="ic"><svg viewBox="0 0 24 24">${ICON[e.icon]}</svg></span><div><b>${e.title}<time>${String(e.m / 60 | 0).padStart(2, '0')}:${String(e.m % 60).padStart(2, '0')}</time></b>${e.inc ? `<p class="in">${e.inc}</p>` : ''}<p>${e.body}</p><span class="tick">✓✓ Delivered</span></div>`;
+  e.el = d; feed.appendChild(d); });
+show('#s2', bar(4), .01);
+tl.fromTo('#clock', {autoAlpha: 0, scale: 1.25, filter: 'blur(14px)'}, {autoAlpha: 1, scale: 1, filter: 'blur(0px)', duration: 1.2, ease: 'expo.out'}, bar(4)); cue(bar(4), 'tick', .6);
+tl.to('#bg', {'--gc': '255,179,0', '--ga': .12, duration: 2}, bar(4));
+tl.to('#clock', {left: 430, top: 300, scale: .52, duration: 1.3, ease: 'power3.inOut'}, bar(4) + 1.2);
+tl.fromTo('#phone', {x: 520, rotateY: -25, autoAlpha: 0}, {x: 0, rotateY: 0, autoAlpha: 1, duration: 1.4, ease: 'expo.out'}, bar(4) + 1.4); cue(bar(4) + 1.4, 'whoosh', .5);
+tl.fromTo('#tally', {autoAlpha: 0, y: 30}, {autoAlpha: 1, y: 0, duration: .8}, bar(4) + 2.2);
+let lastT = bar(4) + 1.4;
+EV.forEach((e, i) => {
+  tl.to(S, {min: e.m, duration: Math.min(1.1, e.t - lastT - .1), ease: 'power2.inOut'}, e.t - Math.min(1.1, e.t - lastT - .1)); lastT = e.t;
+  if (e.ring) { tl.fromTo('#ring', {autoAlpha: 0, scale: .6}, {autoAlpha: 1, scale: 1, duration: .3, ease: 'back.out(2)'}, e.t - .9); tl.to('#ring', {'--r1': 1.5, '--o1': .8, duration: .45, repeat: 1, ease: 'power1.out'}, e.t - .9); tl.to('#ring', {autoAlpha: 0, duration: .25}, e.t - .1); cue(e.t - .9, 'ring'); }
+  tl.call(() => {}, [], e.t);
+  tl.fromTo(['#evk', '#evt', '#evd'], {autoAlpha: 0, y: 26}, {autoAlpha: 1, y: 0, duration: .7, stagger: .07, immediateRender: false,
+    onStart: () => { $('#evkt').textContent = e.k; $('#evk').style.color = `var(${e.c})`; $('#evt').textContent = e.h; $('#evd').textContent = e.d; },
+    onReverseComplete: () => {}}, e.t);
+  if (i < EV.length - 1) tl.to(['#evk', '#evt', '#evd'], {autoAlpha: 0, y: -20, duration: .35, ease: 'power2.in'}, EV[i + 1].t - .45);
+  tl.fromTo(e.el, {autoAlpha: 0, scale: .7, height: 0, marginBottom: 0, paddingTop: 0, paddingBottom: 0}, {autoAlpha: 1, scale: 1, height: 'auto', marginBottom: 12, paddingTop: 16, paddingBottom: 16, duration: .8, ease: 'expo.out'}, e.t);
+  tl.fromTo(e.el.querySelector('.tick'), {autoAlpha: 0, x: -10}, {autoAlpha: 1, x: 0, duration: .4}, e.t + .55);
+  tl.to(S, {sent: i + 1, duration: .3, ease: 'none'}, e.t + .2);
+  cue(e.t, 'send'); cue(e.t + .55, 'ding', .6);
+});
+hide('#s2', bar(8) - .35, .35); cue(bar(8) - .4, 'whoosh', .6);
+
+/* S3 · four triggers (bars 8–11) */
+show('#s3', bar(8), .01);
+tl.to('#bg', {'--gc': '0,230,118', '--ga': .1, duration: 1}, bar(8));
+words('#h3', bar(8) + .05, .1);
+$$('.tc').forEach((c, i) => {
+  const t = bar(8) + .9 + i * BAR * .85;
+  tl.fromTo(c, {autoAlpha: 0, y: 140, rotateX: -30, scale: .9}, {autoAlpha: 1, y: 0, rotateX: 0, scale: 1, duration: 1.2, ease: 'expo.out'}, t);
+  tl.fromTo(c.querySelector('.ic'), {scale: 0, rotate: -90}, {scale: 1, rotate: 0, duration: .8, ease: 'back.out(2)'}, t + .25);
+  tl.fromTo(c.querySelector('code'), {autoAlpha: 0, y: 14}, {autoAlpha: 1, y: 0, duration: .6}, t + .55);
+  cue(t, 'zap'); cue(t + .55, 'blip', .5);
+});
+tl.to('.tc', {y: -40, autoAlpha: 0, duration: .5, stagger: .06, ease: 'power2.in'}, bar(12) - .75);
+hide('#s3 .head', bar(12) - .6, .4); hide('#s3', bar(12), .01);
+
+/* S4 · AI (bars 12–15) */
+const VAR = ['Good morning! ☀️ Have a lovely Wednesday.', 'Morning, Mom! ☀️ Wishing you a calm, happy Wednesday.', 'Rise and shine ☀️ Hope your Wednesday is off to a great start!', 'Good morning! ☀️ Sending a little sunshine your way today.'];
+show('#s4', bar(12), .01);
+tl.to('#bg', {'--gc': '255,179,0', '--ga': .13, '--gx': '72%', duration: 1.4}, bar(12));
+words('#h4', bar(12) + .1, .09);
+rise('#sub4', bar(12) + 1.3);
+tl.fromTo('#ai', {autoAlpha: 0, y: 60, scale: .96}, {autoAlpha: 1, y: 0, scale: 1, duration: 1.1, ease: 'expo.out'}, bar(12) + .5);
+[1, 2, 3].forEach((n, i) => { const t = bar(13) + i * BAR; tl.to(S, {bub: n, duration: 1.1, ease: 'none'}, t); cue(t - .45, 'think'); cue(t + 1.1, 'chime', .6); });
+tl.to('#seg i', {x: '100%', duration: .6, ease: 'power3.inOut'}, bar(15) + .3); cue(bar(15) + .3, 'click');
+tl.to('#note', {autoAlpha: 0, duration: .2}, bar(15) + .25);
+tl.call(() => {}, [], bar(15) + .5);
+tl.to('#note', {autoAlpha: 1, duration: .4, onStart: () => { $('#note').textContent = 'Or let it go out on its own, and see exactly what was sent.'; }, onReverseComplete: () => { $('#note').textContent = 'A notification lets you review, edit or discard it before it goes out.'; }}, bar(15) + .5);
+hide('#s4', bar(16) - .4, .4);
+
+/* S5 · reliable & private (bars 16–19) */
+show('#s5', bar(16), .01);
+tl.to('#bg', {'--gc': '0,230,118', '--gx': '50%', '--ga': .1, duration: 1.2}, bar(16));
+tl.set(['#r1', '#r2', '#r3', '#rail'], {autoAlpha: 0}, bar(16));
+rise('#r1', bar(16) + .1, 50);
+tl.to('#rail', {autoAlpha: 1, duration: .4}, bar(16) + .6);
+tl.to('#rail', {'--p': 1, duration: 1.8, ease: 'power1.inOut'}, bar(16) + .7);
+$$('#rail b').forEach((b, i) => { const t = bar(16) + .7 + [.11, .28, .47, .73, .9][i] * 1.8; tl.fromTo(b, {scale: 0, opacity: 0}, {scale: 1, opacity: 1, duration: .35, ease: 'back.out(3)'}, t); cue(t, 'tick', .5); });
+hide(['#r1', '#rail'], bar(17) + .9, .4);
+rise('#r2', bar(17) + 1.3, 50);
+tl.fromTo('#ticks', {scale: .2, autoAlpha: 0}, {scale: 1, autoAlpha: 1, duration: .6, ease: 'back.out(2.5)'}, bar(17) + 1.8); cue(bar(17) + 1.8, 'ding'); cue(bar(17) + 2.0, 'ding', .7);
+hide('#r2', bar(18) + 1.8, .4);
+rise('#r3', bar(18) + 2.2, 40);
+$$('.chip').forEach((c, i) => { tl.fromTo(c, {scale: .7, autoAlpha: 0}, {scale: 1, autoAlpha: 1, duration: .6, ease: 'back.out(2)'}, bar(19) + .2 + i * .6); cue(bar(19) + .2 + i * .6, 'blip', .6); });
+hide('#s5', bar(20) - .35, .35);
+
+/* S6 · finale (bars 20–23) */
+show('#s6', bar(20), .01);
+tl.fromTo('#flash', {opacity: 0}, {opacity: 1, duration: .12, ease: 'none'}, bar(20) - .12);
+tl.to('#flash', {opacity: 0, duration: 1.1, ease: 'power2.out'}, bar(20)); cue(bar(20), 'impact');
+tl.set(F, {ex: 0, op: 1, x: 2.05, y: .2, s: .98, rx: 0, ry: .35, type: -9, hop: 0}, bar(20));
+tl.fromTo(F, {cam: 6.5}, {cam: 10, duration: 2.4, ease: 'expo.out'}, bar(20));
+tl.fromTo(F, {ring: 0, dust: 0, ball: 0}, {ring: 1, dust: 1, ball: 1, duration: 1.4, ease: 'power2.out'}, bar(20) + .2);
+tl.to('#bg', {'--gc': '0,230,118', '--ga': .2, '--gx': '68%', '--gy': '42%', duration: 1}, bar(20));
+words('#h6', bar(20) + .6, .1);
+tl.to(S, {orbs: 1, duration: 1.2}, bar(20) + 1.2);
+tl.to(F, {type: 0, duration: 1.4, ease: 'none'}, bar(21) + .6); [0, .12, .24].forEach(o => cue(bar(21) + .6 + o, 'blip', .6));
+tl.fromTo('#play', {autoAlpha: 0, y: 30, scale: .9}, {autoAlpha: 1, y: 0, scale: 1, duration: .8, ease: 'back.out(1.8)'}, bar(21) + 1.2); cue(bar(21) + 1.2, 'chime', .7);
+tl.fromTo('#lock', {autoAlpha: 0, y: 30}, {autoAlpha: 1, y: 0, duration: .9}, bar(22)); cue(bar(22), 'send', .6);
+tl.to(F, {hop: 1, duration: .7, ease: 'none'}, bar(22) + .1);
+tl.to(['#s6 .copy', '#play', '#orbs', '.hud'], {autoAlpha: 0, duration: .9, ease: 'power2.in'}, END - 2.3);
+tl.to(F, {x: 0, y: 0, s: 1.4, ry: 0, duration: 1.6, ease: 'power3.inOut'}, END - 2.6);
+tl.to('#lock', {left: 960, xPercent: -50, bottom: 140, duration: 1.6, ease: 'power3.inOut'}, END - 2.6);
+tl.to('#film', {opacity: 0, duration: .9, ease: 'power2.in'}, END - .95); cue(END - 1.2, 'powerdown', .8);
+tl.to({}, {duration: .01}, END);
+
+/* HUD */
+const tc = t => { const s = Math.max(0, t); return `00:${String(Math.floor(s)).padStart(2, '0')}:${String(Math.floor((s % 1) * 30)).padStart(2, '0')}`; };
+
+/* ---------------- per-frame derived state ---------------- */
+const ORBS = [['08:00', 'Good morning ☀️', '--amber'], ['09:00', 'Take your vitamins 💊', '--amber'], ['10:41', 'Back Monday 👋', '--teal'], ['11:27', 'Sorry I missed your call', '--green'], ['17:40', 'Running 10 min late!', '--rose']];
+const orbEls = ORBS.map(([t, m, c]) => { const d = document.createElement('div'); d.className = 'orb'; d.style.setProperty('--c', `var(${c})`); d.innerHTML = `<b>${m}</b><small>${t} · <span>✓✓ delivered</span></small>`; $('#orbs').appendChild(d); return d; });
+const v3 = new THREE.Vector3();
+const scramble = (from, to, p, frame) => { const n = Math.max(from.length, to.length), k = Math.floor(p * n), CH = 'abcdefghijklmnopqrstuvwxyz'; let s = ''; for (let i = 0; i < n; i++) { if (i < k) s += to[i] || ''; else if (i < k + 6 && p > 0 && p < 1) s += to[i] === ' ' ? ' ' : CH[(i * 7 + frame * 3) % 26]; else s += from[i] || ''; } return s; };
+const gctx = $('#grain').getContext('2d'), gimg = gctx.createImageData(960, 540);
+
+function apply(t) {
+  const frame = Math.round(t * 30);
+  // clock + phone
+  const m = Math.round(S.min); const hh = String(m / 60 | 0).padStart(2, '0'), mm = String(m % 60).padStart(2, '0');
+  $('#hh').textContent = hh; $('#mm').textContent = mm; $('#pclock').textContent = `${hh}:${mm}`;
+  $('#sent').textContent = Math.round(S.sent);
+  $('#hudR').textContent = tc(t);
+  // AI bubble
+  const bi = Math.floor(S.bub), bp = S.bub - bi;
+  $('#bub').textContent = bp > 0 ? scramble(VAR[bi], VAR[Math.min(3, bi + 1)], bp, frame) : VAR[Math.min(3, bi)];
+  $('#vn').textContent = `variant ${Math.min(4, Math.round(S.bub) + 1)} / 4`;
+  // beat pulse in later scenes
+  const bt = ((t - D0) / (BAR / 4)) % 1, pulse = t > bar(8) ? Math.exp(-bt * 6) : 0;
+  document.getElementById('bg').style.setProperty('--wa', (.05 + pulse * .05).toFixed(3));
+
+  // fox
+  fox.visible = F.op > .001;
+  const idle = Math.sin(t * 1.1) * .06;
+  const hop = F.hop > 0 && F.hop < 1 ? Math.sin(F.hop * Math.PI) * .25 : 0;
+  fox.position.set(F.x, F.y + idle + hop, F.z);
+  fox.rotation.set(F.rx + Math.sin(t * .7) * .05, F.ry + Math.sin(t * .45) * .22 * (1 - F.ex), F.rz + Math.sin(t * .9) * .025);
+  fox.scale.setScalar(F.s);
+  [MAT.green, MAT.cream, MAT.dark, MAT.eye].forEach(mt => { mt.transparent = F.op < .999; mt.opacity = F.op; });
+  glow.material.opacity = F.op * (1 - F.ex) * (.8 + Math.sin(t * 1.6) * .15) * (F.s > 3 ? 0 : 1);
+  BLAST.forEach(([o, p, r]) => { const e = F.ex; o.position.copy(o.userData.base).add(v3.set(p[0] * e, p[1] * e, p[2] * e)); o.rotation.set(r[0] * e * 2, r[1] * e * 2, r[2] * e * 2); });
+  eyes.forEach((h, i) => { const ty = F.type; const k = ty >= 0 && ty < 1 ? Math.max(0, Math.sin(((ty * 1.4) - i * .12) / .7 * Math.PI * 2)) * (1 - ty) : 0; h.position.y += k * .1; h.position.z += k * .05; });
+  // orbit, ball, dust (finale)
+  ringMat.opacity = .6 * F.ring; ringGlowMat.opacity = .14 * F.ring; ballMat.opacity = F.ball; halo.material.opacity = F.ball;
+  ballLight.intensity = 9 * F.ball; dust.material.opacity = .5 * F.dust;
+  orbit.position.set(F.x, F.y, 0); orbit.scale.setScalar(F.s * .86 * (.9 + .1 * F.ring));
+  const oa = t * .9 + Math.sin(t * .9) * .5;                // faster along the front
+  const bpos = a => v3.set(Math.cos(a) * R, 0, Math.sin(a) * R);
+  ball.position.copy(bpos(oa));
+  trail.forEach((s, i) => { s.position.copy(bpos(oa - i * .035)); s.material.opacity = .5 * (1 - i / TRAIL) * F.ball; });
+  dust.rotation.y = t * .03;
+  camera.position.z = F.cam; camera.position.x = Math.sin(t * .2) * .15; camera.lookAt(0, 0, 0);
+  scene.updateMatrixWorld(); camera.updateMatrixWorld();
+  // orbiting texts follow the 3D ring's projection
+  orbEls.forEach((el, i) => {
+    const a = t * .32 + i * 2 * Math.PI / ORBS.length;
+    v3.set(Math.cos(a) * R, 0, Math.sin(a) * R).applyMatrix4(orbit.matrixWorld);
+    const depth = (Math.sin(a) + 1) / 2; v3.project(camera);
+    const x = (v3.x + 1) * 960, y = (1 - v3.y) * 540;
+    el.style.transform = `translate(-50%,-50%) translate(${x.toFixed(1)}px,${y.toFixed(1)}px) scale(${(.75 + .3 * depth).toFixed(3)})`;
+    el.style.opacity = (S.orbs * (.35 + .65 * depth)).toFixed(3); el.style.zIndex = depth > .5 ? 3 : 1;
+  });
+  renderer.render(scene, camera);
+  // film grain, deterministic per frame
+  let s = frame * 9301 + 49297; const d = gimg.data;
+  for (let i = 0; i < d.length; i += 4) { s = (s * 1103515245 + 12345) & 0x7fffffff; const v = (s >> 16) & 255; d[i] = d[i + 1] = d[i + 2] = v; d[i + 3] = 255; }
+  gctx.putImageData(gimg, 0, 0);
+}
+
+window.FILM = {END, CUES: CUES.sort((a, b) => a[0] - b[0]), FPS: 30};
+window.renderAt = t => { tl.seek(Math.min(t, END), false); apply(t); };
+await document.fonts.ready;
+window.renderAt(0);
+window.READY = true;
+</script>
+</body>
+</html>
