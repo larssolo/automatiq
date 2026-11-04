@@ -285,6 +285,7 @@ footer{border-top:1px solid var(--line);padding-block:56px calc(36px + env(safe-
 .foot ul{list-style:none;padding:0;margin:0;display:grid;gap:10px}
 .foot a{text-decoration:none}
 .foot a:hover{color:var(--fg)}
+.legal a{color:var(--mute);text-decoration:underline;text-underline-offset:3px}
 .legal{margin-top:48px;display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;font:400 12.5px/1.5 var(--mono);color:var(--dim)}
 @media (max-width:800px){.foot{grid-template-columns:1fr 1fr}.foot > :first-child{grid-column:1/-1}}
 

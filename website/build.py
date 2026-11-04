@@ -84,7 +84,7 @@ def faq_schema(key, url):
 
 
 ORG = {"@type": "Organization", "@id": SITE + "/#org", "name": "TextFox", "url": SITE + "/",
-       "logo": SITE + "/icon-512.png", "email": CONTACT, "parentOrganization": {"@type": "Organization", "name": PUBLISHER, "url": "https://kodekid.app"}}
+       "logo": SITE + "/icon-512.png", "email": CONTACT, "parentOrganization": {"@type": "Organization", "name": PUBLISHER, "url": "https://www.kodekid.app"}}
 APP = {"@type": "MobileApplication", "@id": SITE + "/#app", "name": "TextFox", "url": SITE + "/",
        "description": "TextFox is a free Android app that sends text messages automatically: scheduled SMS, auto-replies to incoming texts, missed-call text-back and one-tap widget messages, with optional AI-written variations using Google Gemini. Runs on the phone, with no account and no ads.",
        "operatingSystem": "Android 8.0 or later", "applicationCategory": "UtilitiesApplication", "applicationSubCategory": "SMS automation",
@@ -171,9 +171,9 @@ FOOTER = f"""<footer><div class="wrap">
     <div><a class="brand" href="/" aria-label="TextFox home"><svg aria-hidden="true"><use href="#fox"/></svg>textfox</a><p>Scheduled texts, auto-replies and missed-call text-back for Android. Set it up once. It just runs.</p></div>
     <div><h2>Features</h2><ul><li><a href="/scheduled-text-messages">Scheduled texts</a></li><li><a href="/auto-reply-sms">Auto-reply</a></li><li><a href="/missed-call-text-back">Missed-call text-back</a></li><li><a href="/#ai">AI variations</a></li></ul></div>
     <div><h2>TextFox</h2><ul><li><a href="{PLAY_URL}" rel="noopener">Google Play</a></li><li><a href="/#faq">FAQ</a></li><li><a href="/privacy">Privacy policy</a></li></ul></div>
-    <div><h2>Contact</h2><ul><li><a href="mailto:{CONTACT}">{CONTACT}</a></li><li>Made by {PUBLISHER}</li></ul></div>
+    <div><h2>Contact</h2><ul><li><a href="mailto:{CONTACT}">{CONTACT}</a></li><li>Made by <a href="https://www.kodekid.app" rel="noopener">{PUBLISHER}</a></li></ul></div>
   </div>
-  <div class="legal"><span>© {datetime.date.today().year} TextFox · {PUBLISHER}</span><span>No cookies. No tracking.</span></div>
+  <div class="legal"><span>© {datetime.date.today().year} TextFox · <a href="https://www.kodekid.app" rel="noopener">{PUBLISHER}</a></span><span>No cookies. No tracking.</span></div>
 </div></footer>"""
 
 RELATED_PAGES = [("/scheduled-text-messages", "Scheduled texts"), ("/auto-reply-sms", "Auto-reply"), ("/missed-call-text-back", "Missed-call text-back"), ("/#ai", "AI variations")]
