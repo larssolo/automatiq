@@ -1,0 +1,175 @@
+<!--{"out":"index.html","path":"/","title":"TextFox: Automatic Text Messages for Android","description":"TextFox is a free Android app that sends text messages for you: scheduled SMS, auto-replies to incoming texts and missed-call text-back. On-device, no account, no ads.","scripts":["/assets/js/gsap.min.js","/assets/js/ScrollTrigger.min.js","/assets/js/SplitText.min.js","/assets/home.js"],"schema":["app","faq","video"]}-->
+<section class="hero" id="top">
+  <div class="hero-glow" aria-hidden="true"></div>
+  <div class="wrap hero-grid">
+    <div class="hero-copy">
+      <p class="kicker">&gt; textfox.init()<span class="caret" aria-hidden="true"></span></p>
+      <h1 class="h1" id="h1">Your phone texts for you. <span class="g">All day.</span></h1>
+      <p class="lede"><strong>TextFox is an Android app that sends text messages automatically</strong>: on a schedule, as a reply to a text, or when you miss a call. Set it up once and it just runs, right on your phone.</p>
+      <div class="cta-row">{{PLAY}}<a class="btn btn-ghost" href="#day">Watch a day go by ↓</a></div>
+      <nav class="jump" aria-label="Features">
+        <a href="/scheduled-text-messages" style="--c:var(--amber)"><i></i>Scheduled texts</a>
+        <a href="/auto-reply-sms" style="--c:var(--teal)"><i></i>Auto-reply</a>
+        <a href="/missed-call-text-back" style="--c:var(--green)"><i></i>Missed-call text-back</a>
+        <a href="#ai" style="--c:var(--indigo)"><i></i>AI variations</a>
+      </nav>
+      <div class="facts"><span>Runs on your phone</span><span>No account</span><span>No ads</span><span>Android 8.0+</span></div>
+    </div>
+    <div class="fox-stage" id="foxStage" role="img" aria-label="The TextFox fox sending text messages that circle around it: Good morning, Take your vitamins, Back Monday, Sorry I missed your call, Running late and Bedtime">
+      <svg class="rings" viewBox="-300 -300 600 600" aria-hidden="true"><ellipse class="r1" rx="264" ry="150" transform="rotate(-9)"/><ellipse class="r2" rx="198" ry="114" transform="rotate(13)"/></svg>
+      <div class="fox-glow" aria-hidden="true"></div>
+      <div class="fox-wrap" aria-hidden="true"><svg class="fox" viewBox="0 0 354.18 302.05"><path d="M3.03,167.98l108.55,18.34c18.05,15.38,83.78,26.23,102.7,10.13l136.86-28.13c1.06-.91,4.45-1.28,2.38-4.76l-16.81-47.49L327.15,0l-99.48,74.39h-100.38S27.76,0,27.76,0l-8.57,116.06L.88,163.68c-.59.82-1,1.64-.84,2.21.25.92,1.26,1.41,3,2.1Z" fill="#121815"/><path d="M351.14,168.32c-2.58-.26-5.33.02-8.35,1.16l-87.63,24.45-77.62,102.84-77.78-102.9-88.64-24.75c-3.04-.85-5.58-1.5-8.09-1.14-1.73-.69-2.74-1.18-3-2.1-.16-.57.25-1.38.84-2.21l18.32-47.61L27.76,0l99.53,74.39h100.38S327.15,0,327.15,0l9.56,116.08,16.81,47.49c2.07,3.48-1.32,3.86-2.38,4.76Z" fill="currentColor"/><path d="M351.14,168.32l-144.48,122.95c-18.92,16.1-43.45,13.15-61.5-2.22L3.03,167.98c2.51-.36,5.05.29,8.09,1.14l88.64,24.75,77.78,102.9,77.62-102.84,87.63-24.45c3.03-1.14,5.77-1.43,8.35-1.16Z" fill="#E5F3EA"/><ellipse class="eye" cx="121.96" cy="149.52" rx="19.4" ry="19.4" fill="#121815"/><ellipse class="eye" cx="177.51" cy="149.52" rx="19.4" ry="19.4" fill="#121815"/><ellipse class="eye" cx="233.04" cy="149.52" rx="19.4" ry="19.4" fill="#121815"/></svg></div>
+      <div class="bubbles" id="bubbles" aria-hidden="true"></div>
+    </div>
+  </div>
+  <div class="scroll-cue" aria-hidden="true">scroll<i></i></div>
+</section>
+
+<section class="day" id="day" aria-labelledby="evt">
+  <div class="sky" aria-hidden="true"><i class="g1"></i><i class="g2"></i></div>
+  <div class="day-inner wrap">
+    <div class="day-grid">
+      <div>
+        <div class="clock" aria-hidden="true"><span id="hh">23</span><span class="colon">:</span><span id="mm">00</span></div>
+        <div class="ev">
+          <p class="ev-k"><i></i><span id="evk">23:00 · end of day</span></p>
+          <h2 class="ev-t" id="evt">Five texts sent. You typed none.</h2>
+          <p class="ev-d" id="evd">That was one ordinary day with TextFox.</p>
+        </div>
+        <div class="stats">
+          <div class="stat"><b id="sent">5</b><span>texts sent<br>for you</span></div>
+          <div class="stat zero"><b>0</b><span>texts you<br>typed</span></div>
+        </div>
+      </div>
+      <div class="phone" role="img" aria-label="The TextFox log screen listing seven macros that ran today, from Good morning, Mom at 08:00 to Quiet mode at 22:30">
+        <div class="screen" aria-hidden="true">
+          <div class="sbar"><span id="sclock">23:00</span><svg viewBox="0 0 46 12"><path d="M0 4.5a11 11 0 0 1 14 0L7 12Z"/><path d="M18 12 28 2v10Z"/><rect x="34" y="1" width="7" height="11" rx="1.5"/></svg></div>
+          <div class="app-head"><b>log</b><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9AA79F" stroke-width="1.8"><path d="M4 6h16M7 12h10M10 18h4"/></svg></div>
+          <div class="pills"><span class="on">All<b id="cAll">7</b></span><span>Success<b id="cOk">7</b></span><span>Failed<b>0</b></span></div>
+          <div class="feed">
+            <div class="lw on" data-i="6"><div><div class="lc" style="--c:var(--indigo)"><span class="ic"><svg><use href="#i-moon"/></svg><span class="ok"><svg><use href="#i-check"/></svg></span></span><div><div class="lc-top"><b>Quiet mode</b><time>22:30</time></div><div class="badges"><span class="info">sound mode → do not disturb</span></div></div></div></div></div>
+            <div class="lw on" data-i="5"><div><div class="lc" style="--c:var(--indigo)"><span class="ic"><svg><use href="#i-clock"/></svg><span class="ok"><svg><use href="#i-check"/></svg></span></span><div><div class="lc-top"><b>Kids' bedtime</b><time>20:15</time></div><div class="badges"><span>✓✓ Delivered</span></div><p>Bedtime in 15 minutes 🌙 Teeth, pyjamas, story.</p></div></div></div></div>
+            <div class="lw on" data-i="4"><div><div class="lc" style="--c:var(--rose)"><span class="ic"><svg><use href="#i-tap"/></svg><span class="ok"><svg><use href="#i-check"/></svg></span></span><div><div class="lc-top"><b>Running late</b><time>17:40</time></div><div class="badges"><span>✓✓ Delivered</span><span class="info">one tap</span></div><p>Stuck in traffic, be there in 15!</p></div></div></div></div>
+            <div class="lw on" data-i="3"><div><div class="lc" style="--c:var(--green)"><span class="ic"><svg><use href="#i-missed"/></svg><span class="ok"><svg><use href="#i-check"/></svg></span></span><div><div class="lc-top"><b>Missed call text-back</b><time>11:27</time></div><div class="badges"><span>✓✓ Delivered</span></div><p>Sorry I missed your call. I'll ring you back soon.</p></div></div></div></div>
+            <div class="lw on" data-i="2"><div><div class="lc" style="--c:var(--teal)"><span class="ic"><svg><use href="#i-reply"/></svg><span class="ok"><svg><use href="#i-check"/></svg></span></span><div><div class="lc-top"><b>Out of office</b><time>10:41</time></div><div class="badges"><span>✓✓ Delivered</span></div><p class="in">“Are you free for a quick call?”</p><p>Thanks for your message. I'm away and back Monday.</p></div></div></div></div>
+            <div class="lw on" data-i="1"><div><div class="lc" style="--c:var(--amber)"><span class="ic"><svg><use href="#i-bell"/></svg><span class="ok"><svg><use href="#i-check"/></svg></span></span><div><div class="lc-top"><b>Pills</b><time>09:00</time></div><p>Reminder: Take your vitamins 💊</p></div></div></div></div>
+            <div class="lw on" data-i="0"><div><div class="lc" style="--c:var(--amber)"><span class="ic"><svg><use href="#i-clock"/></svg><span class="ok"><svg><use href="#i-check"/></svg></span></span><div><div class="lc-top"><b>Good morning, Mom</b><time>08:00</time></div><div class="badges"><span>✓✓ Delivered</span><span class="ai">✦ AI variation</span></div><p>Good morning! ☀️ Hope your Thursday is off to a lovely start.</p></div></div></div></div>
+          </div>
+          <div class="empty off" id="empty">nothing yet today<br>zzz</div>
+        </div>
+      </div>
+    </div>
+    <div class="rail" aria-hidden="true"><div class="track" id="track"><div class="base"></div><div class="fill" id="fill"></div></div></div>
+  </div>
+</section>
+
+<section class="section" id="triggers" aria-labelledby="triggers-h">
+  <div class="wrap">
+    <p class="kicker">// what just happened</p>
+    <h2 class="h2" id="triggers-h" data-words>One day. Five texts. <em>You typed none.</em></h2>
+    <p class="body">Every TextFox macro is a trigger plus an action. These are the four ways a macro can fire.</p>
+    <div class="tgrid" id="tgrid" style="margin-top:44px">
+      <a class="tcard" href="/scheduled-text-messages" style="--c:var(--amber)"><span class="ic"><svg><use href="#i-clock"/></svg></span><h3>On a schedule</h3><p>Pick a time, the weekdays, every 1–4 weeks, one date, or 1–2 random days. TextFox sends on the minute, even after a restart.</p><code>08:00 · Mon–Fri → Mom</code><span class="more">Scheduled texts →</span></a>
+      <div class="tcard" style="--c:var(--rose)"><span class="ic"><svg><use href="#i-tap"/></svg></span><h3>With one tap</h3><p>Put any macro on your home screen as a widget. Tap it and a ready-made text goes to everyone on the list.</p><code>widget → "Running late"</code></div>
+      <a class="tcard" href="/auto-reply-sms" style="--c:var(--teal)"><span class="ic"><svg><use href="#i-reply"/></svg></span><h3>As a reply</h3><p>When a text arrives from a chosen sender or with a keyword, TextFox answers it. Quiet hours hold replies until morning.</p><code>text contains "meeting" → reply</code><span class="more">Auto-reply →</span></a>
+      <a class="tcard" href="/missed-call-text-back" style="--c:var(--green)"><span class="ic"><svg><use href="#i-missed"/></svg></span><h3>After a missed call</h3><p>Couldn't pick up? The caller gets a text a few seconds later. Declined calls count too.</p><code>missed call → text back</code><span class="more">Missed-call text-back →</span></a>
+    </div>
+    <p class="also">A macro can also <span>change sound mode</span><span>show a reminder</span><span>call a web address (Home Assistant, IFTTT)</span></p>
+  </div>
+</section>
+
+<section class="section tight" id="setup" aria-labelledby="setup-h">
+  <div class="wrap split">
+    <figure class="video-phone" data-rise>
+      <video data-lazy muted loop playsinline preload="none" poster="/media/textfox-intro-poster.jpg" width="540" height="1200" aria-label="TextFox intro guide: the welcome screen, the four triggers, the permission setup, the optional Gemini key and the ready screen">
+        <source src="/media/textfox-intro.webm" type="video/webm">
+        <source src="/media/textfox-intro.mp4" type="video/mp4">
+      </video>
+      <figcaption>The 37-second intro guide inside TextFox</figcaption>
+    </figure>
+    <div>
+      <p class="kicker">// set up in a minute</p>
+      <h2 class="h2" id="setup-h" data-words>Set it up once. Then forget it.</h2>
+      <ol class="steps">
+        <li><div><b>Create a macro</b><p>Name it, write the message and pick one or more recipients. Insert the date, the weekday or each recipient's name, so every copy feels personal.</p></div></li>
+        <li><div><b>Choose when it fires</b><p>A time and weekdays, a tap on a widget, an incoming text with a keyword, or a missed call.</p></div></li>
+        <li><div><b>Allow it once</b><p>A guided phone setup turns on SMS, notifications, exact alarms and battery access with one tap per step, including on Xiaomi, Redmi and POCO phones.</p></div></li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<section class="section tight" id="ai" aria-labelledby="ai-h">
+  <div class="wrap split rev">
+    <div class="rewrite" data-rise>
+      <div class="rw-k">✦ AI variation <span id="rwn">variant 1 / 4</span></div>
+      <div class="rw-bub" id="rw" aria-live="off">Good morning! ☀️ Have a lovely Wednesday.</div>
+      <div class="seg" role="group" aria-label="When an AI text is sent"><button type="button" aria-pressed="true" id="segA">Ask me first</button><button type="button" aria-pressed="false" id="segB">Send automatically</button></div>
+      <p class="seg-note" id="segNote">A notification lets you review, edit or discard the text before it goes out.</p>
+    </div>
+    <div>
+      <p class="kicker" style="color:var(--amber)">// optional ai</p>
+      <h2 class="h2" id="ai-h" data-words>AI writes it. You approve it.</h2>
+      <p class="body">Turn on <strong>AI variation</strong> and Google Gemini rewrites a scheduled text every time it goes out, so it never reads the same twice. Auto-replies can be written by AI as well, and AI compose suggests a new message from a short description.</p>
+      <ul class="ticks" style="--c:var(--amber)">
+        <li>Uses your own free Google Gemini key. AI stays off until you add one.</li>
+        <li>If Gemini doesn't answer, your original text is sent unchanged.</li>
+        <li>Report any AI text that's wrong or offensive, right from the log.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="section tight" id="reliable" aria-labelledby="rel-h">
+  <div class="wrap">
+    <p class="kicker">// log</p>
+    <h2 class="h2" id="rel-h" data-words>Every message, accounted for.</h2>
+    <div class="trio">
+      <div style="--c:var(--green)"><span class="label">on time</span><h3 class="h3">Fires on the minute</h3><p>Exact alarms with a backup scheduler. Macros keep running after a restart, an app update or a night in battery saver.</p></div>
+      <div style="--c:var(--teal)"><span class="label">delivery</span><h3 class="h3">Delivered ✓✓</h3><p>When your carrier confirms delivery, the log says so. If the network drops a message, you get a notification with one-tap retry.</p></div>
+      <div style="--c:var(--amber)"><span class="label">quiet hours</span><h3 class="h3">Polite at night</h3><p>Texts that arrive during quiet hours are answered when they end: one reply per person, to their latest message.</p></div>
+    </div>
+    <div class="gallery" role="list" aria-label="Screenshots of the TextFox app">
+      <figure role="listitem"><img src="/media/screen-autopilot.webp" width="540" height="960" loading="lazy" alt="TextFox welcome screen: Your phone, on autopilot. TextFox sends text messages for you on a schedule, as a reply or when you miss a call."><figcaption><b>Welcome</b>On-device, no account, no ads.</figcaption></figure>
+      <figure role="listitem"><img src="/media/screen-macros.webp" width="540" height="960" loading="lazy" alt="TextFox macro list with Family and Work folders, scheduled macros showing their next run time, and auto-reply and missed-call macros switched on"><figcaption><b>Macros and folders</b>Each card shows when it runs next.</figcaption></figure>
+      <figure role="listitem"><img src="/media/screen-ai-variation.webp" width="540" height="960" loading="lazy" alt="TextFox message editor with a live preview and the AI variation switch set to Ask me first"><figcaption><b>AI variation</b>Ask first, or send automatically.</figcaption></figure>
+      <figure role="listitem"><img src="/media/screen-phone-setup.webp" width="540" height="960" loading="lazy" alt="TextFox phone setup checklist: Send and receive SMS, Notifications, Exact alarms and Never sleep, with a Fix everything for me button"><figcaption><b>Phone setup</b>One tap fixes every setting.</figcaption></figure>
+      <figure role="listitem"><img src="/media/screen-log.webp" width="540" height="960" loading="lazy" alt="TextFox log showing delivered missed-call, out-of-office and good-morning messages with timestamps"><figcaption><b>Log</b>Delivery status for every send.</figcaption></figure>
+    </div>
+  </div>
+</section>
+
+<section class="section tight" id="privacy" aria-labelledby="priv-h">
+  <div class="wrap">
+    <div class="privacy-card" data-rise>
+      <p class="kicker">// privacy</p>
+      <h2 class="h2" id="priv-h">Your phone. Your data.</h2>
+      <p class="body">TextFox runs on your phone. There is no account, no ads and no analytics, and your macros, contacts and messages never reach us. Text only leaves your phone in three cases you set up yourself:</p>
+      <div class="leaves">
+        <div><b>AI features</b>The message is sent straight to Google Gemini with your own key.</div>
+        <div><b>Reporting an AI text</b>Only the reported text and your reason, with no phone numbers or IDs.</div>
+        <div><b>Web addresses</b>A macro that calls a URL you entered, such as your smart home.</div>
+      </div>
+      <a class="link-arrow" href="/privacy">Read the privacy policy →</a>
+    </div>
+  </div>
+</section>
+
+<section class="section tight" id="faq" aria-labelledby="faq-h">
+  <div class="wrap narrow">
+    <p class="kicker">// faq</p>
+    <h2 class="h2" id="faq-h">Questions, answered.</h2>
+    {{FAQ}}
+  </div>
+</section>
+
+<section class="final" id="get">
+  <div class="wrap">
+    <div class="panel" id="panel">
+      <h2>Set it up once.<br>It just runs.</h2>
+      <p>Free on Google Play for Android 8.0 and newer. Everything runs on your phone: no account, no ads, no tracking. AI is optional and uses your own free Google Gemini key.</p>
+      <div class="cta-row">{{PLAY}}<a class="btn btn-ghost" href="#day">Replay the day ↺</a></div>
+      <p class="cta-note">{{CTA_NOTE}}</p>
+    </div>
+  </div>
+</section>

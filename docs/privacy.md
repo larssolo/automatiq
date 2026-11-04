@@ -86,6 +86,10 @@ If you are in the EU/EEA, you have rights under the GDPR, including access, rect
 
 We will update this page if the app's data handling changes, and change the date at the top.
 
-## 8. Contact
+## 8. This website
+
+textfox.app sets no cookies and uses no analytics, ads or third-party scripts. Fonts and scripts are served from our own domain. The site is hosted by Vercel, which processes standard server logs (such as IP address and browser type) to deliver and protect the site.
+
+## 9. Contact
 
 Lars Sohl, founder of kodekid.app — hello@larssohl.dk

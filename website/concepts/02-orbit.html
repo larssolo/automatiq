@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>TextFox · Concept 02 · Orbit</title>
+<meta name="description" content="TextFox design concept 02: your phone is the glowing core, and every trigger orbits it.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Funnel+Display:wght@300..800&family=Funnel+Sans:wght@300..700&family=JetBrains+Mono:wght@400..600&display=swap">
+<style>
+/* Layout: the app's onboarding orbit, blown up to stage size and pinned. Triggers rotate into the 12 o'clock slot; copy docks left. */
+:root{
+  --ink:#060908; --ink-2:#0C1210; --line:rgba(214,255,232,.1);
+  --fg:#F1F5F2; --mute:#97A49C; --dim:#56635B;
+  --green:#00E676; --amber:#FFB300; --teal:#42D1CA; --rose:#FF5C8A; --indigo:#7B88FF;
+  --display:"Funnel Display", ui-sans-serif, system-ui, sans-serif;
+  --sans:"Funnel Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono:"JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --gut:max(16px, env(safe-area-inset-left, 0px)); --gut-r:max(16px, env(safe-area-inset-right, 0px));
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{background:var(--ink);-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--ink);color:var(--fg);font:400 17px/1.55 var(--sans);-webkit-font-smoothing:antialiased;overflow-x:clip}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--green);outline-offset:3px;border-radius:8px}
+.wrap{max-width:1240px;margin-inline:auto;padding-left:var(--gut);padding-right:var(--gut-r)}
+.grain{position:fixed;inset:0;pointer-events:none;z-index:90;opacity:.07;mix-blend-mode:overlay;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+.kick{font:500 13px/1 var(--mono);color:var(--green);letter-spacing:.06em;margin:0 0 18px}
+
+.nav{position:fixed;inset:0 0 auto;z-index:50;padding-top:env(safe-area-inset-top,0px)}
+.nav .wrap{display:flex;align-items:center;justify-content:space-between;height:68px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;font:600 20px/1 var(--display);letter-spacing:-.02em}
+.brand svg{width:28px;height:28px;color:var(--green)}
+.btn{display:inline-flex;align-items:center;gap:10px;border-radius:999px;font:600 15px/1 var(--sans);text-decoration:none;padding:15px 24px;transition:transform .25s,box-shadow .25s}
+.btn-g{background:var(--green);color:#03140A;box-shadow:0 10px 40px -10px rgba(0,230,118,.7)}
+.btn-ghost{box-shadow:inset 0 0 0 1px rgba(255,255,255,.16);color:var(--fg)}
+.btn-sm{padding:11px 18px;font-size:14px}
+
+/* stage */
+.stage{position:relative;height:100svh;min-height:620px;overflow:hidden;
+  --c:var(--green);
+  background:radial-gradient(60% 60% at 50% 55%,color-mix(in srgb,var(--c) 13%,transparent),transparent 70%),radial-gradient(80% 60% at 0% 100%,rgba(255,179,0,.08),transparent 60%),var(--ink)}
+#dust{position:absolute;inset:0;width:100%;height:100%;opacity:.8}
+.orbit{position:absolute;left:50%;top:52%;--S:min(88vmin,780px);--R:calc(var(--S) * .3333);--rot:0deg;width:var(--S);height:var(--S);margin:calc(var(--S) / -2) 0 0 calc(var(--S) / -2);will-change:transform}
+.rings{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.rings circle{fill:none;stroke:color-mix(in srgb,var(--c) 40%,transparent);stroke-width:1}
+.rings .r1{stroke-opacity:.35}.rings .r2{stroke-opacity:.8}.rings .r3{stroke-opacity:.55}
+.rings .sweep{stroke:var(--c);stroke-width:2;stroke-dasharray:60 1200;stroke-linecap:round;transform-origin:300px 300px;animation:sweep 9s linear infinite;filter:drop-shadow(0 0 6px var(--c))}
+@keyframes sweep{to{transform:rotate(360deg)}}
+.core{position:absolute;left:50%;top:50%;width:22%;height:22%;margin:-11% 0 0 -11%;border-radius:50%;
+  background:radial-gradient(circle at 50% 50%,#fff 0 6%,color-mix(in srgb,var(--c) 60%,#fff) 14%,var(--c) 42%,color-mix(in srgb,var(--c) 40%,#000) 100%);
+  box-shadow:0 0 60px 6px color-mix(in srgb,var(--c) 55%,transparent),0 0 180px 40px color-mix(in srgb,var(--c) 22%,transparent);animation:breathe 3.2s ease-in-out infinite}
+@keyframes breathe{50%{transform:scale(1.06)}}
+.spin{position:absolute;inset:0;transform:rotate(var(--rot))}
+.node{position:absolute;left:50%;top:50%;width:0;height:0;transform:rotate(var(--a)) translateY(calc(-1 * var(--R))) rotate(calc(-1 * var(--a)))}
+.nic{position:absolute;width:62px;height:62px;margin:-31px 0 0 -31px;transform:rotate(calc(-1 * var(--rot)))}
+.nsc{width:100%;height:100%;border-radius:50%;display:grid;place-items:center;background:color-mix(in srgb,var(--nc) 22%,#0B110E);color:var(--nc);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--nc) 50%,transparent);transition:box-shadow .3s}
+.nsc svg{width:26px;height:26px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.node.on .nsc{box-shadow:inset 0 0 0 2px var(--nc),0 0 40px color-mix(in srgb,var(--nc) 70%,transparent)}
+.amb{position:absolute;inset:0}
+.chip{position:absolute;white-space:nowrap;font:500 14px/1 var(--sans);color:#0B110E;background:#fff;border-radius:14px;padding:10px 14px;box-shadow:0 10px 30px rgba(0,0,0,.35);display:flex;align-items:center;gap:8px}
+.chip i{width:8px;height:8px;border-radius:50%;background:var(--green)}
+.chip.dots{padding:10px 12px;letter-spacing:2px;font-weight:800;color:var(--green)}
+.flyer{position:absolute;left:50%;top:50%;opacity:0;white-space:nowrap}
+.flyer .b{font:500 15px/1.3 var(--sans);background:var(--nc);color:#04140B;padding:12px 16px;border-radius:20px 20px 6px 20px;box-shadow:0 14px 40px -10px color-mix(in srgb,var(--nc) 70%,transparent);max-width:280px;white-space:normal}
+.flyer .to{display:flex;align-items:center;gap:8px;margin-top:8px;justify-content:flex-end;font:500 11px/1 var(--mono);color:var(--mute)}
+.flyer .to b{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:#1C2420;color:var(--fg);font:600 11px/1 var(--sans)}
+.flyer .to span{color:var(--green)}
+
+.hero-copy{position:absolute;inset:auto 0 9svh;text-align:center;z-index:5;pointer-events:none}
+.hero-copy .wrap{pointer-events:auto}
+.h1{font:800 clamp(52px,9.4vw,150px)/.9 var(--display);letter-spacing:-.05em;margin:0;text-wrap:balance;text-shadow:0 10px 60px rgba(0,0,0,.6)}
+.h1 .g{color:var(--green)}
+.lede{max-width:46ch;margin:22px auto 30px;color:#C9D3CD;font-size:clamp(16px,1.4vw,19px)}
+.ctas{display:flex;flex-wrap:wrap;gap:12px;justify-content:center}
+
+.caps{position:absolute;left:0;right:0;top:50%;translate:0 -50%;z-index:4;pointer-events:none}
+.caps .wrap{position:relative;height:min(380px,50svh)}
+.cap{position:absolute;left:var(--gut);top:0;width:min(30rem,42vw);opacity:0}
+.cap .kick{color:var(--nc)}
+.cap h2{font:700 clamp(36px,4.6vw,68px)/.95 var(--display);letter-spacing:-.045em;margin:0 0 18px}
+.cap p{color:var(--mute);margin:0 0 20px;max-width:38ch}
+.cap .ex{display:inline-flex;gap:10px;align-items:center;font:500 13px/1 var(--mono);color:var(--fg);background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:999px;padding:10px 14px}
+.cap .ex i{width:8px;height:8px;border-radius:50%;background:var(--nc)}
+.steps{position:absolute;right:var(--gut-r);bottom:28px;z-index:6;display:flex;gap:8px}
+.steps i{width:26px;height:4px;border-radius:4px;background:rgba(255,255,255,.12);overflow:hidden;position:relative}
+.steps i b{position:absolute;inset:0;background:var(--green);transform:scaleX(0);transform-origin:left}
+
+@media (max-width:860px){
+  .orbit{--S:min(96vw,62svh);top:36%}
+  .nic{width:48px;height:48px;margin:-24px 0 0 -24px}.nsc svg{width:21px;height:21px}
+  .chip{font-size:12px;padding:8px 11px}
+  .hero-copy{bottom:7svh}
+  .caps{top:auto;bottom:4svh;translate:none}
+  .caps .wrap{height:auto;min-height:250px}
+  .cap{width:auto;right:var(--gut-r);top:auto;bottom:0}
+  .cap h2{font-size:34px;margin-bottom:10px}
+  .cap p{font-size:15px;margin-bottom:12px}
+  .flyer .b{font-size:13px;max-width:200px;padding:10px 13px}
+  .steps{bottom:auto;top:calc(76px + env(safe-area-inset-top,0px))}
+}
+
+/* macros */
+.sec{padding-block:clamp(100px,14vw,180px);position:relative}
+.split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:64px;align-items:center}
+.h2{font:800 clamp(44px,7vw,104px)/.92 var(--display);letter-spacing:-.05em;margin:0 0 24px;text-wrap:balance}
+.h2 .g{color:var(--green)}
+.body{color:var(--mute);max-width:44ch;margin:0 0 28px}
+.ticks{list-style:none;padding:0;margin:0;display:grid;gap:12px}
+.ticks li{display:flex;gap:12px;align-items:baseline}
+.ticks li::before{content:"";flex:none;width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 10px var(--green);translate:0 -2px}
+.phone{width:min(100%,370px);margin-inline:auto;border-radius:48px;padding:10px;background:linear-gradient(150deg,#2B342F,#0B100D 45%,#19211C);box-shadow:0 0 0 1px rgba(255,255,255,.07),0 60px 120px -40px rgba(0,0,0,.9),0 0 120px -50px rgba(0,230,118,.5)}
+.scr{border-radius:39px;overflow:hidden;background:linear-gradient(180deg,#1C3A2B,#11241B 30%,#0E1914);padding:16px 12px 18px}
+.sbar{display:flex;justify-content:space-between;font:500 12px/1 var(--sans);padding:0 12px 14px}
+.ahead{display:flex;justify-content:space-between;align-items:center;padding:4px 8px 14px}
+.ahead b{font:500 22px/1 var(--mono);display:flex;gap:8px;align-items:center}
+.ahead b::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--green)}
+.ahead span{font:500 11px/1 var(--mono);color:var(--mute)}
+.folder{display:flex;align-items:center;gap:12px;padding:14px;border-radius:18px;background:color-mix(in srgb,var(--fc) 30%,#1A1E1B);margin:10px 0 8px;border-left:3px solid var(--fc)}
+.folder .fi{width:22px;height:17px;border-radius:3px 6px 4px 4px;background:var(--fc)}
+.folder b{font-weight:500;font-size:15px;display:block}
+.folder small{font-size:12px;color:var(--mute)}
+.mc{display:grid;grid-template-columns:40px 1fr auto;gap:12px;align-items:center;padding:12px;margin:0 0 8px 12px;border-radius:18px;background:color-mix(in srgb,var(--mc) 16%,#151A17)}
+.mc .i{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:color-mix(in srgb,var(--mc) 25%,transparent);color:var(--mc)}
+.mc .i svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.mc b{font-weight:500;font-size:14px;display:block}
+.mc small{font-size:11.5px;color:var(--mute);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mc em{font:500 10.5px/1 var(--mono);color:var(--green);font-style:normal;display:block;margin-top:5px}
+.tg{width:42px;height:26px;border-radius:99px;background:#39433D;position:relative;transition:background .3s}
+.tg::after{content:"";position:absolute;left:3px;top:3px;width:20px;height:20px;border-radius:50%;background:#cfd6d2;transition:transform .3s,background .3s}
+.tg.on{background:var(--green)}.tg.on::after{transform:translateX(16px);background:#fff}
+
+/* ai */
+.ai{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:64px;align-items:center}
+.rewrite{background:var(--ink-2);border:1px solid var(--line);border-radius:28px;padding:28px}
+.rw-k{display:flex;justify-content:space-between;font:500 12px/1 var(--mono);color:var(--amber);letter-spacing:.12em;text-transform:uppercase;margin-bottom:18px}
+.rw-k span{color:var(--dim);letter-spacing:0;text-transform:none}
+.rw-bub{font:500 clamp(18px,1.8vw,24px)/1.35 var(--sans);background:#5A4220;color:#FFF3DC;border-radius:24px 24px 24px 8px;padding:20px 22px;min-height:5.2em}
+.seg{display:grid;grid-template-columns:1fr 1fr;margin-top:20px;border-radius:999px;border:1px solid var(--line);padding:4px}
+.seg button{all:unset;cursor:pointer;text-align:center;padding:12px;border-radius:999px;font:500 14px/1 var(--sans);color:var(--mute);transition:background .25s,color .25s}
+.seg button[aria-pressed="true"]{background:#5A4220;color:#FFE2A8;box-shadow:inset 0 0 0 1px var(--amber)}
+.seg-note{margin:14px 4px 0;color:var(--mute);font-size:14px;min-height:3em}
+
+/* cta */
+.cta{position:relative;text-align:center;padding-block:clamp(120px,16vw,220px);overflow:hidden}
+.cta .mini{position:absolute;left:50%;top:50%;width:min(110vw,900px);aspect-ratio:1;translate:-50% -50%;pointer-events:none}
+.cta .mini i{position:absolute;inset:0;border-radius:50%;border:1px solid rgba(0,230,118,.16)}
+.cta .mini i:nth-child(2){inset:16%;border-color:rgba(0,230,118,.24)}
+.cta .mini i:nth-child(3){inset:32%;border-color:rgba(0,230,118,.34);background:radial-gradient(closest-side,rgba(0,230,118,.12),transparent)}
+.cta h2{position:relative;font:800 clamp(48px,8vw,128px)/.9 var(--display);letter-spacing:-.05em;margin:0 0 22px}
+.cta p{position:relative;color:var(--mute);margin:0 auto 34px;max-width:44ch}
+.cta .btn{position:relative}
+footer{border-top:1px solid var(--line);padding-block:26px calc(26px + env(safe-area-inset-bottom,0px));font:400 13px/1.5 var(--mono);color:var(--dim)}
+footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px}
+@media (max-width:900px){.split,.ai{grid-template-columns:1fr;gap:48px}}
+.cchip{position:fixed;left:max(14px,env(safe-area-inset-left,0px));bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:95;background:#F4F6F4;color:#0A0D0B;font:600 12px/1 var(--sans);padding:10px 14px;border-radius:999px;text-decoration:none;box-shadow:0 8px 30px rgba(0,0,0,.4)}
+@media (prefers-reduced-motion:reduce){.core,.rings .sweep{animation:none}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="fox" viewBox="0 0 64 64"><path d="M5 3 23 16.5h18L59 3l1.5 21L64 33 37.2 55.6a8 8 0 0 1-10.4 0L0 33l3.5-9Z" fill="currentColor"/><path d="M0 33 18 38l14 18.6L46 38l18-5-26.8 22.6a8 8 0 0 1-10.4 0Z" fill="#EAF7EF"/><circle cx="22" cy="30" r="3.5" fill="#060908"/><circle cx="32" cy="30" r="3.5" fill="#060908"/><circle cx="42" cy="30" r="3.5" fill="#060908"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></symbol>
+  <symbol id="i-reply" viewBox="0 0 24 24"><path d="M10 7 5 12l5 5"/><path d="M5 12h9a5 5 0 0 1 5 5v1"/></symbol>
+  <symbol id="i-missed" viewBox="0 0 24 24"><path d="M3.5 16.5c4.7-4 12.3-4 17 0l-1.8 2.7-3.2-1.3v-2.5a10 10 0 0 0-7 0v2.5l-3.2 1.3z"/><path d="m6 5 5 5 4-4m0 0h-3m3 0v3"/></symbol>
+  <symbol id="i-tap" viewBox="0 0 24 24"><path d="M9.5 12V5.8a1.6 1.6 0 0 1 3.2 0V11"/><path d="M12.7 10.6a1.6 1.6 0 0 1 3.2 0v1.2a1.6 1.6 0 0 1 3.2 0V15a6 6 0 0 1-6 6h-.6a6 6 0 0 1-5-2.7L4.6 14.6a1.6 1.6 0 0 1 2.6-1.9l2.3 2.6"/></symbol>
+</svg>
+<div class="grain" aria-hidden="true"></div>
+<header class="nav"><div class="wrap">
+  <a class="brand" href="#top" aria-label="TextFox home"><svg aria-hidden="true"><use href="#fox"/></svg>TextFox</a>
+  <a class="btn btn-g btn-sm magnetic" href="#get">Get the app</a>
+</div></header>
+
+<main>
+<section class="stage" id="top" aria-label="TextFox overview">
+  <canvas id="dust" aria-hidden="true"></canvas>
+  <div class="orbit" id="orbit" aria-hidden="true">
+    <svg class="rings" viewBox="0 0 600 600"><circle class="r1" cx="300" cy="300" r="296"/><circle class="r2" cx="300" cy="300" r="200"/><circle class="r3" cx="300" cy="300" r="112"/><circle class="sweep" cx="300" cy="300" r="200"/></svg>
+    <div class="core"></div>
+    <div class="spin">
+      <div class="node" style="--a:0deg;--nc:var(--amber)"><span class="nic"><span class="nsc"><svg><use href="#i-clock"/></svg></span></span></div>
+      <div class="node" style="--a:90deg;--nc:var(--rose)"><span class="nic"><span class="nsc"><svg><use href="#i-tap"/></svg></span></span></div>
+      <div class="node" style="--a:180deg;--nc:var(--teal)"><span class="nic"><span class="nsc"><svg><use href="#i-reply"/></svg></span></span></div>
+      <div class="node" style="--a:270deg;--nc:var(--green)"><span class="nic"><span class="nsc"><svg><use href="#i-missed"/></svg></span></span></div>
+    </div>
+    <div class="amb">
+      <span class="chip float" data-depth="3" style="left:0;top:16%"><i></i>Good morning ☀️</span>
+      <span class="chip float" data-depth="5" style="right:2%;top:7%"><i></i>Running 5 min late!</span>
+      <span class="chip dots float" data-depth="2" style="left:14%;top:33%">•••</span>
+      <span class="chip float" data-depth="4" style="right:-2%;top:29%"><i></i>Sorry I missed your call</span>
+    </div>
+    <div class="flyer" style="--nc:var(--amber)" data-x=".30" data-y="-.08"><div class="b">Good morning ☀️ Have a lovely Wednesday.</div><div class="to"><b>M</b>Mom <span>✓✓ delivered</span></div></div>
+    <div class="flyer" style="--nc:var(--rose)" data-x=".30" data-y="-.08"><div class="b">Running 10 min late, sorry!</div><div class="to"><b>A</b>Anna, Jonas <span>✓✓ delivered</span></div></div>
+    <div class="flyer" style="--nc:var(--teal)" data-x=".30" data-y="-.08"><div class="b">In a meeting. Back at 14:00.</div><div class="to"><b>S</b>Sara <span>✓✓ replied</span></div></div>
+    <div class="flyer" style="--nc:var(--green)" data-x=".30" data-y="-.08"><div class="b">Sorry I missed your call. I'll ring you back soon.</div><div class="to"><b>J</b>Jonas <span>✓✓ 4 sec later</span></div></div>
+  </div>
+
+  <div class="hero-copy"><div class="wrap">
+    <h1 class="h1" id="h1">Your phone, <span class="g">on autopilot.</span></h1>
+    <p class="lede">TextFox is an Android app that sends text messages for you: on a schedule, as a reply, or when you miss a call.</p>
+    <div class="ctas"><a class="btn btn-g magnetic" href="#get">Get it on Google Play</a><a class="btn btn-ghost" href="#macros">See how it works</a></div>
+  </div></div>
+
+  <div class="caps" aria-live="off"><div class="wrap">
+    <div class="cap" style="--nc:var(--amber)"><p class="kick">TRIGGER 1 / 4 · SCHEDULE</p><h2>At the minute you choose.</h2><p>Pick a time, the weekdays and how often. Every other week, one random day, or once on a date.</p><span class="ex"><i></i>08:00 · Mon–Fri → Mom</span></div>
+    <div class="cap" style="--nc:var(--rose)"><p class="kick">TRIGGER 2 / 4 · ONE TAP</p><h2>One tap, everyone knows.</h2><p>Each macro can live as a home-screen widget. Tap it and a ready-made text goes to the whole list.</p><span class="ex"><i></i>widget → Anna, Jonas</span></div>
+    <div class="cap" style="--nc:var(--teal)"><p class="kick">TRIGGER 3 / 4 · AUTO-REPLY</p><h2>Answers while you're busy.</h2><p>Reply to texts from a chosen sender or with a keyword. Quiet hours hold replies until you're back.</p><span class="ex"><i></i>has "meeting" → reply</span></div>
+    <div class="cap" style="--nc:var(--green)"><p class="kick">TRIGGER 4 / 4 · MISSED CALL</p><h2>Missed it? They still hear from you.</h2><p>When a call rings out or you decline it, the caller gets a text a few seconds later.</p><span class="ex"><i></i>missed call → text back</span></div>
+  </div></div>
+  <div class="steps" aria-hidden="true"><i><b></b></i><i><b></b></i><i><b></b></i><i><b></b></i></div>
+</section>
+
+<section class="sec" id="macros"><div class="wrap split">
+  <div>
+    <p class="kick">// macros</p>
+    <h2 class="h2 words">Set it up <span class="g">once.</span></h2>
+    <p class="body">A macro is a trigger, one or more recipients and a message. Group them in folders, flip the master switch, and watch the next run time on every card.</p>
+    <ul class="ticks"><li>Message variables like {weekday} and {recipient}</li><li>Folders with a master switch</li><li>Delivery receipts and a full log</li></ul>
+  </div>
+  <div class="phone skew" id="phone"><div class="scr">
+    <div class="sbar"><span>12:00</span><span>▾ ◢ ▮</span></div>
+    <div class="ahead"><b>textfox</b><span>6 of 6 live</span></div>
+    <div class="folder" style="--fc:#B7720F"><span class="fi"></span><div><b>Family</b><small>2 macros · 2 active</small></div></div>
+    <div class="mc" style="--mc:var(--amber)"><span class="i"><svg><use href="#i-clock"/></svg></span><div><b>Good morning, Mom</b><small>08:00 · 1–2 random of Wed–Fri</small><em>▸ Next Mon 08:00</em></div><span class="tg on"></span></div>
+    <div class="mc" style="--mc:var(--indigo)"><span class="i"><svg><use href="#i-clock"/></svg></span><div><b>Kids' bedtime</b><small>20:15 · Every 2 weeks · Mon · Tue</small><em>▸ Next Mon 20:15</em></div><span class="tg on"></span></div>
+    <div class="folder" style="--fc:#3F4BB8"><span class="fi"></span><div><b>Work</b><small>2 macros · 2 active</small></div></div>
+    <div class="mc" style="--mc:var(--rose)"><span class="i"><svg><use href="#i-tap"/></svg></span><div><b>Running late</b><small>Manual trigger</small></div><span class="tg on"></span></div>
+    <div class="mc" style="--mc:var(--teal)"><span class="i"><svg><use href="#i-reply"/></svg></span><div><b>Out of office</b><small>Auto-reply</small></div><span class="tg on"></span></div>
+    <div class="mc" style="--mc:var(--green);margin-left:0"><span class="i"><svg><use href="#i-missed"/></svg></span><div><b>Missed call text-back</b><small>Missed call</small></div><span class="tg on"></span></div>
+  </div></div>
+</div></section>
+
+<section class="sec" id="ai"><div class="wrap ai">
+  <div>
+    <p class="kick" style="color:var(--amber)">// optional ai</p>
+    <h2 class="h2 words">AI writes it. You approve it.</h2>
+    <p class="body">Turn on AI variation and Google Gemini rewrites your scheduled text every time, so Mom never gets the same message twice. It uses your own free key. If Gemini doesn't answer, your original text goes out.</p>
+  </div>
+  <div class="rewrite">
+    <div class="rw-k">✦ AI variation <span id="rwn">variant 1 / 4</span></div>
+    <div class="rw-bub" id="rw">Good morning! ☀️ Have a lovely Wednesday.</div>
+    <div class="seg" role="group" aria-label="When AI text is sent"><button type="button" aria-pressed="true" id="segA">Ask me first</button><button type="button" aria-pressed="false" id="segB">Send automatically</button></div>
+    <p class="seg-note" id="segNote">A notification lets you review, edit or discard the text before it goes out.</p>
+  </div>
+</div></section>
+
+<section class="cta" id="get">
+  <div class="mini" aria-hidden="true"><i></i><i></i><i></i></div>
+  <div class="wrap">
+    <h2>Put it on<br>autopilot.</h2>
+    <p>Free for Android 8.0 and newer. On-device, no account, no ads.</p>
+    <a class="btn btn-g magnetic" href="#get">Get it on Google Play</a>
+  </div>
+</section>
+</main>
+<footer><div class="wrap"><span>© 2026 TextFox</span><span>Privacy · Contact · hello@textfox.app</span></div></footer>
+<a class="cchip" href="index.html">← Alle 4 retninger · 02 Orbit</a>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/ScrollTrigger.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/SplitText.min.js"></script>
+<script>
+(() => {
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+
+  /* AI rewrite demo + mode toggle (works without motion) */
+  const VARIANTS = ['Good morning! ☀️ Have a lovely Wednesday.', 'Morning, Mom! ☀️ Wishing you a calm and happy Wednesday.', 'Rise and shine ☀️ Hope your Wednesday is off to a great start!', 'Good morning! ☀️ Sending you a little sunshine for your Wednesday.'];
+  let vi = 0; const rw = $('#rw'), rwn = $('#rwn');
+  function nextVariant() {
+    vi = (vi + 1) % VARIANTS.length; rwn.textContent = `variant ${vi + 1} / ${VARIANTS.length}`;
+    if (!window.gsap || reduce) { rw.textContent = VARIANTS[vi]; return; }
+    gsap.to(rw, {opacity: 0, y: -6, duration: .25, onComplete: () => { rw.textContent = VARIANTS[vi]; const s = SplitText.create(rw, {type: 'words'}); gsap.from(s.words, {opacity: 0, y: 8, filter: 'blur(4px)', stagger: .03, duration: .4, ease: 'power2.out', onComplete: () => s.revert()}); gsap.set(rw, {opacity: 1, y: 0}); }});
+  }
+  let rwTimer = null;
+  const io = new IntersectionObserver(es => es.forEach(e => { clearInterval(rwTimer); if (e.isIntersecting) rwTimer = setInterval(nextVariant, 2800); }), {threshold: .4});
+  io.observe($('.rewrite'));
+  const NOTES = {segA: 'A notification lets you review, edit or discard the text before it goes out.', segB: 'The text goes out on its own, and a notification shows you exactly what was sent.'};
+  ['segA', 'segB'].forEach(id => $('#' + id).addEventListener('click', () => { $('#segA').setAttribute('aria-pressed', id === 'segA'); $('#segB').setAttribute('aria-pressed', id === 'segB'); $('#segNote').textContent = NOTES[id]; }));
+
+  if (!window.gsap || reduce) { $$('.cap').forEach((c, i) => c.style.opacity = i === 0 ? 1 : 0); return; }
+  gsap.registerPlugin(ScrollTrigger, SplitText);
+  ScrollTrigger.config({ignoreMobileResize: true});
+
+  /* ambient dust: slow particles drifting around the core, tinted by the active trigger */
+  const cv = $('#dust'), cx = cv.getContext('2d'); let W, H, P = [], running = true;
+  const size = () => { const r = devicePixelRatio > 1 ? 2 : 1; W = cv.width = cv.offsetWidth * r; H = cv.height = cv.offsetHeight * r; P = Array.from({length: innerWidth < 700 ? 50 : 110}, () => ({a: Math.random() * 6.28, r: (.15 + Math.random() * .6) * Math.max(W, H) * .6, s: (.0004 + Math.random() * .0012) * (Math.random() < .5 ? -1 : 1), z: Math.random()})); };
+  size(); addEventListener('resize', size);
+  const stage = $('.stage'); const tint = {r: 0, g: 230, b: 118};
+  (function loop() { if (running) { cx.clearRect(0, 0, W, H); const ox = W * .5, oy = H * .52; P.forEach(p => { p.a += p.s; const x = ox + Math.cos(p.a) * p.r, y = oy + Math.sin(p.a) * p.r * .62; cx.fillStyle = `rgba(${tint.r | 0},${tint.g | 0},${tint.b | 0},${.15 + p.z * .5})`; cx.beginPath(); cx.arc(x, y, .6 + p.z * 1.6, 0, 6.28); cx.fill(); }); } requestAnimationFrame(loop); })();
+  ScrollTrigger.create({trigger: stage, start: 'top bottom', end: 'bottom top', onToggle: s => running = s.isActive});
+
+  /* load */
+  SplitText.create('#h1', {type: 'chars,words', mask: 'words', onSplit: self => gsap.from(self.chars, {yPercent: 120, rotation: 'random(-10,10)', stagger: {each: .025, from: 'random'}, duration: .9, ease: 'power4.out', delay: .2})});
+  gsap.from(['.lede', '.ctas'], {y: 20, opacity: 0, duration: .9, ease: 'power3.out', stagger: .1, delay: .7});
+  gsap.from('.orbit', {scale: .6, opacity: 0, duration: 1.8, ease: 'expo.out'});
+  gsap.from('.chip.float', {scale: 0, opacity: 0, duration: .8, ease: 'back.out(2)', stagger: .12, delay: .9});
+  // organic idle float on the chips (wrapper .amb owns pointer parallax)
+  $$('.chip.float').forEach(el => gsap.to(el, {y: () => gsap.utils.random(-14, 14), x: () => gsap.utils.random(-8, 8), rotation: () => gsap.utils.random(-3, 3), duration: () => gsap.utils.random(2.8, 4.6), ease: 'sine.inOut', repeat: -1, yoyo: true, repeatRefresh: true, delay: 1.6}));
+
+  const COLORS = ['#FFB300', '#FF5C8A', '#42D1CA', '#00E676'], TINTS = [[255,179,0], [255,92,138], [66,209,202], [0,230,118]];
+  gsap.set(stage, {'--c': '#00E676'});
+  const mm = gsap.matchMedia();
+  mm.add({desk: '(min-width: 861px)', mob: '(max-width: 860px)'}, ctx => {
+    const mob = ctx.conditions.mob, D = mob ? .5 : 1;
+    const orbit = $('#orbit'), nodes = $$('.node'), caps = $$('.cap'), flyers = $$('.flyer'), bars = $$('.steps b');
+    const S = () => orbit.offsetWidth;
+    gsap.set(flyers, {xPercent: -50, yPercent: -50, scale: .2});
+    gsap.set(caps, {autoAlpha: 0, y: 30});
+    gsap.set('.steps', {autoAlpha: 0});
+    gsap.set(nodes, {autoAlpha: 0});
+    const tl = gsap.timeline({defaults: {ease: 'power2.inOut'}, scrollTrigger: {trigger: '.stage', start: 'top top', end: () => '+=' + innerHeight * (mob ? 4.5 : 5.5), pin: true, scrub: .7, anticipatePin: 1}});
+    // phase 0: hero leaves, orbit docks right (desktop) or up (mobile)
+    tl.to('.hero-copy', {y: -120, autoAlpha: 0, duration: .6, ease: 'power2.in'}, 0)
+      .to('.amb', {autoAlpha: 0, scale: .8, duration: .5}, 0)
+      .to(orbit, {x: () => mob ? 0 : innerWidth * .2, y: () => mob ? -innerHeight * .06 : 0, scale: mob ? .78 : .86, duration: 1}, 0)
+      .to(nodes, {autoAlpha: 1, duration: .4, stagger: .08}, .45)
+      .to('.steps', {autoAlpha: 1, duration: .3}, .7);
+    COLORS.forEach((c, i) => {
+      const t = 1 + i * 1.3;
+      tl.to(orbit, {'--rot': -90 * i + 'deg', duration: .45}, t)
+        .to(stage, {'--c': c, duration: .45}, t)
+        .to(tint, {r: TINTS[i][0], g: TINTS[i][1], b: TINTS[i][2], duration: .45}, t)
+        .add(() => nodes.forEach((n, j) => n.classList.toggle('on', j === i)), t + .2)
+        .to(nodes.map(n => n.querySelector('.nsc')), {scale: (j) => j === i ? 1.28 : .9, duration: .35}, t)
+        .to(caps[i], {autoAlpha: 1, y: 0, duration: .35, ease: 'power3.out'}, t + .15)
+        .fromTo(flyers[i], {x: 0, y: 0, scale: .2, autoAlpha: 0}, {x: () => S() * (mob ? .06 : .34), y: () => -S() * (mob ? .02 : .3), scale: 1, autoAlpha: 1, duration: .55, ease: 'power3.out'}, t + .3)
+        .fromTo(bars[i], {scaleX: 0}, {scaleX: 1, duration: 1.2, ease: 'none'}, t);
+      if (i < 3) tl.to([caps[i], flyers[i]], {autoAlpha: 0, y: '-=30', duration: .3, ease: 'power2.in'}, t + 1.05);
+    });
+    // finale: orbit pulls back, last caption leaves
+    tl.to([caps[3], flyers[3]], {autoAlpha: 0, duration: .3}, 5.1)
+      .to(orbit, {scale: .35, autoAlpha: 0, duration: .7, ease: 'power2.in'}, 5.2)
+      .to('.steps', {autoAlpha: 0, duration: .2}, 5.3);
+
+    // macros: phone unfolds, cards slide in, toggles flip with scroll
+    gsap.fromTo('#phone', {clipPath: 'inset(50% 0% 50% 0% round 48px)'}, {clipPath: 'inset(0% 0% 0% 0% round 48px)', ease: 'none', scrollTrigger: {trigger: '#phone', start: 'top 95%', end: 'top 40%', scrub: true}});
+    gsap.from('#phone .mc, #phone .folder', {x: 40 * D, opacity: 0, stagger: .08, ease: 'none', scrollTrigger: {trigger: '#phone', start: 'top 75%', end: 'top 20%', scrub: true}});
+    $$('#phone .tg').forEach((t, i) => ScrollTrigger.create({trigger: '#phone', start: () => `top ${60 - i * 7}%`, onEnter: () => t.classList.add('on'), onLeaveBack: () => t.classList.remove('on'), onRefresh: s => { if (s.progress === 0) t.classList.remove('on'); }}));
+    // scrubbed word reveals
+    $$('.words').forEach(h => SplitText.create(h, {type: 'words', mask: 'words', autoSplit: true, onSplit: self => gsap.from(self.words, {yPercent: 115, stagger: .06, ease: 'none', scrollTrigger: {trigger: h, start: 'top 90%', end: 'top 55%', scrub: true}})}));
+    gsap.from('.rewrite', {y: 80 * D, rotate: mob ? 0 : 3, opacity: 0, ease: 'none', scrollTrigger: {trigger: '.rewrite', start: 'top 95%', end: 'top 55%', scrub: true}});
+    // cta rings expand as you arrive
+    gsap.from('.cta .mini i', {scale: .4, opacity: 0, stagger: .1, ease: 'none', scrollTrigger: {trigger: '.cta', start: 'top 90%', end: 'center 60%', scrub: true}});
+    gsap.to('.cta .mini', {rotate: 40, ease: 'none', scrollTrigger: {trigger: '.cta', start: 'top bottom', end: 'bottom top', scrub: true}});
+  });
+
+  /* velocity skew on the phone */
+  const skew = gsap.quickSetter('.skew', 'skewY', 'deg'), clamp = gsap.utils.clamp(-5, 5), proxy = {v: 0};
+  ScrollTrigger.create({onUpdate: s => { const v = clamp(s.getVelocity() / -350); if (Math.abs(v) > Math.abs(proxy.v)) { proxy.v = v; gsap.to(proxy, {v: 0, duration: .8, ease: 'power3', overwrite: true, onUpdate: () => skew(proxy.v)}); } }});
+
+  /* pointer parallax + magnetic CTAs (fine pointers only) */
+  mm.add('(hover: hover) and (pointer: fine)', () => {
+    const layers = $$('[data-depth]').map(el => ({x: gsap.quickTo(el, 'xPercent', {duration: .9, ease: 'power3'}), y: gsap.quickTo(el, 'yPercent', {duration: .9, ease: 'power3'}), d: +el.dataset.depth * 4}));
+    const pm = e => { const nx = e.clientX / innerWidth * 2 - 1, ny = e.clientY / innerHeight * 2 - 1; layers.forEach(l => { l.x(nx * l.d); l.y(ny * l.d); }); };
+    addEventListener('pointermove', pm);
+    const mags = $$('.magnetic').map(el => { const xTo = gsap.quickTo(el, 'x', {duration: .4, ease: 'power3'}), yTo = gsap.quickTo(el, 'y', {duration: .4, ease: 'power3'}); const mv = e => { const r = el.getBoundingClientRect(); xTo((e.clientX - r.left - r.width / 2) * .35); yTo((e.clientY - r.top - r.height / 2) * .35); }; const lv = () => { xTo(0); yTo(0); }; el.addEventListener('pointermove', mv); el.addEventListener('pointerleave', lv); return () => { el.removeEventListener('pointermove', mv); el.removeEventListener('pointerleave', lv); }; });
+    return () => { removeEventListener('pointermove', pm); mags.forEach(f => f()); };
+  });
+})();
+</script>
+</body>
+</html>
