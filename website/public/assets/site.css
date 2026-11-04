@@ -223,8 +223,9 @@ a.tcard:hover{border-color:color-mix(in srgb,var(--c) 60%,transparent);transform
 .trio .label{display:block;margin-bottom:16px;color:var(--c)}
 @media (max-width:900px){.trio{grid-template-columns:1fr}}
 
-.gallery{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(220px,1fr);gap:16px;overflow-x:auto;padding-bottom:12px;scroll-snap-type:x mandatory;margin-top:40px;scrollbar-width:thin;scrollbar-color:var(--line-2) transparent}
-.gallery figure{margin:0;scroll-snap-align:start}
+.gallery{list-style:none;padding:0 0 12px;display:grid;grid-auto-flow:column;grid-auto-columns:minmax(220px,1fr);gap:16px;overflow-x:auto;padding-bottom:12px;scroll-snap-type:x mandatory;margin:40px 0 0;scrollbar-width:thin;scrollbar-color:var(--line-2) transparent}
+.gallery li{scroll-snap-align:start}
+.gallery figure{margin:0}
 .gallery img{display:block;width:100%;height:auto;border-radius:20px;border:1px solid var(--line);background:var(--ink-2)}
 .gallery figcaption{font-size:14px;color:var(--mute);margin-top:12px}
 .gallery figcaption b{display:block;color:var(--fg);font-weight:500}
