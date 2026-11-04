@@ -285,6 +285,9 @@ private fun AppRoot(
 
     val backStack by nav.currentBackStackEntryAsState()
     val route = backStack?.destination?.route
+    // Also recount on every screen change: some steps are confirmed inside the app (e.g. "Did you
+    // switch on Autostart?"), so no ON_RESUME follows and the banner would linger until a restart.
+    LaunchedEffect(route) { missingSetup = missingSetupSteps(context) }
 
     Box(Modifier.fillMaxSize()) {
       ProvideAmbientPulse {

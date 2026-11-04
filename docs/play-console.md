@@ -183,12 +183,13 @@ Core function is running user-scheduled automated actions (sound mode, reminders
 
 ## 6. Første produktionsudgivelse
 
-- [ ] Release name: `1.9` (versionCode 10), med det nye ræve-ikon. Appen hedder nu TextFox; pakkenavnet `app.kodekid.automatiq` er uændret, så det er en almindelig opdatering. Ret også App name, app-ikonet (`store/icon-512.png`) og feature graphic under Main store listing.
+- [ ] Release name: `1.9.1` (versionCode 11), med det nye ræve-ikon, widget-kortet i Settings og rettelsen af setup-banneret. Appen hedder nu TextFox; pakkenavnet `app.kodekid.automatiq` er uændret, så det er en almindelig opdatering. Ret også App name, app-ikonet (`store/icon-512.png`) og feature graphic under Main store listing.
 - [ ] Release notes:
 ```
 First Play Store release of TextFox.
 • Scheduled, one-tap, auto-reply and missed-call SMS macros
 • See when each scheduled macro runs next
+• Add a macro as a one-tap button on your home screen, straight from Settings
 • Guided phone setup for reliable background sending
 • Optional AI (Google Gemini) with approval mode and in-app reporting
 ```
