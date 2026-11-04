@@ -13,6 +13,10 @@ Maker: Lars Sohl (Denmark), founder of kodekid.app, klokly.app and larssohl.dk �
 - [About the maker](https://www.textfox.app/about): Lars Sohl, Danish graphic designer, photographer and creative coder; founder of kodekid.app, klokly.app and larssohl.dk
 - [Privacy policy](https://www.textfox.app/privacy)
 
+## Dansk
+- [TextFox på dansk](https://www.textfox.app/da): forside på dansk
+- [Planlagte sms'er](https://www.textfox.app/da/planlagte-sms) · [Autosvar](https://www.textfox.app/da/autosvar-sms) · [Sms ved ubesvaret opkald](https://www.textfox.app/da/sms-ved-ubesvaret-opkald) · [Sms med ét tryk](https://www.textfox.app/da/sms-med-et-tryk) · [Om skaberen](https://www.textfox.app/da/om)
+
 ## Key facts
 - Triggers: schedule, one tap (widget), incoming SMS (sender/keyword), missed call
 - Actions: send an SMS to one or many recipients or reply to the sender/caller, change sound mode or Do Not Disturb, show a reminder notification, call a web address

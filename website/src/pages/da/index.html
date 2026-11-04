@@ -1,0 +1,184 @@
+<!--{"out":"da/index.html","path":"/da","lang":"da","title":"TextFox: Automatiske sms'er til Android","description":"TextFox er en gratis Android-app, der sender sms'er for dig: planlagte sms'er, autosvar på indgående sms'er og sms ved ubesvaret opkald. På telefonen, uden konto og uden reklamer.","scripts":["/assets/js/gsap.min.js","/assets/js/ScrollTrigger.min.js","/assets/js/SplitText.min.js","/assets/home.js"],"modules":["/assets/fox3d.js"],"schema":["app","faq","video"]}-->
+<section class="hero" id="top">
+  <div class="hero-glow" aria-hidden="true"></div>
+  <div class="wrap hero-grid">
+    <div class="hero-copy">
+      <p class="kicker">&gt; textfox.init()<span class="caret" aria-hidden="true"></span></p>
+      <h1 class="h1" id="h1">Din telefon sms'er for dig. <span class="g">Hele dagen.</span></h1>
+      <p class="lede"><strong>TextFox er en Android-app, der sender sms'er automatisk</strong>: på et fast tidspunkt, som svar på en sms, eller når du ikke når telefonen. Sæt det op én gang, så kører det bare, direkte på din telefon.</p>
+      <div class="cta-row">{{PLAY}}<a class="btn btn-ghost" href="#day">Se en dag gå ↓</a></div>
+      <nav class="jump" aria-label="Funktioner">
+        <a href="/da/planlagte-sms" style="--c:var(--amber)"><i></i>Planlagte sms'er</a>
+        <a href="/da/autosvar-sms" style="--c:var(--teal)"><i></i>Autosvar</a>
+        <a href="/da/sms-ved-ubesvaret-opkald" style="--c:var(--green)"><i></i>Sms ved ubesvaret opkald</a>
+        <a href="#ai" style="--c:var(--indigo)"><i></i>AI-varianter</a>
+      </nav>
+      <div class="facts"><span>Kører på din telefon</span><span>Ingen konto</span><span>Ingen reklamer</span><span>Android 8.0+</span></div>
+    </div>
+    <div class="fox-stage" id="foxStage" role="img" aria-label="TextFox-ræven sender sms'er, der kredser om den: Godmorgen, Husk vitaminer, Tilbage mandag, Undskyld jeg missede dit opkald, Forsinket og Sengetid">
+      <svg class="rings" viewBox="-300 -300 600 600" aria-hidden="true"><ellipse class="r1" rx="264" ry="150" transform="rotate(-9)"/></svg>
+      <div class="fox-burst" aria-hidden="true"></div>
+      <div class="fox-glow" aria-hidden="true"></div>
+      <div class="fox-wrap" aria-hidden="true"><svg class="fox" viewBox="0 0 354.18 302.05"><path d="M3.03,167.98l108.55,18.34c18.05,15.38,83.78,26.23,102.7,10.13l136.86-28.13c1.06-.91,4.45-1.28,2.38-4.76l-16.81-47.49L327.15,0l-99.48,74.39h-100.38S27.76,0,27.76,0l-8.57,116.06L.88,163.68c-.59.82-1,1.64-.84,2.21.25.92,1.26,1.41,3,2.1Z" fill="#121815"/><path d="M351.14,168.32c-2.58-.26-5.33.02-8.35,1.16l-87.63,24.45-77.62,102.84-77.78-102.9-88.64-24.75c-3.04-.85-5.58-1.5-8.09-1.14-1.73-.69-2.74-1.18-3-2.1-.16-.57.25-1.38.84-2.21l18.32-47.61L27.76,0l99.53,74.39h100.38S327.15,0,327.15,0l9.56,116.08,16.81,47.49c2.07,3.48-1.32,3.86-2.38,4.76Z" fill="currentColor"/><path d="M351.14,168.32l-144.48,122.95c-18.92,16.1-43.45,13.15-61.5-2.22L3.03,167.98c2.51-.36,5.05.29,8.09,1.14l88.64,24.75,77.78,102.9,77.62-102.84,87.63-24.45c3.03-1.14,5.77-1.43,8.35-1.16Z" fill="#E5F3EA"/><ellipse class="eye" cx="121.96" cy="149.52" rx="19.4" ry="19.4" fill="#121815"/><ellipse class="eye" cx="177.51" cy="149.52" rx="19.4" ry="19.4" fill="#121815"/><ellipse class="eye" cx="233.04" cy="149.52" rx="19.4" ry="19.4" fill="#121815"/></svg></div>
+      <div class="bubbles" id="bubbles" aria-hidden="true"></div>
+    </div>
+  </div>
+  <div class="scroll-cue" aria-hidden="true">scroll<i></i></div>
+</section>
+
+<section class="day" id="day" aria-labelledby="evt">
+  <div class="sky" aria-hidden="true"><i class="g1"></i><i class="g2"></i></div>
+  <div class="day-inner wrap">
+    <div class="day-grid">
+      <div>
+        <div class="clock" aria-hidden="true"><span id="hh">23</span><span class="colon">:</span><span id="mm">00</span></div>
+        <div class="ev">
+          <p class="ev-k"><i></i><span id="evk">23:00 · dagens slutning</span></p>
+          <h2 class="ev-t" id="evt">Fem sms'er sendt. Du skrev ingen.</h2>
+          <p class="ev-d" id="evd">Det var én helt almindelig dag med TextFox.</p>
+        </div>
+        <div class="stats">
+          <div class="stat"><b id="sent">5</b><span>sms'er sendt<br>for dig</span></div>
+          <div class="stat zero"><b>0</b><span>sms'er du<br>skrev</span></div>
+        </div>
+      </div>
+      <div class="phone" role="img" aria-label="TextFox-loggen med syv makroer, der kørte i dag, fra Godmorgen, mor kl. 08:00 til Stille tilstand kl. 22:30">
+        <div class="screen" aria-hidden="true">
+          <div class="sbar"><span id="sclock">23:00</span><svg viewBox="0 0 46 12"><path d="M0 4.5a11 11 0 0 1 14 0L7 12Z"/><path d="M18 12 28 2v10Z"/><rect x="34" y="1" width="7" height="11" rx="1.5"/></svg></div>
+          <div class="app-head"><b>log</b><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9AA79F" stroke-width="1.8"><path d="M4 6h16M7 12h10M10 18h4"/></svg></div>
+          <div class="pills"><span class="on">All<b id="cAll">7</b></span><span>Success<b id="cOk">7</b></span><span>Failed<b>0</b></span></div>
+          <div class="feed">
+            <div class="lw on" data-i="6"><div><div class="lc" style="--c:var(--indigo)"><span class="ic"><svg><use href="#i-moon"/></svg><span class="ok"><svg><use href="#i-check"/></svg></span></span><div><div class="lc-top"><b>Stille tilstand</b><time>22:30</time></div><div class="badges"><span class="info">sound mode → do not disturb</span></div></div></div></div></div>
+            <div class="lw on" data-i="5"><div><div class="lc" style="--c:var(--indigo)"><span class="ic"><svg><use href="#i-clock"/></svg><span class="ok"><svg><use href="#i-check"/></svg></span></span><div><div class="lc-top"><b>Sengetid</b><time>20:15</time></div><div class="badges"><span>✓✓ Delivered</span></div><p>Sengetid om 15 minutter 🌙 Tænder, nattøj, godnathistorie.</p></div></div></div></div>
+            <div class="lw on" data-i="4"><div><div class="lc" style="--c:var(--rose)"><span class="ic"><svg><use href="#i-tap"/></svg><span class="ok"><svg><use href="#i-check"/></svg></span></span><div><div class="lc-top"><b>Forsinket</b><time>17:40</time></div><div class="badges"><span>✓✓ Delivered</span><span class="info">one tap</span></div><p>Holder i kø, er der om 15!</p></div></div></div></div>
+            <div class="lw on" data-i="3"><div><div class="lc" style="--c:var(--green)"><span class="ic"><svg><use href="#i-missed"/></svg><span class="ok"><svg><use href="#i-check"/></svg></span></span><div><div class="lc-top"><b>Ubesvaret opkald</b><time>11:27</time></div><div class="badges"><span>✓✓ Delivered</span></div><p>Undskyld, jeg missede dit opkald. Jeg ringer tilbage snart.</p></div></div></div></div>
+            <div class="lw on" data-i="2"><div><div class="lc" style="--c:var(--teal)"><span class="ic"><svg><use href="#i-reply"/></svg><span class="ok"><svg><use href="#i-check"/></svg></span></span><div><div class="lc-top"><b>Ikke på kontoret</b><time>10:41</time></div><div class="badges"><span>✓✓ Delivered</span></div><p class="in">“Har du tid til et hurtigt opkald?”</p><p>Tak for din besked. Jeg er væk og tilbage mandag.</p></div></div></div></div>
+            <div class="lw on" data-i="1"><div><div class="lc" style="--c:var(--amber)"><span class="ic"><svg><use href="#i-bell"/></svg><span class="ok"><svg><use href="#i-check"/></svg></span></span><div><div class="lc-top"><b>Piller</b><time>09:00</time></div><p>Påmindelse: Husk dine vitaminer 💊</p></div></div></div></div>
+            <div class="lw on" data-i="0"><div><div class="lc" style="--c:var(--amber)"><span class="ic"><svg><use href="#i-clock"/></svg><span class="ok"><svg><use href="#i-check"/></svg></span></span><div><div class="lc-top"><b>Godmorgen, mor</b><time>08:00</time></div><div class="badges"><span>✓✓ Delivered</span><span class="ai">✦ AI variation</span></div><p>Godmorgen! ☀️ Håber din torsdag er kommet godt i gang.</p></div></div></div></div>
+          </div>
+          <div class="empty off" id="empty">intet endnu i dag<br>zzz</div>
+        </div>
+      </div>
+    </div>
+    <div class="rail" aria-hidden="true"><div class="track" id="track"><div class="base"></div><div class="fill" id="fill"></div></div></div>
+  </div>
+</section>
+
+<section class="section" id="triggers" aria-labelledby="triggers-h">
+  <div class="wrap">
+    <p class="kicker">// hvad skete der lige</p>
+    <h2 class="h2" id="triggers-h" data-words>Én dag. Fem sms'er. <em>Du skrev ingen.</em></h2>
+    <p class="body">Hver TextFox-makro er en udløser plus en handling. Her er de fire måder, en makro kan starte på.</p>
+    <div class="tgrid" id="tgrid" style="margin-top:44px">
+      <a class="tcard" href="/da/planlagte-sms" style="--c:var(--amber)"><span class="ic"><svg><use href="#i-clock"/></svg></span><h3>På et fast tidspunkt</h3><p>Vælg et klokkeslæt, ugedage, hver 1.–4. uge, én dato eller 1–2 tilfældige dage. TextFox sender på minuttet, også efter en genstart.</p><code>08:00 · man–fre → mor</code><span class="more"><span>Planlagte sms'er</span><span class="go" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h13m-5-6 6 6-6 6"/></svg></span></span></a>
+      <a class="tcard" href="/da/sms-med-et-tryk" style="--c:var(--rose)"><span class="ic"><svg><use href="#i-tap"/></svg></span><h3>Med ét tryk</h3><p>Læg enhver makro på hjemmeskærmen som en widget. Ét tryk, og en færdig sms går til alle på listen.</p><code>widget → "Forsinket"</code><span class="more"><span>Sms med ét tryk</span><span class="go" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h13m-5-6 6 6-6 6"/></svg></span></span></a>
+      <a class="tcard" href="/da/autosvar-sms" style="--c:var(--teal)"><span class="ic"><svg><use href="#i-reply"/></svg></span><h3>Som svar</h3><p>Når der kommer en sms fra en bestemt afsender eller med et nøgleord, svarer TextFox. Stille timer gemmer svarene til morgenen.</p><code>sms indeholder "møde" → svar</code><span class="more"><span>Autosvar</span><span class="go" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h13m-5-6 6 6-6 6"/></svg></span></span></a>
+      <a class="tcard" href="/da/sms-ved-ubesvaret-opkald" style="--c:var(--green)"><span class="ic"><svg><use href="#i-missed"/></svg></span><h3>Efter et ubesvaret opkald</h3><p>Kunne du ikke tage den? Den, der ringede, får en sms få sekunder senere. Afviste opkald tæller også med.</p><code>ubesvaret opkald → sms tilbage</code><span class="more"><span>Sms ved ubesvaret opkald</span><span class="go" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h13m-5-6 6 6-6 6"/></svg></span></span></a>
+    </div>
+    <div class="also">
+      <h3 class="also-h">En makro kan også</h3>
+      <ul class="also-list">
+        <li style="--c:var(--indigo)"><span class="ic"><svg><use href="#i-sound"/></svg></span><span><b>Skifte lydtilstand</b>Normal, vibration, lydløs eller Forstyr ikke</span></li>
+        <li style="--c:var(--amber)"><span class="ic"><svg><use href="#i-bell"/></svg></span><span><b>Vise en påmindelse</b>En notifikation med din egen tekst</span></li>
+        <li style="--c:var(--teal)"><span class="ic"><svg><use href="#i-link"/></svg></span><span><b>Kalde en webadresse</b>Styr dit smarthjem, fx Home Assistant eller IFTTT</span></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="section tight" id="setup" aria-labelledby="setup-h">
+  <div class="wrap split">
+    <figure class="video-phone" data-rise>
+      <video data-lazy muted loop playsinline preload="none" poster="/media/textfox-intro-poster.jpg" width="540" height="1200" aria-label="TextFox-introguiden: velkomstskærmen, de fire udløsere, opsætning af tilladelser, den valgfri Gemini-nøgle og klar-skærmen">
+        <source src="/media/textfox-intro.webm" type="video/webm">
+        <source src="/media/textfox-intro.mp4" type="video/mp4">
+      </video>
+      <figcaption>Introguiden i appen, 37 sekunder (på engelsk)</figcaption>
+    </figure>
+    <div>
+      <p class="kicker">// klar på et minut</p>
+      <h2 class="h2" id="setup-h" data-words>Sæt det op én gang. Glem det så.</h2>
+      <ol class="steps">
+        <li><div><b>Lav en makro</b><p>Giv den et navn, skriv beskeden, og vælg en eller flere modtagere. Indsæt dato, ugedag eller modtagerens navn, så hver kopi føles personlig.</p></div></li>
+        <li><div><b>Vælg, hvornår den starter</b><p>Et klokkeslæt og ugedage, et tryk på en widget, en indgående sms med et nøgleord eller et ubesvaret opkald.</p></div></li>
+        <li><div><b>Giv tilladelse én gang</b><p>En guidet opsætning slår sms, notifikationer, præcise alarmer og batteriadgang til med ét tryk pr. trin, også på Xiaomi, Redmi og POCO.</p></div></li>
+        <li class="done"><div><b>Den kører</b><p>Slå makroen til. TextFox klarer resten hver dag og logger hver afsendelse.</p></div></li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<section class="section tight" id="ai" aria-labelledby="ai-h">
+  <div class="wrap split rev">
+    <div class="rewrite" data-rise>
+      <div class="rw-k">✦ AI-variant <span id="rwn">variant 1 / 4</span></div>
+      <div class="rw-bub" id="rw" aria-live="off">Godmorgen! ☀️ Hav en dejlig onsdag.</div>
+      <div class="seg" role="group" aria-label="Hvornår en AI-tekst sendes"><button type="button" aria-pressed="true" id="segA">Spørg mig først</button><button type="button" aria-pressed="false" id="segB">Send automatisk</button></div>
+      <p class="seg-note" id="segNote">En notifikation lader dig gennemse, rette eller kassere teksten, før den sendes.</p>
+    </div>
+    <div>
+      <p class="kicker" style="color:var(--amber)">// valgfri ai</p>
+      <h2 class="h2" id="ai-h" data-words>AI skriver den. Du godkender den.</h2>
+      <p class="body">Slå <strong>AI-variant</strong> til, og Google Gemini omskriver en planlagt sms, hver gang den sendes, så den aldrig lyder ens. AI kan også skrive autosvar, og AI-forslag laver en ny besked ud fra en kort beskrivelse.</p>
+      <ul class="ticks" style="--c:var(--amber)">
+        <li>Bruger din egen gratis Google Gemini-nøgle. AI er slået fra, indtil du tilføjer en.</li>
+        <li>Svarer Gemini ikke, sendes din oprindelige tekst uændret.</li>
+        <li>Rapportér en AI-tekst, der er forkert eller stødende, direkte fra loggen.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="section tight" id="reliable" aria-labelledby="rel-h">
+  <div class="wrap">
+    <p class="kicker">// log</p>
+    <h2 class="h2" id="rel-h" data-words>Styr på hver eneste besked.</h2>
+    <div class="trio">
+      <div style="--c:var(--green)"><span class="label">til tiden</span><h3 class="h3">Sender på minuttet</h3><p>Præcise alarmer med en reserveplanlægger. Makroer kører videre efter en genstart, en appopdatering eller en nat i batterisparetilstand.</p></div>
+      <div style="--c:var(--teal)"><span class="label">levering</span><h3 class="h3">Leveret ✓✓</h3><p>Når dit teleselskab bekræfter leveringen, står det i loggen. Taber netværket en besked, får du en notifikation og kan prøve igen med ét tryk.</p></div>
+      <div style="--c:var(--amber)"><span class="label">stille timer</span><h3 class="h3">Høflig om natten</h3><p>Sms'er, der kommer i stille timer, besvares, når de slutter: ét svar pr. person til deres seneste besked.</p></div>
+    </div>
+    <ul class="gallery" aria-label="Skærmbilleder fra TextFox-appen">
+      <li><figure><img src="/media/screen-autopilot.webp" width="540" height="960" loading="lazy" alt="TextFox' velkomstskærm (på engelsk): Your phone, on autopilot. TextFox sender sms'er for dig på et fast tidspunkt, som svar eller ved et ubesvaret opkald."><figcaption><b>Velkommen</b>På telefonen, uden konto og reklamer.</figcaption></figure></li>
+      <li><figure><img src="/media/screen-macros.webp" width="540" height="960" loading="lazy" alt="TextFox' makroliste med mapperne Family og Work, planlagte makroer med næste kørselstidspunkt og aktive autosvar- og opkaldsmakroer"><figcaption><b>Makroer og mapper</b>Hvert kort viser, hvornår det kører næste gang.</figcaption></figure></li>
+      <li><figure><img src="/media/screen-ai-variation.webp" width="540" height="960" loading="lazy" alt="TextFox' beskededitor med forhåndsvisning og AI-variant sat til Ask me first"><figcaption><b>AI-variant</b>Spørg først, eller send automatisk.</figcaption></figure></li>
+      <li><figure><img src="/media/screen-phone-setup.webp" width="540" height="960" loading="lazy" alt="TextFox' tjekliste til telefonopsætning: sms, notifikationer, præcise alarmer og batteri, med knappen Fix everything for me"><figcaption><b>Telefonopsætning</b>Ét tryk retter alle indstillinger.</figcaption></figure></li>
+      <li><figure><img src="/media/screen-log.webp" width="540" height="960" loading="lazy" alt="TextFox' log med leverede beskeder for ubesvaret opkald, ikke på kontoret og godmorgen med tidspunkter"><figcaption><b>Log</b>Leveringsstatus for hver afsendelse.</figcaption></figure></li>
+    </ul>
+  </div>
+</section>
+
+<section class="section tight" id="privacy" aria-labelledby="priv-h">
+  <div class="wrap">
+    <div class="privacy-card" data-rise>
+      <p class="kicker">// privatliv</p>
+      <h2 class="h2" id="priv-h">Din telefon. Dine data.</h2>
+      <p class="body">TextFox kører på din telefon. Der er ingen konto, ingen reklamer og ingen analyse, og dine makroer, kontakter og beskeder når aldrig frem til os. Tekst forlader kun din telefon i tre tilfælde, som du selv sætter op:</p>
+      <div class="leaves">
+        <div><b>AI-funktioner</b>Beskeden sendes direkte til Google Gemini med din egen nøgle.</div>
+        <div><b>Rapportering af en AI-tekst</b>Kun den rapporterede tekst og din begrundelse, uden telefonnumre eller id'er.</div>
+        <div><b>Webadresser</b>En makro, der kalder en adresse, du selv har indtastet, fx dit smarthjem.</div>
+      </div>
+      <a class="link-arrow" href="/privacy">Læs privatlivspolitikken (på engelsk) →</a>
+    </div>
+  </div>
+</section>
+
+<section class="section tight" id="faq" aria-labelledby="faq-h">
+  <div class="wrap narrow">
+    <p class="kicker">// faq</p>
+    <h2 class="h2" id="faq-h">Spørgsmål og svar.</h2>
+    {{FAQ}}
+  </div>
+</section>
+
+<section class="final" id="get">
+  <div class="wrap">
+    <div class="panel" id="panel">
+      <h2>Sæt det op én gang.<br>Så kører det bare.</h2>
+      <p>Gratis på Google Play til Android 8.0 og nyere. Alt kører på din telefon: ingen konto, ingen reklamer, ingen sporing. AI er valgfrit og bruger din egen gratis Google Gemini-nøgle.</p>
+      <div class="cta-row">{{PLAY}}<a class="btn btn-ghost" href="#day">Se dagen igen ↺</a></div>
+      <p class="cta-note">{{CTA_NOTE}}</p>
+    </div>
+  </div>
+</section>

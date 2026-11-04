@@ -3,10 +3,15 @@ window.TF = window.TF || {boom: 0};
 (() => {
   const stage = document.getElementById('foxStage'), layer = document.getElementById('bubbles');
   if (!stage || !layer) return;
-  const MSGS = [
+  const DA = document.documentElement.lang === 'da';
+  const MSGS = DA ? [
+    ['08:00', 'Godmorgen ☀️', '--amber'], ['09:00', 'Husk dine vitaminer 💊', '--amber'], ['10:41', 'Tilbage mandag 👋', '--teal'],
+    ['11:27', 'Undskyld, jeg missede dit opkald', '--green'], ['17:40', 'Er 10 min. forsinket!', '--rose'], ['20:15', 'Sengetid om 15 🌙', '--indigo'],
+  ] : [
     ['08:00', 'Good morning ☀️', '--amber'], ['09:00', 'Take your vitamins 💊', '--amber'], ['10:41', 'Back Monday 👋', '--teal'],
     ['11:27', 'Sorry I missed your call', '--green'], ['17:40', 'Running 10 min late!', '--rose'], ['20:15', 'Bedtime in 15 🌙', '--indigo'],
   ];
+  const DELIVERED = DA ? '✓✓ leveret' : '✓✓ delivered';
   // two rings in units of the stage width: radius x/y, tilt (rad), angular speed (rad/s)
   const RINGS = [{rx: .44, ry: .25, tilt: -9 * Math.PI / 180, w: .15}, {rx: .33, ry: .19, tilt: 13 * Math.PI / 180, w: -.2}];
   // five evenly spaced slots that circle together, alternating between the two rings, so texts never pile up
@@ -20,7 +25,7 @@ window.TF = window.TF || {boom: 0};
     const [t, txt, c] = MSGS[i % MSGS.length];
     const el = document.createElement('div');
     el.className = 'sms'; el.style.setProperty('--c', `var(${c})`);
-    el.innerHTML = `<b>${txt}</b><small>${t} · <span>✓✓ delivered</span></small>`;
+    el.innerHTML = `<b>${txt}</b><small>${t} · <span>${DELIVERED}</span></small>`;
     layer.appendChild(el); return el;
   }
   function add(slot, born) {
@@ -87,7 +92,16 @@ window.TF = window.TF || {boom: 0};
 
 /* Home page motion: scroll drives one day, 06:59 → 23:00. Requires gsap, ScrollTrigger, SplitText. */
 (() => {
-  const EVENTS = [
+  const DA = document.documentElement.lang === 'da';
+  const EVENTS = DA ? [
+    {t: 480,  k: 'Planlagt',          c: '--amber',  title: 'Godmorgen, mor',    desc: 'Sat til kl. 08:00 på hverdage. Gemini omskriver den hver morgen, så den aldrig lyder ens.', sms: true},
+    {t: 540,  k: 'Påmindelse',        c: '--amber',  title: 'Piller',            desc: 'Ikke alle makroer sender en sms. Den her minder dig bare om noget.', sms: false},
+    {t: 641,  k: 'Autosvar',          c: '--teal',   title: 'Ikke på kontoret',  desc: 'Der kom en sms, mens du var til møde. TextFox svarede for dig.', sms: true},
+    {t: 687,  k: 'Ubesvaret opkald',  c: '--green',  title: 'Ubesvaret opkald',  desc: 'Du kunne ikke tage den. Den, der ringede, fik en sms få sekunder senere.', sms: true},
+    {t: 1060, k: 'Ét tryk',           c: '--rose',   title: 'Forsinket',         desc: 'Ét tryk på widgetten på hjemmeskærmen, og en færdig sms bliver sendt.', sms: true},
+    {t: 1215, k: 'Planlagt',          c: '--indigo', title: 'Sengetid',          desc: 'Hver anden uge, mandag til torsdag. Sat op én gang og kører stadig.', sms: true},
+    {t: 1350, k: 'Lydtilstand',       c: '--indigo', title: 'Stille tilstand',   desc: 'Kl. 22:30 skifter telefonen til Forstyr ikke. Det kan makroer også.', sms: false},
+  ] : [
     {t: 480,  k: 'Scheduled',   c: '--amber',  title: 'Good morning, Mom',     desc: 'Set for 08:00 on weekdays. Gemini rewrites it every morning, so it never reads the same twice.', sms: true},
     {t: 540,  k: 'Reminder',    c: '--amber',  title: 'Pills',                 desc: 'Not every macro sends a text. This one just reminds you.', sms: false},
     {t: 641,  k: 'Auto-reply',  c: '--teal',   title: 'Out of office',         desc: 'A text came in while you were in a meeting. TextFox answered it for you.', sms: true},
@@ -109,8 +123,8 @@ window.TF = window.TF || {boom: 0};
   const dots = EVENTS.map(e => { const d = document.createElement('i'); d.className = 'dot on'; d.style.left = pct(e.t) + '%'; d.style.setProperty('--c', `var(${e.c})`); track.appendChild(d); return d; });
 
   const fmt = m => String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0');
-  const INTRO = {k: '06:59 · before the alarm', title: 'Your phone is asleep. So are you.', desc: 'Everything that follows happens without you opening the app.', c: '--dim'};
-  const OUTRO = {k: '23:00 · end of day', title: 'Five texts sent. You typed none.', desc: 'That was one ordinary day with TextFox.', c: '--green'};
+  const INTRO = DA ? {k: '06:59 · før vækkeuret', title: 'Din telefon sover. Det gør du også.', desc: 'Alt det, der sker nu, sker uden at du åbner appen.', c: '--dim'} : {k: '06:59 · before the alarm', title: 'Your phone is asleep. So are you.', desc: 'Everything that follows happens without you opening the app.', c: '--dim'};
+  const OUTRO = DA ? {k: '23:00 · dagens slutning', title: "Fem sms'er sendt. Du skrev ingen.", desc: 'Det var én helt almindelig dag med TextFox.', c: '--green'} : {k: '23:00 · end of day', title: 'Five texts sent. You typed none.', desc: 'That was one ordinary day with TextFox.', c: '--green'};
 
   let lastMin = -1, lastIdx = -99, skyTl = null;
   function setLabel(idx, animate) {

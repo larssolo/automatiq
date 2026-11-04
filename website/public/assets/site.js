@@ -2,6 +2,7 @@
 (() => {
   const $ = (s, r = document) => r.querySelector(s);
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const DA = document.documentElement.lang === 'da';
 
   // nav gets a solid background once the page has scrolled
   const nav = $('.nav');
@@ -16,13 +17,13 @@
   document.querySelectorAll('[data-share]').forEach(b => {
     if (!navigator.share) return;
     b.hidden = false;
-    b.addEventListener('click', () => navigator.share({title: document.title, text: 'TextFox sends your texts for you: scheduled SMS, auto-replies and missed-call text-back for Android.', url: b.dataset.share}).catch(() => {}));
+    b.addEventListener('click', () => navigator.share({title: document.title, text: b.dataset.text, url: b.dataset.share}).catch(() => {}));
   });
   document.querySelectorAll('[data-copy]').forEach(b => b.addEventListener('click', async () => {
     const label = b.querySelector('span');
-    try { await navigator.clipboard.writeText(b.dataset.copy); label.textContent = 'Link copied ✓'; }
+    try { await navigator.clipboard.writeText(b.dataset.copy); label.textContent = DA ? 'Link kopieret ✓' : 'Link copied ✓'; }
     catch { label.textContent = b.dataset.copy; }
-    b.classList.add('copied'); setTimeout(() => { label.textContent = 'Copy link'; b.classList.remove('copied'); }, 2200);
+    b.classList.add('copied'); setTimeout(() => { label.textContent = b.dataset.label; b.classList.remove('copied'); }, 2200);
   }));
 
   // intro video: load and play only while visible; never autoplay under reduced motion
@@ -38,7 +39,8 @@
   // AI variation demo
   const rw = $('#rw');
   if (rw) {
-    const V = ['Good morning! ☀️ Have a lovely Wednesday.', 'Morning, Mom! ☀️ Wishing you a calm and happy Wednesday.', 'Rise and shine ☀️ Hope your Wednesday is off to a great start!', 'Good morning! ☀️ Sending a little sunshine for your Wednesday.'];
+    const V = DA ? ['Godmorgen! ☀️ Hav en dejlig onsdag.', 'Godmorgen, mor! ☀️ Jeg håber, du får en rolig og glad onsdag.', 'Op med humøret ☀️ Håber din onsdag er kommet godt fra start!', 'Godmorgen! ☀️ Her er lidt solskin til din onsdag.']
+      : ['Good morning! ☀️ Have a lovely Wednesday.', 'Morning, Mom! ☀️ Wishing you a calm and happy Wednesday.', 'Rise and shine ☀️ Hope your Wednesday is off to a great start!', 'Good morning! ☀️ Sending a little sunshine for your Wednesday.'];
     let i = 0, timer = null; const n = $('#rwn');
     const next = () => {
       i = (i + 1) % V.length; n.textContent = `variant ${i + 1} / ${V.length}`;
@@ -46,7 +48,8 @@
       rw.animate([{opacity: 1}, {opacity: 0}], {duration: 220, fill: 'forwards'}).onfinish = () => { rw.textContent = V[i]; rw.animate([{opacity: 0, transform: 'translateY(6px)'}, {opacity: 1, transform: 'none'}], {duration: 380, easing: 'cubic-bezier(.2,.8,.2,1)', fill: 'forwards'}); };
     };
     new IntersectionObserver(([e]) => { clearInterval(timer); if (e.isIntersecting && !reduce) timer = setInterval(next, 2800); }, {threshold: .4}).observe(rw);
-    const notes = {segA: 'A notification lets you review, edit or discard the text before it goes out.', segB: 'The text goes out on its own, and a notification shows exactly what was sent.'};
+    const notes = DA ? {segA: 'En notifikation lader dig gennemse, rette eller kassere teksten, før den sendes.', segB: 'Teksten sendes af sig selv, og en notifikation viser præcis, hvad der blev sendt.'}
+      : {segA: 'A notification lets you review, edit or discard the text before it goes out.', segB: 'The text goes out on its own, and a notification shows exactly what was sent.'};
     ['segA', 'segB'].forEach(id => $('#' + id)?.addEventListener('click', () => {
       ['segA', 'segB'].forEach(o => $('#' + o).setAttribute('aria-pressed', String(o === id)));
       $('#segNote').textContent = notes[id];
