@@ -342,3 +342,19 @@ footer{border-top:1px solid var(--line);padding-block:56px calc(36px + env(safe-
 /* keep the stage (and its load burst) above the hero copy, also when it is reordered on phones */
 .hero-copy{position:relative;z-index:1}
 .fox-stage{z-index:2}
+/* share band */
+.share{padding-block:0 110px}
+.share-in{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:28px 48px;align-items:center;padding:clamp(26px,4vw,44px);border-radius:32px;background:radial-gradient(70% 120% at 100% 0%,rgba(0,230,118,.12),transparent 60%),#0F1512}
+.share-in .h3{font-size:clamp(24px,2.6vw,32px);margin-bottom:8px;text-wrap:balance}
+.share-in .body{margin:0}
+.share-btns{display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-end}
+.sh{display:inline-flex;align-items:center;gap:9px;border:0;border-radius:999px;padding:12px 16px;font:600 14.5px/1 var(--sans);color:var(--fg);text-decoration:none;cursor:pointer;
+  background:color-mix(in srgb,var(--b,#00E676) 16%,#141B17);transition:background .25s,translate .25s}
+.sh:hover{background:color-mix(in srgb,var(--b,#00E676) 30%,#141B17);translate:0 -2px}
+.sh svg{width:18px;height:18px;fill:var(--b,#00E676)}
+.sh svg.st{fill:none;stroke:var(--b,#00E676);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.sh-native{--b:#00E676;background:var(--green);color:var(--on-green)}
+.sh-native svg.st{stroke:var(--on-green)}
+.sh-native:hover{background:#3dffa0}
+.sh.copied{--b:#00E676;background:color-mix(in srgb,#00E676 34%,#141B17)}
+@media (max-width:900px){.share-in{grid-template-columns:1fr}.share-btns{justify-content:flex-start}}

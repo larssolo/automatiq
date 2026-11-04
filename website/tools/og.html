@@ -1,20 +1,19 @@
 <!doctype html><meta charset="utf-8">
+<!-- Open Graph image (1200×630). Render with: node tools/render-assets.js. og-fox.jpg is a 2× capture of the 3D hero. -->
 <style>
 @font-face{font-family:D;src:url(../public/assets/fonts/DMSans.woff2)}@font-face{font-family:M;src:url(../public/assets/fonts/JetBrainsMono.woff2)}
-body{margin:0;width:1200px;height:630px;overflow:hidden;background:radial-gradient(60% 80% at 0% 100%,rgba(255,150,40,.28),transparent 60%),radial-gradient(50% 70% at 100% 0%,rgba(0,230,118,.25),transparent 60%),#090B0A;color:#EEF3EF;font-family:D;position:relative}
-.k{position:absolute;left:72px;top:70px;font:500 26px M;color:#00E676}
-h1{position:absolute;left:68px;top:118px;margin:0;font:700 104px/.95 D;letter-spacing:-.045em;width:760px}
+body{margin:0;width:1200px;height:630px;overflow:hidden;background:radial-gradient(55% 75% at 0% 100%,rgba(255,150,40,.22),transparent 60%),radial-gradient(45% 70% at 78% 50%,rgba(0,230,118,.16),transparent 70%),#0A0D0B;color:#EEF3EF;font-family:D;position:relative}
+.fox{position:absolute;right:-8px;top:-10px;width:650px;height:auto;-webkit-mask-image:radial-gradient(closest-side,#000 74%,transparent 100%);mask-image:radial-gradient(closest-side,#000 74%,transparent 100%)}
+.k{position:absolute;left:70px;top:76px;font:500 25px M;color:#00E676}
+h1{position:absolute;left:66px;top:118px;margin:0;font:700 92px/.95 D;letter-spacing:-.045em;width:560px}
 h1 span{color:#00E676}
-p{position:absolute;left:72px;bottom:66px;margin:0;font:400 28px D;color:#9AA79F}
-.clock{position:absolute;right:-20px;bottom:-60px;font:200 330px/1 M;letter-spacing:-.06em;color:transparent;-webkit-text-stroke:2px rgba(0,230,118,.28)}
-.logo{position:absolute;right:72px;top:62px;display:flex;align-items:center;gap:14px;font:500 34px M}
-.logo svg{width:60px;height:60px}
-.log{position:absolute;right:72px;top:190px;width:330px;display:grid;gap:12px}
-.log div{background:#161C19;border-radius:18px;padding:14px 16px;font-size:19px;border-left:4px solid var(--c)}
-.log b{display:block;font:500 14px M;color:var(--c);margin-bottom:4px}
+.sub{position:absolute;left:70px;top:430px;margin:0;font:400 27px/1.35 D;color:#B5C2BA;width:520px}
+.foot{position:absolute;left:70px;bottom:52px;display:flex;align-items:center;gap:14px;font:500 27px M}
+.foot svg{width:54px;height:46px}
+.foot i{font-style:normal;color:#7E8C84;font:400 22px D;margin-left:10px}
 </style>
+<img class="fox" src="og-fox.jpg" alt="">
 <div class="k">&gt; textfox.init()</div>
 <h1>Your phone texts for you. <span>All day.</span></h1>
-<p>Scheduled texts · auto-reply · missed-call text-back · Android</p>
-<div class="logo"><svg viewBox="0 0 354.18 302.05" style="color:#00E676;width:70px;height:60px"><path d="M3.03,167.98l108.55,18.34c18.05,15.38,83.78,26.23,102.7,10.13l136.86-28.13c1.06-.91,4.45-1.28,2.38-4.76l-16.81-47.49L327.15,0l-99.48,74.39h-100.38S27.76,0,27.76,0l-8.57,116.06L.88,163.68c-.59.82-1,1.64-.84,2.21.25.92,1.26,1.41,3,2.1Z" fill="#121815"/><path d="M351.14,168.32c-2.58-.26-5.33.02-8.35,1.16l-87.63,24.45-77.62,102.84-77.78-102.9-88.64-24.75c-3.04-.85-5.58-1.5-8.09-1.14-1.73-.69-2.74-1.18-3-2.1-.16-.57.25-1.38.84-2.21l18.32-47.61L27.76,0l99.53,74.39h100.38S327.15,0,327.15,0l9.56,116.08,16.81,47.49c2.07,3.48-1.32,3.86-2.38,4.76Z" fill="currentColor"/><path d="M351.14,168.32l-144.48,122.95c-18.92,16.1-43.45,13.15-61.5-2.22L3.03,167.98c2.51-.36,5.05.29,8.09,1.14l88.64,24.75,77.78,102.9,77.62-102.84,87.63-24.45c3.03-1.14,5.77-1.43,8.35-1.16Z" fill="#E5F3EA"/><ellipse class="eye" cx="121.96" cy="149.52" rx="19.4" ry="19.4" fill="#121815"/><ellipse class="eye" cx="177.51" cy="149.52" rx="19.4" ry="19.4" fill="#121815"/><ellipse class="eye" cx="233.04" cy="149.52" rx="19.4" ry="19.4" fill="#121815"/></svg>textfox</div>
-<div class="log"><div style="--c:#FFB300"><b>08:00 · SCHEDULED</b>Good morning ☀️</div><div style="--c:#42D1CA"><b>10:41 · AUTO-REPLY</b>I'm away, back Monday.</div><div style="--c:#00E676"><b>11:27 · MISSED CALL</b>Sorry I missed your call.</div></div>
+<p class="sub">Scheduled texts, auto-replies and missed-call text-back for Android.</p>
+<div class="foot"><svg viewBox="0 0 354.18 302.05" style="color:#00E676"><path d="M3.03,167.98l108.55,18.34c18.05,15.38,83.78,26.23,102.7,10.13l136.86-28.13c1.06-.91,4.45-1.28,2.38-4.76l-16.81-47.49L327.15,0l-99.48,74.39h-100.38S27.76,0,27.76,0l-8.57,116.06L.88,163.68c-.59.82-1,1.64-.84,2.21.25.92,1.26,1.41,3,2.1Z" fill="#121815"/><path d="M351.14,168.32c-2.58-.26-5.33.02-8.35,1.16l-87.63,24.45-77.62,102.84-77.78-102.9-88.64-24.75c-3.04-.85-5.58-1.5-8.09-1.14-1.73-.69-2.74-1.18-3-2.1-.16-.57.25-1.38.84-2.21l18.32-47.61L27.76,0l99.53,74.39h100.38S327.15,0,327.15,0l9.56,116.08,16.81,47.49c2.07,3.48-1.32,3.86-2.38,4.76Z" fill="currentColor"/><path d="M351.14,168.32l-144.48,122.95c-18.92,16.1-43.45,13.15-61.5-2.22L3.03,167.98c2.51-.36,5.05.29,8.09,1.14l88.64,24.75,77.78,102.9,77.62-102.84,87.63-24.45c3.03-1.14,5.77-1.43,8.35-1.16Z" fill="#E5F3EA"/><ellipse class="eye" cx="121.96" cy="149.52" rx="19.4" ry="19.4" fill="#121815"/><ellipse class="eye" cx="177.51" cy="149.52" rx="19.4" ry="19.4" fill="#121815"/><ellipse class="eye" cx="233.04" cy="149.52" rx="19.4" ry="19.4" fill="#121815"/></svg>textfox<i>Free on Google Play · textfox.app</i></div>

@@ -12,6 +12,19 @@
   const fitSteps = () => steps.forEach(ol => { const li = ol.lastElementChild; if (!li) return; const pad = parseFloat(getComputedStyle(li).paddingTop), n = parseFloat(getComputedStyle(li, '::before').height) || 48; ol.style.setProperty('--end', (ol.offsetHeight - li.offsetTop - pad - n / 2) + 'px'); });
   if (steps.length) { fitSteps(); addEventListener('resize', fitSteps); document.fonts && document.fonts.ready.then(fitSteps); }
 
+  // sharing: native share sheet where available, otherwise the plain links; copy-link with feedback
+  document.querySelectorAll('[data-share]').forEach(b => {
+    if (!navigator.share) return;
+    b.hidden = false;
+    b.addEventListener('click', () => navigator.share({title: document.title, text: 'TextFox sends your texts for you: scheduled SMS, auto-replies and missed-call text-back for Android.', url: b.dataset.share}).catch(() => {}));
+  });
+  document.querySelectorAll('[data-copy]').forEach(b => b.addEventListener('click', async () => {
+    const label = b.querySelector('span');
+    try { await navigator.clipboard.writeText(b.dataset.copy); label.textContent = 'Link copied ✓'; }
+    catch { label.textContent = b.dataset.copy; }
+    b.classList.add('copied'); setTimeout(() => { label.textContent = 'Copy link'; b.classList.remove('copied'); }, 2200);
+  }));
+
   // intro video: load and play only while visible; never autoplay under reduced motion
   const vid = $('video[data-lazy]');
   if (vid) {
