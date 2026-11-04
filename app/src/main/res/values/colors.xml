@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Teal sampled from the app icon artwork; used as the adaptive-icon background. -->
-    <color name="ic_launcher_background">#42D1CA</color>
+    <!-- TextFox green, the background of the fox logo and the adaptive icon. -->
+    <color name="ic_launcher_background">#69E382</color>
 </resources>
