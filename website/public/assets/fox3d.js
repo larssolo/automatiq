@@ -116,7 +116,8 @@ function boot(THREE, SVGLoader, RoomEnvironment) {
   addEventListener('pointermove', e => { if (e.pointerType !== 'mouse') return; ptr.tx = e.clientX / innerWidth * 2 - 1; ptr.ty = e.clientY / innerHeight * 2 - 1; ptr.last = performance.now() / 1000; }, {passive: true});
 
   const ease = x => x * x * (3 - 2 * x);
-  let visible = true, t0 = performance.now(), last = t0, oa = 0, slow = 0, frames = 0;
+  // the spin-in starts as the load burst snaps back (≈1 s after navigation), never before
+  let visible = true, t0 = Math.max(performance.now(), 950), last = performance.now(), oa = 0, slow = 0, frames = 0;
   new IntersectionObserver(([e]) => { visible = e.isIntersecting; }).observe(stage);
 
   function frame(now) {
@@ -125,7 +126,7 @@ function boot(THREE, SVGLoader, RoomEnvironment) {
     const dt = Math.min(.05, (now - last) / 1000); last = now;
     const t = (now - t0) / 1000;
     // intro: the flat logo pops into 3D — parts fly together while the fox spins once
-    const intro = Math.max(0, 1 - t / 1.9), ie = intro * intro * (3 - 2 * intro);
+    const intro = Math.min(1, Math.max(0, 1 - t / 1.9)), ie = intro * intro * (3 - 2 * intro);
     const e = ease(Math.min(1, Math.max(TF.boom, ie * .7)));
 
     // pointer (desktop) or a slow idle sway, so the depth always reads

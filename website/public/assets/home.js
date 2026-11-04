@@ -176,6 +176,6 @@ window.TF = window.TF || {boom: 0};
     gsap.fromTo('#panel', {clipPath: 'inset(12% 8% 12% 8% round 64px)'}, {clipPath: 'inset(0% 0% 0% 0% round 40px)', ease: 'none', scrollTrigger: {trigger: '#panel', start: 'top 95%', end: 'top 45%', scrub: true}});
   });
 
-  SplitText.create('#h1', {type: 'words', mask: 'words', onSplit: self => gsap.from(self.words, {yPercent: 110, duration: 1.1, ease: 'power4.out', stagger: .07, delay: .1})});
-  gsap.from(['.hero .kicker', '.hero .lede', '.hero .cta-row', '.hero .jump'], {y: 24, opacity: 0, duration: .9, ease: 'power3.out', stagger: .08, delay: .4});
+  SplitText.create('#h1', {type: 'words', mask: 'words', onSplit: self => gsap.from(self.words, {yPercent: 110, duration: 1.1, ease: 'power4.out', stagger: .07, delay: .6})});   // rises as the burst retracts
+  gsap.from(['.hero .kicker', '.hero .lede', '.hero .cta-row', '.hero .jump'], {y: 24, opacity: 0, duration: .9, ease: 'power3.out', stagger: .08, delay: .85});
 })();
