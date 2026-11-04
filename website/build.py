@@ -18,9 +18,60 @@ SITE = "https://www.textfox.app"
 # ---- one place to change launch details ------------------------------------
 PLAY_URL = "https://play.google.com/apps/testing/app.kodekid.automatiq"  # swap for the production listing at launch
 CTA_NOTE = "Early access on Google Play · Free · Android 8.0+"
+CTA_NOTE_DA = "Tidlig adgang på Google Play · Gratis · Android 8.0+"
 CONTACT = "hello@larssohl.dk"
 PUBLISHER = "kodekid.app"
 TODAY = datetime.date.today().isoformat()
+
+# ---- languages -------------------------------------------------------------
+# English lives at the root, Danish under /da. PAIRS links each page to its translation (hreflang + language switch).
+PAIRS = [("/", "/da"), ("/scheduled-text-messages", "/da/planlagte-sms"), ("/auto-reply-sms", "/da/autosvar-sms"),
+         ("/missed-call-text-back", "/da/sms-ved-ubesvaret-opkald"), ("/one-tap-text-widget", "/da/sms-med-et-tryk"), ("/about", "/da/om")]
+
+
+def counterpart(path):
+    for en, da in PAIRS:
+        if path == en: return "da", da
+        if path == da: return "en", en
+    return None
+
+
+def abs_url(path):
+    return SITE + ("/" if path == "/" else path)
+
+
+T = {
+    "en": {"locale": "en_US", "home": "/", "skip": "Skip to content", "home_aria": "TextFox home",
+           "nav": ["A day", "Features", "AI", "Privacy", "FAQ"], "get_app": "Get the app", "play_small": "Get it on",
+           "cta_note": CTA_NOTE,
+           "f_tag": "Scheduled texts, auto-replies and missed-call text-back for Android. Set it up once. It just runs.",
+           "f_features": "Features", "f_contact": "Contact", "about": "About the maker", "privacy": "Privacy policy", "made_by": "Made by",
+           "no_track": "No cookies. No tracking.", "related_h": "More of what TextFox does",
+           "pages": {"sched": ("/scheduled-text-messages", "Scheduled texts"), "auto": ("/auto-reply-sms", "Auto-reply"), "missed": ("/missed-call-text-back", "Missed-call text-back"),
+                     "tap": ("/one-tap-text-widget", "One-tap widget"), "ai": ("/#ai", "AI variations"), "about": ("/about", "About the maker"), "faq": ("/#faq", "FAQ")},
+           "privacy_href": "/privacy", "crumb_root": "TextFox",
+           "share_text": "TextFox sends your texts for you: scheduled SMS, auto-replies and missed-call text-back for Android.",
+           "share_subject": "Have a look at TextFox", "share_h": "Know someone who's always running late?",
+           "share_p": "Send them TextFox. It's free, and it might save them a lot of typing.", "share": "Share", "email": "Email", "copy": "Copy link",
+           "final_h": "Set it up once.<br>It just runs.", "final_p": "Free for Android 8.0 and newer. Runs on your phone: no account, no ads, no tracking.",
+           "og_alt": "TextFox: your phone texts for you. Scheduled texts, auto-replies and missed-call text-back for Android.",
+           "switch": ("DA", "Dansk", "da")},
+    "da": {"locale": "da_DK", "home": "/da", "skip": "Gå til indhold", "home_aria": "TextFox forside",
+           "nav": ["En dag", "Funktioner", "AI", "Privatliv", "FAQ"], "get_app": "Hent appen", "play_small": "Hent den på",
+           "cta_note": CTA_NOTE_DA,
+           "f_tag": "Planlagte sms'er, autosvar og sms ved ubesvaret opkald til Android. Sæt det op én gang. Så kører det bare.",
+           "f_features": "Funktioner", "f_contact": "Kontakt", "about": "Om skaberen", "privacy": "Privatlivspolitik (engelsk)", "made_by": "Lavet af",
+           "no_track": "Ingen cookies. Ingen sporing.", "related_h": "Mere af det, TextFox kan",
+           "pages": {"sched": ("/da/planlagte-sms", "Planlagte sms'er"), "auto": ("/da/autosvar-sms", "Autosvar"), "missed": ("/da/sms-ved-ubesvaret-opkald", "Sms ved ubesvaret opkald"),
+                     "tap": ("/da/sms-med-et-tryk", "Sms med ét tryk"), "ai": ("/da#ai", "AI-varianter"), "about": ("/da/om", "Om skaberen"), "faq": ("/da#faq", "FAQ")},
+           "privacy_href": "/privacy", "crumb_root": "TextFox",
+           "share_text": "TextFox sender dine sms'er for dig: planlagte sms'er, autosvar og sms ved ubesvaret opkald til Android.",
+           "share_subject": "Kig lige på TextFox", "share_h": "Kender du en, der altid kommer for sent?",
+           "share_p": "Send dem TextFox. Den er gratis og kan spare dem for en masse tasten.", "share": "Del", "email": "E-mail", "copy": "Kopiér link",
+           "final_h": "Sæt det op én gang.<br>Så kører det bare.", "final_p": "Gratis til Android 8.0 og nyere. Kører på din telefon: ingen konto, ingen reklamer, ingen sporing.",
+           "og_alt": "TextFox: din telefon sender sms'er for dig. Planlagte sms'er, autosvar og sms ved ubesvaret opkald til Android.",
+           "switch": ("EN", "English", "en")},
+}
 
 FAQ = {
     "home": [
@@ -59,6 +110,43 @@ FAQ = {
     ],
 }
 
+FAQ_DA = {
+    "home": [
+        ("Hvad er TextFox?", "TextFox er en gratis Android-app, der sender sms'er for dig automatisk. Du laver en makro, som er en udløser plus en besked, og TextFox sender den på et fast tidspunkt, som svar på en indgående sms, efter et ubesvaret opkald, eller når du trykker på en widget på hjemmeskærmen."),
+        ("Er TextFox gratis?", "Ja. TextFox er gratis, uden reklamer og uden abonnement. De valgfrie AI-funktioner bruger din egen gratis Google Gemini-nøgle. Sms'erne sendes via dit almindelige mobilabonnement, så dit teleselskabs normale sms-priser gælder."),
+        ("Skal jeg oprette en konto?", "Nej. Der er ingen tilmelding og intet login. Installér appen, giv de tilladelser, den guidede opsætning beder om, og lav din første makro."),
+        ("Virker TextFox på iPhone?", "Nej. TextFox er til Android 8.0 og nyere. iPhone tillader ikke apps at sende sms'er automatisk i baggrunden."),
+        ("Kan TextFox svare på WhatsApp-beskeder?", "Nej. TextFox sender og svarer kun på almindelige sms'er."),
+        ("Bliver planlagte sms'er sendt, selv om telefonen genstarter eller sover?", "Ja. TextFox bruger Androids præcise alarmer med en reserveplanlægger og genaktiverer alle makroer efter en genstart eller en opdatering. Den guidede opsætning beder dig tillade præcise alarmer og undtage TextFox fra batterioptimering, hvilket Android kræver for at kunne sende pålideligt i baggrunden."),
+        ("Hvad gør AI'en, og hvad sendes til Google?", "AI er valgfrit og slået fra, indtil du tilføjer din egen Gemini-nøgle. Den kan omskrive planlagte sms'er, så de aldrig lyder ens, skrive autosvar og foreslå nye beskeder. Kun beskedteksten og din eventuelle instruks sendes, direkte fra din telefon til Googles Gemini API. Telefonnumre og kontaktnavne sendes ikke."),
+        ("Kan én makro sende til flere personer?", "Ja. En makro kan have mange modtagere, og hver kopi kan indeholde personens kontaktnavn."),
+    ],
+    "scheduled": [
+        ("Kan jeg planlægge en sms til en bestemt dato?", "Ja. Vælg en engangsplan, og vælg dato og klokkeslæt. Gentagne planer kan også have en slutdato."),
+        ("Bliver en planlagt sms sendt, hvis telefonen genstarter?", "Ja. TextFox genaktiverer alle planer efter en genstart eller appopdatering, og en reserveplanlægger indhenter, hvis Android har forsinket en alarm."),
+        ("Kan jeg sende den samme planlagte sms til flere personer?", "Ja. Tilføj så mange modtagere, du vil. Hver kopi kan indeholde personens navn."),
+        ("Kommer en planlagt sms fra mit eget nummer?", "Ja. TextFox sender en helt almindelig sms fra din telefon og dit nummer via dit mobilabonnement."),
+    ],
+    "autoreply": [
+        ("Kan TextFox kun autosvare bestemte personer?", "Ja. Hver autosvar-makro kan begrænses til udvalgte afsendere, til sms'er med et bestemt ord, eller begge dele."),
+        ("Kan jeg stoppe autosvar om natten?", "Ja. Indstil stille timer. Sms'er, der kommer i det tidsrum, besvares, når det slutter, med ét svar pr. person til deres seneste besked."),
+        ("Svarer den på WhatsApp eller Messenger?", "Nej. TextFox svarer kun på almindelige sms'er."),
+        ("Kan AI skrive autosvaret?", "Ja, hvis du tilføjer din egen gratis Google Gemini-nøgle. Du kan godkende hvert svar i en notifikation, før det sendes, eller lade det sende automatisk og få besked bagefter."),
+    ],
+    "tap": [
+        ("Sender widgetten uden at åbne appen?", "Ja. Ét tryk på widgetten sender makroens sms med det samme. Du behøver ikke åbne TextFox."),
+        ("Kan én widget sende til flere personer?", "Ja. Widgetten sender makroen til alle modtagere på listen, og hver kopi kan indeholde personens navn."),
+        ("Hvordan ved jeg, at sms'en er sendt?", "Widgettens undertekst viser seneste afsendelse, fx \"Last: 14:32 ✓\", og loggen i appen viser leveringsstatus."),
+        ("Kan jeg have flere widgets?", "Ja. Tilføj én widget pr. makro, og placér så mange, du vil, på dine hjemmeskærme."),
+    ],
+    "missed": [
+        ("Virker det, når jeg afviser et opkald?", "Ja. Både opkald, der ringer ud, og opkald, du afviser, udløser sms'en."),
+        ("Kan jeg begrænse det til bestemte opkaldere?", "Ja. Et valgfrit filter begrænser sms'en til de numre, du vælger."),
+        ("Hvilke tilladelser kræver det?", "Adgang til telefonstatus og opkaldslog for at opdage et ubesvaret opkald, og sms for at sende beskeden. Begge dele bruges kun på din telefon og uploades aldrig."),
+        ("Hvor hurtigt sendes sms'en?", "Normalt få sekunder efter opkaldet. Hver afsendelse logges og markeres som leveret, når dit teleselskab bekræfter det."),
+    ],
+}
+
 ICONS = """<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
 <symbol id="fox" viewBox="0 0 354.18 302.05"><path d="M3.03,167.98l108.55,18.34c18.05,15.38,83.78,26.23,102.7,10.13l136.86-28.13c1.06-.91,4.45-1.28,2.38-4.76l-16.81-47.49L327.15,0l-99.48,74.39h-100.38S27.76,0,27.76,0l-8.57,116.06L.88,163.68c-.59.82-1,1.64-.84,2.21.25.92,1.26,1.41,3,2.1Z" fill="#121815"/><path d="M351.14,168.32c-2.58-.26-5.33.02-8.35,1.16l-87.63,24.45-77.62,102.84-77.78-102.9-88.64-24.75c-3.04-.85-5.58-1.5-8.09-1.14-1.73-.69-2.74-1.18-3-2.1-.16-.57.25-1.38.84-2.21l18.32-47.61L27.76,0l99.53,74.39h100.38S327.15,0,327.15,0l9.56,116.08,16.81,47.49c2.07,3.48-1.32,3.86-2.38,4.76Z" fill="currentColor"/><path d="M351.14,168.32l-144.48,122.95c-18.92,16.1-43.45,13.15-61.5-2.22L3.03,167.98c2.51-.36,5.05.29,8.09,1.14l88.64,24.75,77.78,102.9,77.62-102.84,87.63-24.45c3.03-1.14,5.77-1.43,8.35-1.16Z" fill="#E5F3EA"/><ellipse class="eye" cx="121.96" cy="149.52" rx="19.4" ry="19.4" fill="#121815"/><ellipse class="eye" cx="177.51" cy="149.52" rx="19.4" ry="19.4" fill="#121815"/><ellipse class="eye" cx="233.04" cy="149.52" rx="19.4" ry="19.4" fill="#121815"/></symbol>
 <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></symbol>
@@ -74,21 +162,29 @@ ICONS = """<svg width="0" height="0" style="position:absolute" aria-hidden="true
 </svg>"""
 
 PLAY_SVG = '<svg width="18" height="20" viewBox="0 0 16 18" aria-hidden="true"><path d="M1 1.2v15.6c0 .5.5.8.9.6L15 9.6a.7.7 0 0 0 0-1.2L1.9.6C1.5.4 1 .7 1 1.2Z" fill="currentColor"/></svg>'
-PLAY = f'<a class="btn btn-g play-btn" href="{PLAY_URL}" rel="noopener">{PLAY_SVG}<span><small>Get it on</small>Google Play</span></a>'
+def play(lang="en"):
+    return f'<a class="btn btn-g play-btn" href="{PLAY_URL}" rel="noopener">{PLAY_SVG}<span><small>{T[lang]["play_small"]}</small>Google Play</span></a>'
+
+
+PLAY = play("en")
 
 
 def ver(rel):
     return hashlib.sha1((PUB / rel.lstrip("/")).read_bytes()).hexdigest()[:8]
 
 
-def faq_html(key):
-    items = "".join(f'<details><summary>{html.escape(q)}</summary><div><p>{html.escape(a)}</p></div></details>' for q, a in FAQ[key])
+def faqs(lang):
+    return FAQ_DA if lang == "da" else FAQ
+
+
+def faq_html(key, lang="en"):
+    items = "".join(f'<details><summary>{html.escape(q)}</summary><div><p>{html.escape(a)}</p></div></details>' for q, a in faqs(lang)[key])
     return f'<div class="faq">{items}</div>'
 
 
-def faq_schema(key, url):
-    return {"@type": "FAQPage", "@id": url + "#faq", "mainEntity": [
-        {"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}} for q, a in FAQ[key]]}
+def faq_schema(key, url, lang="en"):
+    return {"@type": "FAQPage", "@id": url + "#faq", "inLanguage": lang, "mainEntity": [
+        {"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}} for q, a in faqs(lang)[key]]}
 
 
 PERSON = {"@type": "Person", "@id": SITE + "/about#lars", "name": "Lars Sohl", "url": SITE + "/about",
@@ -119,30 +215,39 @@ VIDEO = {"@type": "VideoObject", "@id": SITE + "/#video", "name": "TextFox intro
 
 def head(meta, url):
     title, desc = meta["title"], meta["description"]
+    lang = meta.get("lang", "en"); L = T[lang]
     og = SITE + "/og/textfox-og.png"
     graph = [ORG, PERSON, {"@type": "WebSite", "@id": SITE + "/#site", "url": SITE + "/", "name": "TextFox", "publisher": {"@id": SITE + "/#org"}, "inLanguage": "en"}]
     s = meta.get("schema", [])
     if "app" in s: graph.append(APP)
-    if "faq" in s: graph.append(faq_schema("home", url))
+    if "faq" in s: graph.append(faq_schema("home", url, lang))
     if "video" in s: graph.append(VIDEO)
     if "page-faq" in s:
-        graph.append(faq_schema(meta["faq"], url))
-        graph.append({"@type": "WebPage", "@id": url, "url": url, "name": title, "description": desc, "about": {"@id": SITE + "/#app"}, "isPartOf": {"@id": SITE + "/#site"}})
+        graph.append(faq_schema(meta["faq"], url, lang))
+        graph.append({"@type": "WebPage", "@id": url, "url": url, "name": title, "description": desc, "inLanguage": lang, "about": {"@id": SITE + "/#app"}, "isPartOf": {"@id": SITE + "/#site"}})
     if "person" in s:
-        graph.append({"@type": "AboutPage", "@id": url, "url": url, "name": title, "description": desc, "mainEntity": {"@id": SITE + "/about#lars"}, "isPartOf": {"@id": SITE + "/#site"}})
+        graph.append({"@type": "AboutPage", "@id": url, "url": url, "name": title, "description": desc, "inLanguage": lang, "mainEntity": {"@id": SITE + "/about#lars"}, "isPartOf": {"@id": SITE + "/#site"}})
     if meta.get("crumb"):
         graph.append({"@type": "BreadcrumbList", "itemListElement": [
-            {"@type": "ListItem", "position": 1, "name": "TextFox", "item": SITE + "/"},
+            {"@type": "ListItem", "position": 1, "name": "TextFox", "item": abs_url(L["home"])},
             {"@type": "ListItem", "position": 2, "name": meta["crumb"], "item": url}]})
     ld = json.dumps({"@context": "https://schema.org", "@graph": graph}, ensure_ascii=False).replace("</", "<\\/")
     robots = "noindex, follow" if meta.get("noindex") else "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"
     e = html.escape
+    alts = ""
+    cp = counterpart(meta["path"])
+    if cp:
+        other_lang, other_path = cp
+        en_path, da_path = (meta["path"], other_path) if lang == "en" else (other_path, meta["path"])
+        alts = (f'\n<meta property="og:locale:alternate" content="{T[other_lang]["locale"]}">'
+                f'\n<link rel="alternate" hreflang="en" href="{abs_url(en_path)}">\n<link rel="alternate" hreflang="da" href="{abs_url(da_path)}">'
+                f'\n<link rel="alternate" hreflang="x-default" href="{abs_url(en_path)}">')
     preload = "".join(f'\n<link rel="modulepreload" href="{m}">' for m in (["/assets/js/three/three.module.min.js", "/assets/js/three/SVGLoader.min.js", "/assets/js/three/RoomEnvironment.min.js"] if meta.get("modules") else []))
     preload += "".join(f'\n<link rel="modulepreload" href="{m}?v={ver(m)}">' for m in meta.get("modules", []))
     noscript = '\n<noscript><style>.fox-stage .fox-wrap,.fox-stage .rings{opacity:1!important}</style></noscript>' if meta.get("modules") else ""
     preload += noscript
     return f"""<!doctype html>
-<html lang="en">
+<html lang="{lang}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -161,14 +266,14 @@ def head(meta, url):
 <link rel="stylesheet" href="/assets/site.css?v={ver('/assets/site.css')}">{preload}
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="TextFox">
-<meta property="og:locale" content="en_US">
+<meta property="og:locale" content="{L['locale']}">{alts}
 <meta property="og:title" content="{e(title)}">
 <meta property="og:description" content="{e(desc)}">
 <meta property="og:url" content="{url}">
 <meta property="og:image" content="{og}">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="TextFox: your phone texts for you. Scheduled texts, auto-replies and missed-call text-back for Android.">
+<meta property="og:image:alt" content="{e(L['og_alt'])}">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="{e(title)}">
 <meta name="twitter:description" content="{e(desc)}">
@@ -177,33 +282,40 @@ def head(meta, url):
 </head>"""
 
 
-def nav(home):
-    p = "" if home else "/"
-    return f"""<a class="skip" href="#main">Skip to content</a>
+def nav(path, lang):
+    L = T[lang]
+    p = "" if path == L["home"] else L["home"].rstrip("/") if lang == "da" else "/"
+    links = "".join(f'<a href="{p}#{a}">{n}</a>' for a, n in zip(["day", "triggers", "ai", "privacy", "faq"], L["nav"]))
+    cp = counterpart(path)
+    code, label, other = L["switch"]
+    target = cp[1] if cp else T[other]["home"]
+    return f"""<a class="skip" href="#main">{L["skip"]}</a>
 <div class="grain" aria-hidden="true"></div>
 <header class="nav"><div class="wrap">
-  <a class="brand" href="/" aria-label="TextFox home"><svg aria-hidden="true"><use href="#fox"/></svg>textfox</a>
-  <nav class="nav-links" aria-label="Main"><a href="{p}#day">A day</a><a href="{p}#triggers">Features</a><a href="{p}#ai">AI</a><a href="{p}#privacy">Privacy</a><a href="{p}#faq">FAQ</a></nav>
-  <a class="btn btn-g btn-sm" href="{PLAY_URL}" rel="noopener">Get the app</a>
+  <a class="brand" href="{L["home"]}" aria-label="{L["home_aria"]}"><svg aria-hidden="true"><use href="#fox"/></svg>textfox</a>
+  <nav class="nav-links" aria-label="Main">{links}</nav>
+  <div class="nav-end"><a class="lang" href="{target}" hreflang="{other}" lang="{other}" title="{label}" aria-label="{label}">{code}</a><a class="btn btn-g btn-sm" href="{PLAY_URL}" rel="noopener">{L["get_app"]}</a></div>
 </div></header>"""
 
 
-FOOTER = f"""<footer><div class="wrap">
+def footer(lang):
+    L = T[lang]; P = L["pages"]
+    feats = "".join(f'<li><a href="{P[k][0]}">{P[k][1]}</a></li>' for k in ["sched", "auto", "missed", "tap", "ai"])
+    return f"""<footer><div class="wrap">
   <div class="foot">
-    <div><a class="brand" href="/" aria-label="TextFox home"><svg aria-hidden="true"><use href="#fox"/></svg>textfox</a><p>Scheduled texts, auto-replies and missed-call text-back for Android. Set it up once. It just runs.</p></div>
-    <div><h2>Features</h2><ul><li><a href="/scheduled-text-messages">Scheduled texts</a></li><li><a href="/auto-reply-sms">Auto-reply</a></li><li><a href="/missed-call-text-back">Missed-call text-back</a></li><li><a href="/one-tap-text-widget">One-tap widget</a></li><li><a href="/#ai">AI variations</a></li></ul></div>
-    <div><h2>TextFox</h2><ul><li><a href="{PLAY_URL}" rel="noopener">Google Play</a></li><li><a href="/#faq">FAQ</a></li><li><a href="/about">About the maker</a></li><li><a href="/privacy">Privacy policy</a></li></ul></div>
-    <div><h2>Contact</h2><ul><li><a href="mailto:{CONTACT}">{CONTACT}</a></li><li>Made by <a href="/about">Lars Sohl</a></li><li><a href="https://www.kodekid.app" rel="noopener">{PUBLISHER}</a></li></ul></div>
+    <div><a class="brand" href="{L["home"]}" aria-label="{L["home_aria"]}"><svg aria-hidden="true"><use href="#fox"/></svg>textfox</a><p>{L["f_tag"]}</p></div>
+    <div><h2>{L["f_features"]}</h2><ul>{feats}</ul></div>
+    <div><h2>TextFox</h2><ul><li><a href="{PLAY_URL}" rel="noopener">Google Play</a></li><li><a href="{P["faq"][0]}">FAQ</a></li><li><a href="{P["about"][0]}">{L["about"]}</a></li><li><a href="{L["privacy_href"]}">{L["privacy"]}</a></li></ul></div>
+    <div><h2>{L["f_contact"]}</h2><ul><li><a href="mailto:{CONTACT}">{CONTACT}</a></li><li>{L["made_by"]} <a href="{P["about"][0]}">Lars Sohl</a></li><li><a href="https://www.kodekid.app" rel="noopener">{PUBLISHER}</a></li></ul></div>
   </div>
-  <div class="legal"><span>© {datetime.date.today().year} TextFox · <a href="https://www.kodekid.app" rel="noopener">{PUBLISHER}</a></span><span>No cookies. No tracking.</span></div>
+  <div class="legal"><span>© {datetime.date.today().year} TextFox · <a href="https://www.kodekid.app" rel="noopener">{PUBLISHER}</a></span><span>{L["no_track"]}</span></div>
 </div></footer>"""
 
-RELATED_PAGES = [("/scheduled-text-messages", "Scheduled texts"), ("/auto-reply-sms", "Auto-reply"), ("/missed-call-text-back", "Missed-call text-back"), ("/one-tap-text-widget", "One-tap widget"), ("/#ai", "AI variations")]
 
-
-def related(path):
-    links = "".join(f'<a href="{h}"><span>{t}</span><span class="g">→</span></a>' for h, t in RELATED_PAGES if h != path)
-    return f'<section class="section tight"><div class="wrap"><h2 class="h3">More of what TextFox does</h2><div class="related">{links}</div></div></section>'
+def related(path, lang="en"):
+    L = T[lang]; P = L["pages"]
+    links = "".join(f'<a href="{P[k][0]}"><span>{P[k][1]}</span><span class="g">→</span></a>' for k in ["sched", "auto", "missed", "tap", "ai"] if P[k][0] != path)
+    return f'<section class="section tight"><div class="wrap"><h2 class="h3">{L["related_h"]}</h2><div class="related">{links}</div></div></section>'
 
 
 SHARE_TEXT = "TextFox sends your texts for you: scheduled SMS, auto-replies and missed-call text-back for Android."
@@ -215,7 +327,8 @@ BRANDS = {
 }
 
 
-def share(url):
+def share(url, lang="en"):
+    L = T[lang]; SHARE_TEXT = L["share_text"]
     q = urllib.parse.quote
     links = [
         ("linkedin", "LinkedIn", "#0A66C2", f"https://www.linkedin.com/sharing/share-offsite/?url={q(url, safe='')}"),
@@ -224,38 +337,40 @@ def share(url):
         ("whatsapp", "WhatsApp", "#25D366", f"https://wa.me/?text={q(SHARE_TEXT + ' ' + url)}"),
     ]
     btns = "".join(f'<a class="sh" style="--b:{c}" href="{h}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true">{BRANDS[k]}</svg>{n}</a>' for k, n, c, h in links)
-    mail = f'mailto:?subject={q("Have a look at TextFox")}&body={q(SHARE_TEXT + chr(10) + chr(10) + url)}'
+    mail = f'mailto:?subject={q(L["share_subject"])}&body={q(SHARE_TEXT + chr(10) + chr(10) + url)}'
     return f"""<section class="share" aria-labelledby="share-h"><div class="wrap"><div class="share-in">
-  <div><p class="kicker">// share</p><h2 class="h3" id="share-h">Know someone who's always running late?</h2><p class="body">Send them TextFox. It's free, and it might save them a lot of typing.</p></div>
+  <div><p class="kicker">// share</p><h2 class="h3" id="share-h">{L["share_h"]}</h2><p class="body">{L["share_p"]}</p></div>
   <div class="share-btns">
-    <button class="sh sh-native" type="button" data-share="{url}" hidden><svg viewBox="0 0 24 24" aria-hidden="true" class="st"><path d="M12 3v12M7.5 7.5 12 3l4.5 4.5M5 12v7.5h14V12"/></svg>Share</button>
+    <button class="sh sh-native" type="button" data-share="{url}" data-text="{html.escape(SHARE_TEXT)}" hidden><svg viewBox="0 0 24 24" aria-hidden="true" class="st"><path d="M12 3v12M7.5 7.5 12 3l4.5 4.5M5 12v7.5h14V12"/></svg>{L["share"]}</button>
     {btns}
-    <a class="sh" style="--b:#9AA79F" href="{mail}"><svg viewBox="0 0 24 24" aria-hidden="true" class="st"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="m3.5 6.5 8.5 7 8.5-7"/></svg>Email</a>
-    <button class="sh" style="--b:#00E676" type="button" data-copy="{url}"><svg viewBox="0 0 24 24" aria-hidden="true" class="st"><path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1"/><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1"/></svg><span>Copy link</span></button>
+    <a class="sh" style="--b:#9AA79F" href="{mail}"><svg viewBox="0 0 24 24" aria-hidden="true" class="st"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="m3.5 6.5 8.5 7 8.5-7"/></svg>{L["email"]}</a>
+    <button class="sh" style="--b:#00E676" type="button" data-copy="{url}" data-label="{L["copy"]}"><svg viewBox="0 0 24 24" aria-hidden="true" class="st"><path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1"/><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1"/></svg><span>{L["copy"]}</span></button>
   </div>
 </div></div></section>"""
 
 
-FINAL = f"""<section class="final"><div class="wrap"><div class="panel"><h2>Set it up once.<br>It just runs.</h2>
-<p>Free for Android 8.0 and newer. Runs on your phone: no account, no ads, no tracking.</p><div class="cta-row">{PLAY}</div><p class="cta-note">{CTA_NOTE}</p></div></div></section>"""
+def final(lang="en"):
+    L = T[lang]
+    return f"""<section class="final"><div class="wrap"><div class="panel"><h2>{L["final_h"]}</h2>
+<p>{L["final_p"]}</p><div class="cta-row">{play(lang)}</div><p class="cta-note">{L["cta_note"]}</p></div></div></section>"""
 
 
 def render(meta, body):
-    url = SITE + ("/" if meta["path"] == "/" else meta["path"])
-    home = meta["path"] == "/"
-    body = (body.replace("{{PLAY}}", PLAY).replace("{{CTA_NOTE}}", CTA_NOTE).replace("{{FAQ}}", faq_html(meta.get("faq", "home"))).replace("{{CONTACT}}", CONTACT)
-            .replace("{{RELATED}}", related(meta["path"])).replace("{{FINAL}}", FINAL))
+    url = abs_url(meta["path"])
+    lang = meta.get("lang", "en")
+    body = (body.replace("{{PLAY}}", play(lang)).replace("{{CTA_NOTE}}", T[lang]["cta_note"]).replace("{{FAQ}}", faq_html(meta.get("faq", "home"), lang)).replace("{{CONTACT}}", CONTACT)
+            .replace("{{RELATED}}", related(meta["path"], lang)).replace("{{FINAL}}", final(lang)))
     scripts = "".join(f'<script src="{s}?v={ver(s)}" defer></script>' for s in ["/assets/site.js"] + meta.get("scripts", []))
     scripts += "".join(f'<script type="module" src="{s}?v={ver(s)}"></script>' for s in meta.get("modules", []))
     return f"""{head(meta, url)}
 <body>
 {ICONS}
-{nav(home)}
+{nav(meta["path"], lang)}
 <main id="main">
 {body}
-{"" if meta.get("noindex") or meta["path"] == "/privacy" else share(url)}
+{"" if meta.get("noindex") or meta["path"] == "/privacy" else share(url, lang)}
 </main>
-{FOOTER}
+{footer(lang)}
 {scripts}
 </body>
 </html>
@@ -279,19 +394,26 @@ def privacy_page():
 
 def main():
     pages = []
-    for f in sorted((ROOT / "src" / "pages").glob("*.html")):
+    for f in sorted((ROOT / "src" / "pages").rglob("*.html")):
         raw = f.read_text()
         m = re.match(r"<!--(\{.*?\})-->\n", raw, re.S)
         meta = json.loads(m.group(1))
         pages.append((meta, raw[m.end():]))
     pages.append(privacy_page())
     for meta, body in pages:
+        (PUB / meta["out"]).parent.mkdir(parents=True, exist_ok=True)
         (PUB / meta["out"]).write_text(render(meta, body))
         print("built", meta["out"])
 
-    urls = [(SITE + ("/" if m["path"] == "/" else m["path"])) for m, _ in pages if not m.get("noindex")]
-    sm = "".join(f"<url><loc>{u}</loc><lastmod>{TODAY}</lastmod></url>" for u in urls)
-    (PUB / "sitemap.xml").write_text(f'<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">{sm}</urlset>\n')
+    def sm_entry(path):
+        alt = ""
+        cp = counterpart(path)
+        if cp:
+            pair = {meta_lang: p for meta_lang, p in [("en" if cp[0] == "da" else "da", path), cp]}
+            alt = "".join(f'<xhtml:link rel="alternate" hreflang="{l}" href="{abs_url(p)}"/>' for l, p in sorted(pair.items()))
+        return f"<url><loc>{abs_url(path)}</loc><lastmod>{TODAY}</lastmod>{alt}</url>"
+    sm = "".join(sm_entry(m["path"]) for m, _ in pages if not m.get("noindex"))
+    (PUB / "sitemap.xml").write_text(f'<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">{sm}</urlset>\n')
     (PUB / "robots.txt").write_text(f"User-agent: *\nAllow: /\n\nSitemap: {SITE}/sitemap.xml\n")
     (PUB / "site.webmanifest").write_text(json.dumps({"name": "TextFox", "short_name": "TextFox", "start_url": "/", "display": "standalone",
         "background_color": "#090B0A", "theme_color": "#090B0A", "icons": [{"src": "/icon-192.png", "sizes": "192x192", "type": "image/png"}, {"src": "/icon-512.png", "sizes": "512x512", "type": "image/png"}]}, indent=1))
@@ -310,6 +432,10 @@ Maker: Lars Sohl (Denmark), founder of kodekid.app, klokly.app and larssohl.dk �
 - [One-tap text widget]({SITE}/one-tap-text-widget): a home-screen widget per macro, one tap sends a ready-made text to one or many people
 - [About the maker]({SITE}/about): Lars Sohl, Danish graphic designer, photographer and creative coder; founder of kodekid.app, klokly.app and larssohl.dk
 - [Privacy policy]({SITE}/privacy)
+
+## Dansk
+- [TextFox på dansk]({SITE}/da): forside på dansk
+- [Planlagte sms'er]({SITE}/da/planlagte-sms) · [Autosvar]({SITE}/da/autosvar-sms) · [Sms ved ubesvaret opkald]({SITE}/da/sms-ved-ubesvaret-opkald) · [Sms med ét tryk]({SITE}/da/sms-med-et-tryk) · [Om skaberen]({SITE}/da/om)
 
 ## Key facts
 - Triggers: schedule, one tap (widget), incoming SMS (sender/keyword), missed call

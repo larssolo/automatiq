@@ -45,6 +45,41 @@
       "permanent": true
     },
     {
+      "source": "/da/index.html",
+      "destination": "/da",
+      "permanent": true
+    },
+    {
+      "source": "/da/",
+      "destination": "/da",
+      "permanent": true
+    },
+    {
+      "source": "/da/planlagte-sms.html",
+      "destination": "/da/planlagte-sms",
+      "permanent": true
+    },
+    {
+      "source": "/da/autosvar-sms.html",
+      "destination": "/da/autosvar-sms",
+      "permanent": true
+    },
+    {
+      "source": "/da/sms-ved-ubesvaret-opkald.html",
+      "destination": "/da/sms-ved-ubesvaret-opkald",
+      "permanent": true
+    },
+    {
+      "source": "/da/sms-med-et-tryk.html",
+      "destination": "/da/sms-med-et-tryk",
+      "permanent": true
+    },
+    {
+      "source": "/da/om.html",
+      "destination": "/da/om",
+      "permanent": true
+    },
+    {
       "source": "/404.html",
       "destination": "/404",
       "permanent": false
@@ -123,6 +158,30 @@
     {
       "source": "/about",
       "destination": "/about.html"
+    },
+    {
+      "source": "/da",
+      "destination": "/da/index.html"
+    },
+    {
+      "source": "/da/planlagte-sms",
+      "destination": "/da/planlagte-sms.html"
+    },
+    {
+      "source": "/da/autosvar-sms",
+      "destination": "/da/autosvar-sms.html"
+    },
+    {
+      "source": "/da/sms-ved-ubesvaret-opkald",
+      "destination": "/da/sms-ved-ubesvaret-opkald.html"
+    },
+    {
+      "source": "/da/sms-med-et-tryk",
+      "destination": "/da/sms-med-et-tryk.html"
+    },
+    {
+      "source": "/da/om",
+      "destination": "/da/om.html"
     }
   ]
 }
