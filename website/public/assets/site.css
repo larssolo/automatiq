@@ -296,3 +296,7 @@ footer{border-top:1px solid var(--line);padding-block:56px calc(36px + env(safe-
   html{scroll-behavior:auto}
 }
 @media (max-width:900px){.scroll-cue{display:none}}
+.fox3d{position:absolute;left:-25%;top:-25%;width:150%;height:150%;z-index:2;pointer-events:none;opacity:0;transition:opacity .9s ease}
+.fox-stage.is-3d .fox3d{opacity:1}
+.fox-stage .fox-wrap,.fox-stage .fox-glow,.fox-stage .rings,.fox-stage .orb{transition:opacity .5s ease}
+.fox-stage.is-3d .fox-wrap,.fox-stage.is-3d .fox-glow,.fox-stage.is-3d .rings,.fox-stage.is-3d .orb{opacity:0!important}
