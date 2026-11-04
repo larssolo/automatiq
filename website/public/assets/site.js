@@ -7,6 +7,11 @@
   const nav = $('.nav');
   if (nav) { const set = () => nav.classList.toggle('solid', scrollY > 24); set(); addEventListener('scroll', set, {passive: true}); }
 
+  // step timelines end exactly in the last step's number
+  const steps = [...document.querySelectorAll('.steps')];
+  const fitSteps = () => steps.forEach(ol => { const li = ol.lastElementChild; if (!li) return; const pad = parseFloat(getComputedStyle(li).paddingTop), n = parseFloat(getComputedStyle(li, '::before').height) || 48; ol.style.setProperty('--end', (ol.offsetHeight - li.offsetTop - pad - n / 2) + 'px'); });
+  if (steps.length) { fitSteps(); addEventListener('resize', fitSteps); document.fonts && document.fonts.ready.then(fitSteps); }
+
   // intro video: load and play only while visible; never autoplay under reduced motion
   const vid = $('video[data-lazy]');
   if (vid) {
