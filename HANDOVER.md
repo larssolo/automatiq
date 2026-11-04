@@ -1,4 +1,4 @@
-# Overlevering — Automatiq (VibeActions)
+# Overlevering — TextFox (VibeActions)
 
 > Kopiér denne fil ind i en ny chattråd som kontekst. Sidst opdateret: 2026-08-14 (fase 9: AI-variationer for planlagte afsendelser).
 
@@ -100,7 +100,7 @@ Fuld kodegennemgang (dom: solid; 5 småfejl fundet, se nedenfor) fulgt af implem
 **Organisk UI-pass (fase B, /frontend-design):** retning "bio-terminal" — terminal-DNA'et (mono, matrix-grøn) + liv:
 - `StaticBackground` + `AuroraOverlay`: tre drivende radiale glows (Primary/teal `#42D1CA`/Amber, alpha 4-9%, 52-73s cyklusser) — pauses automatisk når UI ikke er synligt.
 - `MacroCard`: asymmetriske "leaf-cut"-hjørner (`LeafShape` 18/6/18/6), accent-gradient i stedet for flad tint, fjeder-skala ved tryk (spring 0.965), "vein"-kanten ånder (alpha 0.45→1, 3.6s) når makroen er aktiv.
-- `MacroListScreen`: wordmark-header "automatiq" med pulserende status-dot (+ "N of M live"), pill-formet søgefelt, blob-FAB (26/14/26/14), varmere tomtilstande ("Nothing automated yet." / "Tap + and teach your phone its first trick.").
+- `MacroListScreen`: wordmark-header "textfox" med pulserende status-dot (+ "N of M live"), pill-formet søgefelt, blob-FAB (26/14/26/14), varmere tomtilstande ("Nothing automated yet." / "Tap + and teach your phone its first trick.").
 - `MainActivity`: bundnav med leaf-klippede tophjørner, egne ikoner pr. fane (Bolt/History/Tune — før brugte Macros og Log samme ikon), grønne selected-farver.
 - `LogScreen`: tomtilstand ("All quiet."), mono statuslinje+timestamps, blødere divider (Outline 45% i stedet for lys OutlineVariant), varmere clear-dialog.
 - `Type.kt`: titleSmall → JetBrains Mono (sektionsoverskrifter i Settings/Health får terminal-accent).
@@ -145,7 +145,7 @@ Fuld gennemgang af appen; rettelser (tests: 68 grønne, 7 nye):
 
 ## App
 
-**Automatiq** — native Kotlin/Compose Android-app til SMS-automatisering.
+**TextFox** — native Kotlin/Compose Android-app til SMS-automatisering.
 - Pakke: `com.vibeactions`
 - Repo: `C:\Users\ls\Documents\GitHub\automatiq` (Windows), remote `https://github.com/larssolo/automatiq.git`
 - Branch: `main`

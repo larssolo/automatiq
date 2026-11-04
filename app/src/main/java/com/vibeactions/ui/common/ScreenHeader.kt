@@ -11,7 +11,7 @@ import androidx.compose.ui.unit.sp
 import com.vibeactions.ui.theme.JetBrainsMono
 import com.vibeactions.ui.theme.OnSurface
 
-/** The mono, lower-case screen title that the macro list's "automatiq" wordmark set — so Log and
+/** The mono, lower-case screen title that the macro list's "textfox" wordmark set — so Log and
  *  Settings read as the same app. [trailing] holds the screen's own summary and actions. */
 @Composable
 fun ScreenHeader(title: String, trailing: (@Composable RowScope.() -> Unit)? = null) {

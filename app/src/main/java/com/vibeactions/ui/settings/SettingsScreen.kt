@@ -284,7 +284,7 @@ fun SettingsScreen(
                     Button(
                         onClick = {
                             vm.exportBackup(includeKeyInBackup) { json ->
-                                pendingExport = json; createDoc.launch("automatiq-backup.json")
+                                pendingExport = json; createDoc.launch("textfox-backup.json")
                             }
                         },
                         modifier = Modifier.weight(1f)
@@ -339,7 +339,7 @@ fun SettingsScreen(
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("Automatiq ${BuildConfig.VERSION_NAME} · ", color = OnSurfaceVariant, fontSize = 13.sp, textAlign = TextAlign.Center)
+                Text("TextFox ${BuildConfig.VERSION_NAME} · ", color = OnSurfaceVariant, fontSize = 13.sp, textAlign = TextAlign.Center)
                 Text("kodekid.app", color = Primary, fontSize = 13.sp, textAlign = TextAlign.Center)
             }
         }

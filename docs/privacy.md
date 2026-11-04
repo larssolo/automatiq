@@ -1,14 +1,14 @@
 ---
-title: Automatiq — Privacy Policy
+title: TextFox — Privacy Policy
 ---
 
-# Automatiq — Privacy Policy
+# TextFox — Privacy Policy
 
-_Last updated: 20 October 2026_
+_Last updated: 4 November 2026_
 
-Automatiq ("the app") is an automation app for Android, published by Lars Sohl, founder of kodekid.app ("we"). This policy explains what data the app uses, what leaves your phone, and why.
+TextFox ("the app") is an automation app for Android, published by Lars Sohl, founder of kodekid.app ("we"). This policy explains what data the app uses, what leaves your phone, and why.
 
-**In short:** Automatiq works on your phone. There is no account, no server of ours that stores your messages, no ads and no analytics. Data leaves your phone only in cases you set up yourself: when you use an **AI feature** (sent to Google's Gemini API with your own key), when you **report an AI-written text** to us, and when a macro **calls a web address** you entered.
+**In short:** TextFox works on your phone. There is no account, no server of ours that stores your messages, no ads and no analytics. Data leaves your phone only in cases you set up yourself: when you use an **AI feature** (sent to Google's Gemini API with your own key), when you **report an AI-written text** to us, and when a macro **calls a web address** you entered.
 
 ## 1. Data the app uses on your phone
 
@@ -58,7 +58,7 @@ If you create a macro with the **"call a web address"** action, the app sends a 
 
 ### 2.4 Location and device triggers (only in the separately distributed "full" version)
 
-The version of Automatiq on Google Play does **not** use location, Bluetooth or Wi-Fi triggers. A separately distributed version offers a location trigger; there, the place you set and your location are processed on your device by Google Play services geofencing and are not sent to us.
+The version of TextFox on Google Play does **not** use location, Bluetooth or Wi-Fi triggers. A separately distributed version offers a location trigger; there, the place you set and your location are processed on your device by Google Play services geofencing and are not sent to us.
 
 ## 3. What we don't do
 
@@ -72,7 +72,7 @@ All data sent off your phone (Gemini requests, reports) is encrypted in transit 
 
 ## 5. Children
 
-Automatiq is not directed at children under 13 and is not designed for them.
+TextFox is not directed at children under 13 and is not designed for them.
 
 ## 6. Your choices and rights
 
