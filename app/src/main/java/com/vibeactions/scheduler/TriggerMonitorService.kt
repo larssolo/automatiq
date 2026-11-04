@@ -19,6 +19,7 @@ import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.IntentCompat
+import com.vibeactions.R
 import com.vibeactions.data.repository.MacroRepository
 import com.vibeactions.domain.model.TriggerType
 import com.vibeactions.util.stateTriggerMatches
@@ -161,7 +162,7 @@ class TriggerMonitorService : android.app.Service() {
             manager.createNotificationChannel(channel)
         }
         val notification: Notification = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setSmallIcon(android.R.drawable.stat_notify_sync)
+            .setSmallIcon(R.drawable.ic_stat_textfox)
             .setContentTitle("TextFox is watching for triggers")
             .setContentText("Charging / Bluetooth / Wi-Fi macros")
             .setOngoing(true)

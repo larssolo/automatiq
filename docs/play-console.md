@@ -183,7 +183,7 @@ Core function is running user-scheduled automated actions (sound mode, reminders
 
 ## 6. Første produktionsudgivelse
 
-- [ ] Release name: `1.9.1` (versionCode 11), med det nye ræve-ikon, widget-kortet i Settings og rettelsen af setup-banneret. Appen hedder nu TextFox; pakkenavnet `app.kodekid.automatiq` er uændret, så det er en almindelig opdatering. Ret også App name, app-ikonet (`store/icon-512.png`) og feature graphic under Main store listing.
+- [ ] Release name: `1.9.2` (versionCode 12), med det nye ræve-ikon (også i notifikationerne), widget-kortet i Settings og rettelsen af setup-banneret. Appen hedder nu TextFox; pakkenavnet `app.kodekid.automatiq` er uændret, så det er en almindelig opdatering. Ret også App name, app-ikonet (`store/icon-512.png`) og feature graphic under Main store listing.
 - [ ] Release notes:
 ```
 First Play Store release of TextFox.
