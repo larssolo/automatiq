@@ -12,7 +12,9 @@ window.TF = window.TF || {boom: 0};
   // five evenly spaced slots that circle together, alternating between the two rings, so texts never pile up
   const SLOTS = 5, W = .15, reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const live = []; let next = 0, phase = .35, size = stage.offsetWidth, cursor = 0;
-  addEventListener('resize', () => { size = stage.offsetWidth; });
+  // room between the stage centre and the right edge of the screen (the stage may overhang it)
+  let roomRight = 1e4; const measure = () => { size = stage.offsetWidth; const r = stage.getBoundingClientRect(); roomRight = innerWidth - (r.left + r.width / 2) - 14; };
+  measure(); addEventListener('resize', measure); addEventListener('load', measure);
 
   function make(i) {
     const [t, txt, c] = MSGS[i % MSGS.length];
@@ -34,7 +36,8 @@ window.TF = window.TF || {boom: 0};
       x = Math.cos(b.a) * rx * nx * S; y = Math.sin(b.a) * ry * S;
       [x, y] = [x * Math.cos(tilt) - y * Math.sin(tilt), x * Math.sin(tilt) + y * Math.cos(tilt)];
     }
-    b.w2 = b.w2 || b.el.offsetWidth / 2; const lim = S / 2 - b.w2 * .8; x = Math.max(-lim, Math.min(lim, x));   // keep texts inside the stage
+    b.w2 = b.w2 || b.el.offsetWidth / 2; const lim = S / 2 - b.w2 * .8;                 // keep texts inside the stage…
+    x = Math.max(-lim, Math.min(lim, Math.min(x, roomRight - b.w2)));                // …and inside the screen
     const depth = (Math.sin(b.a) + 1) / 2;                      // 0 = behind the fox, 1 = in front
     let k = 1, o = .35 + .65 * depth;
     if (b.born) { const p = Math.min(1, (now - b.born) / 900); k = 1 - Math.pow(1 - p, 3); }   // fly out of the fox
