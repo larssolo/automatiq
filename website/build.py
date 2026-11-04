@@ -7,7 +7,7 @@ Pages live in src/pages/*.html with a JSON header comment. Shared head, nav,
 footer, FAQ data and schema.org markup are generated here, so every page
 stays consistent. The output in public/ is committed and served as-is by Vercel.
 """
-import datetime, hashlib, html, json, pathlib, re
+import datetime, hashlib, html, json, pathlib, re, urllib.parse
 
 import markdown
 
@@ -206,6 +206,36 @@ def related(path):
     return f'<section class="section tight"><div class="wrap"><h2 class="h3">More of what TextFox does</h2><div class="related">{links}</div></div></section>'
 
 
+SHARE_TEXT = "TextFox sends your texts for you: scheduled SMS, auto-replies and missed-call text-back for Android."
+BRANDS = {
+    "linkedin": '<path d="M4.98 3.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5zM3 9h4v12H3zM9 9h3.8v1.7h.05c.53-1 1.83-2.05 3.77-2.05C20.6 8.65 21 11.3 21 14.7V21h-4v-5.6c0-1.34-.02-3.06-1.86-3.06-1.87 0-2.15 1.46-2.15 2.96V21H9z"/>',
+    "facebook": '<path d="M14 8.5V6.8c0-.8.5-1 .9-1H17V2.1L14.1 2C10.9 2 10.2 4.4 10.2 6v2.5H8V12h2.2v10H14V12h2.9l.4-3.5z"/>',
+    "x": '<path d="M17.8 3H21l-7 8 8.2 10h-6.4l-5-6.2L5 21H1.8l7.5-8.6L1.5 3H8l4.5 5.7zm-1.1 16h1.8L7.3 4.9H5.4z"/>',
+    "whatsapp": '<path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm5.2 13.9c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.3-.7-2.8-1.1-4.5-3.9-4.7-4.1-.1-.2-1.1-1.5-1.1-2.9s.7-2.1 1-2.4c.3-.3.6-.3.8-.3h.6c.2 0 .4 0 .6.5l.9 2.1c.1.2.1.4 0 .6l-.4.6-.4.4c-.1.2-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.3 2.4 1.5.3.1.5.1.6-.1l.9-1c.2-.3.4-.2.7-.1l2 1c.3.1.5.2.5.3.1.2.1.6-.1 1.2z"/>',
+}
+
+
+def share(url):
+    q = urllib.parse.quote
+    links = [
+        ("linkedin", "LinkedIn", "#0A66C2", f"https://www.linkedin.com/sharing/share-offsite/?url={q(url, safe='')}"),
+        ("facebook", "Facebook", "#1877F2", f"https://www.facebook.com/sharer/sharer.php?u={q(url, safe='')}"),
+        ("x", "X", "#E7ECE9", f"https://x.com/intent/post?text={q(SHARE_TEXT)}&url={q(url, safe='')}"),
+        ("whatsapp", "WhatsApp", "#25D366", f"https://wa.me/?text={q(SHARE_TEXT + ' ' + url)}"),
+    ]
+    btns = "".join(f'<a class="sh" style="--b:{c}" href="{h}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true">{BRANDS[k]}</svg>{n}</a>' for k, n, c, h in links)
+    mail = f'mailto:?subject={q("Have a look at TextFox")}&body={q(SHARE_TEXT + chr(10) + chr(10) + url)}'
+    return f"""<section class="share" aria-labelledby="share-h"><div class="wrap"><div class="share-in">
+  <div><p class="kicker">// share</p><h2 class="h3" id="share-h">Know someone who's always running late?</h2><p class="body">Send them TextFox. It's free, and it might save them a lot of typing.</p></div>
+  <div class="share-btns">
+    <button class="sh sh-native" type="button" data-share="{url}" hidden><svg viewBox="0 0 24 24" aria-hidden="true" class="st"><path d="M12 3v12M7.5 7.5 12 3l4.5 4.5M5 12v7.5h14V12"/></svg>Share</button>
+    {btns}
+    <a class="sh" style="--b:#9AA79F" href="{mail}"><svg viewBox="0 0 24 24" aria-hidden="true" class="st"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="m3.5 6.5 8.5 7 8.5-7"/></svg>Email</a>
+    <button class="sh" style="--b:#00E676" type="button" data-copy="{url}"><svg viewBox="0 0 24 24" aria-hidden="true" class="st"><path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1"/><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1"/></svg><span>Copy link</span></button>
+  </div>
+</div></div></section>"""
+
+
 FINAL = f"""<section class="final"><div class="wrap"><div class="panel"><h2>Set it up once.<br>It just runs.</h2>
 <p>Free for Android 8.0 and newer. Runs on your phone: no account, no ads, no tracking.</p><div class="cta-row">{PLAY}</div><p class="cta-note">{CTA_NOTE}</p></div></div></section>"""
 
@@ -223,6 +253,7 @@ def render(meta, body):
 {nav(home)}
 <main id="main">
 {body}
+{"" if meta.get("noindex") or meta["path"] == "/privacy" else share(url)}
 </main>
 {FOOTER}
 {scripts}
