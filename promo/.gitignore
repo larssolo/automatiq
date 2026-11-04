@@ -1,0 +1,3 @@
+# local tooling / caches (render intermediates live in build/, ignored repo-wide)
+__pycache__/
+node_modules/

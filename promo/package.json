@@ -1,0 +1,15 @@
+{
+  "name": "automatiq-promo",
+  "private": true,
+  "description": "60 s beat-cut promo for Automatiq, rendered from code",
+  "scripts": {
+    "render": "node render.cjs",
+    "render:16x9": "node render.cjs --format 16x9",
+    "render:15s": "node render.cjs --cut 15",
+    "render:15s:16x9": "node render.cjs --cut 15 --format 16x9",
+    "sheet": "node render.cjs --sheet 0:60:1"
+  },
+  "devDependencies": {
+    "playwright": "^1.56.1"
+  }
+}
