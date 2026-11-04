@@ -132,7 +132,7 @@ class AiVaryWorker @AssistedInject constructor(
     }
 
     companion object {
-        private const val TAG = "AutomatiqAI"
+        private const val TAG = "TextFoxAI"
         const val KEY_MACRO_ID = "macro_id"
         const val KEY_EVENT_ID = "event_id"
         const val KEY_PREVIOUS = "previous"

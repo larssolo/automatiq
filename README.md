@@ -1,8 +1,8 @@
 <div align="center">
 
-<img src="app/src/main/res/mipmap-xxxhdpi/ic_launcher.png" width="96" height="96" alt="Automatiq icon" />
+<img src="app/src/main/res/mipmap-xxxhdpi/ic_launcher.png" width="96" height="96" alt="TextFox icon" />
 
-# Automatiq
+# TextFox
 
 **On-device SMS automation for Android — scheduled, manual, auto-reply, missed-call, location & device-state triggers, with optional AI-generated replies.**
 
@@ -17,7 +17,7 @@
 
 ## What it does
 
-Automatiq lets you define SMS macros — a name, one or more recipients, and a message — and fire them automatically. A macro can trigger on a **schedule**, on a **button tap**, as an **auto-reply** to an incoming SMS, when you **miss (or decline) a call**, when you **arrive at / leave a place**, or on a **device state change** — plugging in the charger, connecting a Bluetooth device or a Wi-Fi network. Macros can be organized into nameable **folders** with a per-folder master switch. Auto-replies can answer with a fixed text or with an **AI-generated reply** (Gemini) — either sent automatically or held for your approval.
+TextFox lets you define SMS macros — a name, one or more recipients, and a message — and fire them automatically. A macro can trigger on a **schedule**, on a **button tap**, as an **auto-reply** to an incoming SMS, when you **miss (or decline) a call**, when you **arrive at / leave a place**, or on a **device state change** — plugging in the charger, connecting a Bluetooth device or a Wi-Fi network. Macros can be organized into nameable **folders** with a per-folder master switch. Auto-replies can answer with a fixed text or with an **AI-generated reply** (Gemini) — either sent automatically or held for your approval.
 
 Everything runs on-device. No account, no ads. Only two optional features reach outside the phone: the **location trigger** (Google Play Services geofencing) and **AI replies** (Google's Gemini API, with your own free key).
 
@@ -111,7 +111,7 @@ The AI features use Google's free tier — no credit card or billing account req
 1. Go to **[aistudio.google.com](https://aistudio.google.com)** and sign in with any Google account.
 2. Click **"Get API key"** (in the left menu or top bar), then **"Create API key"**. Choose *Create API key in new project* if asked.
 3. Copy the key (it starts with `AIza…`).
-4. In Automatiq: **Settings → AI (Gemini)** → paste the key → tap **"Test nøgle"** to verify it works → **"Gem"**.
+4. In TextFox: **Settings → AI (Gemini)** → paste the key → tap **"Test nøgle"** to verify it works → **"Gem"**.
 
 Notes:
 

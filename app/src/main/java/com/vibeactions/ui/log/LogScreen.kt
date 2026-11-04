@@ -123,7 +123,7 @@ fun LogScreen(vm: LogViewModel = hiltViewModel()) {
                     )
                     Spacer(Modifier.height(6.dp))
                     Text(
-                        if (total == 0 && selectedMacroId == null) "Everything Automatiq sends will land here."
+                        if (total == 0 && selectedMacroId == null) "Everything TextFox sends will land here."
                         else "No entries match this filter.",
                         color = OnSurfaceVariant, fontSize = 13.sp
                     )

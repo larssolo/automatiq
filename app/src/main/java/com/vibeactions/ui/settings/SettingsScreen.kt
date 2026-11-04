@@ -1,6 +1,14 @@
 package com.vibeactions.ui.settings
 
 import android.content.Intent
+import com.vibeactions.widget.MacroWidgetProvider
+import com.vibeactions.widget.MacroWidgetConfigActivity
+import androidx.compose.material.icons.filled.Widgets
+import androidx.compose.material.icons.filled.Add
+import android.content.Context
+import android.content.ComponentName
+import android.appwidget.AppWidgetManager
+import android.app.PendingIntent
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
@@ -123,6 +131,9 @@ fun SettingsScreen(
         }
     }
 
+    // Not every launcher lets an app place a widget for the user; then the card only explains how.
+    val canPinWidget = remember { AppWidgetManager.getInstance(context).isRequestPinAppWidgetSupported }
+
     Box(Modifier.fillMaxSize()) {
         Column(
             Modifier
@@ -147,6 +158,23 @@ fun SettingsScreen(
                     )
                     NavRow(Icons.Default.MonitorHeart, "Health check", "Next fire times and permission status", onOpenHealth)
                     NavRow(Icons.Default.School, "Intro guide", "Setup, permissions and AI key — step by step", onShowGuide)
+                }
+            }
+
+            // ── Widget: run a macro from the home screen ──────────────────────────────────
+            EditorSection(Icons.Default.Widgets, "HOME-SCREEN WIDGET", Primary) {
+                Hint("Put any macro on your home screen as a one-tap button — handy for manual macros like \"Running late\".")
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    WidgetStep(1, "Long-press an empty spot on your home screen and tap Widgets.")
+                    WidgetStep(2, "Find TextFox and drag \"Macro button\" onto the screen.")
+                    WidgetStep(3, "Pick the macro it should run. One tap runs it, and the button shows the macro's name and when it last ran.")
+                }
+                if (canPinWidget) {
+                    Button(onClick = { pinMacroWidget(context) }, modifier = Modifier.fillMaxWidth()) {
+                        Icon(Icons.Default.Add, null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(6.dp))
+                        Text("Add to home screen")
+                    }
                 }
             }
 
@@ -284,7 +312,7 @@ fun SettingsScreen(
                     Button(
                         onClick = {
                             vm.exportBackup(includeKeyInBackup) { json ->
-                                pendingExport = json; createDoc.launch("automatiq-backup.json")
+                                pendingExport = json; createDoc.launch("textfox-backup.json")
                             }
                         },
                         modifier = Modifier.weight(1f)
@@ -339,7 +367,7 @@ fun SettingsScreen(
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("Automatiq ${BuildConfig.VERSION_NAME} · ", color = OnSurfaceVariant, fontSize = 13.sp, textAlign = TextAlign.Center)
+                Text("TextFox ${BuildConfig.VERSION_NAME} · ", color = OnSurfaceVariant, fontSize = 13.sp, textAlign = TextAlign.Center)
                 Text("kodekid.app", color = Primary, fontSize = 13.sp, textAlign = TextAlign.Center)
             }
         }
@@ -428,6 +456,29 @@ private fun NavRow(icon: ImageVector, title: String, subtitle: String, onClick: 
         }
         Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null, tint = OnSurfaceVariant)
     }
+}
+
+/** A numbered how-to line in the widget card. */
+@Composable
+private fun WidgetStep(n: Int, text: String) {
+    Row {
+        Text(
+            "$n", fontFamily = JetBrainsMono, fontSize = 13.sp, color = Primary,
+            modifier = Modifier.width(22.dp)
+        )
+        Text(text, color = OnSurface, style = MaterialTheme.typography.bodyMedium)
+    }
+}
+
+/** Asks the launcher to place a macro button. Once it's placed, the macro picker opens for the new
+ *  widget (the system fills in its id) — launchers don't all open a pinned widget's configure screen. */
+private fun pinMacroWidget(context: Context) {
+    val pick = PendingIntent.getActivity(
+        context, 0, Intent(context, MacroWidgetConfigActivity::class.java),
+        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
+    )
+    AppWidgetManager.getInstance(context)
+        .requestPinAppWidget(ComponentName(context, MacroWidgetProvider::class.java), null, pick)
 }
 
 /** One end of the quiet-hours window: big mono time, tap to change — like the editor's time. */

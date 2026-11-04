@@ -1,4 +1,4 @@
-# Play Console — udfyldningsguide for Automatiq
+# Play Console — udfyldningsguide for TextFox
 
 Udkast til alt, der skal udfyldes i Play Console for `app.kodekid.automatiq`. Tekster i kodeblokke er klar til at kopiere ind (engelsk, som appen). Punkter markeret **⚠ Beslut** kræver dit valg, før de sendes ind.
 
@@ -21,7 +21,7 @@ Udkast til alt, der skal udfyldes i Play Console for `app.kodekid.automatiq`. Te
 
 | Felt | Værdi |
 |---|---|
-| App name | `Automatiq — SMS Automation` (maks 30 tegn) |
+| App name | `TextFox — SMS Automation` (maks 30 tegn) |
 | Default language | English (United States) |
 | App or game | App |
 | Free or paid | Free |
@@ -37,9 +37,9 @@ Automate texts, sound mode, reminders and webhooks — right on your phone.
 
 **Full description** (maks 4000 tegn):
 ```
-Automatiq puts your phone on autopilot.
+TextFox puts your phone on autopilot.
 
-Set up a macro once — when it should run and what it should do — and Automatiq takes care of it. Everything runs on your phone: no account, no ads.
+Set up a macro once — when it should run and what it should do — and TextFox takes care of it. Everything runs on your phone: no account, no ads.
 
 FOUR WAYS TO TRIGGER A MACRO
 • Schedule — at 08:30 on weekdays, every second week, on 1–2 random days, until a date you choose
@@ -132,7 +132,7 @@ Appen er ikke standard-SMS-app. Vælg undtagelsen **Device automation**. Googles
 
 **Core functionality:**
 ```
-Automatiq is a device-automation app. The user builds "macros": a trigger they choose and an action the phone then performs automatically.
+TextFox is a device-automation app. The user builds "macros": a trigger they choose and an action the phone then performs automatically.
 
 Triggers: a time schedule (alarms), a one-tap/home-screen widget, an incoming SMS from a chosen sender or containing a keyword, or a missed or declined call.
 Actions: change the phone's sound mode or Do Not Disturb, show a reminder notification, call a web address (for example to control smart-home devices), or send an SMS.
@@ -145,8 +145,8 @@ Triggers and actions therefore span several areas of the OS — alarms, telephon
 
 SMS and call data is processed on the device and never uploaded, sold or shared — with one user-controlled exception: if the user turns on the optional AI reply feature and explicitly consents in the app, the text of the incoming message is sent to Google's Gemini API with the user's own API key to write the reply. Without these permissions the SMS and call triggers/actions cannot work; Android offers no alternative API for automated SMS.
 ```
-**Video** (YouTube, unlisted, 54 sek, 1080×1920): `declaration-device-automation.mp4` (se `store/README.md`), optaget på `play`-bundlen 1.6 (versionCode 7). 1.7 (versionCode 8) ændrer intet af det, videoen viser; den tilføjer kun "Next …"-linjen ved planlagte makroer. Statuslinjens ur og loggen viser samme tid, der er ingen musemarkør (kun synlige tryk), og alle numre er fiktive 555-01xx-numre. Hvert trin har en engelsk tekst øverst:
-1. Makrolisten med 6 makroer: SMS, auto-svar, ubesvaret opkald, lyd, påmindelse og webhook. *"Automatiq: macros the user builds"*
+**Video** (YouTube, unlisted, 53 sek, 1080×1920): `declaration-device-automation.mp4` (se `store/README.md`), optaget på `play`-bundlen 1.8 (versionCode 9), så appnavnet og systemdialogerne siger TextFox. Statuslinjens ur og loggen viser samme tid, der er ingen musemarkør (kun synlige tryk), og alle numre er fiktive 555-01xx-numre. Hvert trin har en engelsk tekst øverst:
+1. Makrolisten med 6 makroer: SMS, auto-svar, ubesvaret opkald, lyd, påmindelse og webhook. *"TextFox: macros the user builds"*
 2. Phone setup → "1. Send & receive SMS" → systemdialogen → Allow. *SEND_SMS · RECEIVE_SMS*
 3. "Out of office" åbnes: WHEN = Auto-reply med afsender- og nøgleordsbetingelsen, og svarteksten under REPLY. *incoming SMS (condition) → send SMS*
 4. En SMS kommer ind → notifikationen → Messages-tråden, hvor auto-svaret står som sendt. *RECEIVE_SMS → SEND_SMS*
@@ -155,7 +155,7 @@ SMS and call data is processed on the device and never uploaded, sold or shared 
 7. Pills (påmindelse), Ping (webhook) og Quiet mode (lydløs) køres fra listen, og påmindelsen ses i notifikationspanelet. *sound mode · notifications · network*
 8. Loggen: alle 5 kørsler SUCCESS, og "Delivered" på begge SMS'er.
 
-YouTube-indstillinger: **Unlisted**, "No, it's not made for kids", ingen monetisering, ingen aldersbegrænsning, indlejring tilladt. Titel: "Automatiq — SMS & Call Log declaration (device automation)". Link (unlisted, uploadet 22. okt. 2026): **https://www.youtube.com/watch?v=eEs4n2vKViU**. YouTube viser den som Short, fordi den er lodret og under 60 s, men watch-linket virker som en almindelig video.
+YouTube-indstillinger: **Unlisted**, "No, it's not made for kids", ingen monetisering, ingen aldersbegrænsning, indlejring tilladt. Titel: "TextFox — SMS & Call Log declaration (device automation)". - [ ] **Upload den nye TextFox-video** og indsæt linket her og i Play Console. Det gamle link (https://www.youtube.com/watch?v=eEs4n2vKViU, uploadet 22. okt. 2026) viser navnet Automatiq. YouTube viser den som Short, fordi den er lodret og under 60 s, men watch-linket virker som en almindelig video.
 
 ### 4.2 Foreground service
 **Ikke relevant for Play-versionen.** Opladning/Bluetooth/Wi-Fi-triggerne (og tjenesten bag dem) er kun med i den delbare APK. Play-bundlen har ingen foreground service-type at erklære.
@@ -183,12 +183,13 @@ Core function is running user-scheduled automated actions (sound mode, reminders
 
 ## 6. Første produktionsudgivelse
 
-- [ ] Release name: `1.7` (1.6 / versionCode 7 er allerede uploadet til den lukkede test, så næste bundle er 1.7 / versionCode 8)
+- [ ] Release name: `1.9.2` (versionCode 12), med det nye ræve-ikon (også i notifikationerne), widget-kortet i Settings og rettelsen af setup-banneret. Appen hedder nu TextFox; pakkenavnet `app.kodekid.automatiq` er uændret, så det er en almindelig opdatering. Ret også App name, app-ikonet (`store/icon-512.png`) og feature graphic under Main store listing.
 - [ ] Release notes:
 ```
-First Play Store release of Automatiq.
+First Play Store release of TextFox.
 • Scheduled, one-tap, auto-reply and missed-call SMS macros
 • See when each scheduled macro runs next
+• Add a macro as a one-tap button on your home screen, straight from Settings
 • Guided phone setup for reliable background sending
 • Optional AI (Google Gemini) with approval mode and in-app reporting
 ```

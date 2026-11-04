@@ -244,7 +244,7 @@ private fun TopRow(page: Int, onSkip: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            "automatiq",
+            "textfox",
             fontFamily = JetBrainsMono, fontWeight = FontWeight.Medium,
             color = OnSurface, fontSize = 15.sp, modifier = Modifier.weight(1f)
         )
@@ -311,10 +311,10 @@ private fun Typewriter(full: String, active: Boolean, color: Color) {
 
 @Composable
 private fun WelcomePage(active: Boolean) {
-    Typewriter("> automatiq.init()", active, Primary)
+    Typewriter("> textfox.init()", active, Primary)
     Title("Your phone,\non autopilot.")
     Body(
-        "Automatiq sends text messages for you — on a schedule, as a reply" +
+        "TextFox sends text messages for you — on a schedule, as a reply" +
             (if (BuildConfig.LOCATION_TRIGGER) ", when you miss a call or when you arrive somewhere. "
             else " or when you miss a call. ") +
             "Set it up once, and it just runs."
@@ -495,7 +495,7 @@ private fun AiPage(
     InfoCard(
         "Model: $model",
         "Fast and reliable, and it's the default. If it's busy or its free daily quota runs out, " +
-            "Automatiq automatically switches to another Gemini model. Your key stays on this phone."
+            "TextFox automatically switches to another Gemini model. Your key stays on this phone."
     )
     Spacer(Modifier.height(8.dp))
     Text(

@@ -237,7 +237,7 @@ fun MacroListScreen(
                     PulseDot(alive = macros.any { it.enabled })
                     Spacer(Modifier.width(9.dp))
                     Text(
-                        "automatiq",
+                        "textfox",
                         fontFamily = JetBrainsMono,
                         fontWeight = FontWeight.Medium,
                         fontSize = 20.sp,

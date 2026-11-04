@@ -40,7 +40,7 @@ fun AiConsentDialog(onAccept: () -> Unit, onDecline: () -> Unit) {
         text = {
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text(
-                    "Automatiq's AI features use Google's Gemini API with your own API key. To write a " +
+                    "TextFox's AI features use Google's Gemini API with your own API key. To write a " +
                         "message, this text is sent to Google:"
                 )
                 Text("• AI auto-replies: the incoming SMS you're replying to\n" +

@@ -115,7 +115,7 @@ private fun Header(empty: Boolean) {
         )
         Spacer(Modifier.height(12.dp))
         Text(
-            if (empty) "You have no macros yet. Create one in Automatiq, then add the widget again."
+            if (empty) "You have no macros yet. Create one in TextFox, then add the widget again."
             else "The button on your home screen runs this macro with one tap and shows its name.",
             fontFamily = DmSans, fontSize = 16.sp, lineHeight = 22.sp, color = Color(0xFFD8D8D8)
         )
