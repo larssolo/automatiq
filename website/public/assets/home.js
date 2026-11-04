@@ -161,7 +161,7 @@ window.TF = window.TF || {boom: 0};
     });
     gsap.fromTo('.day .phone', {y: 120 * D, opacity: .3}, {y: 0, opacity: 1, ease: 'none', scrollTrigger: {trigger: day, start: 'top bottom', end: 'top top', scrub: true}});
     // the hero illustration explodes at the speed you scroll
-    const boom = gsap.timeline({scrollTrigger: {trigger: '.hero', start: 'top top', end: 'bottom 20%', scrub: .4, onUpdate: s => { TF.boom = s.progress; }}});
+    const boom = gsap.timeline({scrollTrigger: {trigger: '.hero', start: 'top top', end: () => '+=' + Math.round(innerHeight * (mob ? .28 : .32)), scrub: .15, onUpdate: s => { TF.boom = s.progress; }}});   // blows apart within the first third of a screen
     boom.to('.fox-wrap .fox', {scale: 2.6, rotate: -14, yPercent: -30, opacity: 0, ease: 'power2.in'}, 0)   // .fox-wrap keeps its CSS float
         .to('.fox-glow', {scale: 3.4, opacity: 0, ease: 'power1.in'}, 0)
         .to('.fox-stage .rings', {scaleX: mob ? 1.54 : 2.2, scaleY: 2.2, rotate: 25, opacity: 0, ease: 'power2.in'}, 0)
