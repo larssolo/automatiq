@@ -45,6 +45,12 @@ FAQ = {
         ("Does it reply to WhatsApp or Messenger?", "No. TextFox replies to regular SMS text messages only."),
         ("Can AI write the auto-reply?", "Yes, if you add your own free Google Gemini key. You can approve each reply in a notification before it is sent, or let it send automatically and get notified."),
     ],
+    "tap": [
+        ("Does the widget send without opening the app?", "Yes. One tap on the widget sends the macro's text straight away. You don't need to open TextFox."),
+        ("Can one widget text several people?", "Yes. The widget sends the macro to every recipient on its list, and each copy can include that person's name."),
+        ("How do I know the text was sent?", "The widget's subtitle shows the last send, for example \"Last: 14:32 ✓\", and the log in the app shows delivery status."),
+        ("Can I have several widgets?", "Yes. Add one widget per macro and place as many as you like on your home screens."),
+    ],
     "missed": [
         ("Does it work when I decline a call?", "Yes. Both calls that ring out and calls you decline trigger the text-back."),
         ("Can I limit it to certain callers?", "Yes. An optional caller filter limits the text-back to the numbers you choose."),
@@ -83,8 +89,16 @@ def faq_schema(key, url):
         {"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}} for q, a in FAQ[key]]}
 
 
+PERSON = {"@type": "Person", "@id": SITE + "/about#lars", "name": "Lars Sohl", "url": SITE + "/about",
+          "jobTitle": "Graphic designer, photographer and creative coder", "email": CONTACT,
+          "description": "Danish graphic designer, photographer and creative coder. Founder of kodekid.app, klokly.app and larssohl.dk, maker of TextFox.",
+          "homeLocation": {"@type": "Country", "name": "Denmark"}, "areaServed": "Europe",
+          "worksFor": {"@type": "Organization", "name": "Brandsurface", "url": "https://www.brandsurface.dk"},
+          "knowsAbout": ["Graphic design", "Photography", "Creative coding", "Android apps", "Web development", "Digital solutions"],
+          "sameAs": ["https://www.larssohl.dk", "https://www.kodekid.app", "https://www.klokly.app"]}
 ORG = {"@type": "Organization", "@id": SITE + "/#org", "name": "TextFox", "url": SITE + "/",
-       "logo": SITE + "/icon-512.png", "email": CONTACT, "parentOrganization": {"@type": "Organization", "name": PUBLISHER, "url": "https://www.kodekid.app"}}
+       "logo": SITE + "/icon-512.png", "email": CONTACT, "founder": {"@id": SITE + "/about#lars"},
+       "parentOrganization": {"@type": "Organization", "name": PUBLISHER, "url": "https://www.kodekid.app", "founder": {"@id": SITE + "/about#lars"}}}
 APP = {"@type": "MobileApplication", "@id": SITE + "/#app", "name": "TextFox", "url": SITE + "/",
        "description": "TextFox is a free Android app that sends text messages automatically: scheduled SMS, auto-replies to incoming texts, missed-call text-back and one-tap widget messages, with optional AI-written variations using Google Gemini. Runs on the phone, with no account and no ads.",
        "operatingSystem": "Android 8.0 or later", "applicationCategory": "UtilitiesApplication", "applicationSubCategory": "SMS automation",
@@ -94,7 +108,7 @@ APP = {"@type": "MobileApplication", "@id": SITE + "/#app", "name": "TextFox", "
        "featureList": ["Scheduled text messages by time, weekday, every 1–4 weeks, one date or random days", "Auto-reply to incoming SMS by sender or keyword, with quiet hours",
                        "Missed-call and declined-call text-back", "One-tap home-screen widgets", "Multiple recipients with personalised names",
                        "Optional AI variations and AI replies with your own Google Gemini key", "Delivery receipts and a full log", "Change sound mode, show a reminder or call a web address"],
-       "publisher": {"@id": SITE + "/#org"}}
+       "publisher": {"@id": SITE + "/#org"}, "author": {"@id": SITE + "/about#lars"}}
 VIDEO = {"@type": "VideoObject", "@id": SITE + "/#video", "name": "TextFox intro guide",
          "description": "The intro guide inside the TextFox Android app: your phone on autopilot, the four ways to fire a macro (schedule, one tap, incoming text, missed call), the guided permission setup, the optional Google Gemini key, and the ready screen.",
          "thumbnailUrl": SITE + "/media/textfox-intro-poster.jpg", "contentUrl": SITE + "/media/textfox-intro.mp4", "uploadDate": "2026-11-04", "duration": "PT37S",
@@ -104,7 +118,7 @@ VIDEO = {"@type": "VideoObject", "@id": SITE + "/#video", "name": "TextFox intro
 def head(meta, url):
     title, desc = meta["title"], meta["description"]
     og = SITE + "/og/textfox-og.png"
-    graph = [ORG, {"@type": "WebSite", "@id": SITE + "/#site", "url": SITE + "/", "name": "TextFox", "publisher": {"@id": SITE + "/#org"}, "inLanguage": "en"}]
+    graph = [ORG, PERSON, {"@type": "WebSite", "@id": SITE + "/#site", "url": SITE + "/", "name": "TextFox", "publisher": {"@id": SITE + "/#org"}, "inLanguage": "en"}]
     s = meta.get("schema", [])
     if "app" in s: graph.append(APP)
     if "faq" in s: graph.append(faq_schema("home", url))
@@ -112,6 +126,8 @@ def head(meta, url):
     if "page-faq" in s:
         graph.append(faq_schema(meta["faq"], url))
         graph.append({"@type": "WebPage", "@id": url, "url": url, "name": title, "description": desc, "about": {"@id": SITE + "/#app"}, "isPartOf": {"@id": SITE + "/#site"}})
+    if "person" in s:
+        graph.append({"@type": "AboutPage", "@id": url, "url": url, "name": title, "description": desc, "mainEntity": {"@id": SITE + "/about#lars"}, "isPartOf": {"@id": SITE + "/#site"}})
     if meta.get("crumb"):
         graph.append({"@type": "BreadcrumbList", "itemListElement": [
             {"@type": "ListItem", "position": 1, "name": "TextFox", "item": SITE + "/"},
@@ -169,14 +185,14 @@ def nav(home):
 FOOTER = f"""<footer><div class="wrap">
   <div class="foot">
     <div><a class="brand" href="/" aria-label="TextFox home"><svg aria-hidden="true"><use href="#fox"/></svg>textfox</a><p>Scheduled texts, auto-replies and missed-call text-back for Android. Set it up once. It just runs.</p></div>
-    <div><h2>Features</h2><ul><li><a href="/scheduled-text-messages">Scheduled texts</a></li><li><a href="/auto-reply-sms">Auto-reply</a></li><li><a href="/missed-call-text-back">Missed-call text-back</a></li><li><a href="/#ai">AI variations</a></li></ul></div>
-    <div><h2>TextFox</h2><ul><li><a href="{PLAY_URL}" rel="noopener">Google Play</a></li><li><a href="/#faq">FAQ</a></li><li><a href="/privacy">Privacy policy</a></li></ul></div>
-    <div><h2>Contact</h2><ul><li><a href="mailto:{CONTACT}">{CONTACT}</a></li><li>Made by <a href="https://www.kodekid.app" rel="noopener">{PUBLISHER}</a></li></ul></div>
+    <div><h2>Features</h2><ul><li><a href="/scheduled-text-messages">Scheduled texts</a></li><li><a href="/auto-reply-sms">Auto-reply</a></li><li><a href="/missed-call-text-back">Missed-call text-back</a></li><li><a href="/one-tap-text-widget">One-tap widget</a></li><li><a href="/#ai">AI variations</a></li></ul></div>
+    <div><h2>TextFox</h2><ul><li><a href="{PLAY_URL}" rel="noopener">Google Play</a></li><li><a href="/#faq">FAQ</a></li><li><a href="/about">About the maker</a></li><li><a href="/privacy">Privacy policy</a></li></ul></div>
+    <div><h2>Contact</h2><ul><li><a href="mailto:{CONTACT}">{CONTACT}</a></li><li>Made by <a href="/about">Lars Sohl</a></li><li><a href="https://www.kodekid.app" rel="noopener">{PUBLISHER}</a></li></ul></div>
   </div>
   <div class="legal"><span>© {datetime.date.today().year} TextFox · <a href="https://www.kodekid.app" rel="noopener">{PUBLISHER}</a></span><span>No cookies. No tracking.</span></div>
 </div></footer>"""
 
-RELATED_PAGES = [("/scheduled-text-messages", "Scheduled texts"), ("/auto-reply-sms", "Auto-reply"), ("/missed-call-text-back", "Missed-call text-back"), ("/#ai", "AI variations")]
+RELATED_PAGES = [("/scheduled-text-messages", "Scheduled texts"), ("/auto-reply-sms", "Auto-reply"), ("/missed-call-text-back", "Missed-call text-back"), ("/one-tap-text-widget", "One-tap widget"), ("/#ai", "AI variations")]
 
 
 def related(path):
@@ -191,7 +207,7 @@ FINAL = f"""<section class="final"><div class="wrap"><div class="panel"><h2>Set 
 def render(meta, body):
     url = SITE + ("/" if meta["path"] == "/" else meta["path"])
     home = meta["path"] == "/"
-    body = (body.replace("{{PLAY}}", PLAY).replace("{{CTA_NOTE}}", CTA_NOTE).replace("{{FAQ}}", faq_html(meta.get("faq", "home")))
+    body = (body.replace("{{PLAY}}", PLAY).replace("{{CTA_NOTE}}", CTA_NOTE).replace("{{FAQ}}", faq_html(meta.get("faq", "home"))).replace("{{CONTACT}}", CONTACT)
             .replace("{{RELATED}}", related(meta["path"])).replace("{{FINAL}}", FINAL))
     scripts = "".join(f'<script src="{s}?v={ver(s)}" defer></script>' for s in ["/assets/site.js"] + meta.get("scripts", []))
     scripts += "".join(f'<script type="module" src="{s}?v={ver(s)}"></script>' for s in meta.get("modules", []))
@@ -247,13 +263,15 @@ def main():
 
 > TextFox is a free Android app (Android 8.0+) that sends text messages (SMS) automatically: on a schedule, as a reply to incoming texts, after a missed or declined call, or with one tap on a home-screen widget. It runs on the phone, with no account, no ads and no analytics. Optional AI features use the user's own free Google Gemini API key.
 
-Publisher: {PUBLISHER} · Contact: {CONTACT} · Google Play: {PLAY_URL}
+Maker: Lars Sohl (Denmark), founder of kodekid.app, klokly.app and larssohl.dk · Publisher: {PUBLISHER} · Contact: {CONTACT} · Google Play: {PLAY_URL}
 
 ## Pages
 - [Home]({SITE}/): overview, a day with TextFox, setup, AI, privacy and FAQ
 - [Scheduled text messages]({SITE}/scheduled-text-messages): time and weekdays, every 1–4 weeks, one date, random days, multiple recipients, AI variations
 - [Auto-reply to text messages]({SITE}/auto-reply-sms): sender and keyword filters, quiet hours, fixed or AI-written replies
 - [Missed-call text-back]({SITE}/missed-call-text-back): texts callers after a missed or declined call, optional caller filter
+- [One-tap text widget]({SITE}/one-tap-text-widget): a home-screen widget per macro, one tap sends a ready-made text to one or many people
+- [About the maker]({SITE}/about): Lars Sohl, Danish graphic designer, photographer and creative coder; founder of kodekid.app, klokly.app and larssohl.dk
 - [Privacy policy]({SITE}/privacy)
 
 ## Key facts

@@ -2,13 +2,15 @@
 
 > TextFox is a free Android app (Android 8.0+) that sends text messages (SMS) automatically: on a schedule, as a reply to incoming texts, after a missed or declined call, or with one tap on a home-screen widget. It runs on the phone, with no account, no ads and no analytics. Optional AI features use the user's own free Google Gemini API key.
 
-Publisher: kodekid.app · Contact: hello@larssohl.dk · Google Play: https://play.google.com/apps/testing/app.kodekid.automatiq
+Maker: Lars Sohl (Denmark), founder of kodekid.app, klokly.app and larssohl.dk · Publisher: kodekid.app · Contact: hello@larssohl.dk · Google Play: https://play.google.com/apps/testing/app.kodekid.automatiq
 
 ## Pages
 - [Home](https://www.textfox.app/): overview, a day with TextFox, setup, AI, privacy and FAQ
 - [Scheduled text messages](https://www.textfox.app/scheduled-text-messages): time and weekdays, every 1–4 weeks, one date, random days, multiple recipients, AI variations
 - [Auto-reply to text messages](https://www.textfox.app/auto-reply-sms): sender and keyword filters, quiet hours, fixed or AI-written replies
 - [Missed-call text-back](https://www.textfox.app/missed-call-text-back): texts callers after a missed or declined call, optional caller filter
+- [One-tap text widget](https://www.textfox.app/one-tap-text-widget): a home-screen widget per macro, one tap sends a ready-made text to one or many people
+- [About the maker](https://www.textfox.app/about): Lars Sohl, Danish graphic designer, photographer and creative coder; founder of kodekid.app, klokly.app and larssohl.dk
 - [Privacy policy](https://www.textfox.app/privacy)
 
 ## Key facts
