@@ -76,7 +76,7 @@ a{color:inherit}
 .facts{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:20px;font:500 12.5px/1 var(--mono);color:var(--dim)}
 .facts span::before{content:"✓ ";color:var(--green)}
 .hero-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px;align-items:center}
-.fox-stage{position:relative;isolation:isolate;width:115%;max-width:680px;margin-right:-8%;aspect-ratio:1;justify-self:center;--S:min(46vw,600px)}
+.fox-stage{position:relative;isolation:isolate;width:115%;max-width:680px;margin-right:-8%;justify-self:center;aspect-ratio:1;justify-self:center;--S:min(46vw,600px)}
 .fox-stage .rings{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
 .rings ellipse{fill:none;stroke:rgba(0,230,118,.34);stroke-width:2.4}
 .fox-stage .rings{transform-origin:50% 50%}
@@ -358,3 +358,12 @@ footer{border-top:1px solid var(--line);padding-block:56px calc(36px + env(safe-
 .sh-native:hover{background:#3dffa0}
 .sh.copied{--b:#00E676;background:color-mix(in srgb,#00E676 34%,#141B17)}
 @media (max-width:900px){.share-in{grid-template-columns:1fr}.share-btns{justify-content:flex-start}}
+/* desktop hero: the fox floats free in the top right at 120% of its old size; the copy keeps its own column */
+@media (min-width:901px){
+  .hero-grid{grid-template-columns:minmax(0,1fr);width:100%}
+  .hero{--S:min(816px,57vw)}
+  /* body copy ends before the fox stage; the headline keeps its width (it never reaches the stage) */
+  .hero-copy{max-width:min(620px,calc(98.5vw - var(--S) * .94 - (100vw - min(100vw,1240px)) / 2 - 44px))}
+  .h1{font-size:clamp(46px,7.6vw,112px);width:min(640px,44vw)}
+  .fox-stage{--S:min(816px,57vw);position:absolute;width:var(--S);max-width:none;margin:0;right:calc(1.5vw - var(--S) * .06);top:calc(47% - var(--S) / 2)}
+}
