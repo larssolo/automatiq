@@ -8,7 +8,7 @@ Udkast til alt, der skal udfyldes i Play Console for `app.kodekid.automatiq`. Te
 
 ## 0. Før du starter
 
-- [ ] **Privatlivspolitik online.** Online på `https://larssolo.github.io/automatiq-privacy/` (separat offentligt repo `larssolo/automatiq-privacy`, så dette repo kan være privat). Ret politikken i begge repoer, hvis den ændres.
+- [x] **Privatlivspolitik online.** Online på `https://www.textfox.app/privacy`. Siden bygges fra `docs/privacy.md` (`python3 website/build.py`), så ret kun den fil. Den gamle kopi på `https://larssolo.github.io/automatiq-privacy/` skal pege hertil eller fjernes.
 - [x] Pladsholderne i `docs/privacy.md` er udfyldt (Lars Sohl, founder of kodekid.app · hello@larssohl.dk).
 - [x] Rapporter slettes senest efter 12 måneder (besluttet). Husk oprydning i Neon: `DELETE FROM ai_reports WHERE created_at < now() - interval '12 months'`.
 - [ ] Upload-nøglen er sikkerhedskopieret (`~/.android/automatiq-upload.jks` + `keystore.properties`).

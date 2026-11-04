@@ -212,11 +212,6 @@ def privacy_page():
     md = (ROOT.parent / "docs" / "privacy.md").read_text()
     md = re.sub(r"^---.*?---\s*", "", md, flags=re.S)
     md = re.sub(r"^# .*\n", "", md, count=1, flags=re.M)
-    md = md.replace("Automatiq", "TextFox")
-    website = ("## 8. This website\n\ntextfox.app sets no cookies and uses no analytics, ads or third-party scripts. "
-               "Fonts and scripts are served from our own domain. The site is hosted by Vercel, which processes standard "
-               "server logs (such as IP address and browser type) to deliver and protect the site.\n\n## 9. Contact")
-    md = md.replace("## 8. Contact", website)
     body = markdown.markdown(md, extensions=["tables"])
     body = body.replace("<table>", '<div class="table-scroll"><table>').replace("</table>", "</table></div>")
     meta = {"out": "privacy.html", "path": "/privacy", "title": "Privacy Policy | TextFox",
