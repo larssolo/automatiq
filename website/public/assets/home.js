@@ -166,6 +166,12 @@ window.TF = window.TF || {boom: 0};
     gsap.to('.hero-copy', {y: -90 * D, opacity: .1, ease: 'none', scrollTrigger: {trigger: '.hero', start: 'top top', end: 'bottom top', scrub: true}});
     document.querySelectorAll('[data-words]').forEach(h => SplitText.create(h, {type: 'words', mask: 'words', autoSplit: true, onSplit: self => gsap.from(self.words, {yPercent: 115, stagger: .05, ease: 'none', scrollTrigger: {trigger: h, start: 'top 90%', end: 'top 55%', scrub: true}})}));
     gsap.from('#tgrid .tcard', {y: 80 * D, opacity: 0, stagger: .1, ease: 'none', scrollTrigger: {trigger: '#tgrid', start: 'top 92%', end: 'top 50%', scrub: true}});
+    // setup timeline: the line fills and each step lights up as you scroll through it
+    document.querySelectorAll('.steps').forEach(ol => {
+      ol.classList.add('js');
+      gsap.fromTo(ol, {'--p': 0}, {'--p': 1, ease: 'none', scrollTrigger: {trigger: ol, start: 'top 78%', end: 'bottom 72%', scrub: true}});
+      ol.querySelectorAll('li').forEach(li => ScrollTrigger.create({trigger: li, start: 'top 78%', toggleClass: {targets: li, className: 'lit'}, end: 'max'}));
+    });
     document.querySelectorAll('[data-rise]').forEach(el => gsap.from(el, {y: 70 * D, opacity: 0, ease: 'none', scrollTrigger: {trigger: el, start: 'top 95%', end: 'top 65%', scrub: true}}));
     gsap.fromTo('#panel', {clipPath: 'inset(12% 8% 12% 8% round 64px)'}, {clipPath: 'inset(0% 0% 0% 0% round 40px)', ease: 'none', scrollTrigger: {trigger: '#panel', start: 'top 95%', end: 'top 45%', scrub: true}});
   });
