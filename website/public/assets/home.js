@@ -1,3 +1,4 @@
+window.TF = window.TF || {boom: 0};
 /* Hero: the fox sends the day's texts; they join two tilted orbits and circle it. Plain JS, no libraries. */
 (() => {
   const stage = document.getElementById('foxStage'), layer = document.getElementById('bubbles');
@@ -22,7 +23,7 @@
   }
   function add(slot, born) {
     live.filter(b => b.slot === slot && !b.die).forEach(b => b.die = performance.now());
-    live.push({el: make(next++), slot, ring: RINGS[slot % 2], born, die: 0});
+    live.push({el: make(next++), slot, ring: RINGS[0], spin: (Math.random() - .5) * 140, dir: .75 + Math.random() * .6, born, die: 0});
   }
   function place(b, now) {
     const {rx, ry, tilt} = b.ring, S = size; b.a = phase + b.slot * 2 * Math.PI / SLOTS;
@@ -34,15 +35,29 @@
     let k = 1, o = .35 + .65 * depth;
     if (b.born) { const p = Math.min(1, (now - b.born) / 900); k = 1 - Math.pow(1 - p, 3); }   // fly out of the fox
     if (b.die) { const p = Math.min(1, (now - b.die) / 600); o *= 1 - p; if (p >= 1) { b.el.remove(); b.gone = true; } }
-    const s = (.72 + .28 * depth) * (b.born ? .4 + .6 * k : 1);
-    b.el.style.transform = `translate(-50%,-50%) translate(${(x * k).toFixed(1)}px,${(y * k).toFixed(1)}px) scale(${s.toFixed(3)})`;
-    b.el.style.opacity = (o * (b.born ? k : 1)).toFixed(3);
+    const B = TF.boom, f = 1 + B * B * 3.2 * b.dir;            // scroll explosion: texts are flung outwards and spin
+    const s = (.72 + .28 * depth) * (b.born ? .4 + .6 * k : 1) * (1 + B * .5);
+    b.el.style.transform = `translate(-50%,-50%) translate(${(x * k * f).toFixed(1)}px,${(y * k * f - B * 60).toFixed(1)}px) rotate(${(b.spin * B).toFixed(1)}deg) scale(${s.toFixed(3)})`;
+    b.el.style.opacity = (o * (b.born ? k : 1) * (1 - B * B)).toFixed(3);
     b.el.style.zIndex = depth > .5 ? 3 : 1;
     b.el.parentNode && (b.el.style.filter = depth < .35 ? 'blur(.6px)' : '');
   }
-  // start complete: four messages already in orbit
+  // a small ball rides the orbit, faster along the front (bottom) than the back (top)
+  const orb = document.createElement('i'); orb.className = 'orb'; layer.appendChild(orb);
+  let oa = 0;
+  function placeOrb(dt) {
+    const {rx, ry, tilt} = RINGS[0], S = size, nx = S < 520 ? .7 : 1;
+    oa += dt * (.55 + .45 * Math.sin(oa)) * 1.25;              // sin > 0 is the front half
+    let x = Math.cos(oa) * rx * nx * S, y = Math.sin(oa) * ry * S;
+    [x, y] = [x * Math.cos(tilt) - y * Math.sin(tilt), x * Math.sin(tilt) + y * Math.cos(tilt)];
+    const depth = (Math.sin(oa) + 1) / 2, B = TF.boom;
+    orb.style.transform = `translate(-50%,-50%) translate(${(x * (1 + B * 1.6)).toFixed(1)}px,${(y * (1 + B * 1.6)).toFixed(1)}px) scale(${(.6 + .5 * depth).toFixed(3)})`;
+    orb.style.opacity = ((.45 + .55 * depth) * (1 - B)).toFixed(3);
+    orb.style.zIndex = depth > .5 ? 3 : 1;
+  }
+  // start complete: five messages already in orbit
   for (let i = 0; i < SLOTS; i++) add(i, 0);
-  if (reduce) { live.forEach(b => place(b, 0)); return; }
+  if (reduce) { live.forEach(b => place(b, 0)); placeOrb(0); return; }
 
   let last = performance.now(), visible = true, timer = 0;
   new IntersectionObserver(([e]) => { visible = e.isIntersecting; }).observe(stage);
@@ -54,7 +69,7 @@
   (function tick(now) {
     const dt = Math.min(.05, (now - last) / 1000); last = now;
     if (visible && !document.hidden) {
-      phase += W * dt; for (const b of live) place(b, now);
+      phase += W * dt; for (const b of live) place(b, now); placeOrb(dt);
       for (let i = live.length - 1; i >= 0; i--) if (live[i].gone) live.splice(i, 1);
       timer += dt; if (timer > 3.4) { timer = 0; send(); }
     }
@@ -137,7 +152,12 @@
       onUpdate: s => gsap.to(state, {p: s.progress, duration: .3, ease: 'power2.out', overwrite: true, onUpdate: () => render(minuteAt(state.p))}),
     });
     gsap.fromTo('.day .phone', {y: 120 * D, opacity: .3}, {y: 0, opacity: 1, ease: 'none', scrollTrigger: {trigger: day, start: 'top bottom', end: 'top top', scrub: true}});
-    gsap.to('.fox-stage', {y: -140 * D, scale: .88, ease: 'none', scrollTrigger: {trigger: '.hero', start: 'top top', end: 'bottom top', scrub: true}});
+    // the hero illustration explodes at the speed you scroll
+    const boom = gsap.timeline({scrollTrigger: {trigger: '.hero', start: 'top top', end: 'bottom 20%', scrub: .4, onUpdate: s => { TF.boom = s.progress; }}});
+    boom.to('.fox-wrap .fox', {scale: 2.6, rotate: -14, yPercent: -30, opacity: 0, ease: 'power2.in'}, 0)   // .fox-wrap keeps its CSS float
+        .to('.fox-glow', {scale: 3.4, opacity: 0, ease: 'power1.in'}, 0)
+        .to('.fox-stage .rings', {scaleX: mob ? 1.54 : 2.2, scaleY: 2.2, rotate: 25, opacity: 0, ease: 'power2.in'}, 0)
+        .to('.fox-stage', {y: -60 * D, ease: 'none'}, 0);
     gsap.to('.hero-copy', {y: -90 * D, opacity: .1, ease: 'none', scrollTrigger: {trigger: '.hero', start: 'top top', end: 'bottom top', scrub: true}});
     document.querySelectorAll('[data-words]').forEach(h => SplitText.create(h, {type: 'words', mask: 'words', autoSplit: true, onSplit: self => gsap.from(self.words, {yPercent: 115, stagger: .05, ease: 'none', scrollTrigger: {trigger: h, start: 'top 90%', end: 'top 55%', scrub: true}})}));
     gsap.from('#tgrid .tcard', {y: 80 * D, opacity: 0, stagger: .1, ease: 'none', scrollTrigger: {trigger: '#tgrid', start: 'top 92%', end: 'top 50%', scrub: true}});
