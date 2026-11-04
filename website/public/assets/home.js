@@ -165,7 +165,7 @@ window.TF = window.TF || {boom: 0};
         .to('.fox-stage', {y: -60 * D, ease: 'none'}, 0);
     gsap.to('.hero-copy', {y: -90 * D, opacity: .1, ease: 'none', scrollTrigger: {trigger: '.hero', start: 'top top', end: 'bottom top', scrub: true}});
     document.querySelectorAll('[data-words]').forEach(h => SplitText.create(h, {type: 'words', mask: 'words', autoSplit: true, onSplit: self => gsap.from(self.words, {yPercent: 115, stagger: .05, ease: 'none', scrollTrigger: {trigger: h, start: 'top 90%', end: 'top 55%', scrub: true}})}));
-    gsap.from('#tgrid .tcard', {y: 80 * D, opacity: 0, stagger: .1, ease: 'none', scrollTrigger: {trigger: '#tgrid', start: 'top 92%', end: 'top 50%', scrub: true}});
+    gsap.fromTo('#tgrid .tcard', {y: 80 * D, autoAlpha: 0}, {y: 0, autoAlpha: 1, stagger: .1, ease: 'none', scrollTrigger: {trigger: '#tgrid', start: 'top 92%', end: 'top 50%', scrub: true}});   // hover uses `translate`, so this tween owns transform alone
     // setup timeline: the line fills and each step lights up as you scroll through it
     document.querySelectorAll('.steps').forEach(ol => {
       ol.classList.add('js');
