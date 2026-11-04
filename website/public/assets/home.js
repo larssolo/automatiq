@@ -1,3 +1,67 @@
+/* Hero: the fox sends the day's texts; they join two tilted orbits and circle it. Plain JS, no libraries. */
+(() => {
+  const stage = document.getElementById('foxStage'), layer = document.getElementById('bubbles');
+  if (!stage || !layer) return;
+  const MSGS = [
+    ['08:00', 'Good morning ☀️', '--amber'], ['09:00', 'Take your vitamins 💊', '--amber'], ['10:41', 'Back Monday 👋', '--teal'],
+    ['11:27', 'Sorry I missed your call', '--green'], ['17:40', 'Running 10 min late!', '--rose'], ['20:15', 'Bedtime in 15 🌙', '--indigo'],
+  ];
+  // two rings in units of the stage width: radius x/y, tilt (rad), angular speed (rad/s)
+  const RINGS = [{rx: .44, ry: .25, tilt: -9 * Math.PI / 180, w: .15}, {rx: .33, ry: .19, tilt: 13 * Math.PI / 180, w: -.2}];
+  // five evenly spaced slots that circle together, alternating between the two rings, so texts never pile up
+  const SLOTS = 5, W = .15, reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const live = []; let next = 0, phase = .35, size = stage.offsetWidth, cursor = 0;
+  addEventListener('resize', () => { size = stage.offsetWidth; });
+
+  function make(i) {
+    const [t, txt, c] = MSGS[i % MSGS.length];
+    const el = document.createElement('div');
+    el.className = 'sms'; el.style.setProperty('--c', `var(${c})`);
+    el.innerHTML = `<b>${txt}</b><small>${t} · <span>✓✓ delivered</span></small>`;
+    layer.appendChild(el); return el;
+  }
+  function add(slot, born) {
+    live.filter(b => b.slot === slot && !b.die).forEach(b => b.die = performance.now());
+    live.push({el: make(next++), slot, ring: RINGS[slot % 2], born, die: 0});
+  }
+  function place(b, now) {
+    const {rx, ry, tilt} = b.ring, S = size; b.a = phase + b.slot * 2 * Math.PI / SLOTS;
+    const nx = S < 520 ? .7 : 1;                                 // narrower orbit on phones
+    let x = Math.cos(b.a) * rx * nx * S, y = Math.sin(b.a) * ry * S;
+    [x, y] = [x * Math.cos(tilt) - y * Math.sin(tilt), x * Math.sin(tilt) + y * Math.cos(tilt)];
+    b.w2 = b.w2 || b.el.offsetWidth / 2; const lim = S / 2 - b.w2 * .8; x = Math.max(-lim, Math.min(lim, x));   // keep texts inside the stage
+    const depth = (Math.sin(b.a) + 1) / 2;                      // 0 = behind the fox, 1 = in front
+    let k = 1, o = .35 + .65 * depth;
+    if (b.born) { const p = Math.min(1, (now - b.born) / 900); k = 1 - Math.pow(1 - p, 3); }   // fly out of the fox
+    if (b.die) { const p = Math.min(1, (now - b.die) / 600); o *= 1 - p; if (p >= 1) { b.el.remove(); b.gone = true; } }
+    const s = (.72 + .28 * depth) * (b.born ? .4 + .6 * k : 1);
+    b.el.style.transform = `translate(-50%,-50%) translate(${(x * k).toFixed(1)}px,${(y * k).toFixed(1)}px) scale(${s.toFixed(3)})`;
+    b.el.style.opacity = (o * (b.born ? k : 1)).toFixed(3);
+    b.el.style.zIndex = depth > .5 ? 3 : 1;
+    b.el.parentNode && (b.el.style.filter = depth < .35 ? 'blur(.6px)' : '');
+  }
+  // start complete: four messages already in orbit
+  for (let i = 0; i < SLOTS; i++) add(i, 0);
+  if (reduce) { live.forEach(b => place(b, 0)); return; }
+
+  let last = performance.now(), visible = true, timer = 0;
+  new IntersectionObserver(([e]) => { visible = e.isIntersecting; }).observe(stage);
+  function send() {
+    stage.classList.remove('typing'); void stage.offsetWidth; stage.classList.add('typing');
+    const slot = cursor++ % SLOTS;                                          // replace the oldest text
+    setTimeout(() => add(slot, performance.now()), 1000);
+  }
+  (function tick(now) {
+    const dt = Math.min(.05, (now - last) / 1000); last = now;
+    if (visible && !document.hidden) {
+      phase += W * dt; for (const b of live) place(b, now);
+      for (let i = live.length - 1; i >= 0; i--) if (live[i].gone) live.splice(i, 1);
+      timer += dt; if (timer > 3.4) { timer = 0; send(); }
+    }
+    requestAnimationFrame(tick);
+  })(last);
+})();
+
 /* Home page motion: scroll drives one day, 06:59 → 23:00. Requires gsap, ScrollTrigger, SplitText. */
 (() => {
   const EVENTS = [
@@ -73,8 +137,7 @@
       onUpdate: s => gsap.to(state, {p: s.progress, duration: .3, ease: 'power2.out', overwrite: true, onUpdate: () => render(minuteAt(state.p))}),
     });
     gsap.fromTo('.day .phone', {y: 120 * D, opacity: .3}, {y: 0, opacity: 1, ease: 'none', scrollTrigger: {trigger: day, start: 'top bottom', end: 'top top', scrub: true}});
-    gsap.to('.hero-ghost', {y: 120 * D, ease: 'none', scrollTrigger: {trigger: '.hero', start: 'top top', end: 'bottom top', scrub: true}});
-    gsap.to('.hero-orbit', {y: -160 * D, scale: .8, ease: 'none', scrollTrigger: {trigger: '.hero', start: 'top top', end: 'bottom top', scrub: true}});
+    gsap.to('.fox-stage', {y: -140 * D, scale: .88, ease: 'none', scrollTrigger: {trigger: '.hero', start: 'top top', end: 'bottom top', scrub: true}});
     gsap.to('.hero-copy', {y: -90 * D, opacity: .1, ease: 'none', scrollTrigger: {trigger: '.hero', start: 'top top', end: 'bottom top', scrub: true}});
     document.querySelectorAll('[data-words]').forEach(h => SplitText.create(h, {type: 'words', mask: 'words', autoSplit: true, onSplit: self => gsap.from(self.words, {yPercent: 115, stagger: .05, ease: 'none', scrollTrigger: {trigger: h, start: 'top 90%', end: 'top 55%', scrub: true}})}));
     gsap.from('#tgrid .tcard', {y: 80 * D, opacity: 0, stagger: .1, ease: 'none', scrollTrigger: {trigger: '#tgrid', start: 'top 92%', end: 'top 50%', scrub: true}});

@@ -15,7 +15,7 @@
 <link rel="manifest" href="/site.webmanifest">
 <link rel="preload" href="/assets/fonts/DMSans.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/assets/fonts/JetBrainsMono.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/assets/site.css?v=06c876e7">
+<link rel="stylesheet" href="/assets/site.css?v=3170cd03">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="TextFox">
 <meta property="og:locale" content="en_US">
@@ -34,7 +34,7 @@
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
-<symbol id="fox" viewBox="0 0 64 64"><path d="M5 3 23 16.5h18L59 3l1.5 21L64 33 37.2 55.6a8 8 0 0 1-10.4 0L0 33l3.5-9Z" fill="currentColor"/><path d="M0 33 18 38l14 18.6L46 38l18-5-26.8 22.6a8 8 0 0 1-10.4 0Z" fill="#EAF7EF"/><circle cx="22" cy="30" r="3.5" fill="#090B0A"/><circle cx="32" cy="30" r="3.5" fill="#090B0A"/><circle cx="42" cy="30" r="3.5" fill="#090B0A"/></symbol>
+<symbol id="fox" viewBox="0 0 354.18 302.05"><path d="M3.03,167.98l108.55,18.34c18.05,15.38,83.78,26.23,102.7,10.13l136.86-28.13c1.06-.91,4.45-1.28,2.38-4.76l-16.81-47.49L327.15,0l-99.48,74.39h-100.38S27.76,0,27.76,0l-8.57,116.06L.88,163.68c-.59.82-1,1.64-.84,2.21.25.92,1.26,1.41,3,2.1Z" fill="#121815"/><path d="M351.14,168.32c-2.58-.26-5.33.02-8.35,1.16l-87.63,24.45-77.62,102.84-77.78-102.9-88.64-24.75c-3.04-.85-5.58-1.5-8.09-1.14-1.73-.69-2.74-1.18-3-2.1-.16-.57.25-1.38.84-2.21l18.32-47.61L27.76,0l99.53,74.39h100.38S327.15,0,327.15,0l9.56,116.08,16.81,47.49c2.07,3.48-1.32,3.86-2.38,4.76Z" fill="currentColor"/><path d="M351.14,168.32l-144.48,122.95c-18.92,16.1-43.45,13.15-61.5-2.22L3.03,167.98c2.51-.36,5.05.29,8.09,1.14l88.64,24.75,77.78,102.9,77.62-102.84,87.63-24.45c3.03-1.14,5.77-1.43,8.35-1.16Z" fill="#E5F3EA"/><ellipse class="eye" cx="121.96" cy="149.52" rx="19.4" ry="19.4" fill="#121815"/><ellipse class="eye" cx="177.51" cy="149.52" rx="19.4" ry="19.4" fill="#121815"/><ellipse class="eye" cx="233.04" cy="149.52" rx="19.4" ry="19.4" fill="#121815"/></symbol>
 <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></symbol>
 <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6.5 16v-5a5.5 5.5 0 0 1 11 0v5l1.5 2h-14z"/><path d="M10 20.5a2 2 0 0 0 4 0"/></symbol>
 <symbol id="i-reply" viewBox="0 0 24 24"><path d="M10 7 5 12l5 5"/><path d="M5 12h9a5 5 0 0 1 5 5v1"/></symbol>
@@ -54,20 +54,26 @@
 <main id="main">
 <section class="hero" id="top">
   <div class="hero-glow" aria-hidden="true"></div>
-  <div class="hero-orbit" aria-hidden="true"><i></i><i></i><i></i><b style="--c:var(--amber);--t:14s;--d:0s"></b><b style="--c:var(--teal);--t:14s;--d:-4.6s"></b><b style="--c:var(--rose);--t:14s;--d:-9.3s"></b></div>
-  <div class="hero-ghost" aria-hidden="true">06:59</div>
-  <div class="wrap hero-copy">
-    <p class="kicker">&gt; textfox.init()<span class="caret" aria-hidden="true"></span></p>
-    <h1 class="h1" id="h1">Your phone texts for you. <span class="g">All day.</span></h1>
-    <p class="lede"><strong>TextFox is an Android app that sends text messages automatically</strong>: on a schedule, as a reply to a text, or when you miss a call. Set it up once and it just runs, right on your phone.</p>
-    <div class="cta-row"><a class="btn btn-g play-btn" href="https://play.google.com/apps/testing/app.kodekid.automatiq" rel="noopener"><svg width="18" height="20" viewBox="0 0 16 18" aria-hidden="true"><path d="M1 1.2v15.6c0 .5.5.8.9.6L15 9.6a.7.7 0 0 0 0-1.2L1.9.6C1.5.4 1 .7 1 1.2Z" fill="currentColor"/></svg><span><small>Get it on</small>Google Play</span></a><a class="btn btn-ghost" href="#day">Watch a day go by ↓</a></div>
-    <nav class="jump" aria-label="Features">
-      <a href="/scheduled-text-messages" style="--c:var(--amber)"><i></i>Scheduled texts</a>
-      <a href="/auto-reply-sms" style="--c:var(--teal)"><i></i>Auto-reply</a>
-      <a href="/missed-call-text-back" style="--c:var(--green)"><i></i>Missed-call text-back</a>
-      <a href="#ai" style="--c:var(--indigo)"><i></i>AI variations</a>
-    </nav>
-    <div class="facts"><span>Runs on your phone</span><span>No account</span><span>No ads</span><span>Android 8.0+</span></div>
+  <div class="wrap hero-grid">
+    <div class="hero-copy">
+      <p class="kicker">&gt; textfox.init()<span class="caret" aria-hidden="true"></span></p>
+      <h1 class="h1" id="h1">Your phone texts for you. <span class="g">All day.</span></h1>
+      <p class="lede"><strong>TextFox is an Android app that sends text messages automatically</strong>: on a schedule, as a reply to a text, or when you miss a call. Set it up once and it just runs, right on your phone.</p>
+      <div class="cta-row"><a class="btn btn-g play-btn" href="https://play.google.com/apps/testing/app.kodekid.automatiq" rel="noopener"><svg width="18" height="20" viewBox="0 0 16 18" aria-hidden="true"><path d="M1 1.2v15.6c0 .5.5.8.9.6L15 9.6a.7.7 0 0 0 0-1.2L1.9.6C1.5.4 1 .7 1 1.2Z" fill="currentColor"/></svg><span><small>Get it on</small>Google Play</span></a><a class="btn btn-ghost" href="#day">Watch a day go by ↓</a></div>
+      <nav class="jump" aria-label="Features">
+        <a href="/scheduled-text-messages" style="--c:var(--amber)"><i></i>Scheduled texts</a>
+        <a href="/auto-reply-sms" style="--c:var(--teal)"><i></i>Auto-reply</a>
+        <a href="/missed-call-text-back" style="--c:var(--green)"><i></i>Missed-call text-back</a>
+        <a href="#ai" style="--c:var(--indigo)"><i></i>AI variations</a>
+      </nav>
+      <div class="facts"><span>Runs on your phone</span><span>No account</span><span>No ads</span><span>Android 8.0+</span></div>
+    </div>
+    <div class="fox-stage" id="foxStage" role="img" aria-label="The TextFox fox sending text messages that circle around it: Good morning, Take your vitamins, Back Monday, Sorry I missed your call, Running late and Bedtime">
+      <svg class="rings" viewBox="-300 -300 600 600" aria-hidden="true"><ellipse class="r1" rx="264" ry="150" transform="rotate(-9)"/><ellipse class="r2" rx="198" ry="114" transform="rotate(13)"/></svg>
+      <div class="fox-glow" aria-hidden="true"></div>
+      <div class="fox-wrap" aria-hidden="true"><svg class="fox" viewBox="0 0 354.18 302.05"><path d="M3.03,167.98l108.55,18.34c18.05,15.38,83.78,26.23,102.7,10.13l136.86-28.13c1.06-.91,4.45-1.28,2.38-4.76l-16.81-47.49L327.15,0l-99.48,74.39h-100.38S27.76,0,27.76,0l-8.57,116.06L.88,163.68c-.59.82-1,1.64-.84,2.21.25.92,1.26,1.41,3,2.1Z" fill="#121815"/><path d="M351.14,168.32c-2.58-.26-5.33.02-8.35,1.16l-87.63,24.45-77.62,102.84-77.78-102.9-88.64-24.75c-3.04-.85-5.58-1.5-8.09-1.14-1.73-.69-2.74-1.18-3-2.1-.16-.57.25-1.38.84-2.21l18.32-47.61L27.76,0l99.53,74.39h100.38S327.15,0,327.15,0l9.56,116.08,16.81,47.49c2.07,3.48-1.32,3.86-2.38,4.76Z" fill="currentColor"/><path d="M351.14,168.32l-144.48,122.95c-18.92,16.1-43.45,13.15-61.5-2.22L3.03,167.98c2.51-.36,5.05.29,8.09,1.14l88.64,24.75,77.78,102.9,77.62-102.84,87.63-24.45c3.03-1.14,5.77-1.43,8.35-1.16Z" fill="#E5F3EA"/><ellipse class="eye" cx="121.96" cy="149.52" rx="19.4" ry="19.4" fill="#121815"/><ellipse class="eye" cx="177.51" cy="149.52" rx="19.4" ry="19.4" fill="#121815"/><ellipse class="eye" cx="233.04" cy="149.52" rx="19.4" ry="19.4" fill="#121815"/></svg></div>
+      <div class="bubbles" id="bubbles" aria-hidden="true"></div>
+    </div>
   </div>
   <div class="scroll-cue" aria-hidden="true">scroll<i></i></div>
 </section>
@@ -231,6 +237,6 @@
   </div>
   <div class="legal"><span>© 2026 TextFox · kodekid.app</span><span>No cookies. No tracking.</span></div>
 </div></footer>
-<script src="/assets/site.js?v=ffdcb89d" defer></script><script src="/assets/js/gsap.min.js?v=fa1aeabc" defer></script><script src="/assets/js/ScrollTrigger.min.js?v=ecd3242f" defer></script><script src="/assets/js/SplitText.min.js?v=f59793f6" defer></script><script src="/assets/home.js?v=93e5e938" defer></script>
+<script src="/assets/site.js?v=ffdcb89d" defer></script><script src="/assets/js/gsap.min.js?v=fa1aeabc" defer></script><script src="/assets/js/ScrollTrigger.min.js?v=ecd3242f" defer></script><script src="/assets/js/SplitText.min.js?v=f59793f6" defer></script><script src="/assets/home.js?v=187d2579" defer></script>
 </body>
 </html>
