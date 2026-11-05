@@ -80,6 +80,16 @@
       "permanent": true
     },
     {
+      "source": "/sitemap.html",
+      "destination": "/sitemap",
+      "permanent": true
+    },
+    {
+      "source": "/da/sitemap.html",
+      "destination": "/da/sitemap",
+      "permanent": true
+    },
+    {
       "source": "/404.html",
       "destination": "/404",
       "permanent": false
@@ -182,6 +192,14 @@
     {
       "source": "/da/om",
       "destination": "/da/om.html"
+    },
+    {
+      "source": "/sitemap",
+      "destination": "/sitemap.html"
+    },
+    {
+      "source": "/da/sitemap",
+      "destination": "/da/sitemap.html"
     }
   ]
 }

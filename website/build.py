@@ -26,7 +26,7 @@ TODAY = datetime.date.today().isoformat()
 # ---- languages -------------------------------------------------------------
 # English lives at the root, Danish under /da. PAIRS links each page to its translation (hreflang + language switch).
 PAIRS = [("/", "/da"), ("/scheduled-text-messages", "/da/planlagte-sms"), ("/auto-reply-sms", "/da/autosvar-sms"),
-         ("/missed-call-text-back", "/da/sms-ved-ubesvaret-opkald"), ("/one-tap-text-widget", "/da/sms-med-et-tryk"), ("/about", "/da/om")]
+         ("/missed-call-text-back", "/da/sms-ved-ubesvaret-opkald"), ("/one-tap-text-widget", "/da/sms-med-et-tryk"), ("/about", "/da/om"), ("/sitemap", "/da/sitemap")]
 
 
 def counterpart(path):
@@ -364,7 +364,7 @@ def footer(lang):
     <div><h2>TextFox</h2><ul><li><a href="{PLAY_URL}" rel="noopener">Google Play</a></li><li><a href="{P["faq"][0]}">FAQ</a></li><li><a href="{P["about"][0]}">{L["about"]}</a></li><li><a href="{L["privacy_href"]}">{L["privacy"]}</a></li></ul></div>
     <div><h2>{L["f_contact"]}</h2><ul><li><a href="mailto:{CONTACT}">{CONTACT}</a></li><li>{L["made_by"]} <a href="{P["about"][0]}">Lars Sohl</a></li><li><a href="https://www.kodekid.app" rel="noopener">{PUBLISHER}</a></li></ul></div>
   </div>
-  <div class="legal"><span>© {datetime.date.today().year} TextFox · <a href="https://www.kodekid.app" rel="noopener">{PUBLISHER}</a></span><span>{L["no_track"]}</span></div>
+  <div class="legal"><span>© {datetime.date.today().year} TextFox · <a href="https://www.kodekid.app" rel="noopener">{PUBLISHER}</a></span><span><a href="{'/da/sitemap' if lang == 'da' else '/sitemap'}">Sitemap</a> · {L["no_track"]}</span></div>
 </div></footer>"""
 
 
@@ -448,6 +448,38 @@ def privacy_page():
     return meta, page
 
 
+SM = {"en": {"title": "Sitemap | TextFox", "desc": "Every page and video on textfox.app: features, guides, FAQ, privacy and the Danish version.",
+              "h1": "Sitemap", "lede": "Every page and video on textfox.app.", "pages": "Pages", "videos": "Videos", "other": "Dansk version", "xml": "XML sitemap for search engines",
+              "vids": [("/#film", "TextFox film, 59 seconds"), ("/#ai", "Get your free Gemini API key, 49-second guide"), ("/#setup", "The intro guide inside the app, 37 seconds")],
+              "extra": [("/#faq", "Frequently asked questions"), ("/#privacy", "Your data, in short")]},
+      "da": {"title": "Oversigt over siden | TextFox", "desc": "Alle sider og videoer på textfox.app: funktioner, guides, FAQ, privatliv og den engelske version.",
+              "h1": "Oversigt", "lede": "Alle sider og videoer på textfox.app.", "pages": "Sider", "videos": "Videoer", "other": "English version", "xml": "XML-sitemap til søgemaskiner",
+              "vids": [("/da#film", "TextFox-filmen, 59 sekunder"), ("/da#ai", "Hent din gratis Gemini API-nøgle, guide på 49 sekunder"), ("/da#setup", "Introguiden i appen, 37 sekunder (på engelsk)")],
+              "extra": [("/da#faq", "Spørgsmål og svar"), ("/da#privacy", "Dine data, kort fortalt")]}}
+
+
+def sitemap_page(lang, pages):
+    S = SM[lang]; path = "/da/sitemap" if lang == "da" else "/sitemap"
+    mine = [m for m, _ in pages if m.get("lang", "en") == lang and not m.get("noindex") and m["path"] != path]
+    if lang == "da": mine.append({"path": "/privacy", "title": "Privatlivspolitik (på engelsk) | TextFox"})
+    mine.sort(key=lambda m: (m["path"] != T[lang]["home"], m["path"] == "/privacy", m["title"].lower()))
+    li = lambda h, t: f'<li><a href="{h}"><span>{html.escape(t)}</span><span class="g">→</span></a></li>'
+    pg = "".join(li(m["path"], m["title"].split(" | ")[0]) for m in mine) + "".join(li(h, t) for h, t in S["extra"])
+    vd = "".join(li(h, t) for h, t in S["vids"])
+    other = "/sitemap" if lang == "da" else "/da/sitemap"
+    body = f"""<section class="page-hero"><div class="wrap">
+<p class="crumbs"><a href="{T[lang]["home"]}">TextFox</a><span>/</span><span>{S["h1"]}</span></p>
+<p class="kicker">// sitemap</p><h1 class="h1 sub">{S["h1"]}</h1><p class="lede">{S["lede"]}</p></div></section>
+<section class="section tight"><div class="wrap smap">
+<div><h2 class="h3">{S["pages"]}</h2><ul class="smap-list">{pg}</ul></div>
+<div><h2 class="h3">{S["videos"]}</h2><ul class="smap-list">{vd}</ul>
+<h2 class="h3" style="margin-top:40px">More</h2><ul class="smap-list">{li(other, S["other"])}{li("/sitemap.xml", S["xml"])}</ul></div>
+</div></section>"""
+    if lang == "da": body = body.replace('>More<', '>Mere<')
+    meta = {"out": path.lstrip("/") + ".html", "path": path, "lang": lang, "title": S["title"], "description": S["desc"], "crumb": S["h1"]}
+    return meta, body
+
+
 def main():
     pages = []
     for f in sorted((ROOT / "src" / "pages").rglob("*.html")):
@@ -456,6 +488,7 @@ def main():
         meta = json.loads(m.group(1))
         pages.append((meta, raw[m.end():]))
     pages.append(privacy_page())
+    pages += [sitemap_page(l, pages) for l in ("en", "da")]
     for meta, body in pages:
         (PUB / meta["out"]).parent.mkdir(parents=True, exist_ok=True)
         (PUB / meta["out"]).write_text(render(meta, body))
@@ -477,6 +510,10 @@ def main():
             vid += (f"<video:video><video:thumbnail_loc>{SITE}{keyfile(lang, '-poster.jpg')}</video:thumbnail_loc><video:title>{html.escape(kn)}</video:title>"
                     f"<video:description>{html.escape(kd)}</video:description><video:content_loc>{SITE}{keyfile(lang, '.mp4')}</video:content_loc>"
                     f"<video:duration>49</video:duration><video:publication_date>{'2026-11-06T12:00:00+01:00' if lang == 'da' else '2026-11-05T15:00:00+01:00'}</video:publication_date><video:family_friendly>yes</video:family_friendly></video:video>")
+        if path in ("/", "/da"):
+            vid += (f"<video:video><video:thumbnail_loc>{SITE}/media/textfox-intro-poster.jpg</video:thumbnail_loc><video:title>{html.escape(VIDEO['name'])}</video:title>"
+                    f"<video:description>{html.escape(VIDEO['description'])}</video:description><video:content_loc>{SITE}/media/textfox-intro.mp4</video:content_loc>"
+                    f"<video:duration>37</video:duration><video:publication_date>2026-11-04T12:00:00+01:00</video:publication_date><video:family_friendly>yes</video:family_friendly></video:video>")
         return f"<url><loc>{abs_url(path)}</loc><lastmod>{TODAY}</lastmod>{alt}{vid}</url>"
     sm = "".join(sm_entry(m["path"]) for m, _ in pages if not m.get("noindex"))
     (PUB / "sitemap.xml").write_text(f'<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml" xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">{sm}</urlset>\n')
