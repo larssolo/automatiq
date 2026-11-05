@@ -1,4 +1,6 @@
-# TextFox film
+# TextFox films
+
+Two films live here: the 59-second brand film (`film.html`) and a 49-second tutorial, "Get your free Gemini API key" (`key.html`).
 
 A 59-second, 1920×1080 motion film for TextFox, rendered from code so it can be re-cut when the app or copy changes.
 
@@ -29,3 +31,16 @@ ffmpeg -framerate 30 -i /tmp/tf/frames/f%05d.jpg -i /tmp/tf/mix.wav \
 4. **AI built in** — a Gemini variation rewrites itself; ask first or send automatically.
 5. **Reliable and private** — fires on the minute, delivered ✓✓, runs on your phone.
 6. **Finale** — green flash, the fox with its orbit of texts, Google Play and the logo.
+
+## Tutorial: Get your free Gemini API key (`key.html`)
+
+A calm 49-second walkthrough: open Google AI Studio and sign in, create an API key, copy it, paste it in TextFox (Settings → AI · Gemini), test it and save.
+The AI Studio screens are a simplified, neutral illustration of the flow. The score is synthesised by `music.py` (80 BPM, cut on the same 3-second bars as the film).
+
+```bash
+node marketing/film/render.js /tmp/tk/frames 0 - 1 key.html
+python3 marketing/film/music.py 49.2 /tmp/tk/music.wav
+python3 marketing/film/sfx.py /tmp/tk/frames/cues.json /tmp/tk/music.wav /tmp/tk/mix.wav
+ffmpeg -framerate 30 -i /tmp/tk/frames/f%05d.jpg -i /tmp/tk/mix.wav -c:v libx264 -preset slow -crf 17 -pix_fmt yuv420p \
+  -movflags +faststart -af "loudnorm=I=-16:TP=-1.5,alimiter=limit=0.84:level=false" -c:a aac -b:a 256k -shortest textfox-gemini-key.mp4
+```

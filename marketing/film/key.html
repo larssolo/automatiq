@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>TextFox · Get your free Gemini API key</title>
+<!-- 1920×1080 tutorial film. Deterministic: window.renderAt(seconds). Calm pace: one bar = 3 s (80 BPM), scenes cut on bars.
+     The Google AI Studio screens are a simplified, neutral illustration of the flow, not a copy of Google's UI. -->
+<style>
+@font-face{font-family:"DM Sans";font-weight:300 700;src:url(../../website/public/assets/fonts/DMSans.woff2) format("woff2")}
+@font-face{font-family:"JetBrains Mono";font-weight:200 700;src:url(../../website/public/assets/fonts/JetBrainsMono.woff2) format("woff2")}
+:root{--ink:#070908;--fg:#EEF3EF;--mute:#9AA79F;--dim:#56635B;--green:#00E676;--on:#03140A;--amber:#FFB300;--teal:#42D1CA;--indigo:#7B88FF;
+  --sans:"DM Sans",sans-serif;--mono:"JetBrains Mono",monospace}
+*{box-sizing:border-box}
+html,body{margin:0;width:1920px;height:1080px;overflow:hidden;background:var(--ink);color:var(--fg);font-family:var(--sans);-webkit-font-smoothing:antialiased}
+#film{position:relative;width:1920px;height:1080px;overflow:hidden;background:var(--ink)}
+.layer{position:absolute;inset:0}
+#bg{background:radial-gradient(50% 60% at var(--gx,70%) var(--gy,40%),rgba(var(--gc,0,230,118),.16),transparent 70%),radial-gradient(45% 55% at 10% 90%,rgba(66,209,202,.10),transparent 70%),radial-gradient(35% 45% at 85% 95%,rgba(123,136,255,.08),transparent 70%)}
+#grain{position:absolute;inset:0;width:1920px;height:1080px;opacity:.07;mix-blend-mode:overlay}
+#vig{background:radial-gradient(ellipse at center,transparent 55%,rgba(0,0,0,.55))}
+.k{font:500 24px/1 var(--mono);color:var(--green);letter-spacing:.04em}
+.w{display:inline-block;overflow:hidden;vertical-align:top;padding:0 .12em .08em 0;margin:0 -.12em -.08em 0}
+.w>span{display:inline-block}
+.g{color:var(--green)}
+
+/* intro / outro */
+#intro,#outro{position:absolute;inset:0;display:grid;place-items:center;text-align:center;opacity:0}
+.fox{width:190px;height:162px;filter:drop-shadow(0 20px 50px rgba(0,230,118,.45))}
+.big{font:700 112px/.98 var(--sans);letter-spacing:-.05em;margin:34px 0 0}
+.lead{font:400 36px/1.4 var(--sans);color:var(--mute);margin:30px 0 0}
+.chips{display:flex;gap:16px;justify-content:center;margin-top:40px}
+.chip{font:500 24px/1 var(--sans);padding:18px 26px;border-radius:999px;background:rgba(0,230,118,.12);display:flex;gap:12px;align-items:center}
+.chip i{width:12px;height:12px;border-radius:50%;background:var(--green);box-shadow:0 0 12px var(--green)}
+
+/* steps rail (left) */
+#rail{position:absolute;left:120px;top:0;bottom:0;width:560px;opacity:0}
+#rail .dots{position:absolute;top:150px;left:0;display:flex;gap:12px}
+#rail .dots i{width:46px;height:6px;border-radius:6px;background:rgba(214,255,232,.14);overflow:hidden;position:relative}
+#rail .dots i b{position:absolute;inset:0;background:var(--green);transform-origin:left;transform:scaleX(0)}
+.step{position:absolute;left:0;top:250px;width:560px;opacity:0}
+.step .n{font:300 120px/1 var(--mono);color:var(--green);letter-spacing:-.06em}
+.step h2{font:700 66px/1.02 var(--sans);letter-spacing:-.04em;margin:26px 0 22px}
+.step p{font:400 29px/1.45 var(--sans);color:var(--mute);margin:0}
+.step p b{color:var(--fg);font-weight:600}
+.step code{font:500 26px/1 var(--mono);color:var(--green)}
+
+/* browser mockup */
+#browser{position:absolute;left:760px;top:130px;width:1040px;height:820px;border-radius:26px;background:#F4F6F5;color:#1D2420;overflow:hidden;opacity:0;
+  box-shadow:0 60px 140px -40px rgba(0,0,0,.85),0 0 0 1px rgba(255,255,255,.08),0 0 140px -60px rgba(0,230,118,.6)}
+.bar{height:84px;background:#E4E9E6;display:flex;align-items:center;gap:18px;padding:0 26px}
+.bar .tl{display:flex;gap:10px}.bar .tl i{width:15px;height:15px;border-radius:50%;background:#C9D1CD}
+.url{flex:1;height:50px;border-radius:999px;background:#fff;display:flex;align-items:center;gap:12px;padding:0 22px;font:500 22px/1 var(--mono);color:#1D2420}
+.url svg{width:18px;height:18px;fill:#56635B}
+.caretb{display:inline-block;width:2px;height:26px;background:#1D2420;margin-left:2px}
+.pg{position:absolute;left:0;right:0;top:84px;bottom:0;padding:56px 64px;opacity:0}
+.brandline{display:flex;align-items:center;gap:14px;font:600 30px/1 var(--sans);color:#1D2420}
+.brandline i{width:34px;height:34px;border-radius:10px;background:conic-gradient(from 200deg,#7B88FF,#42D1CA,#00E676,#FFB300,#7B88FF)}
+.card{margin-top:40px;border-radius:22px;background:#fff;box-shadow:0 10px 40px -20px rgba(0,0,0,.25);padding:40px 44px}
+.card h3{font:600 38px/1.1 var(--sans);margin:0 0 12px}
+.card p{font:400 24px/1.45 var(--sans);color:#56635B;margin:0}
+.acct{display:flex;align-items:center;gap:18px;margin-top:30px;padding:20px 24px;border-radius:16px;border:2px solid #E4E9E6}
+.acct .av{width:56px;height:56px;border-radius:50%;background:#7B88FF;color:#fff;display:grid;place-items:center;font:600 26px/1 var(--sans)}
+.acct b{display:block;font:600 24px/1.2 var(--sans)}.acct small{font:400 20px/1.2 var(--sans);color:#56635B}
+.btn{display:inline-flex;align-items:center;gap:12px;border-radius:999px;padding:20px 30px;font:600 24px/1 var(--sans);background:#1D2420;color:#fff}
+.btn.ghost{background:#E4E9E6;color:#1D2420}
+.btn.blue{background:#3D5AFE}
+.row{display:flex;justify-content:space-between;align-items:center}
+.table{margin-top:30px;border-top:1px solid #E4E9E6}
+.table div{display:flex;justify-content:space-between;padding:22px 0;border-bottom:1px solid #E4E9E6;font:400 22px/1 var(--sans);color:#56635B}
+#dlg{position:absolute;left:50%;top:50%;width:720px;transform:translate(-50%,-50%);background:#fff;border-radius:24px;padding:44px;box-shadow:0 40px 100px -20px rgba(0,0,0,.4);opacity:0}
+#dlg h3{font:600 34px/1.1 var(--sans);margin:0 0 14px}#dlg p{font:400 22px/1.45 var(--sans);color:#56635B;margin:0 0 30px}
+#scrim{position:absolute;inset:0;background:rgba(10,16,13,.45);opacity:0}
+#keybox{margin-top:26px;display:flex;align-items:center;gap:16px;padding:22px 24px;border-radius:16px;background:#EEF3EF;font:500 26px/1 var(--mono);color:#1D2420}
+#keybox span{flex:1;white-space:nowrap;overflow:hidden}
+#keybox .copy{display:flex;gap:10px;align-items:center;padding:14px 20px;border-radius:12px;background:#1D2420;color:#fff;font:600 20px/1 var(--sans)}
+#keybox .copy svg{width:20px;height:20px;fill:none;stroke:#fff;stroke-width:2}
+#toast{position:absolute;left:50%;bottom:44px;transform:translateX(-50%);background:#1D2420;color:#fff;font:500 22px/1 var(--sans);padding:18px 28px;border-radius:14px;opacity:0;white-space:nowrap}
+.spin{display:inline-block;width:26px;height:26px;border-radius:50%;border:3px solid rgba(29,36,32,.2);border-top-color:#1D2420;vertical-align:-5px}
+
+/* phone mockup (TextFox settings) */
+#phone{position:absolute;left:1050px;top:70px;width:470px;height:940px;border-radius:66px;padding:14px;opacity:0;
+  background:linear-gradient(160deg,#2A332E,#0E1210 40%,#1A211D);box-shadow:0 60px 140px -40px rgba(0,0,0,.9),inset 0 0 0 1px rgba(255,255,255,.08),0 0 140px -50px rgba(0,230,118,.5)}
+.scr{position:relative;height:100%;border-radius:53px;overflow:hidden;background:linear-gradient(180deg,#14201A,#0D1411 60%);padding:22px 20px}
+.sb{display:flex;justify-content:space-between;font:500 19px/1 var(--sans);padding:0 16px 22px}
+.ah{font:500 34px/1 var(--mono);padding:6px 8px 22px}
+.sec{font:500 15px/1 var(--mono);letter-spacing:.14em;color:var(--teal);padding:0 8px 14px}
+.sc{border-radius:24px;background:rgba(255,255,255,.05);padding:22px 20px}
+.lab{font:500 15px/1 var(--sans);color:var(--mute);margin-bottom:10px}
+.field{display:flex;align-items:center;gap:10px;height:62px;border-radius:14px;border:2px solid rgba(214,255,232,.18);padding:0 16px;font:500 20px/1 var(--mono);color:var(--fg);transition:none}
+.field span{flex:1;white-space:nowrap;overflow:hidden}
+.field .ph{color:var(--dim);font-family:var(--sans)}
+.field svg{width:24px;height:24px;fill:none;stroke:var(--mute);stroke-width:2}
+.hint{font:400 15px/1.4 var(--sans);color:var(--mute);margin:14px 2px 0}
+.hint b{color:var(--green);font-weight:500}
+.pbtns{display:flex;gap:12px;margin-top:20px}
+.pb{flex:1;height:58px;border-radius:999px;display:grid;place-items:center;font:600 19px/1 var(--sans);background:rgba(255,255,255,.08)}
+.pb.g{background:var(--green);color:var(--on)}
+#res{margin-top:18px;font:500 17px/1.3 var(--mono);color:var(--green);opacity:0}
+#snack{position:absolute;left:20px;right:20px;bottom:30px;background:#E8EEEA;color:#0B110E;border-radius:14px;padding:18px 20px;font:500 18px/1 var(--sans);opacity:0}
+
+/* pointer */
+#cur{position:absolute;left:0;top:0;width:44px;height:44px;opacity:0;z-index:50;filter:drop-shadow(0 6px 10px rgba(0,0,0,.45))}
+#ripple{position:absolute;left:0;top:0;width:70px;height:70px;margin:-35px;border-radius:50%;border:3px solid var(--green);opacity:0;z-index:49}
+#finger{position:absolute;left:0;top:0;width:66px;height:66px;margin:-33px;border-radius:50%;background:rgba(255,255,255,.35);border:2px solid rgba(255,255,255,.7);opacity:0;z-index:50}
+</style>
+</head>
+<body>
+<div id="film">
+  <div class="layer" id="bg"></div>
+
+  <section id="intro">
+    <div>
+      <svg class="fox" viewBox="0 0 354.18 302.05" style="color:#00E676" id="fox1"><path d="M3.03,167.98l108.55,18.34c18.05,15.38,83.78,26.23,102.7,10.13l136.86-28.13c1.06-.91,4.45-1.28,2.38-4.76l-16.81-47.49L327.15,0l-99.48,74.39h-100.38S27.76,0,27.76,0l-8.57,116.06L.88,163.68c-.59.82-1,1.64-.84,2.21.25.92,1.26,1.41,3,2.1Z" fill="#121815"/><path d="M351.14,168.32c-2.58-.26-5.33.02-8.35,1.16l-87.63,24.45-77.62,102.84-77.78-102.9-88.64-24.75c-3.04-.85-5.58-1.5-8.090-1.14-1.73-.69-2.74-1.18-3-2.1-.16-.57.25-1.38.84-2.21l18.32-47.61L27.76,0l99.53,74.39h100.38S327.15,0,327.15,0l9.56,116.08,16.81,47.49c2.07,3.48-1.32,3.86-2.38,4.76Z" fill="currentColor"/><path d="M351.14,168.32l-144.48,122.95c-18.92,16.1-43.45,13.15-61.5-2.22L3.03,167.98c2.51-.36,5.05.29,8.09,1.14l88.64,24.75,77.78,102.9,77.62-102.84,87.63-24.45c3.03-1.14,5.77-1.43,8.35-1.16Z" fill="#E5F3EA"/><circle class="e" cx="121.96" cy="149.52" r="19.4" fill="#121815"/><circle class="e" cx="177.51" cy="149.52" r="19.4" fill="#121815"/><circle class="e" cx="233.04" cy="149.52" r="19.4" fill="#121815"/></svg>
+      <p class="k" style="margin-top:40px">// textfox · ai setup</p>
+      <h1 class="big" id="t1"><span class="w"><span>Get</span></span> <span class="w"><span>your</span></span> <span class="w"><span>free</span></span><br><span class="w"><span class="g">Gemini</span></span> <span class="w"><span class="g">API</span></span> <span class="w"><span class="g">key.</span></span></h1>
+      <p class="lead" id="l1">It takes about a minute. TextFox can then write texts for you.</p>
+    </div>
+  </section>
+
+  <aside id="rail">
+    <div class="dots"><i><b></b></i><i><b></b></i><i><b></b></i><i><b></b></i></div>
+    <div class="step" id="st1"><div class="n">01</div><h2>Open Google AI Studio</h2><p>Go to <code>aistudio.google.com</code> and sign in with your <b>Google account</b>.</p></div>
+    <div class="step" id="st2"><div class="n">02</div><h2>Create an API key</h2><p>On the <b>API keys</b> page, click <b>Create API key</b>. Google makes a new project for it.</p></div>
+    <div class="step" id="st3"><div class="n">03</div><h2>Copy the key</h2><p>It starts with <code>AIza</code>. Keep it private, like a password.</p></div>
+    <div class="step" id="st4"><div class="n">04</div><h2>Paste it in TextFox</h2><p><b>Settings → AI · Gemini</b>. Paste the key, tap <b>Test key</b>, then <b>Save</b>.</p></div>
+  </aside>
+
+  <div id="browser">
+    <div class="bar"><div class="tl"><i></i><i></i><i></i></div><div class="url"><svg viewBox="0 0 24 24"><path d="M7 10V7a5 5 0 0 1 10 0v3h1a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1zm2 0h6V7a3 3 0 0 0-6 0z"/></svg><span id="url"></span><i class="caretb" id="ucaret"></i></div></div>
+    <div class="pg" id="pg1">
+      <div class="brandline"><i></i>Google AI Studio</div>
+      <div class="card"><h3>Sign in</h3><p>Use your Google account. It's free, and no credit card is needed.</p>
+        <div class="acct" id="acct"><span class="av">Y</span><span><b>Your Name</b><small>you@gmail.com</small></span></div></div>
+    </div>
+    <div class="pg" id="pg2">
+      <div class="row"><div class="brandline"><i></i>Google AI Studio</div><span class="btn ghost" id="getkey">Get API key</span></div>
+      <div class="card"><div class="row"><h3 style="margin:0">API keys</h3><span class="btn blue" id="create">+ Create API key</span></div>
+        <p style="margin-top:14px">Use a key to call the Gemini API from your own apps.</p>
+        <div class="table" id="tbl"><div><span>Key</span><span>Project</span><span>Created</span></div><div id="nokeys"><span>No API keys yet</span><span></span><span></span></div></div>
+        <div id="keybox" style="opacity:0"><span id="keytxt">AIzaSy•••••••••••••••••••••••••••••••</span><span class="copy" id="copy"><svg viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/></svg><b id="copyl" style="font-weight:600">Copy</b></span></div>
+      </div>
+      <div id="scrim"></div>
+      <div id="dlg"><h3>Create API key</h3><p>Google creates a new project for the key. You can rename it later.</p><div class="row"><span></span><span class="btn blue" id="mk">Create API key in new project</span></div></div>
+      <div id="toast">API key copied to clipboard</div>
+    </div>
+  </div>
+
+  <div id="phone"><div class="scr">
+    <div class="sb"><span>12:00</span><span>▾ ◢ ▮</span></div>
+    <div class="ah">settings</div>
+    <div class="sec">AI · GEMINI</div>
+    <div class="sc">
+      <div class="lab">Gemini API key</div>
+      <div class="field" id="fld"><span id="fldt"><span class="ph">Paste your key here</span></span><svg viewBox="0 0 24 24" id="paste"><rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 4.5h6v-1a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1z"/></svg></div>
+      <p class="hint"><b>Get a free API key</b> · Google AI Studio: sign in → "Create API key" → copy it and paste it above.</p>
+      <div class="pbtns"><span class="pb" id="test">Test key</span><span class="pb g" id="save">Save</span></div>
+      <div id="res">✅ Works: OK</div>
+    </div>
+    <div id="snack">AI settings saved</div>
+  </div></div>
+
+  <section id="outro">
+    <div>
+      <svg class="fox" viewBox="0 0 354.18 302.05" style="color:#00E676" id="fox2"><use href="#fox1"/></svg>
+      <h2 class="big" id="t2"><span class="w"><span>You're</span></span> <span class="w"><span class="g">set.</span></span></h2>
+      <p class="lead" id="l2">TextFox can now write auto-replies and fresh versions of your texts.</p>
+      <div class="chips"><span class="chip"><i></i>Free tier</span><span class="chip"><i></i>Key stays on your phone</span><span class="chip"><i></i>AI is optional</span></div>
+      <p class="k" style="margin-top:56px;color:var(--mute)">textfox.app</p>
+    </div>
+  </section>
+
+  <svg id="cur" viewBox="0 0 24 24"><path d="M4 2.5 19.5 13l-7 1.4 3.6 7-2.9 1.4-3.5-7.1L4 20.5z" fill="#fff" stroke="#0B110E" stroke-width="1.3" stroke-linejoin="round"/></svg>
+  <div id="ripple"></div>
+  <div id="finger"></div>
+  <div class="layer" id="vig"></div>
+  <canvas id="grain" width="960" height="540"></canvas>
+</div>
+
+<script src="../../website/public/assets/js/gsap.min.js"></script>
+<script>
+(async () => {
+  await document.fonts.ready;
+  const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+  // the outro fox reuses the intro fox's markup
+  $('#fox2').innerHTML = $('#fox1').innerHTML;
+  const BAR = 3, B0 = .5, bar = n => B0 + n * BAR;
+  const END = bar(16) + .6;
+  const CUES = []; const cue = (t, s, g = 1) => CUES.push([+t.toFixed(3), s, g]);
+  const tl = gsap.timeline({paused: true, defaults: {ease: 'power3.out'}});
+  const show = (s, t, d = .7) => tl.fromTo(s, {autoAlpha: 0}, {autoAlpha: 1, duration: d, ease: 'power2.out'}, t);
+  const hide = (s, t, d = .5) => tl.to(s, {autoAlpha: 0, duration: d, ease: 'power2.in'}, t);
+  const words = (s, t, st = .1) => tl.fromTo(`${s} .w>span`, {yPercent: 110}, {yPercent: 0, duration: 1.2, ease: 'expo.out', stagger: st}, t);
+  const rise = (s, t, y = 30) => tl.fromTo(s, {y, autoAlpha: 0}, {y: 0, autoAlpha: 1, duration: 1}, t);
+  const type = (el, text, t, d, caret = '') => { const o = {n: 0}; tl.to(o, {n: text.length, duration: d, ease: 'none', onUpdate: () => { el.textContent = text.slice(0, Math.round(o.n)); }}, t); };
+
+  // pointer helpers: target centres measured once, in final layout
+  const film = $('#film').getBoundingClientRect();
+  const at = (sel, dx = 0, dy = 0) => { const r = $(sel).getBoundingClientRect(); return {x: r.left - film.left + r.width / 2 + dx, y: r.top - film.top + r.height / 2 + dy}; };
+  const P = {create: at('#create'), mk: at('#mk'), copy: at('#copy'), acct: at('#acct'), paste: at('#paste'), test: at('#test'), save: at('#save'), getkey: at('#getkey')};
+  const move = (p, t, d = 1.1) => tl.to('#cur', {x: p.x - 8, y: p.y - 4, duration: d, ease: 'power2.inOut'}, t);
+  const click = (p, t) => { tl.fromTo('#cur', {scale: 1}, {scale: .85, duration: .1, yoyo: true, repeat: 1, ease: 'power1.inOut'}, t);
+    tl.fromTo('#ripple', {x: p.x, y: p.y, scale: .3, autoAlpha: .9}, {scale: 1.6, autoAlpha: 0, duration: .6, ease: 'power2.out'}, t); cue(t, 'click'); };
+  const tap = (p, t) => { tl.fromTo('#finger', {x: p.x, y: p.y, scale: 1.4, autoAlpha: 0}, {scale: 1, autoAlpha: 1, duration: .25, ease: 'power2.out'}, t - .25);
+    tl.to('#finger', {scale: .8, duration: .1, yoyo: true, repeat: 1}, t); tl.to('#finger', {autoAlpha: 0, duration: .3}, t + .35);
+    tl.fromTo('#ripple', {x: p.x, y: p.y, scale: .3, autoAlpha: .9}, {scale: 1.5, autoAlpha: 0, duration: .6}, t); cue(t, 'click'); };
+  const dot = (i, t) => tl.fromTo(`#rail .dots i:nth-child(${i + 1}) b`, {scaleX: 0}, {scaleX: 1, duration: .8, ease: 'power2.inOut'}, t);
+
+  /* ---- intro (bars 0–1) ---- */
+  show('#intro', 0, .01);
+  tl.fromTo('#fox1', {scale: .4, autoAlpha: 0, rotate: -12}, {scale: 1, autoAlpha: 1, rotate: 0, duration: 1.4, ease: 'expo.out'}, .3); cue(.3, 'boot', .6);
+  tl.fromTo('#fox1 .e', {y: 0}, {y: -14, duration: .18, yoyo: true, repeat: 1, stagger: .1, ease: 'sine.inOut'}, 1.6); [0, .1, .2].forEach(o => cue(1.6 + o, 'blip', .5));
+  rise('#intro .k', bar(0) + 1.2);
+  words('#t1', bar(1) - .6, .1); cue(bar(1) - .6, 'swoosh', .5);
+  rise('#l1', bar(1) + .6);
+  tl.to('#intro', {autoAlpha: 0, scale: .96, duration: .6, ease: 'power2.in'}, bar(2) - .5); cue(bar(2) - .5, 'whoosh', .5);
+
+  /* ---- step 1: open AI Studio, sign in (bars 2–4) ---- */
+  show('#rail', bar(2), .4);
+  tl.fromTo('#browser', {y: 120, autoAlpha: 0, scale: .96}, {y: 0, autoAlpha: 1, scale: 1, duration: 1.3, ease: 'expo.out'}, bar(2)); cue(bar(2), 'whoosh', .4);
+  dot(0, bar(2) + .2); rise('#st1', bar(2) + .3); cue(bar(2) + .3, 'chime', .4);
+  type($('#url'), 'aistudio.google.com/apikey', bar(2) + 1.2, 1.4); cue(bar(2) + 1.2, 'type', .6);
+  tl.to('#ucaret', {autoAlpha: 0, duration: .01}, bar(3) + .2);
+  show('#pg1', bar(3) + .3, .6); cue(bar(3) + .3, 'tick', .5);
+  tl.set('#cur', {x: 1500, y: 980}, bar(3) + .3); show('#cur', bar(3) + .4, .4);
+  move(P.acct, bar(3) + .7); click(P.acct, bar(3) + 1.9);
+  tl.to('#acct', {borderColor: '#3D5AFE', duration: .2}, bar(3) + 1.9);
+  hide('#pg1', bar(4) + .4, .4);
+  show('#pg2', bar(4) + .7, .5); cue(bar(4) + .7, 'tick', .5);
+
+  /* ---- step 2: create the key (bars 5–7) ---- */
+  hide('#st1', bar(5) - .3, .3); dot(1, bar(5)); rise('#st2', bar(5) + .1); cue(bar(5), 'chime', .4);
+  move(P.create, bar(5) + .4); click(P.create, bar(5) + 1.6);
+  show('#scrim', bar(5) + 1.8, .3);
+  tl.fromTo('#dlg', {autoAlpha: 0, scale: .92}, {autoAlpha: 1, scale: 1, duration: .6, ease: 'back.out(1.6)'}, bar(5) + 1.85); cue(bar(5) + 1.85, 'swoosh', .4);
+  move(P.mk, bar(6) + .3); click(P.mk, bar(6) + 1.5);
+  tl.call(() => { $('#mk').innerHTML = '<span class="spin" style="border-color:rgba(255,255,255,.3);border-top-color:#fff"></span>&nbsp; Creating…'; }, [], bar(6) + 1.6);
+  tl.to('#mk .spin', {rotate: 720, duration: 1.2, ease: 'none'}, bar(6) + 1.6);
+  hide(['#dlg', '#scrim'], bar(7) + .4, .35);
+  tl.to('#nokeys', {autoAlpha: 0, height: 0, padding: 0, duration: .3}, bar(7) + .5);
+  tl.fromTo('#keybox', {autoAlpha: 0, y: 20}, {autoAlpha: 1, y: 0, duration: .7}, bar(7) + .7); cue(bar(7) + .7, 'ding', .7);
+  tl.fromTo('#keytxt', {color: '#00A653'}, {color: '#1D2420', duration: 1.5}, bar(7) + .7);
+
+  /* ---- step 3: copy (bars 8–9) ---- */
+  hide('#st2', bar(8) - .3, .3); dot(2, bar(8)); rise('#st3', bar(8) + .1); cue(bar(8), 'chime', .4);
+  move(P.copy, bar(8) + .4); click(P.copy, bar(8) + 1.6);
+  tl.call(() => { $('#copyl').innerHTML = 'Copied'; }, [], bar(8) + 1.65);
+  tl.fromTo('#toast', {autoAlpha: 0, y: 20}, {autoAlpha: 1, y: 0, duration: .4}, bar(8) + 1.7); cue(bar(8) + 1.7, 'send', .6);
+  hide('#toast', bar(9) + 1.5, .4);
+  hide('#cur', bar(9) + 1.6, .3);
+
+  /* ---- step 4: paste in TextFox (bars 10–13) ---- */
+  tl.to('#browser', {x: -260, scale: .86, autoAlpha: 0, duration: 1, ease: 'power3.inOut'}, bar(10) - .4); cue(bar(10) - .4, 'whoosh', .6);
+  tl.fromTo('#phone', {x: 260, autoAlpha: 0, rotateY: -18}, {x: 0, autoAlpha: 1, rotateY: 0, duration: 1.3, ease: 'expo.out'}, bar(10));
+  tl.to('#bg', {'--gc': '66,209,202', duration: 2}, bar(10));
+  hide('#st3', bar(10) - .3, .3); dot(3, bar(10)); rise('#st4', bar(10) + .1); cue(bar(10) + .1, 'chime', .4);
+  tap(P.paste, bar(11)); tl.to('#fld', {borderColor: '#00E676', duration: .2}, bar(11));
+  tl.call(() => { $('#fldt').innerHTML = 'AIzaSy••••••••••••••••••••'; }, [], bar(11) + .15); cue(bar(11) + .15, 'type', .5);
+  tap(P.test, bar(12) - .2);
+  tl.call(() => { $('#test').innerHTML = '<span class="spin" style="border-color:rgba(238,243,239,.25);border-top-color:#EEF3EF"></span>'; }, [], bar(12) - .1);
+  tl.to('#test .spin', {rotate: 540, duration: .9, ease: 'none'}, bar(12) - .1); cue(bar(12), 'think', .6);
+  tl.call(() => { $('#test').innerHTML = 'Test key'; }, [], bar(12) + .85);
+  tl.fromTo('#res', {autoAlpha: 0, y: 8}, {autoAlpha: 1, y: 0, duration: .5}, bar(12) + .9); cue(bar(12) + .9, 'ding', .8);
+  tap(P.save, bar(13));
+  tl.fromTo('#snack', {autoAlpha: 0, y: 30}, {autoAlpha: 1, y: 0, duration: .5}, bar(13) + .2); cue(bar(13) + .2, 'send', .6);
+  tl.to(['#phone', '#rail'], {autoAlpha: 0, duration: .7, ease: 'power2.in'}, bar(14) - .6); cue(bar(14) - .6, 'whoosh', .5);
+
+  /* ---- outro (bars 14–16) ---- */
+  tl.to('#bg', {'--gc': '0,230,118', '--gx': '50%', '--gy': '45%', duration: 1.5}, bar(14));
+  show('#outro', bar(14), .01);
+  tl.fromTo('#fox2', {scale: .5, autoAlpha: 0}, {scale: 1, autoAlpha: 1, duration: 1.2, ease: 'expo.out'}, bar(14)); cue(bar(14), 'impact', .55);
+  words('#t2', bar(14) + .5, .14);
+  rise('#l2', bar(14) + 1.3);
+  $$('.chip').forEach((c, i) => { tl.fromTo(c, {scale: .7, autoAlpha: 0}, {scale: 1, autoAlpha: 1, duration: .6, ease: 'back.out(2)'}, bar(15) + i * .45); cue(bar(15) + i * .45, 'blip', .5); });
+  tl.fromTo('#fox2 .e', {y: 0}, {y: -14, duration: .18, yoyo: true, repeat: 1, stagger: .1, ease: 'sine.inOut'}, bar(15) + 1.6);
+  tl.to('#film', {opacity: 0, duration: 1, ease: 'power2.in'}, END - 1); cue(END - 1.2, 'powerdown', .5);
+  tl.to({}, {duration: .01}, END);
+
+  const gctx = $('#grain').getContext('2d'), gimg = gctx.createImageData(960, 540);
+  window.FILM = {END, FPS: 30, CUES: CUES.sort((a, b) => a[0] - b[0])};
+  window.renderAt = t => {
+    tl.seek(Math.min(t, END), false);
+    const f = Math.round(t * 30); let s = f * 9301 + 49297; const d = gimg.data;
+    for (let i = 0; i < d.length; i += 4) { s = (s * 1103515245 + 12345) & 0x7fffffff; const v = (s >> 16) & 255; d[i] = d[i + 1] = d[i + 2] = v; d[i + 3] = 255; }
+    gctx.putImageData(gimg, 0, 0);
+    $('#fox1').style.translate = `0 ${Math.sin(t * 1.3) * 6}px`; $('#fox2').style.translate = `0 ${Math.sin(t * 1.3) * 6}px`;
+  };
+  window.renderAt(0); window.READY = true;
+})();
+</script>
+</body>
+</html>
