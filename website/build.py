@@ -209,8 +209,27 @@ APP = {"@type": "MobileApplication", "@id": SITE + "/#app", "name": "TextFox", "
        "publisher": {"@id": SITE + "/#org"}, "author": {"@id": SITE + "/about#lars"}}
 VIDEO = {"@type": "VideoObject", "@id": SITE + "/#video", "name": "TextFox intro guide",
          "description": "The intro guide inside the TextFox Android app: your phone on autopilot, the four ways to fire a macro (schedule, one tap, incoming text, missed call), the guided permission setup, the optional Google Gemini key, and the ready screen.",
-         "thumbnailUrl": SITE + "/media/textfox-intro-poster.jpg", "contentUrl": SITE + "/media/textfox-intro.mp4", "uploadDate": "2026-11-04", "duration": "PT37S",
+         "thumbnailUrl": SITE + "/media/textfox-intro-poster.jpg", "contentUrl": SITE + "/media/textfox-intro.mp4", "uploadDate": "2026-11-04T12:00:00+01:00", "duration": "PT37S",
          "transcript": "Your phone, on autopilot. TextFox sends text messages for you: on a schedule, as a reply or when you miss a call. Set it up once, and it just runs. Four ways to fire a macro: missed call, text people back when you can't pick up. And not just texts: a macro can also switch your sound mode or Do Not Disturb, show a reminder, or call a web address for your smart home. Hand it the keys: your phone blocks background apps until you say yes. Teach it to write: let Google Gemini write auto-replies and fresh variations of your scheduled texts with your own free API key. You're live: SMS access granted, background reliable, Gemini key saved, system armed."}
+
+
+FILM_TRANSCRIPT = ("A 59-second motion film with music and robot sound effects, no voice-over. On-screen text: Meet TextFox. A tiny SMS robot that lives in your Android phone. "
+    "Hi! I send your texts for you. A day on autopilot: 08:00 Good morning, Mom, Gemini rewrites it every morning. 10:41 Out of office, a text came in and TextFox answered it. "
+    "11:27 Missed call text-back, the caller got a text seconds later. 17:40 Running late, one tap on the widget. Set it up once: on a schedule, with one tap, as a reply, after a missed call. "
+    "AI writes it. You approve it. Google Gemini rewrites your scheduled text every time, so it never reads the same twice. Ask me first, or send automatically. "
+    "Fires on the minute. Delivered. Runs on your phone, no account, no ads. Your phone texts for you. All day. Free on Google Play. textfox.app")
+FILM = {"en": ("TextFox: your phone texts for you, all day", "A 59-second film about TextFox, the Android app that sends text messages for you: scheduled texts, auto-replies, missed-call text-back and AI-written variations with Google Gemini."),
+        "da": ("TextFox: din telefon sender sms'er for dig, hele dagen", "En film på 59 sekunder (på engelsk) om TextFox, Android-appen der sender sms'er for dig: planlagte sms'er, autosvar, sms ved ubesvaret opkald og AI-varianter med Google Gemini.")}
+
+
+def film_schema(lang, url):
+    name, desc = FILM[lang]
+    return {"@type": "VideoObject", "@id": url + "#film", "name": name, "description": desc,
+            "thumbnailUrl": [SITE + "/media/textfox-film-poster.jpg", SITE + "/og/textfox-og.png"],
+            "uploadDate": "2026-11-05T12:00:00+01:00", "duration": "PT59S", "inLanguage": "en",
+            "contentUrl": SITE + "/media/textfox-film.mp4", "encodingFormat": "video/mp4", "width": 900, "height": 506,
+            "isFamilyFriendly": True, "transcript": FILM_TRANSCRIPT, "about": {"@id": SITE + "/#app"},
+            "publisher": {"@id": SITE + "/#org"}, "creator": {"@id": SITE + "/about#lars"}, "isPartOf": {"@id": url}}
 
 
 def head(meta, url):
@@ -222,6 +241,7 @@ def head(meta, url):
     if "app" in s: graph.append(APP)
     if "faq" in s: graph.append(faq_schema("home", url, lang))
     if "video" in s: graph.append(VIDEO)
+    if "film" in s: graph.append(film_schema(lang, url))
     if "page-faq" in s:
         graph.append(faq_schema(meta["faq"], url, lang))
         graph.append({"@type": "WebPage", "@id": url, "url": url, "name": title, "description": desc, "inLanguage": lang, "about": {"@id": SITE + "/#app"}, "isPartOf": {"@id": SITE + "/#site"}})
@@ -358,7 +378,7 @@ def final(lang="en"):
 def render(meta, body):
     url = abs_url(meta["path"])
     lang = meta.get("lang", "en")
-    body = (body.replace("{{PLAY}}", play(lang)).replace("{{CTA_NOTE}}", T[lang]["cta_note"]).replace("{{FAQ}}", faq_html(meta.get("faq", "home"), lang)).replace("{{CONTACT}}", CONTACT)
+    body = (body.replace("{{PLAY}}", play(lang)).replace("{{CTA_NOTE}}", T[lang]["cta_note"]).replace("{{FAQ}}", faq_html(meta.get("faq", "home"), lang)).replace("{{CONTACT}}", CONTACT).replace("{{FILM_TRANSCRIPT}}", FILM_TRANSCRIPT)
             .replace("{{RELATED}}", related(meta["path"], lang)).replace("{{FINAL}}", final(lang)))
     scripts = "".join(f'<script src="{s}?v={ver(s)}" defer></script>' for s in ["/assets/site.js"] + meta.get("scripts", []))
     scripts += "".join(f'<script type="module" src="{s}?v={ver(s)}"></script>' for s in meta.get("modules", []))
@@ -411,9 +431,15 @@ def main():
         if cp:
             pair = {meta_lang: p for meta_lang, p in [("en" if cp[0] == "da" else "da", path), cp]}
             alt = "".join(f'<xhtml:link rel="alternate" hreflang="{l}" href="{abs_url(p)}"/>' for l, p in sorted(pair.items()))
-        return f"<url><loc>{abs_url(path)}</loc><lastmod>{TODAY}</lastmod>{alt}</url>"
+        vid = ""
+        if path in ("/", "/da"):
+            lang = "da" if path == "/da" else "en"; name, desc = FILM[lang]
+            vid = (f"<video:video><video:thumbnail_loc>{SITE}/media/textfox-film-poster.jpg</video:thumbnail_loc><video:title>{html.escape(name)}</video:title>"
+                   f"<video:description>{html.escape(desc)}</video:description><video:content_loc>{SITE}/media/textfox-film.mp4</video:content_loc>"
+                   f"<video:duration>59</video:duration><video:publication_date>2026-11-05T12:00:00+01:00</video:publication_date><video:family_friendly>yes</video:family_friendly></video:video>")
+        return f"<url><loc>{abs_url(path)}</loc><lastmod>{TODAY}</lastmod>{alt}{vid}</url>"
     sm = "".join(sm_entry(m["path"]) for m, _ in pages if not m.get("noindex"))
-    (PUB / "sitemap.xml").write_text(f'<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">{sm}</urlset>\n')
+    (PUB / "sitemap.xml").write_text(f'<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml" xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">{sm}</urlset>\n')
     (PUB / "robots.txt").write_text(f"User-agent: *\nAllow: /\n\nSitemap: {SITE}/sitemap.xml\n")
     (PUB / "site.webmanifest").write_text(json.dumps({"name": "TextFox", "short_name": "TextFox", "start_url": "/", "display": "standalone",
         "background_color": "#090B0A", "theme_color": "#090B0A", "icons": [{"src": "/icon-192.png", "sizes": "192x192", "type": "image/png"}, {"src": "/icon-512.png", "sizes": "512x512", "type": "image/png"}]}, indent=1))
