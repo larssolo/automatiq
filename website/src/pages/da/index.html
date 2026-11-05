@@ -1,4 +1,4 @@
-<!--{"out":"da/index.html","path":"/da","lang":"da","title":"TextFox: Automatiske sms'er til Android","description":"TextFox er en gratis Android-app, der sender sms'er for dig: planlagte sms'er, autosvar på indgående sms'er og sms ved ubesvaret opkald. På telefonen, uden konto og uden reklamer.","scripts":["/assets/js/gsap.min.js","/assets/js/ScrollTrigger.min.js","/assets/js/SplitText.min.js","/assets/home.js"],"modules":["/assets/fox3d.js"],"schema":["app","faq","video","film"]}-->
+<!--{"out":"da/index.html","path":"/da","lang":"da","title":"TextFox: Automatiske sms'er til Android","description":"TextFox er en gratis Android-app, der sender sms'er for dig: planlagte sms'er, autosvar på indgående sms'er og sms ved ubesvaret opkald. På telefonen, uden konto og uden reklamer.","scripts":["/assets/js/gsap.min.js","/assets/js/ScrollTrigger.min.js","/assets/js/SplitText.min.js","/assets/home.js"],"modules":["/assets/fox3d.js"],"schema":["app","faq","video","film","keyfilm"]}-->
 <section class="hero" id="top">
   <div class="hero-glow" aria-hidden="true"></div>
   <div class="wrap hero-grid">
@@ -110,11 +110,28 @@
 
 <section class="section tight" id="ai" aria-labelledby="ai-h">
   <div class="wrap split rev">
-    <div class="rewrite" data-rise>
-      <div class="rw-k">✦ AI-variant <span id="rwn">variant 1 / 4</span></div>
-      <div class="rw-bub" id="rw" aria-live="off">Godmorgen! ☀️ Hav en dejlig onsdag.</div>
-      <div class="seg" role="group" aria-label="Hvornår en AI-tekst sendes"><button type="button" aria-pressed="true" id="segA">Spørg mig først</button><button type="button" aria-pressed="false" id="segB">Send automatisk</button></div>
-      <p class="seg-note" id="segNote">En notifikation lader dig gennemse, rette eller kassere teksten, før den sendes.</p>
+    <div class="ai-col">
+      <div class="rewrite" data-rise>
+        <div class="rw-k">✦ AI-variant <span id="rwn">variant 1 / 4</span></div>
+        <div class="rw-bub" id="rw" aria-live="off">Godmorgen! ☀️ Hav en dejlig onsdag.</div>
+        <div class="seg" role="group" aria-label="Hvornår en AI-tekst sendes"><button type="button" aria-pressed="true" id="segA">Spørg mig først</button><button type="button" aria-pressed="false" id="segB">Send automatisk</button></div>
+        <p class="seg-note" id="segNote">En notifikation lader dig gennemse, rette eller kassere teksten, før den sendes.</p>
+      </div>
+      <figure class="howto" data-rise>
+        <button class="howto-thumb" type="button" data-lightbox="lb-key" aria-label="Afspil guiden: Hent din gratis Gemini API-nøgle, 49 sekunder">
+          <img src="/media/textfox-gemini-key-poster.jpg" width="900" height="506" loading="lazy" alt="Hent din gratis Gemini API-nøgle: TextFox-guiden til AI-opsætning">
+          <span class="howto-play" aria-hidden="true"><i><svg viewBox="0 0 24 24"><path d="M8 5.5v13l10.5-6.5z"/></svg></i>Se guiden</span>
+          <span class="howto-dur">0:49</span>
+        </button>
+        <figcaption><b>Hent din gratis Gemini-nøgle på et minut.</b> Se den 49 sekunder lange guide (på engelsk), og opret så din nøgle på <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a>.</figcaption>
+      </figure>
+      <dialog class="lightbox" id="lb-key" aria-label="Hent din gratis Gemini API-nøgle">
+        <button class="lb-close" type="button" aria-label="Luk">×</button>
+        <video controls playsinline preload="none" poster="/media/textfox-gemini-key-poster.jpg" width="900" height="506">
+          <source src="/media/textfox-gemini-key.webm" type="video/webm">
+          <source src="/media/textfox-gemini-key.mp4" type="video/mp4">
+        </video>
+      </dialog>
     </div>
     <div>
       <p class="kicker" style="color:var(--amber)">// valgfri ai</p>
