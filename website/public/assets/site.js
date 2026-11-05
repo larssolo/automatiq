@@ -26,6 +26,16 @@
     b.classList.add('copied'); setTimeout(() => { label.textContent = b.dataset.label; b.classList.remove('copied'); }, 2200);
   }));
 
+  // film: our play button starts it with sound; native controls take over after that
+  const film = $('#filmVideo');
+  if (film) {
+    const frame = film.parentElement;
+    frame.querySelector('.film-play').addEventListener('click', () => { film.play().catch(() => {}); });
+    film.addEventListener('play', () => frame.classList.add('playing'));
+    film.addEventListener('pause', () => { if (!film.seeking) frame.classList.remove('playing'); });
+    film.addEventListener('ended', () => frame.classList.remove('playing'));
+  }
+
   // intro video: load and play only while visible; never autoplay under reduced motion
   const vid = $('video[data-lazy]');
   if (vid) {
