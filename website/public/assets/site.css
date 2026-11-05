@@ -386,3 +386,7 @@ footer{border-top:1px solid var(--line);padding-block:56px calc(36px + env(safe-
 .film-tr summary{cursor:pointer;font:500 14px/1 var(--mono);color:var(--green)}
 .film-tr p{font-size:15px;margin:12px 0 0}
 @media (max-width:600px){.film-play{width:76px;height:76px;box-shadow:0 0 0 9px rgba(0,230,118,.18)}.film-play svg{width:30px;height:30px}.film-frame{border-radius:18px}}
+/* ambient shader gradient (bg.js): fixed behind everything; opaque page backgrounds step aside when it runs */
+.shader-bg{position:fixed;inset:0;width:100vw;height:100vh;z-index:-1;pointer-events:none;image-rendering:auto;filter:blur(2px);transform:scale(1.02)}
+.has-shader-bg body{background:transparent}
+.has-shader-bg .day{background:transparent}

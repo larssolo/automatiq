@@ -380,7 +380,7 @@ def render(meta, body):
     lang = meta.get("lang", "en")
     body = (body.replace("{{PLAY}}", play(lang)).replace("{{CTA_NOTE}}", T[lang]["cta_note"]).replace("{{FAQ}}", faq_html(meta.get("faq", "home"), lang)).replace("{{CONTACT}}", CONTACT).replace("{{FILM_TRANSCRIPT}}", FILM_TRANSCRIPT)
             .replace("{{RELATED}}", related(meta["path"], lang)).replace("{{FINAL}}", final(lang)))
-    scripts = "".join(f'<script src="{s}?v={ver(s)}" defer></script>' for s in ["/assets/site.js"] + meta.get("scripts", []))
+    scripts = "".join(f'<script src="{s}?v={ver(s)}" defer></script>' for s in ["/assets/bg.js", "/assets/site.js"] + meta.get("scripts", []))
     scripts += "".join(f'<script type="module" src="{s}?v={ver(s)}"></script>' for s in meta.get("modules", []))
     return f"""{head(meta, url)}
 <body>
