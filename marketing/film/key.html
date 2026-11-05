@@ -180,6 +180,23 @@ html,body{margin:0;width:1920px;height:1080px;overflow:hidden;background:var(--i
 (async () => {
   await document.fonts.ready;
   const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+  // ?lang=da: Danish narration; on-screen buttons in TextFox and AI Studio keep their real (English) labels
+  if (new URLSearchParams(location.search).get('lang') === 'da') {
+    document.documentElement.lang = 'da'; document.title = 'TextFox · Hent din gratis Gemini API-nøgle';
+    const w = s => s.split(' ').map(x => x === '<br>' ? '<br>' : `<span class="w"><span${x.startsWith('*') ? ' class="g"' : ''}>${x.replace('*', '')}</span></span>`).join(' ');
+    const set = (sel, html) => { $(sel).innerHTML = html; };
+    set('#intro .k', '// textfox · ai-opsætning');
+    set('#t1', w('Hent din gratis <br> *Gemini *API-nøgle.'));
+    set('#l1', "Det tager cirka et minut. Så kan TextFox skrive sms'er for dig.");
+    set('#st1', '<div class="n">01</div><h2>Åbn Google AI Studio</h2><p>Gå til <code>aistudio.google.com</code>, og log ind med din <b>Google-konto</b>.</p>');
+    set('#st2', '<div class="n">02</div><h2>Opret en API-nøgle</h2><p>Klik på <b>Create API key</b> på siden <b>API keys</b>. Google opretter et nyt projekt til den.</p>');
+    set('#st3', '<div class="n">03</div><h2>Kopiér nøglen</h2><p>Den starter med <code>AIza</code>. Hold den hemmelig, ligesom en adgangskode.</p>');
+    set('#st4', '<div class="n">04</div><h2>Indsæt den i TextFox</h2><p><b>Settings → AI · Gemini</b>. Indsæt nøglen, tryk på <b>Test key</b> og derefter <b>Save</b>.</p>');
+    set('#t2', w('Du er *klar.'));
+    set('#l2', "Nu kan TextFox skrive autosvar og nye versioner af dine sms'er.");
+    set('#outro .chips', '<span class="chip"><i></i>Gratis</span><span class="chip"><i></i>Nøglen bliver på din telefon</span><span class="chip"><i></i>AI er valgfrit</span>');
+  }
+
   // the outro fox reuses the intro fox's markup
   $('#fox2').innerHTML = $('#fox1').innerHTML;
   const BAR = 3, B0 = .5, bar = n => B0 + n * BAR;
