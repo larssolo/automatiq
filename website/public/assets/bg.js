@@ -29,17 +29,17 @@ void main(){
  float n2=sn(r*.7-vec2(uS*1.4,t*.5)+7.3);
  float n3=sn(r*1.6+vec2(4.2,t));
  // palette from the app: deep green, robot teal, a touch of amber; scroll moves the balance
- vec3 base=vec3(.020,.031,.027);
+ vec3 base=vec3(.030,.046,.040);
  vec3 green=vec3(0.,.42,.21), teal=vec3(.10,.40,.40), amber=vec3(.55,.36,.02), indigo=vec3(.18,.20,.55);
  float s=uS;
  vec3 a=mix(green,teal,smoothstep(.15,.55,s)); a=mix(a,green,smoothstep(.7,1.,s));
  vec3 b=mix(teal,indigo,smoothstep(.3,.7,s)*.55);
  vec3 col=base;
- col+=a*smoothstep(-.15,.9,n1)*.20;
- col+=b*smoothstep(0.,1.,n2)*.14;
- col+=amber*smoothstep(.35,1.,n3)*(.05+.05*smoothstep(.45,.6,s)*(1.-smoothstep(.6,.75,s)));
+ col+=a*smoothstep(-.15,.9,n1)*.28;
+ col+=b*smoothstep(0.,1.,n2)*.20;
+ col+=amber*smoothstep(.35,1.,n3)*(.07+.06*smoothstep(.45,.6,s)*(1.-smoothstep(.6,.75,s)));
  // keep the reading column darkest: a soft vignette towards the left and the bottom
- col*=mix(.55,1.,smoothstep(.05,.75,uv.x))*mix(.7,1.,smoothstep(0.,.5,uv.y));
+ col*=mix(.68,1.,smoothstep(.05,.75,uv.x))*mix(.8,1.,smoothstep(0.,.5,uv.y));
  gl_FragColor=vec4(col,1.);
 }`;
   const sh = (type, src) => { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); return gl.getShaderParameter(s, gl.COMPILE_STATUS) ? s : null; };
