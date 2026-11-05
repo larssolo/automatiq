@@ -33,7 +33,7 @@ html,body{margin:0;width:1920px;height:1080px;overflow:hidden;background:var(--i
 /* S0/S1 */
 #dot{position:absolute;left:960px;top:540px;width:14px;height:14px;margin:-7px;border-radius:50%;background:var(--green);box-shadow:0 0 30px 6px rgba(0,230,118,.6)}
 #s1 .copy{position:absolute;left:150px;top:300px;width:780px}
-#hello{position:absolute;left:1230px;top:210px;padding:20px 26px;border-radius:30px 30px 30px 8px;background:#EEF3EF;color:#0B110E;font:500 30px/1.25 var(--sans);box-shadow:0 30px 70px -20px rgba(0,0,0,.7);transform-origin:0 100%;white-space:nowrap}
+#hello{position:absolute;left:1180px;top:200px;padding:20px 26px;border-radius:30px 30px 30px 8px;background:#EEF3EF;color:#0B110E;font:500 30px/1.25 var(--sans);box-shadow:0 30px 70px -20px rgba(0,0,0,.7);transform-origin:0 100%;white-space:nowrap}
 #hello small{display:block;font:500 17px/1 var(--mono);color:#00A653;margin-top:8px}
 
 /* S2: a day */
@@ -196,6 +196,39 @@ import {SVGLoader} from '../../website/public/assets/js/three/SVGLoader.min.js';
 import {RoomEnvironment} from '../../website/public/assets/js/three/RoomEnvironment.min.js';
 
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+// ?lang=da: Danish on-screen text (same timing, same cues)
+const DA = new URLSearchParams(location.search).get('lang') === 'da';
+if (DA) {
+  document.documentElement.lang = 'da'; document.title = 'TextFox film (dansk)';
+  const w = t => t.split(' ').map(x => x === '<br>' ? '<br>' : `<span class="w"><span${x.startsWith('*') ? ' class="g"' : ''}>${x.replace('*', '')}</span></span>`).join(' ');
+  const set = (sel, html) => { document.querySelector(sel).innerHTML = html; };
+  set('#h1', w('Mød *TextFox.'));
+  set('#sub1', "En lille sms-robot, der bor i din Android-telefon.");
+  set('#hello', "Hej! Jeg sender dine sms'er for dig. 🦊<small>✓✓ leveret</small>");
+  set('#phone .ah', '<span style="font:500 32px/1 var(--mono);color:var(--fg)">log</span><span>i dag</span>');
+  set('#tally', "<div><b id=\"sent\">0</b><span>sms'er sendt<br>for dig</span></div><div class=\"z\"><b>0</b><span>sms'er du<br>skrev</span></div>");
+  set('#s3 .head .k', '// fire måder at starte en makro');
+  set('#h3', w('Sæt det op *én *gang.'));
+  const tc = document.querySelectorAll('.tc'), TC = [
+    ['På et fast tidspunkt', 'Et klokkeslæt, ugedage, hver få uger eller én dato.', '08:00 · man–fre → mor'],
+    ['Med ét tryk', 'En widget på hjemmeskærmen sender en færdig sms.', 'widget → "Forsinket"'],
+    ['Som svar', "Svarer sms'er fra udvalgte personer eller med et nøgleord.", 'har "møde" → svar'],
+    ['Efter et ubesvaret opkald', 'Den, der ringede, får en sms få sekunder senere.', 'ubesvaret opkald → sms']];
+  tc.forEach((c, i) => { c.querySelector('h3').textContent = TC[i][0]; c.querySelector('p').textContent = TC[i][1]; c.querySelector('code').textContent = TC[i][2]; });
+  set('#s4 .head .k', '// ai indbygget');
+  set('#h4', w('AI skriver den. <br> *Du *godkender *den.'));
+  set('#sub4', 'Google Gemini omskriver din planlagte sms hver gang, så den aldrig lyder ens.');
+  set('#ai .lab', '✦ AI-variant <span id="vn">variant 1 / 4</span>');
+  set('#seg', '<i></i><span>Spørg mig først</span><span>Send automatisk</span>');
+  set('#note', 'En notifikation lader dig gennemse, rette eller kassere den, før den sendes.');
+  set('#r1', '<p class="k">// pålidelig</p><p class="big" style="margin-top:30px">Sender på <span class="g">minuttet.</span></p>');
+  set('#r2', '<p class="big">Leveret <span class="g" id="ticks">✓✓</span></p><p class="sub" style="margin-top:30px">En komplet log over hver sms, bekræftet af dit teleselskab.</p>');
+  set('#r3', '<p class="k">// privat fra start</p><div class="chips" style="margin-top:44px"><span class="chip"><i></i>Kører på din telefon</span><span class="chip"><i></i>Ingen konto</span><span class="chip"><i></i>Ingen reklamer</span></div>');
+  set('#h6', w("Din telefon sms'er for dig. *Hele *dagen."));
+  document.querySelector('#play small').textContent = 'Gratis på';
+  document.querySelector('#lock span').innerHTML = "Planlagte sms'er · autosvar<br>sms ved ubesvaret opkald · Android";
+  set('#hudL', 'TEXTFOX · SMS-ROBOT');
+}
 const BAR = 2.4, D0 = 1.18, bar = n => D0 + n * BAR, beat = n => D0 + n * BAR / 4;
 const END = 59.3;
 const CUES = [];                                   // [time, sound, gain] for sfx.py
@@ -281,7 +314,7 @@ tl.to('#bg', {'--ga': .16, duration: 1.4}, D0 - .2);
 show('#s1', D0, .01);
 tl.fromTo(F, {ex: 1, op: 0, ry: -2.6, s: .7}, {ex: 0, op: 1, ry: 0, s: 1, duration: 2.3, ease: 'expo.out'}, D0); cue(D0, 'servo', .9); cue(D0 + 2.05, 'clunk');
 tl.to(F, {type: 0, duration: 1.4, ease: 'none'}, beat(4)); [0, .12, .24].forEach(o => cue(beat(4) + o, 'blip', .7));
-tl.fromTo(F, {x: 0, s: 1}, {x: 2.05, s: .88, duration: 1.6, ease: 'power3.inOut'}, beat(6));
+tl.fromTo(F, {x: 0, s: 1}, {x: 1.85, s: .86, duration: 1.6, ease: 'power3.inOut'}, beat(6));
 type($('#k1'), '> textfox.init()', beat(7), .7); cue(beat(7), 'type', .6);
 words('#h1', bar(2) + .2, .14); cue(bar(2) + .2, 'swoosh', .6);
 rise('#sub1', bar(2) + 1.1);
@@ -295,7 +328,12 @@ tl.to(F, {op: 0, duration: .25, ease: 'none'}, bar(4) - .2);
 hide('#s1', bar(4), .01);
 
 /* S2 · a day on autopilot (bars 4–7) */
-const EV = [
+const EV = DA ? [
+  {t: bar(5) - .4, m: 480, c: '--amber', k: '08:00 · planlagt', h: 'Godmorgen, mor', d: 'Gemini omskriver den hver morgen.', title: 'Godmorgen, mor', icon: 'clock', body: 'Godmorgen! ☀️ Håber din torsdag er kommet godt i gang.'},
+  {t: bar(6) - .4, m: 641, c: '--teal', k: '10:41 · autosvar', h: 'Ikke på kontoret', d: 'Der kom en sms. TextFox svarede.', title: 'Ikke på kontoret', icon: 'reply', inc: '“Har du tid til et hurtigt opkald?”', body: 'Tak! Jeg er væk og tilbage mandag.'},
+  {t: bar(7) - .4, m: 687, c: '--green', k: '11:27 · ubesvaret opkald', h: 'Sms ved ubesvaret opkald', d: 'Den, der ringede, fik en sms sekunder efter.', title: 'Ubesvaret opkald', icon: 'missed', body: 'Undskyld, jeg missede dit opkald. Jeg ringer tilbage snart.', ring: true},
+  {t: bar(7) + 1.0, m: 1060, c: '--rose', k: '17:40 · ét tryk', h: 'Forsinket', d: 'Ét tryk på widgetten. Færdig.', title: 'Forsinket', icon: 'tap', body: 'Holder i kø, er der om 15!'},
+] : [
   {t: bar(5) - .4, m: 480, c: '--amber', k: '08:00 · scheduled', h: 'Good morning, Mom', d: 'Gemini rewrites it every morning.', title: 'Good morning, Mom', icon: 'clock', body: 'Good morning! ☀️ Hope your Thursday is off to a lovely start.'},
   {t: bar(6) - .4, m: 641, c: '--teal', k: '10:41 · auto-reply', h: 'Out of office', d: 'A text came in. TextFox answered it.', title: 'Out of office', icon: 'reply', inc: '“Free for a quick call?”', body: "Thanks! I'm away and back Monday."},
   {t: bar(7) - .4, m: 687, c: '--green', k: '11:27 · missed call', h: 'Missed call text-back', d: 'The caller got a text seconds later.', title: 'Missed call', icon: 'missed', body: "Sorry I missed your call. I'll ring you back soon.", ring: true},
@@ -304,7 +342,7 @@ const EV = [
 const ICON = {clock: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>', reply: '<path d="M10 7 5 12l5 5"/><path d="M5 12h9a5 5 0 0 1 5 5v1"/>', missed: '<path d="M3.5 16.5c4.7-4 12.3-4 17 0l-1.8 2.7-3.2-1.3v-2.5a10 10 0 0 0-7 0v2.5l-3.2 1.3z"/><path d="m6 5 5 5 4-4m0 0h-3m3 0v3"/>', tap: '<path d="M9.5 12V5.8a1.6 1.6 0 0 1 3.2 0V11"/><path d="M12.7 10.6a1.6 1.6 0 0 1 3.2 0v1.2a1.6 1.6 0 0 1 3.2 0V15a6 6 0 0 1-6 6h-.6a6 6 0 0 1-5-2.7L4.6 14.6a1.6 1.6 0 0 1 2.6-1.9l2.3 2.6"/>'};
 const feed = $('#feed');
 EV.slice().reverse().forEach(e => { const d = document.createElement('div'); d.className = 'card'; d.style.setProperty('--c', `var(${e.c})`);
-  d.innerHTML = `<span class="ic"><svg viewBox="0 0 24 24">${ICON[e.icon]}</svg></span><div><b>${e.title}<time>${String(e.m / 60 | 0).padStart(2, '0')}:${String(e.m % 60).padStart(2, '0')}</time></b>${e.inc ? `<p class="in">${e.inc}</p>` : ''}<p>${e.body}</p><span class="tick">✓✓ Delivered</span></div>`;
+  d.innerHTML = `<span class="ic"><svg viewBox="0 0 24 24">${ICON[e.icon]}</svg></span><div><b>${e.title}<time>${String(e.m / 60 | 0).padStart(2, '0')}:${String(e.m % 60).padStart(2, '0')}</time></b>${e.inc ? `<p class="in">${e.inc}</p>` : ''}<p>${e.body}</p><span class="tick">${DA ? '✓✓ Leveret' : '✓✓ Delivered'}</span></div>`;
   e.el = d; feed.appendChild(d); });
 show('#s2', bar(4), .01);
 tl.fromTo('#clock', {autoAlpha: 0, scale: 1.25, filter: 'blur(14px)'}, {autoAlpha: 1, scale: 1, filter: 'blur(0px)', duration: 1.2, ease: 'expo.out'}, bar(4)); cue(bar(4), 'tick', .6);
@@ -343,7 +381,7 @@ tl.to('.tc', {y: -40, autoAlpha: 0, duration: .5, stagger: .06, ease: 'power2.in
 hide('#s3 .head', bar(12) - .6, .4); hide('#s3', bar(12), .01);
 
 /* S4 · AI (bars 12–15) */
-const VAR = ['Good morning! ☀️ Have a lovely Wednesday.', 'Morning, Mom! ☀️ Wishing you a calm, happy Wednesday.', 'Rise and shine ☀️ Hope your Wednesday is off to a great start!', 'Good morning! ☀️ Sending a little sunshine your way today.'];
+const VAR = DA ? ['Godmorgen! ☀️ Hav en dejlig onsdag.', 'Godmorgen, mor! ☀️ Jeg håber, du får en rolig og glad onsdag.', 'Op med humøret ☀️ Håber din onsdag er kommet godt fra start!', 'Godmorgen! ☀️ Her er lidt solskin til din onsdag.'] : ['Good morning! ☀️ Have a lovely Wednesday.', 'Morning, Mom! ☀️ Wishing you a calm, happy Wednesday.', 'Rise and shine ☀️ Hope your Wednesday is off to a great start!', 'Good morning! ☀️ Sending a little sunshine your way today.'];
 show('#s4', bar(12), .01);
 tl.to('#bg', {'--gc': '255,179,0', '--ga': .13, '--gx': '72%', duration: 1.4}, bar(12));
 words('#h4', bar(12) + .1, .09);
@@ -353,7 +391,7 @@ tl.fromTo('#ai', {autoAlpha: 0, y: 60, scale: .96}, {autoAlpha: 1, y: 0, scale: 
 tl.to('#seg i', {x: '100%', duration: .6, ease: 'power3.inOut'}, bar(15) + .3); cue(bar(15) + .3, 'click');
 tl.to('#note', {autoAlpha: 0, duration: .2}, bar(15) + .25);
 tl.call(() => {}, [], bar(15) + .5);
-tl.to('#note', {autoAlpha: 1, duration: .4, onStart: () => { $('#note').textContent = 'Or let it go out on its own, and see exactly what was sent.'; }, onReverseComplete: () => { $('#note').textContent = 'A notification lets you review, edit or discard it before it goes out.'; }}, bar(15) + .5);
+tl.to('#note', {autoAlpha: 1, duration: .4, onStart: () => { $('#note').textContent = DA ? 'Eller lad den gå af sig selv, og se præcis, hvad der blev sendt.' : 'Or let it go out on its own, and see exactly what was sent.'; }, onReverseComplete: () => { $('#note').textContent = DA ? 'En notifikation lader dig gennemse, rette eller kassere den, før den sendes.' : 'A notification lets you review, edit or discard it before it goes out.'; }}, bar(15) + .5);
 hide('#s4', bar(16) - .4, .4);
 
 /* S5 · reliable & private (bars 16–19) */
@@ -396,8 +434,8 @@ tl.to({}, {duration: .01}, END);
 const tc = t => { const s = Math.max(0, t); return `00:${String(Math.floor(s)).padStart(2, '0')}:${String(Math.floor((s % 1) * 30)).padStart(2, '0')}`; };
 
 /* ---------------- per-frame derived state ---------------- */
-const ORBS = [['08:00', 'Good morning ☀️', '--amber'], ['09:00', 'Take your vitamins 💊', '--amber'], ['10:41', 'Back Monday 👋', '--teal'], ['11:27', 'Sorry I missed your call', '--green'], ['17:40', 'Running 10 min late!', '--rose']];
-const orbEls = ORBS.map(([t, m, c]) => { const d = document.createElement('div'); d.className = 'orb'; d.style.setProperty('--c', `var(${c})`); d.innerHTML = `<b>${m}</b><small>${t} · <span>✓✓ delivered</span></small>`; $('#orbs').appendChild(d); return d; });
+const ORBS = DA ? [['08:00', 'Godmorgen ☀️', '--amber'], ['09:00', 'Husk dine vitaminer 💊', '--amber'], ['10:41', 'Tilbage mandag 👋', '--teal'], ['11:27', 'Undskyld, jeg missede dit opkald', '--green'], ['17:40', 'Er 10 min. forsinket!', '--rose']] : [['08:00', 'Good morning ☀️', '--amber'], ['09:00', 'Take your vitamins 💊', '--amber'], ['10:41', 'Back Monday 👋', '--teal'], ['11:27', 'Sorry I missed your call', '--green'], ['17:40', 'Running 10 min late!', '--rose']];
+const orbEls = ORBS.map(([t, m, c]) => { const d = document.createElement('div'); d.className = 'orb'; d.style.setProperty('--c', `var(${c})`); d.innerHTML = `<b>${m}</b><small>${t} · <span>${DA ? '✓✓ leveret' : '✓✓ delivered'}</span></small>`; $('#orbs').appendChild(d); return d; });
 const v3 = new THREE.Vector3();
 const scramble = (from, to, p, frame) => { const n = Math.max(from.length, to.length), k = Math.floor(p * n), CH = 'abcdefghijklmnopqrstuvwxyz'; let s = ''; for (let i = 0; i < n; i++) { if (i < k) s += to[i] || ''; else if (i < k + 6 && p > 0 && p < 1) s += to[i] === ' ' ? ' ' : CH[(i * 7 + frame * 3) % 26]; else s += from[i] || ''; } return s; };
 const gctx = $('#grain').getContext('2d'), gimg = gctx.createImageData(960, 540);

@@ -218,8 +218,19 @@ FILM_TRANSCRIPT = ("A 59-second motion film with music and robot sound effects, 
     "11:27 Missed call text-back, the caller got a text seconds later. 17:40 Running late, one tap on the widget. Set it up once: on a schedule, with one tap, as a reply, after a missed call. "
     "AI writes it. You approve it. Google Gemini rewrites your scheduled text every time, so it never reads the same twice. Ask me first, or send automatically. "
     "Fires on the minute. Delivered. Runs on your phone, no account, no ads. Your phone texts for you. All day. Free on Google Play. textfox.app")
+FILM_TRANSCRIPT_DA = ("En film på 59 sekunder med musik og robotlyde, uden speak. Tekst på skærmen: Mød TextFox. En lille sms-robot, der bor i din Android-telefon. "
+    "Hej! Jeg sender dine sms'er for dig. En dag på autopilot: 08:00 Godmorgen, mor, Gemini omskriver den hver morgen. 10:41 Ikke på kontoret, der kom en sms, og TextFox svarede. "
+    "11:27 Sms ved ubesvaret opkald, den, der ringede, fik en sms sekunder efter. 17:40 Forsinket, ét tryk på widgetten. Sæt det op én gang: på et fast tidspunkt, med ét tryk, som svar, efter et ubesvaret opkald. "
+    "AI skriver den. Du godkender den. Google Gemini omskriver din planlagte sms hver gang, så den aldrig lyder ens. Spørg mig først, eller send automatisk. "
+    "Sender på minuttet. Leveret. Kører på din telefon, ingen konto, ingen reklamer. Din telefon sms'er for dig. Hele dagen. Gratis på Google Play. textfox.app")
+
+
+def filmfile(lang, ext):
+    return f"/media/textfox-film{'-da' if lang == 'da' else ''}{ext}"
+
+
 FILM = {"en": ("TextFox: your phone texts for you, all day", "A 59-second film about TextFox, the Android app that sends text messages for you: scheduled texts, auto-replies, missed-call text-back and AI-written variations with Google Gemini."),
-        "da": ("TextFox: din telefon sender sms'er for dig, hele dagen", "En film på 59 sekunder (på engelsk) om TextFox, Android-appen der sender sms'er for dig: planlagte sms'er, autosvar, sms ved ubesvaret opkald og AI-varianter med Google Gemini.")}
+        "da": ("TextFox: din telefon sender sms'er for dig, hele dagen", "En film på 59 sekunder om TextFox, Android-appen der sender sms'er for dig: planlagte sms'er, autosvar, sms ved ubesvaret opkald og AI-varianter med Google Gemini.")}
 
 
 KEYFILM = {"en": ("Get your free Gemini API key for TextFox", "A 49-second guide: open Google AI Studio, create a free Gemini API key, copy it and paste it in TextFox under Settings → AI · Gemini, then test and save."),
@@ -249,10 +260,10 @@ def keyfilm_schema(lang, url):
 def film_schema(lang, url):
     name, desc = FILM[lang]
     return {"@type": "VideoObject", "@id": url + "#film", "name": name, "description": desc,
-            "thumbnailUrl": [SITE + "/media/textfox-film-poster.jpg", SITE + "/og/textfox-og.png"],
-            "uploadDate": "2026-11-05T12:00:00+01:00", "duration": "PT59S", "inLanguage": "en",
-            "contentUrl": SITE + "/media/textfox-film.mp4", "encodingFormat": "video/mp4", "width": 900, "height": 506,
-            "isFamilyFriendly": True, "transcript": FILM_TRANSCRIPT, "about": {"@id": SITE + "/#app"},
+            "thumbnailUrl": [SITE + filmfile(lang, "-poster.jpg"), SITE + "/og/textfox-og.png"],
+            "uploadDate": "2026-11-05T12:00:00+01:00" if lang == "en" else "2026-11-06T18:00:00+01:00", "duration": "PT59S", "inLanguage": lang,
+            "contentUrl": SITE + filmfile(lang, ".mp4"), "encodingFormat": "video/mp4", "width": 900, "height": 506,
+            "isFamilyFriendly": True, "transcript": FILM_TRANSCRIPT_DA if lang == "da" else FILM_TRANSCRIPT, "about": {"@id": SITE + "/#app"},
             "publisher": {"@id": SITE + "/#org"}, "creator": {"@id": SITE + "/about#lars"}, "isPartOf": {"@id": url}}
 
 
@@ -403,7 +414,7 @@ def final(lang="en"):
 def render(meta, body):
     url = abs_url(meta["path"])
     lang = meta.get("lang", "en")
-    body = (body.replace("{{PLAY}}", play(lang)).replace("{{CTA_NOTE}}", T[lang]["cta_note"]).replace("{{FAQ}}", faq_html(meta.get("faq", "home"), lang)).replace("{{CONTACT}}", CONTACT).replace("{{FILM_TRANSCRIPT}}", FILM_TRANSCRIPT)
+    body = (body.replace("{{PLAY}}", play(lang)).replace("{{CTA_NOTE}}", T[lang]["cta_note"]).replace("{{FAQ}}", faq_html(meta.get("faq", "home"), lang)).replace("{{CONTACT}}", CONTACT).replace("{{FILM_TRANSCRIPT}}", FILM_TRANSCRIPT_DA if lang == "da" else FILM_TRANSCRIPT)
             .replace("{{RELATED}}", related(meta["path"], lang)).replace("{{FINAL}}", final(lang)))
     scripts = "".join(f'<script src="{s}?v={ver(s)}" defer></script>' for s in ["/assets/bg.js", "/assets/site.js"] + meta.get("scripts", []))
     scripts += "".join(f'<script type="module" src="{s}?v={ver(s)}"></script>' for s in meta.get("modules", []))
@@ -459,9 +470,9 @@ def main():
         vid = ""
         if path in ("/", "/da"):
             lang = "da" if path == "/da" else "en"; name, desc = FILM[lang]
-            vid = (f"<video:video><video:thumbnail_loc>{SITE}/media/textfox-film-poster.jpg</video:thumbnail_loc><video:title>{html.escape(name)}</video:title>"
-                   f"<video:description>{html.escape(desc)}</video:description><video:content_loc>{SITE}/media/textfox-film.mp4</video:content_loc>"
-                   f"<video:duration>59</video:duration><video:publication_date>2026-11-05T12:00:00+01:00</video:publication_date><video:family_friendly>yes</video:family_friendly></video:video>")
+            vid = (f"<video:video><video:thumbnail_loc>{SITE}{filmfile(lang, '-poster.jpg')}</video:thumbnail_loc><video:title>{html.escape(name)}</video:title>"
+                   f"<video:description>{html.escape(desc)}</video:description><video:content_loc>{SITE}{filmfile(lang, '.mp4')}</video:content_loc>"
+                   f"<video:duration>59</video:duration><video:publication_date>{'2026-11-06T18:00:00+01:00' if lang == 'da' else '2026-11-05T12:00:00+01:00'}</video:publication_date><video:family_friendly>yes</video:family_friendly></video:video>")
             kn, kd = KEYFILM[lang]
             vid += (f"<video:video><video:thumbnail_loc>{SITE}{keyfile(lang, '-poster.jpg')}</video:thumbnail_loc><video:title>{html.escape(kn)}</video:title>"
                     f"<video:description>{html.escape(kd)}</video:description><video:content_loc>{SITE}{keyfile(lang, '.mp4')}</video:content_loc>"
