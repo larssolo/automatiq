@@ -1,4 +1,4 @@
-<!--{"out":"index.html","path":"/","title":"TextFox: Automatic Text Messages for Android","description":"TextFox is a free Android app that sends text messages for you: scheduled SMS, auto-replies to incoming texts and missed-call text-back. On-device, no account, no ads.","scripts":["/assets/js/gsap.min.js","/assets/js/ScrollTrigger.min.js","/assets/js/SplitText.min.js","/assets/home.js"],"modules":["/assets/fox3d.js"],"schema":["app","faq","video","film"]}-->
+<!--{"out":"index.html","path":"/","title":"TextFox: Automatic Text Messages for Android","description":"TextFox is a free Android app that sends text messages for you: scheduled SMS, auto-replies to incoming texts and missed-call text-back. On-device, no account, no ads.","scripts":["/assets/js/gsap.min.js","/assets/js/ScrollTrigger.min.js","/assets/js/SplitText.min.js","/assets/home.js"],"modules":["/assets/fox3d.js"],"schema":["app","faq","video","film","keyfilm"]}-->
 <section class="hero" id="top">
   <div class="hero-glow" aria-hidden="true"></div>
   <div class="wrap hero-grid">
@@ -110,11 +110,28 @@
 
 <section class="section tight" id="ai" aria-labelledby="ai-h">
   <div class="wrap split rev">
-    <div class="rewrite" data-rise>
-      <div class="rw-k">✦ AI variation <span id="rwn">variant 1 / 4</span></div>
-      <div class="rw-bub" id="rw" aria-live="off">Good morning! ☀️ Have a lovely Wednesday.</div>
-      <div class="seg" role="group" aria-label="When an AI text is sent"><button type="button" aria-pressed="true" id="segA">Ask me first</button><button type="button" aria-pressed="false" id="segB">Send automatically</button></div>
-      <p class="seg-note" id="segNote">A notification lets you review, edit or discard the text before it goes out.</p>
+    <div class="ai-col">
+      <div class="rewrite" data-rise>
+        <div class="rw-k">✦ AI variation <span id="rwn">variant 1 / 4</span></div>
+        <div class="rw-bub" id="rw" aria-live="off">Good morning! ☀️ Have a lovely Wednesday.</div>
+        <div class="seg" role="group" aria-label="When an AI text is sent"><button type="button" aria-pressed="true" id="segA">Ask me first</button><button type="button" aria-pressed="false" id="segB">Send automatically</button></div>
+        <p class="seg-note" id="segNote">A notification lets you review, edit or discard the text before it goes out.</p>
+      </div>
+      <figure class="howto" data-rise>
+        <button class="howto-thumb" type="button" data-lightbox="lb-key" aria-label="Play the guide: Get your free Gemini API key, 49 seconds">
+          <img src="/media/textfox-gemini-key-poster.jpg" width="900" height="506" loading="lazy" alt="Get your free Gemini API key: the TextFox AI setup guide">
+          <span class="howto-play" aria-hidden="true"><i><svg viewBox="0 0 24 24"><path d="M8 5.5v13l10.5-6.5z"/></svg></i>Watch the guide</span>
+          <span class="howto-dur">0:49</span>
+        </button>
+        <figcaption><b>Get your free Gemini key in a minute.</b> Watch the 49-second guide, then create your key at <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a>.</figcaption>
+      </figure>
+      <dialog class="lightbox" id="lb-key" aria-label="Get your free Gemini API key">
+        <button class="lb-close" type="button" aria-label="Close">×</button>
+        <video controls playsinline preload="none" poster="/media/textfox-gemini-key-poster.jpg" width="900" height="506">
+          <source src="/media/textfox-gemini-key.webm" type="video/webm">
+          <source src="/media/textfox-gemini-key.mp4" type="video/mp4">
+        </video>
+      </dialog>
     </div>
     <div>
       <p class="kicker" style="color:var(--amber)">// optional ai</p>

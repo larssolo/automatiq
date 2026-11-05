@@ -36,6 +36,16 @@
     film.addEventListener('ended', () => frame.classList.remove('playing'));
   }
 
+  // lightbox videos: a thumbnail opens a <dialog> and plays with sound; Esc, ×, or a click outside closes and pauses
+  document.querySelectorAll('[data-lightbox]').forEach(btn => {
+    const dlg = document.getElementById(btn.dataset.lightbox); if (!dlg || !dlg.showModal) return;
+    const v = dlg.querySelector('video');
+    btn.addEventListener('click', () => { dlg.showModal(); v.play().catch(() => {}); });
+    dlg.querySelector('.lb-close').addEventListener('click', () => dlg.close());
+    dlg.addEventListener('click', e => { if (e.target === dlg) dlg.close(); });
+    dlg.addEventListener('close', () => { v.pause(); btn.focus(); });
+  });
+
   // intro video: load and play only while visible; never autoplay under reduced motion
   const vid = $('video[data-lazy]');
   if (vid) {

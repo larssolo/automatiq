@@ -222,6 +222,21 @@ FILM = {"en": ("TextFox: your phone texts for you, all day", "A 59-second film a
         "da": ("TextFox: din telefon sender sms'er for dig, hele dagen", "En film på 59 sekunder (på engelsk) om TextFox, Android-appen der sender sms'er for dig: planlagte sms'er, autosvar, sms ved ubesvaret opkald og AI-varianter med Google Gemini.")}
 
 
+KEYFILM = {"en": ("Get your free Gemini API key for TextFox", "A 49-second guide: open Google AI Studio, create a free Gemini API key, copy it and paste it in TextFox under Settings → AI · Gemini, then test and save."),
+           "da": ("Hent din gratis Gemini API-nøgle til TextFox", "En guide på 49 sekunder (på engelsk): åbn Google AI Studio, opret en gratis Gemini API-nøgle, kopiér den, og indsæt den i TextFox under Settings → AI · Gemini. Test og gem.")}
+KEYFILM_TRANSCRIPT = ("Get your free Gemini API key. It takes about a minute. 01 Open Google AI Studio: go to aistudio.google.com and sign in with your Google account. "
+    "02 Create an API key: on the API keys page, click Create API key; Google makes a new project for it. 03 Copy the key: it starts with AIza; keep it private, like a password. "
+    "04 Paste it in TextFox: Settings, AI · Gemini. Paste the key, tap Test key, then Save. You're set: free tier, the key stays on your phone, AI is optional.")
+
+
+def keyfilm_schema(lang, url):
+    name, desc = KEYFILM[lang]
+    return {"@type": "VideoObject", "@id": url + "#gemini-key-guide", "name": name, "description": desc,
+            "thumbnailUrl": [SITE + "/media/textfox-gemini-key-poster.jpg"], "uploadDate": "2026-11-05T15:00:00+01:00", "duration": "PT49S", "inLanguage": "en",
+            "contentUrl": SITE + "/media/textfox-gemini-key.mp4", "encodingFormat": "video/mp4", "width": 900, "height": 506, "isFamilyFriendly": True,
+            "transcript": KEYFILM_TRANSCRIPT, "about": {"@id": SITE + "/#app"}, "publisher": {"@id": SITE + "/#org"}, "creator": {"@id": SITE + "/about#lars"}, "isPartOf": {"@id": url}}
+
+
 def film_schema(lang, url):
     name, desc = FILM[lang]
     return {"@type": "VideoObject", "@id": url + "#film", "name": name, "description": desc,
@@ -242,6 +257,7 @@ def head(meta, url):
     if "faq" in s: graph.append(faq_schema("home", url, lang))
     if "video" in s: graph.append(VIDEO)
     if "film" in s: graph.append(film_schema(lang, url))
+    if "keyfilm" in s: graph.append(keyfilm_schema(lang, url))
     if "page-faq" in s:
         graph.append(faq_schema(meta["faq"], url, lang))
         graph.append({"@type": "WebPage", "@id": url, "url": url, "name": title, "description": desc, "inLanguage": lang, "about": {"@id": SITE + "/#app"}, "isPartOf": {"@id": SITE + "/#site"}})
@@ -437,6 +453,10 @@ def main():
             vid = (f"<video:video><video:thumbnail_loc>{SITE}/media/textfox-film-poster.jpg</video:thumbnail_loc><video:title>{html.escape(name)}</video:title>"
                    f"<video:description>{html.escape(desc)}</video:description><video:content_loc>{SITE}/media/textfox-film.mp4</video:content_loc>"
                    f"<video:duration>59</video:duration><video:publication_date>2026-11-05T12:00:00+01:00</video:publication_date><video:family_friendly>yes</video:family_friendly></video:video>")
+            kn, kd = KEYFILM[lang]
+            vid += (f"<video:video><video:thumbnail_loc>{SITE}/media/textfox-gemini-key-poster.jpg</video:thumbnail_loc><video:title>{html.escape(kn)}</video:title>"
+                    f"<video:description>{html.escape(kd)}</video:description><video:content_loc>{SITE}/media/textfox-gemini-key.mp4</video:content_loc>"
+                    f"<video:duration>49</video:duration><video:publication_date>2026-11-05T15:00:00+01:00</video:publication_date><video:family_friendly>yes</video:family_friendly></video:video>")
         return f"<url><loc>{abs_url(path)}</loc><lastmod>{TODAY}</lastmod>{alt}{vid}</url>"
     sm = "".join(sm_entry(m["path"]) for m, _ in pages if not m.get("noindex"))
     (PUB / "sitemap.xml").write_text(f'<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml" xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">{sm}</urlset>\n')
