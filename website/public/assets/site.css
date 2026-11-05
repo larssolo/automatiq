@@ -390,3 +390,7 @@ footer{border-top:1px solid var(--line);padding-block:56px calc(36px + env(safe-
 .shader-bg{position:fixed;inset:0;width:100vw;height:100vh;z-index:-1;pointer-events:none;image-rendering:auto;filter:blur(2px);transform:scale(1.02)}
 .has-shader-bg body{background:transparent}
 .has-shader-bg .day{background:transparent}
+/* keep the green payoff line on one line; the Danish one is longer, so it sets a touch smaller */
+.h1 .g{white-space:nowrap}
+@media (min-width:901px){html[lang="da"] .h1{font-size:clamp(40px,5.6vw,88px)}}
+@media (max-width:900px){html[lang="da"] .h1{font-size:clamp(38px,10.4vw,92px)}}

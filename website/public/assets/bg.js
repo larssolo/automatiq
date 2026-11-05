@@ -30,13 +30,13 @@ void main(){
  float n3=sn(r*1.6+vec2(4.2,t));
  // palette from the app: deep green, robot teal, a touch of amber; scroll moves the balance
  vec3 base=vec3(.030,.046,.040);
- vec3 green=vec3(0.,.42,.21), teal=vec3(.10,.40,.40), amber=vec3(.55,.36,.02), indigo=vec3(.18,.20,.55);
+ vec3 green=vec3(0.,.55,.26), teal=vec3(.05,.50,.50), amber=vec3(.70,.44,0.), indigo=vec3(.22,.24,.72);
  float s=uS;
  vec3 a=mix(green,teal,smoothstep(.15,.55,s)); a=mix(a,green,smoothstep(.7,1.,s));
  vec3 b=mix(teal,indigo,smoothstep(.3,.7,s)*.55);
  vec3 col=base;
- col+=a*smoothstep(-.15,.9,n1)*.28;
- col+=b*smoothstep(0.,1.,n2)*.20;
+ col+=a*smoothstep(-.15,.9,n1)*.32;
+ col+=b*smoothstep(0.,1.,n2)*.24;
  col+=amber*smoothstep(.35,1.,n3)*(.07+.06*smoothstep(.45,.6,s)*(1.-smoothstep(.6,.75,s)));
  // keep the reading column darkest: a soft vignette towards the left and the bottom
  col*=mix(.68,1.,smoothstep(.05,.75,uv.x))*mix(.8,1.,smoothstep(0.,.5,uv.y));
