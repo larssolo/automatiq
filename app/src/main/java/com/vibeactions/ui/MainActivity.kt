@@ -16,7 +16,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bolt
-import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Tune
@@ -45,6 +44,7 @@ import com.vibeactions.data.AppSettings
 import com.vibeactions.scheduler.AiReplyActionReceiver
 import com.vibeactions.ui.common.AiConsentDialog
 import com.vibeactions.ui.common.BrandIntro
+import com.vibeactions.ui.common.CopyTextButton
 import com.vibeactions.ui.common.ReportAiButton
 import com.vibeactions.ui.onboarding.OnboardingScreen
 import com.vibeactions.util.AiConsent
@@ -233,15 +233,7 @@ private fun AiApprovalDialog(approval: AiApproval, onDone: () -> Unit) {
                 // Wraps instead of squeezing: three labelled buttons don't fit one line on most phones.
                 FlowRow(verticalArrangement = Arrangement.Center) {
                     // Copies the text as it stands now, edits included.
-                    TextButton(
-                        enabled = text.isNotBlank(),
-                        contentPadding = PaddingValues(horizontal = 8.dp),
-                        onClick = { copyToClipboard(context, text) }
-                    ) {
-                        Icon(Icons.Default.ContentCopy, null, modifier = Modifier.size(16.dp))
-                        Spacer(Modifier.width(4.dp))
-                        Text("Copy")
-                    }
+                    CopyTextButton(text)
                     // A reply can only be rewritten when we still know the message it answers.
                     if (approval.recipient == null || approval.incoming != null) {
                         TextButton(contentPadding = PaddingValues(horizontal = 8.dp), onClick = {
@@ -292,15 +284,6 @@ private fun AiApprovalDialog(approval: AiApproval, onDone: () -> Unit) {
             TextButton(onClick = { cancelNotification(); onDone() }) { Text("Discard") }
         }
     )
-}
-
-private fun copyToClipboard(context: Context, text: String) {
-    val clipboard = context.getSystemService(android.content.ClipboardManager::class.java) ?: return
-    clipboard.setPrimaryClip(android.content.ClipData.newPlainText("TextFox message", text))
-    // Android 13+ shows its own "Copied" confirmation; older versions get a toast.
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-        android.widget.Toast.makeText(context, "Copied", android.widget.Toast.LENGTH_SHORT).show()
-    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

@@ -7,7 +7,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import android.content.Context
+import android.os.Build
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.outlined.Flag
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -77,6 +80,29 @@ fun rememberAiConsentGate(): (() -> Unit) -> Unit {
 }
 
 /** Small flag button that opens [AiReportDialog] for [aiText]. */
+fun copyToClipboard(context: Context, text: String) {
+    val clipboard = context.getSystemService(android.content.ClipboardManager::class.java) ?: return
+    clipboard.setPrimaryClip(android.content.ClipData.newPlainText("TextFox message", text))
+    // Android 13+ shows its own "Copied" confirmation; older versions get a toast.
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+        android.widget.Toast.makeText(context, "Copied", android.widget.Toast.LENGTH_SHORT).show()
+    }
+}
+
+/** Copies an AI text so it can be pasted elsewhere; sits next to [ReportAiButton]. */
+@Composable
+fun CopyTextButton(text: String, modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    TextButton(
+        onClick = { copyToClipboard(context, text) }, modifier = modifier,
+        contentPadding = PaddingValues(horizontal = 8.dp)
+    ) {
+        Icon(Icons.Default.ContentCopy, null, modifier = Modifier.size(16.dp))
+        Spacer(Modifier.width(4.dp))
+        Text("Copy text", fontSize = 13.sp)
+    }
+}
+
 @Composable
 fun ReportAiButton(aiText: String, source: AiReportSource, modifier: Modifier = Modifier) {
     var open by remember { mutableStateOf(false) }
