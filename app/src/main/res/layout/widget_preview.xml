@@ -6,8 +6,9 @@
     android:orientation="vertical" android:gravity="center"
     android:padding="6dp">
 
-    <FrameLayout android:layout_width="40dp" android:layout_height="40dp">
-        <ImageView android:layout_width="match_parent" android:layout_height="match_parent"
+    <FrameLayout android:layout_width="46dp" android:layout_height="46dp">
+        <ImageView android:layout_width="40dp" android:layout_height="40dp"
+            android:layout_gravity="center"
             android:src="@drawable/widget_compact_background"
             android:tint="#00E676"
             android:contentDescription="@null" />
@@ -15,6 +16,10 @@
             android:layout_gravity="center"
             android:src="@drawable/ic_send"
             android:tint="#000000"
+            android:contentDescription="@null" />
+        <ImageView android:layout_width="17dp" android:layout_height="17dp"
+            android:layout_gravity="bottom|end"
+            android:src="@drawable/widget_fox_badge"
             android:contentDescription="@null" />
     </FrameLayout>
 

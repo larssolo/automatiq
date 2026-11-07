@@ -32,6 +32,10 @@ import com.vibeactions.ui.theme.Primary
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import androidx.core.content.pm.ShortcutInfoCompat
+import androidx.core.content.pm.ShortcutManagerCompat
+import androidx.core.graphics.drawable.IconCompat
+import com.vibeactions.R
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -87,6 +91,7 @@ class MainActivity : ComponentActivity() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             splashScreen.setOnExitAnimationListener { it.remove() }
         }
+        publishShortcuts()
         // On recreation (process death, config change) Android hands back the original launch
         // intent; replaying it would yank the user back to the Log / approval dialog every time.
         if (savedInstanceState == null) {
@@ -151,6 +156,30 @@ class MainActivity : ComponentActivity() {
         )
     }
 
+    /** Long-press shortcuts on the launcher icon. Dynamic rather than res/xml so the intents
+     *  name this build's own package (the side-by-side ".test" build included). */
+    private fun publishShortcuts() {
+        fun shortcut(id: String, label: String, icon: Int, nav: String) =
+            ShortcutInfoCompat.Builder(this, id)
+                .setShortLabel(label)
+                .setIcon(IconCompat.createWithResource(this, icon))
+                .setIntent(
+                    Intent(this, MainActivity::class.java)
+                        .setAction(Intent.ACTION_VIEW)
+                        .putExtra(EXTRA_NAV, nav)
+                )
+                .build()
+        runCatching {
+            ShortcutManagerCompat.setDynamicShortcuts(
+                this,
+                listOf(
+                    shortcut("new_macro", "New macro", R.drawable.shortcut_new, NAV_NEW_MACRO),
+                    shortcut("log", "Log", R.drawable.shortcut_log, "log")
+                )
+            )
+        }
+    }
+
     private fun hasGeminiKey(context: Context) =
         !context.getSharedPreferences("ai_settings", Context.MODE_PRIVATE)
             .getString("gemini_api_key", null).isNullOrBlank()
@@ -165,6 +194,8 @@ class MainActivity : ComponentActivity() {
         const val EXTRA_NAV = "nav"
         const val EXTRA_AI_NOTE = "ai_note"
         const val EXTRA_INCOMING = "incoming"
+        /** EXTRA_NAV value that opens the list with an empty editor. */
+        const val NAV_NEW_MACRO = "new_macro"
     }
 }
 
@@ -300,9 +331,13 @@ private fun AppRoot(
 
     // A notification asked us to open a specific tab (e.g. the Log). Navigate once, then clear it so
     // it doesn't re-fire on recomposition.
+    var openNewMacro by remember { mutableStateOf(false) }
     LaunchedEffect(navTarget) {
         if (navTarget != null) {
-            navigateTab(navTarget)
+            if (navTarget == MainActivity.NAV_NEW_MACRO) {
+                navigateTab("list")
+                openNewMacro = true
+            } else navigateTab(navTarget)
             onNavConsumed()
         }
     }
@@ -363,6 +398,8 @@ private fun AppRoot(
             NavHost(nav, startDestination = "list", modifier = Modifier.padding(p).consumeWindowInsets(p)) {
                 composable("list") {
                     MacroListScreen(
+                        openNewMacro = openNewMacro,
+                        onNewMacroOpened = { openNewMacro = false },
                         banner = {
                             if (missingSetup > 0) {
                                 PermissionBanner(

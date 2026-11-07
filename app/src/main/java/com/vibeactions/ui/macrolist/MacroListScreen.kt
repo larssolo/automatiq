@@ -45,6 +45,7 @@ import com.vibeactions.ui.common.FolderCard
 import com.vibeactions.ui.common.MacroCard
 import com.vibeactions.ui.editor.MacroEditorScreen
 import com.vibeactions.ui.editor.MacroEditorViewModel
+import com.vibeactions.ui.theme.FoxGreen
 import com.vibeactions.ui.theme.JetBrainsMono
 import com.vibeactions.ui.theme.OnPrimary
 import com.vibeactions.ui.theme.OnSurface
@@ -64,6 +65,9 @@ import sh.calvin.reorderable.rememberReorderableLazyGridState
 @Composable
 fun MacroListScreen(
     banner: @Composable () -> Unit = {},
+    /** Set by the "New macro" launcher shortcut: open an empty editor once. */
+    openNewMacro: Boolean = false,
+    onNewMacroOpened: () -> Unit = {},
     vm: MacroListViewModel = hiltViewModel()
 ) {
     val macros by vm.macros.collectAsStateWithLifecycle()
@@ -96,6 +100,13 @@ fun MacroListScreen(
 
     var showEditor by remember { mutableStateOf(false) }
     var editorMacroId by remember { mutableStateOf<String?>(null) }
+    LaunchedEffect(openNewMacro) {
+        if (openNewMacro) {
+            editorMacroId = null
+            showEditor = true
+            onNewMacroOpened()
+        }
+    }
     var query by remember { mutableStateOf("") }
     var searchOpen by remember { mutableStateOf(false) }
     // Filter for display; reordering is disabled while searching (dragging a filtered subset would
@@ -254,7 +265,7 @@ fun MacroListScreen(
                     Icon(
                         painterResource(R.drawable.ic_stat_textfox),
                         contentDescription = "TextFox",
-                        tint = if (macros.any { it.enabled }) Primary else OnSurfaceVariant,
+                        tint = if (macros.any { it.enabled }) FoxGreen else OnSurfaceVariant,
                         modifier = Modifier.size(30.dp)
                     )
                     Spacer(Modifier.weight(1f))

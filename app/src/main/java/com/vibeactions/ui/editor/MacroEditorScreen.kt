@@ -1,5 +1,6 @@
 package com.vibeactions.ui.editor
 
+import com.vibeactions.ui.common.TypingDots
 import androidx.compose.animation.core.RepeatMode
 import com.vibeactions.ui.common.SentenceKeyboard
 import androidx.compose.animation.core.animateFloat
@@ -1180,8 +1181,11 @@ fun MacroEditorScreen(
                             )
                         }
                         AiState.Loading -> {
-                            CircularProgressIndicator(Modifier.align(Alignment.CenterHorizontally))
-                            Text("Generating suggestions…", style = MaterialTheme.typography.bodySmall)
+                            TypingDots(Modifier.align(Alignment.CenterHorizontally).padding(vertical = 8.dp), dot = 10.dp)
+                            Text(
+                                "Writing suggestions…", style = MaterialTheme.typography.bodySmall,
+                                modifier = Modifier.align(Alignment.CenterHorizontally)
+                            )
                         }
                         is AiState.Suggestions -> {
                             st.items.forEach { suggestion ->

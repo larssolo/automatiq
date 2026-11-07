@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.vibeactions.ui.theme.Background
 import com.vibeactions.ui.theme.DmSans
+import com.vibeactions.ui.theme.FoxGreen
 import com.vibeactions.ui.theme.OnSurface
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -38,8 +39,7 @@ import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.sin
 
-/** The launcher icon's green and the fox's dark fill (`drawable/ic_launcher_foreground.xml`). */
-private val FoxGreen = Color(0xFF69E382)
+/** The fox's dark fill (`drawable/ic_launcher_foreground.xml`). */
 private val FoxDark = Color(0xFF0B130E)
 
 /** The fox head from the launcher icon, in its 108-unit adaptive-icon viewport, without the dot

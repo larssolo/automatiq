@@ -1,7 +1,9 @@
 package com.vibeactions.ui.settings
 
+import com.vibeactions.ui.common.TypingDots
 import android.content.Intent
 import com.vibeactions.ui.common.SentenceKeyboard
+import com.vibeactions.R
 import com.vibeactions.widget.MacroWidgetProvider
 import com.vibeactions.widget.MacroWidgetConfigActivity
 import androidx.compose.material.icons.filled.Widgets
@@ -24,6 +26,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
@@ -57,6 +60,7 @@ import com.vibeactions.ui.common.ScreenHeader
 import com.vibeactions.ui.editor.EditorSection
 import com.vibeactions.ui.editor.Hint
 import com.vibeactions.ui.editor.SwitchRow
+import com.vibeactions.ui.theme.FoxGreen
 import com.vibeactions.ui.theme.JetBrainsMono
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vibeactions.BuildConfig
@@ -297,7 +301,7 @@ fun SettingsScreen(
                         modifier = Modifier.weight(1f)
                     ) {
                         if (apiTestLoading)
-                            CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp)
+                            TypingDots(dot = 5.dp)
                         else
                             Text("Test key")
                     }
@@ -355,6 +359,11 @@ fun SettingsScreen(
                 }
             }
 
+            // The sign-off: the fox over the version line.
+            Icon(
+                painterResource(R.drawable.ic_stat_textfox), contentDescription = null, tint = FoxGreen,
+                modifier = Modifier.align(Alignment.CenterHorizontally).padding(top = 8.dp).size(36.dp)
+            )
             Row(
                 modifier = Modifier
                     .align(Alignment.CenterHorizontally)

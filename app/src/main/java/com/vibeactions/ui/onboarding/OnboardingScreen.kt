@@ -1,5 +1,6 @@
 package com.vibeactions.ui.onboarding
 
+import com.vibeactions.ui.common.TypingDots
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -475,7 +476,7 @@ private fun AiPage(
         enabled = apiKey.isNotBlank() && !testing,
         modifier = Modifier.fillMaxWidth()
     ) {
-        if (testing) CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp, color = Teal)
+        if (testing) TypingDots(dot = 5.dp, color = Teal)
         else Text("Test key", fontFamily = DmSans)
     }
     AnimatedContent(keyWorks, label = "result") { ok ->
