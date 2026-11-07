@@ -1,3 +1,6 @@
 <resources>
-    <style name="Theme.VibeActions" parent="android:Theme.Material.NoActionBar" />
+    <style name="Theme.VibeActions" parent="android:Theme.Material.NoActionBar">
+        <!-- The app's dark background from the first frame, so a cold start never flashes. -->
+        <item name="android:windowBackground">@color/app_background</item>
+    </style>
 </resources>

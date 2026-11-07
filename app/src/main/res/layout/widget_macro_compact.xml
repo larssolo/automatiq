@@ -6,15 +6,22 @@
     android:orientation="vertical" android:gravity="center"
     android:padding="2dp">
 
-    <FrameLayout android:layout_width="40dp" android:layout_height="40dp">
+    <!-- 40dp button plus room for the TextFox badge on its lower-right edge. -->
+    <FrameLayout android:layout_width="46dp" android:layout_height="46dp">
         <ImageView android:id="@+id/widget_compact_bg"
-            android:layout_width="match_parent" android:layout_height="match_parent"
+            android:layout_width="40dp" android:layout_height="40dp"
+            android:layout_gravity="center"
             android:src="@drawable/widget_compact_background"
             android:contentDescription="@null" />
         <ImageView android:id="@+id/widget_compact_icon"
             android:layout_width="18dp" android:layout_height="18dp"
             android:layout_gravity="center"
             android:src="@drawable/ic_send"
+            android:contentDescription="@null" />
+        <ImageView
+            android:layout_width="17dp" android:layout_height="17dp"
+            android:layout_gravity="bottom|end"
+            android:src="@drawable/widget_fox_badge"
             android:contentDescription="@null" />
     </FrameLayout>
 

@@ -1,6 +1,16 @@
 package com.vibeactions.ui.macrolist
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.material.icons.filled.Folder
+import androidx.compose.material.icons.filled.Home
+import com.vibeactions.ui.common.FolderDropHint
+import com.vibeactions.ui.common.LeafShape
+import com.vibeactions.util.resolveDrop
+import com.vibeactions.ui.common.SentenceKeyboard
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -8,7 +18,6 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
@@ -17,14 +26,14 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
+import com.vibeactions.R
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -34,9 +43,9 @@ import com.vibeactions.domain.model.Folder
 import com.vibeactions.domain.model.Macro
 import com.vibeactions.ui.common.FolderCard
 import com.vibeactions.ui.common.MacroCard
-import com.vibeactions.ui.common.ambientPulse
 import com.vibeactions.ui.editor.MacroEditorScreen
 import com.vibeactions.ui.editor.MacroEditorViewModel
+import com.vibeactions.ui.theme.FoxGreen
 import com.vibeactions.ui.theme.JetBrainsMono
 import com.vibeactions.ui.theme.OnPrimary
 import com.vibeactions.ui.theme.OnSurface
@@ -56,6 +65,9 @@ import sh.calvin.reorderable.rememberReorderableLazyGridState
 @Composable
 fun MacroListScreen(
     banner: @Composable () -> Unit = {},
+    /** Set by the "New macro" launcher shortcut: open an empty editor once. */
+    openNewMacro: Boolean = false,
+    onNewMacroOpened: () -> Unit = {},
     vm: MacroListViewModel = hiltViewModel()
 ) {
     val macros by vm.macros.collectAsStateWithLifecycle()
@@ -72,6 +84,14 @@ fun MacroListScreen(
     // hidden members while a drag holds them out — then dropped() re-splices them, duplicating
     // LazyGrid keys and crashing. Only sync when no drag is in progress.
     LaunchedEffect(vmRows) { if (draggedKey == null) rows = vmRows }
+    // The macro whose handle is held right now (set on touch, before the first move), and the
+    // folder it would land in if released here — so the list can show the target while dragging.
+    var macroDragKey by remember { mutableStateOf<String?>(null) }
+    val dropFolderId = macroDragKey?.let { resolveDrop(rows, it).movedMacroFolderId }
+    val haptics = LocalHapticFeedback.current
+    LaunchedEffect(macroDragKey, dropFolderId) {
+        if (macroDragKey != null) haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+    }
     var showCreateFolder by remember { mutableStateOf(false) }
     var renameTarget by remember { mutableStateOf<Folder?>(null) }
     var deleteTarget by remember { mutableStateOf<Folder?>(null) }
@@ -80,6 +100,13 @@ fun MacroListScreen(
 
     var showEditor by remember { mutableStateOf(false) }
     var editorMacroId by remember { mutableStateOf<String?>(null) }
+    LaunchedEffect(openNewMacro) {
+        if (openNewMacro) {
+            editorMacroId = null
+            showEditor = true
+            onNewMacroOpened()
+        }
+    }
     var query by remember { mutableStateOf("") }
     var searchOpen by remember { mutableStateOf(false) }
     // Filter for display; reordering is disabled while searching (dragging a filtered subset would
@@ -229,19 +256,17 @@ fun MacroListScreen(
                 }
                 LaunchedEffect(Unit) { focusRequester.requestFocus() }
             } else {
-                // Wordmark header with the app's heartbeat: the dot breathes while anything is armed.
+                // The fox logo heads the list: green while anything is armed, dimmed when all is off.
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth().padding(top = 12.dp, start = 6.dp, end = 6.dp)
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 44.dp)
+                        .padding(top = 12.dp, start = 6.dp, end = 6.dp)
                 ) {
-                    PulseDot(alive = macros.any { it.enabled })
-                    Spacer(Modifier.width(9.dp))
-                    Text(
-                        "textfox",
-                        fontFamily = JetBrainsMono,
-                        fontWeight = FontWeight.Medium,
-                        fontSize = 20.sp,
-                        color = OnSurface
+                    Icon(
+                        painterResource(R.drawable.ic_stat_textfox),
+                        contentDescription = "TextFox",
+                        tint = if (macros.any { it.enabled }) FoxGreen else OnSurfaceVariant,
+                        modifier = Modifier.size(30.dp)
                     )
                     Spacer(Modifier.weight(1f))
                     if (macros.isNotEmpty()) {
@@ -306,7 +331,7 @@ fun MacroListScreen(
                         }
                     } else {
                         items(rows, key = { it.key }) { row ->
-                            ReorderableItem(reorderState, key = row.key) { _ ->
+                            ReorderableItem(reorderState, key = row.key) { isDragging ->
                                 when (row) {
                                     is FolderRow -> FolderCard(
                                         folder = row.folder,
@@ -317,12 +342,23 @@ fun MacroListScreen(
                                         onToggleAll = { enabled -> vm.onToggleFolder(row.folder, enabled) },
                                         onRename = { renameTarget = row.folder },
                                         onDelete = { deleteTarget = row.folder },
+                                        dropHint = when {
+                                            macroDragKey == null -> FolderDropHint.NONE
+                                            row.folder.id == dropFolderId -> FolderDropHint.TARGET
+                                            !row.folder.expanded -> FolderDropHint.CLOSED
+                                            else -> FolderDropHint.NONE
+                                        },
                                         dragHandleModifier = Modifier.draggableHandle(onDragStopped = { dropped() })
                                     )
                                     is MacroRow -> {
-                                        val member = row.macro.folderId != null
-                                        val folderColor = folders.firstOrNull { it.id == row.macro.folderId }
+                                        // While dragged, the card already shows where it would land:
+                                        // indented in the target folder's colour, or flush at root.
+                                        val held = row.key == macroDragKey
+                                        val folderId = if (held) dropFolderId else row.macro.folderId
+                                        val member = folderId != null
+                                        val folderColor = folders.firstOrNull { it.id == folderId }
                                             ?.let { Color(it.cardColor) }
+                                        Box(if (member) Modifier.padding(start = 16.dp) else Modifier) {
                                         MacroCard(
                                             macro = row.macro,
                                             onClick = { editorMacroId = row.macro.id; showEditor = true },
@@ -337,9 +373,22 @@ fun MacroListScreen(
                                             onMoveToRoot = if (member) {
                                                 { vm.onMoveToFolder(row.macro, null) }
                                             } else null,
-                                            modifier = if (member) Modifier.padding(start = 16.dp) else Modifier,
-                                            dragHandleModifier = Modifier.draggableHandle(onDragStopped = { dropped() })
+                                            // Lifted and opaque while held, so the cards it passes
+                                            // over don't show through the translucent card.
+                                            modifier = if (isDragging) Modifier.shadow(12.dp, LeafShape)
+                                                .background(Color(0xFF151A17), LeafShape)
+                                                else Modifier,
+                                            dragHandleModifier = Modifier.draggableHandle(
+                                                onDragStarted = { macroDragKey = row.key },
+                                                onDragStopped = { macroDragKey = null; dropped() }
+                                            )
                                         )
+                                        if (held) DropTargetPill(
+                                            folders.firstOrNull { it.id == folderId }?.name,
+                                            folderColor,
+                                            Modifier.align(Alignment.TopCenter).offset(y = (-10).dp)
+                                        )
+                                        }
                                     }
                                 }
                             }
@@ -468,18 +517,28 @@ fun MacroListScreen(
     }
 }
 
-/** A small status dot: breathes while at least one macro is armed, rests dim otherwise. Reads the
- *  shared [ambientPulse] instead of running its own InfiniteTransition. */
+/** Rides on the dragged macro and says where it lands if released now. */
 @Composable
-private fun PulseDot(alive: Boolean) {
-    val alpha = if (alive) ambientPulse().dotBreath else 0.3f
-    Box(
-        Modifier
-            .size(9.dp)
-            .graphicsLayer { this.alpha = alpha }
-            .clip(CircleShape)
-            .background(Primary)
-    )
+private fun DropTargetPill(folderName: String?, folderColor: Color?, modifier: Modifier = Modifier) {
+    val color = folderColor ?: OnSurfaceVariant
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = modifier
+            .clip(RoundedCornerShape(50))
+            .background(Color(0xFF151A17))
+            .border(1.dp, color, RoundedCornerShape(50))
+            .padding(horizontal = 10.dp, vertical = 3.dp)
+    ) {
+        Icon(
+            if (folderName != null) Icons.Default.Folder else Icons.Default.Home,
+            contentDescription = null, tint = color, modifier = Modifier.size(13.dp)
+        )
+        Spacer(Modifier.width(5.dp))
+        Text(
+            if (folderName != null) "Into $folderName" else "No folder",
+            fontSize = 12.sp, color = OnSurface, maxLines = 1
+        )
+    }
 }
 
 @Composable
@@ -494,7 +553,8 @@ private fun FolderNameDialog(
         text = {
             OutlinedTextField(
                 value = name, onValueChange = { name = it },
-                label = { Text("Name") }, singleLine = true
+                label = { Text("Name") }, singleLine = true,
+                keyboardOptions = SentenceKeyboard
             )
         },
         confirmButton = {

@@ -1,0 +1,8 @@
+<resources>
+    <!-- Android 12+ system splash: the launcher icon (fox on green) on the app's dark background.
+         BrandIntro starts from this exact picture and animates it into the TextFox wordmark. -->
+    <style name="Theme.VibeActions" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/app_background</item>
+        <item name="android:windowSplashScreenBackground">@color/app_background</item>
+    </style>
+</resources>

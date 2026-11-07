@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- TextFox green, the background of the fox logo and the adaptive icon. -->
-    <color name="ic_launcher_background">#69E382</color>
+    <!-- TextFox green (ui/theme/Color.kt FoxGreen): the fox logo and the adaptive icon. -->
+    <color name="ic_launcher_background">#00C853</color>
+    <!-- ui/theme/Color.kt Background: behind the splash and the first frame. -->
+    <color name="app_background">#0D0D0D</color>
 </resources>

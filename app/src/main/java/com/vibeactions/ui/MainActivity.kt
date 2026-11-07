@@ -1,6 +1,7 @@
 package com.vibeactions.ui
 
 import android.Manifest
+import com.vibeactions.ui.common.SentenceKeyboard
 import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
@@ -15,6 +16,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bolt
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Tune
@@ -30,6 +32,10 @@ import com.vibeactions.ui.theme.Primary
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import androidx.core.content.pm.ShortcutInfoCompat
+import androidx.core.content.pm.ShortcutManagerCompat
+import androidx.core.graphics.drawable.IconCompat
+import com.vibeactions.R
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -38,6 +44,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import com.vibeactions.data.AppSettings
 import com.vibeactions.scheduler.AiReplyActionReceiver
 import com.vibeactions.ui.common.AiConsentDialog
+import com.vibeactions.ui.common.BrandIntro
 import com.vibeactions.ui.common.ReportAiButton
 import com.vibeactions.ui.onboarding.OnboardingScreen
 import com.vibeactions.util.AiConsent
@@ -79,14 +86,25 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableDarkEdgeToEdge()
+        // BrandIntro's first frame repeats the system splash, so drop the splash at once instead of
+        // letting Android fade it out over the intro (which reads as a flicker).
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            splashScreen.setOnExitAnimationListener { it.remove() }
+        }
+        publishShortcuts()
         // On recreation (process death, config change) Android hands back the original launch
         // intent; replaying it would yank the user back to the Log / approval dialog every time.
         if (savedInstanceState == null) {
             pendingApproval.value = readApproval(intent)
             pendingNav.value = intent.getStringExtra(EXTRA_NAV)
         }
+        // The brand intro plays on a plain cold start only: not on first run (onboarding has its own
+        // intro), not after recreation, and not when a notification opened the app for a task.
+        val playIntro = savedInstanceState == null && AppSettings.onboardingDone(this) &&
+            pendingApproval.value == null && pendingNav.value == null
         setContent {
             VibeActionsTheme {
+                var showIntro by rememberSaveable { mutableStateOf(playIntro) }
                 var showGuide by rememberSaveable { mutableStateOf(!AppSettings.onboardingDone(this)) }
                 if (showGuide) {
                     OnboardingScreen(onFinish = { showGuide = false })
@@ -97,6 +115,7 @@ class MainActivity : ComponentActivity() {
                         onShowGuide = { showGuide = true }
                     )
                 }
+                if (showIntro) BrandIntro(onFinished = { showIntro = false })
                 pendingApproval.value?.let { approval ->
                     AiApprovalDialog(approval, onDone = { pendingApproval.value = null })
                 }
@@ -104,7 +123,7 @@ class MainActivity : ComponentActivity() {
                 var askConsent by rememberSaveable {
                     mutableStateOf(hasGeminiKey(this) && !AiConsent.given(this))
                 }
-                if (askConsent && !showGuide && pendingApproval.value == null) {
+                if (askConsent && !showGuide && !showIntro && pendingApproval.value == null) {
                     AiConsentDialog(
                         onAccept = { AiConsent.give(this); askConsent = false },
                         onDecline = { askConsent = false }
@@ -137,6 +156,30 @@ class MainActivity : ComponentActivity() {
         )
     }
 
+    /** Long-press shortcuts on the launcher icon. Dynamic rather than res/xml so the intents
+     *  name this build's own package (the side-by-side ".test" build included). */
+    private fun publishShortcuts() {
+        fun shortcut(id: String, label: String, icon: Int, nav: String) =
+            ShortcutInfoCompat.Builder(this, id)
+                .setShortLabel(label)
+                .setIcon(IconCompat.createWithResource(this, icon))
+                .setIntent(
+                    Intent(this, MainActivity::class.java)
+                        .setAction(Intent.ACTION_VIEW)
+                        .putExtra(EXTRA_NAV, nav)
+                )
+                .build()
+        runCatching {
+            ShortcutManagerCompat.setDynamicShortcuts(
+                this,
+                listOf(
+                    shortcut("new_macro", "New macro", R.drawable.shortcut_new, NAV_NEW_MACRO),
+                    shortcut("log", "Log", R.drawable.shortcut_log, "log")
+                )
+            )
+        }
+    }
+
     private fun hasGeminiKey(context: Context) =
         !context.getSharedPreferences("ai_settings", Context.MODE_PRIVATE)
             .getString("gemini_api_key", null).isNullOrBlank()
@@ -151,12 +194,14 @@ class MainActivity : ComponentActivity() {
         const val EXTRA_NAV = "nav"
         const val EXTRA_AI_NOTE = "ai_note"
         const val EXTRA_INCOMING = "incoming"
+        /** EXTRA_NAV value that opens the list with an empty editor. */
+        const val NAV_NEW_MACRO = "new_macro"
     }
 }
 
 /** In-app approval surface for AI texts (auto-replies and scheduled variations) — reliable on OEM
  *  skins (MIUI) where notification action buttons don't render. Lets the user edit before sending. */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 private fun AiApprovalDialog(approval: AiApproval, onDone: () -> Unit) {
     val context = LocalContext.current
@@ -182,12 +227,24 @@ private fun AiApprovalDialog(approval: AiApproval, onDone: () -> Unit) {
                     value = text,
                     onValueChange = { text = it },
                     label = { Text("Message (editable)") },
+                    keyboardOptions = SentenceKeyboard,
                     modifier = Modifier.fillMaxWidth()
                 )
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                // Wraps instead of squeezing: three labelled buttons don't fit one line on most phones.
+                FlowRow(verticalArrangement = Arrangement.Center) {
+                    // Copies the text as it stands now, edits included.
+                    TextButton(
+                        enabled = text.isNotBlank(),
+                        contentPadding = PaddingValues(horizontal = 8.dp),
+                        onClick = { copyToClipboard(context, text) }
+                    ) {
+                        Icon(Icons.Default.ContentCopy, null, modifier = Modifier.size(16.dp))
+                        Spacer(Modifier.width(4.dp))
+                        Text("Copy")
+                    }
                     // A reply can only be rewritten when we still know the message it answers.
                     if (approval.recipient == null || approval.incoming != null) {
-                        TextButton(onClick = {
+                        TextButton(contentPadding = PaddingValues(horizontal = 8.dp), onClick = {
                             context.sendBroadcast(
                                 AiReplyActionReceiver.regenerateIntent(
                                     context, approval.macroId, approval.recipient, approval.incoming,
@@ -201,7 +258,6 @@ private fun AiApprovalDialog(approval: AiApproval, onDone: () -> Unit) {
                             Text("New suggestion")
                         }
                     }
-                    Spacer(Modifier.weight(1f))
                     // Reports what the AI wrote, not the user's edit of it.
                     ReportAiButton(
                         approval.body,
@@ -238,6 +294,15 @@ private fun AiApprovalDialog(approval: AiApproval, onDone: () -> Unit) {
     )
 }
 
+private fun copyToClipboard(context: Context, text: String) {
+    val clipboard = context.getSystemService(android.content.ClipboardManager::class.java) ?: return
+    clipboard.setPrimaryClip(android.content.ClipData.newPlainText("TextFox message", text))
+    // Android 13+ shows its own "Copied" confirmation; older versions get a toast.
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+        android.widget.Toast.makeText(context, "Copied", android.widget.Toast.LENGTH_SHORT).show()
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun AppRoot(
@@ -266,9 +331,13 @@ private fun AppRoot(
 
     // A notification asked us to open a specific tab (e.g. the Log). Navigate once, then clear it so
     // it doesn't re-fire on recomposition.
+    var openNewMacro by remember { mutableStateOf(false) }
     LaunchedEffect(navTarget) {
         if (navTarget != null) {
-            navigateTab(navTarget)
+            if (navTarget == MainActivity.NAV_NEW_MACRO) {
+                navigateTab("list")
+                openNewMacro = true
+            } else navigateTab(navTarget)
             onNavConsumed()
         }
     }
@@ -329,6 +398,8 @@ private fun AppRoot(
             NavHost(nav, startDestination = "list", modifier = Modifier.padding(p).consumeWindowInsets(p)) {
                 composable("list") {
                     MacroListScreen(
+                        openNewMacro = openNewMacro,
+                        onNewMacroOpened = { openNewMacro = false },
                         banner = {
                             if (missingSetup > 0) {
                                 PermissionBanner(

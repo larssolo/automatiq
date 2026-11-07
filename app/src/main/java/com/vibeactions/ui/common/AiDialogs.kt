@@ -80,7 +80,7 @@ fun rememberAiConsentGate(): (() -> Unit) -> Unit {
 @Composable
 fun ReportAiButton(aiText: String, source: AiReportSource, modifier: Modifier = Modifier) {
     var open by remember { mutableStateOf(false) }
-    TextButton(onClick = { open = true }, modifier = modifier) {
+    TextButton(onClick = { open = true }, modifier = modifier, contentPadding = PaddingValues(horizontal = 8.dp)) {
         Icon(Icons.Outlined.Flag, null, modifier = Modifier.size(16.dp))
         Spacer(Modifier.width(4.dp))
         Text("Report", fontSize = 13.sp)
@@ -126,6 +126,7 @@ fun AiReportDialog(aiText: String, source: AiReportSource, onDismiss: () -> Unit
                     value = note,
                     onValueChange = { note = it.take(1000) },
                     label = { Text("Details (optional)") },
+                    keyboardOptions = SentenceKeyboard,
                     minLines = 2,
                     modifier = Modifier.fillMaxWidth()
                 )
