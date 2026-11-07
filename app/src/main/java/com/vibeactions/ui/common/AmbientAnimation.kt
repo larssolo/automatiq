@@ -13,20 +13,19 @@ import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 
 /**
- * The app's "breathing" values — the aurora backdrop, every armed macro's card edge, and the
- * status dot all read from this single clock instead of each running their own InfiniteTransition.
+ * The app's "breathing" values — the aurora backdrop and every armed macro's card edge —
+ * all read from this single clock instead of each running their own InfiniteTransition.
  * Compose ties one frame-clock subscription to each InfiniteTransition instance; with a separate
  * one per card, N enabled macros meant N+2 concurrent subscriptions redrawing every frame while
  * the list was on screen. One shared transition still redraws every frame, but only once.
  */
 data class AmbientPulse(
     val cardBreath: Float,
-    val dotBreath: Float,
     val auroraT1: Float,
     val auroraT2: Float
 )
 
-private val defaultAmbientPulse = AmbientPulse(cardBreath = 1f, dotBreath = 1f, auroraT1 = 0f, auroraT2 = 0f)
+private val defaultAmbientPulse = AmbientPulse(cardBreath = 1f, auroraT1 = 0f, auroraT2 = 0f)
 private val LocalAmbientPulse = compositionLocalOf { defaultAmbientPulse }
 
 @Composable
@@ -36,11 +35,6 @@ fun ProvideAmbientPulse(content: @Composable () -> Unit) {
         0.45f, 1f,
         infiniteRepeatable(tween(3600, easing = FastOutSlowInEasing), RepeatMode.Reverse),
         label = "cardBreath"
-    )
-    val dotBreath by transition.animateFloat(
-        0.35f, 1f,
-        infiniteRepeatable(tween(2600, easing = FastOutSlowInEasing), RepeatMode.Reverse),
-        label = "dotBreath"
     )
     val auroraT1 by transition.animateFloat(
         0f, 1f,
@@ -53,7 +47,7 @@ fun ProvideAmbientPulse(content: @Composable () -> Unit) {
         label = "auroraT2"
     )
     CompositionLocalProvider(
-        LocalAmbientPulse provides AmbientPulse(cardBreath, dotBreath, auroraT1, auroraT2)
+        LocalAmbientPulse provides AmbientPulse(cardBreath, auroraT1, auroraT2)
     ) {
         content()
     }

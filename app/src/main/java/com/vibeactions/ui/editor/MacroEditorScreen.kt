@@ -1,6 +1,7 @@
 package com.vibeactions.ui.editor
 
 import androidx.compose.animation.core.RepeatMode
+import com.vibeactions.ui.common.SentenceKeyboard
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
@@ -256,6 +257,7 @@ fun MacroEditorScreen(
                     placeholder = { Text("Name, e.g. Good morning, Mom") },
                     isError = s.name.isNotEmpty() && !s.nameValid,
                     textStyle = MaterialTheme.typography.titleMedium,
+                    keyboardOptions = SentenceKeyboard,
                     singleLine = true, modifier = Modifier.fillMaxWidth()
                 )
                 // Swatches share the width so all of them show as full circles on narrow phones too.
@@ -831,6 +833,7 @@ fun MacroEditorScreen(
                     onValueChange = { v -> vm.update { it.copy(matchKeyword = v) } },
                     label = { Text("If message contains (optional)") },
                     supportingText = { Text("Leave blank to reply to any message") },
+                    keyboardOptions = SentenceKeyboard,
                     singleLine = true, modifier = Modifier.fillMaxWidth()
                 )
                 }
@@ -965,6 +968,9 @@ fun MacroEditorScreen(
                             )
                         },
                         supportingText = { Text("${s.message.length} characters") },
+                        // A webhook body is often JSON, where a forced capital only gets in the way.
+                        keyboardOptions = if (s.effectiveAction == ActionType.WEBHOOK) KeyboardOptions.Default
+                            else SentenceKeyboard,
                         minLines = 3, modifier = Modifier.fillMaxWidth()
                     )
                     Text(
@@ -1034,6 +1040,7 @@ fun MacroEditorScreen(
                             value = s.aiReplyInstruction,
                             onValueChange = { v -> vm.update { it.copy(aiReplyInstruction = v) } },
                             label = { Text(if (isReply) "How to reply (optional)" else "Tone and style (optional)") },
+                            keyboardOptions = SentenceKeyboard,
                             placeholder = {
                                 Text(if (isReply) "e.g. short and friendly, max 1 sentence" else "e.g. warm and casual, keep it short")
                             },
@@ -1158,6 +1165,7 @@ fun MacroEditorScreen(
                                 value = aiPrompt,
                                 onValueChange = { aiPrompt = it },
                                 label = { Text("Describe the message") },
+                                keyboardOptions = SentenceKeyboard,
                                 placeholder = { Text("e.g.: friendly reminder about the 2pm meeting") },
                                 modifier = Modifier.fillMaxWidth()
                             )
@@ -1165,6 +1173,7 @@ fun MacroEditorScreen(
                                 value = aiStyle,
                                 onValueChange = { aiStyle = it },
                                 label = { Text("Style/tone (optional)") },
+                                keyboardOptions = SentenceKeyboard,
                                 placeholder = { Text("e.g.: short and casual") },
                                 singleLine = true,
                                 modifier = Modifier.fillMaxWidth()

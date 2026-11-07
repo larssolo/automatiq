@@ -1,6 +1,7 @@
 package com.vibeactions.ui
 
 import android.Manifest
+import com.vibeactions.ui.common.SentenceKeyboard
 import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
@@ -15,6 +16,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bolt
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Tune
@@ -156,7 +158,7 @@ class MainActivity : ComponentActivity() {
 
 /** In-app approval surface for AI texts (auto-replies and scheduled variations) — reliable on OEM
  *  skins (MIUI) where notification action buttons don't render. Lets the user edit before sending. */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 private fun AiApprovalDialog(approval: AiApproval, onDone: () -> Unit) {
     val context = LocalContext.current
@@ -182,12 +184,24 @@ private fun AiApprovalDialog(approval: AiApproval, onDone: () -> Unit) {
                     value = text,
                     onValueChange = { text = it },
                     label = { Text("Message (editable)") },
+                    keyboardOptions = SentenceKeyboard,
                     modifier = Modifier.fillMaxWidth()
                 )
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                // Wraps instead of squeezing: three labelled buttons don't fit one line on most phones.
+                FlowRow(verticalArrangement = Arrangement.Center) {
+                    // Copies the text as it stands now, edits included.
+                    TextButton(
+                        enabled = text.isNotBlank(),
+                        contentPadding = PaddingValues(horizontal = 8.dp),
+                        onClick = { copyToClipboard(context, text) }
+                    ) {
+                        Icon(Icons.Default.ContentCopy, null, modifier = Modifier.size(16.dp))
+                        Spacer(Modifier.width(4.dp))
+                        Text("Copy")
+                    }
                     // A reply can only be rewritten when we still know the message it answers.
                     if (approval.recipient == null || approval.incoming != null) {
-                        TextButton(onClick = {
+                        TextButton(contentPadding = PaddingValues(horizontal = 8.dp), onClick = {
                             context.sendBroadcast(
                                 AiReplyActionReceiver.regenerateIntent(
                                     context, approval.macroId, approval.recipient, approval.incoming,
@@ -201,7 +215,6 @@ private fun AiApprovalDialog(approval: AiApproval, onDone: () -> Unit) {
                             Text("New suggestion")
                         }
                     }
-                    Spacer(Modifier.weight(1f))
                     // Reports what the AI wrote, not the user's edit of it.
                     ReportAiButton(
                         approval.body,
@@ -236,6 +249,15 @@ private fun AiApprovalDialog(approval: AiApproval, onDone: () -> Unit) {
             TextButton(onClick = { cancelNotification(); onDone() }) { Text("Discard") }
         }
     )
+}
+
+private fun copyToClipboard(context: Context, text: String) {
+    val clipboard = context.getSystemService(android.content.ClipboardManager::class.java) ?: return
+    clipboard.setPrimaryClip(android.content.ClipData.newPlainText("TextFox message", text))
+    // Android 13+ shows its own "Copied" confirmation; older versions get a toast.
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+        android.widget.Toast.makeText(context, "Copied", android.widget.Toast.LENGTH_SHORT).show()
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

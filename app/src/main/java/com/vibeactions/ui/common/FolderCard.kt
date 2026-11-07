@@ -4,6 +4,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
@@ -41,6 +42,15 @@ import com.vibeactions.ui.theme.OnSurface
 import com.vibeactions.ui.theme.OnSurfaceVariant
 import com.vibeactions.ui.theme.Surface
 
+/** What a folder card shows while a macro is being dragged. */
+enum class FolderDropHint {
+    NONE,
+    /** Releasing the dragged macro now puts it in this folder. */
+    TARGET,
+    /** A closed folder can't take a drop; its rows must be visible to land between them. */
+    CLOSED
+}
+
 /**
  * Accordion folder card with a physical folder silhouette: a raised accent tab over the top-left
  * ([FolderTabShape]) makes folders unmistakable next to the flat macro cards. Tap (or the chevron
@@ -57,11 +67,13 @@ fun FolderCard(
     onToggleAll: (Boolean) -> Unit,
     onRename: () -> Unit,
     onDelete: () -> Unit,
+    dropHint: FolderDropHint = FolderDropHint.NONE,
     modifier: Modifier = Modifier,
     dragHandleModifier: Modifier = Modifier
 ) {
     val accent = Color(folder.cardColor)
     var menuExpanded by remember { mutableStateOf(false) }
+    val target = dropHint == FolderDropHint.TARGET
 
     Column(
         modifier
@@ -71,9 +83,11 @@ fun FolderCard(
             .background(Surface.copy(alpha = BackgroundSetting.cardOpacity))
             .background(
                 Brush.horizontalGradient(
-                    listOf(accent.copy(alpha = 0.16f), accent.copy(alpha = 0.03f))
+                    if (target) listOf(accent.copy(alpha = 0.42f), accent.copy(alpha = 0.14f))
+                    else listOf(accent.copy(alpha = 0.16f), accent.copy(alpha = 0.03f))
                 )
             )
+            .then(if (target) Modifier.border(2.dp, accent, FolderTabShape) else Modifier)
             .combinedClickable(onClick = onClick, onLongClick = { menuExpanded = true })
     ) {
         // The raised tab: a plain accent strip — the clip's silhouette cuts its rounded top-left
@@ -102,9 +116,15 @@ fun FolderCard(
             )
             Spacer(Modifier.height(3.dp))
             Text(
-                if (memberCount == 0) "Empty folder — drag macros in"
-                else "$memberCount macros · $activeCount active",
-                color = OnSurfaceVariant, fontSize = 12.sp, maxLines = 1
+                when {
+                    target -> "Release to put it in this folder"
+                    dropHint == FolderDropHint.CLOSED -> "Open the folder to drag macros in"
+                    memberCount == 0 -> "Empty folder — drag macros in"
+                    else -> "$memberCount macros · $activeCount active"
+                },
+                color = if (target) OnSurface else OnSurfaceVariant,
+                fontWeight = if (target) FontWeight.Medium else FontWeight.Normal,
+                fontSize = 12.sp, maxLines = 1
             )
         }
         // Open/close control: a small round chevron button in the folder's accent — points right

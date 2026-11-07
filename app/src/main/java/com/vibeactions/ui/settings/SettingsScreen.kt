@@ -1,6 +1,7 @@
 package com.vibeactions.ui.settings
 
 import android.content.Intent
+import com.vibeactions.ui.common.SentenceKeyboard
 import com.vibeactions.widget.MacroWidgetProvider
 import com.vibeactions.widget.MacroWidgetConfigActivity
 import androidx.compose.material.icons.filled.Widgets
@@ -231,6 +232,7 @@ fun SettingsScreen(
                     onValueChange = { systemPrompt = it },
                     label = { Text("System prompt (optional)") },
                     placeholder = { Text("Reply in a friendly tone, keep it short") },
+                    keyboardOptions = SentenceKeyboard,
                     minLines = 2,
                     modifier = Modifier.fillMaxWidth()
                 )
