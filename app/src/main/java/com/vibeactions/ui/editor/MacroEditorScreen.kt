@@ -3,6 +3,7 @@ package com.vibeactions.ui.editor
 import com.vibeactions.ui.common.TypingDots
 import androidx.compose.animation.core.RepeatMode
 import com.vibeactions.ui.common.SentenceKeyboard
+import com.vibeactions.ui.common.CopyTextButton
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
@@ -1210,10 +1211,10 @@ fun MacroEditorScreen(
                                             showAiCompose = false
                                         }) { Text("Choose") }
                                     }
-                                    ReportAiButton(
-                                        suggestion, AiReportSource.COMPOSE,
-                                        Modifier.padding(start = 4.dp)
-                                    )
+                                    Row(Modifier.padding(start = 4.dp)) {
+                                        CopyTextButton(suggestion)
+                                        ReportAiButton(suggestion, AiReportSource.COMPOSE)
+                                    }
                                 }
                             }
                         }
@@ -1339,7 +1340,10 @@ private fun AiVariationPreview(message: String, instruction: String) {
                 )
                 Spacer(Modifier.height(4.dp))
                 Text(st.items.first(), style = MaterialTheme.typography.bodyMedium, color = OnSurface)
-                ReportAiButton(st.items.first(), AiReportSource.PREVIEW)
+                Row {
+                    CopyTextButton(st.items.first())
+                    ReportAiButton(st.items.first(), AiReportSource.PREVIEW)
+                }
             }
         }
         is AiState.Err -> Text(
