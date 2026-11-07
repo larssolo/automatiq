@@ -20,16 +20,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.PathParser
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.vibeactions.ui.theme.Background
-import com.vibeactions.ui.theme.DmSans
+import com.vibeactions.ui.theme.JetBrainsMono
 import com.vibeactions.ui.theme.FoxGreen
-import com.vibeactions.ui.theme.OnSurface
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -53,7 +49,7 @@ private const val DOT_R = 2.76f
 /**
  * The cold-start brand moment. Its first frame repeats the system splash (the launcher icon in a
  * 160dp circle, centred), so the hand-over is seamless; then the fox's dots bounce like a "typing"
- * bubble, the badge rises and the TextFox wordmark fades in, and the whole layer fades out over
+ * bubble, the badge rises and the textfox wordmark fades in, and the whole layer fades out over
  * the app. About 1.3 s; a tap skips it.
  */
 @Composable
@@ -109,14 +105,13 @@ fun BrandIntro(onFinished: () -> Unit) {
                 }
             }
             Spacer(Modifier.height(28.dp))
+            // The wordmark as the onboarding writes it: lower-case mono, plain white.
             Text(
-                buildAnnotatedString {
-                    withStyle(SpanStyle(color = OnSurface)) { append("Text") }
-                    withStyle(SpanStyle(color = FoxGreen)) { append("Fox") }
-                },
-                fontFamily = DmSans,
+                "textfox",
+                color = Color.White,
+                fontFamily = JetBrainsMono,
                 fontWeight = FontWeight.Medium,
-                fontSize = 40.sp,
+                fontSize = 36.sp,
                 modifier = Modifier.graphicsLayer {
                     alpha = word.value
                     translationY = (1f - word.value) * 16.dp.toPx()
