@@ -40,6 +40,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import com.vibeactions.data.AppSettings
 import com.vibeactions.scheduler.AiReplyActionReceiver
 import com.vibeactions.ui.common.AiConsentDialog
+import com.vibeactions.ui.common.BrandIntro
 import com.vibeactions.ui.common.ReportAiButton
 import com.vibeactions.ui.onboarding.OnboardingScreen
 import com.vibeactions.util.AiConsent
@@ -81,14 +82,24 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableDarkEdgeToEdge()
+        // BrandIntro's first frame repeats the system splash, so drop the splash at once instead of
+        // letting Android fade it out over the intro (which reads as a flicker).
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            splashScreen.setOnExitAnimationListener { it.remove() }
+        }
         // On recreation (process death, config change) Android hands back the original launch
         // intent; replaying it would yank the user back to the Log / approval dialog every time.
         if (savedInstanceState == null) {
             pendingApproval.value = readApproval(intent)
             pendingNav.value = intent.getStringExtra(EXTRA_NAV)
         }
+        // The brand intro plays on a plain cold start only: not on first run (onboarding has its own
+        // intro), not after recreation, and not when a notification opened the app for a task.
+        val playIntro = savedInstanceState == null && AppSettings.onboardingDone(this) &&
+            pendingApproval.value == null && pendingNav.value == null
         setContent {
             VibeActionsTheme {
+                var showIntro by rememberSaveable { mutableStateOf(playIntro) }
                 var showGuide by rememberSaveable { mutableStateOf(!AppSettings.onboardingDone(this)) }
                 if (showGuide) {
                     OnboardingScreen(onFinish = { showGuide = false })
@@ -99,6 +110,7 @@ class MainActivity : ComponentActivity() {
                         onShowGuide = { showGuide = true }
                     )
                 }
+                if (showIntro) BrandIntro(onFinished = { showIntro = false })
                 pendingApproval.value?.let { approval ->
                     AiApprovalDialog(approval, onDone = { pendingApproval.value = null })
                 }
@@ -106,7 +118,7 @@ class MainActivity : ComponentActivity() {
                 var askConsent by rememberSaveable {
                     mutableStateOf(hasGeminiKey(this) && !AiConsent.given(this))
                 }
-                if (askConsent && !showGuide && pendingApproval.value == null) {
+                if (askConsent && !showGuide && !showIntro && pendingApproval.value == null) {
                     AiConsentDialog(
                         onAccept = { AiConsent.give(this); askConsent = false },
                         onDecline = { askConsent = false }

@@ -360,17 +360,23 @@ fun SettingsScreen(
                     .align(Alignment.CenterHorizontally)
                     .clip(RoundedCornerShape(50))
                     .background(Color.Black.copy(alpha = 0.35f))
-                    .clickable {
-                        context.startActivity(
-                            Intent(Intent.ACTION_VIEW, Uri.parse("https://www.kodekid.app"))
-                        )
-                    }
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                    .padding(horizontal = 8.dp),
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("TextFox ${BuildConfig.VERSION_NAME} · ", color = OnSurfaceVariant, fontSize = 13.sp, textAlign = TextAlign.Center)
-                Text("kodekid.app", color = Primary, fontSize = 13.sp, textAlign = TextAlign.Center)
+                // Two links: the product site and the maker's site; the version between is plain text.
+                fun open(url: String) = context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+                Text(
+                    "TextFox", color = Primary, fontSize = 13.sp,
+                    modifier = Modifier.clickable { open("https://www.textfox.app") }
+                        .padding(start = 8.dp, top = 8.dp, bottom = 8.dp)
+                )
+                Text(" ${BuildConfig.VERSION_NAME} · ", color = OnSurfaceVariant, fontSize = 13.sp, textAlign = TextAlign.Center)
+                Text(
+                    "kodekid.app", color = Primary, fontSize = 13.sp,
+                    modifier = Modifier.clickable { open("https://www.kodekid.app") }
+                        .padding(end = 8.dp, top = 8.dp, bottom = 8.dp)
+                )
             }
         }
         // Above the keyboard if it is open, so "saved" / errors are never hidden behind it.
