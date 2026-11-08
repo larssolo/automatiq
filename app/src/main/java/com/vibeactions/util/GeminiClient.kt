@@ -13,6 +13,9 @@ const val DEFAULT_GEMINI_MODEL = "gemini-3.6-flash"
 /** Where users create a Gemini API key. */
 const val GEMINI_API_KEY_URL = "https://aistudio.google.com/apikey"
 
+/** The 49-second video guide: how to create the free key in Google AI Studio. */
+const val GEMINI_KEY_VIDEO_URL = "https://www.youtube.com/watch?v=ehTkQ3RNY6E"
+
 /** Models offered in the Settings picker — all normally free-tier eligible (some may show quota 0
  *  depending on the project/region, so the user can switch to one that works for their key). */
 val GEMINI_MODELS = listOf(
