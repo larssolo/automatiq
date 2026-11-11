@@ -448,3 +448,4 @@ footer{border-top:1px solid var(--line);padding-block:56px calc(36px + env(safe-
 .copybox{margin-top:24px;padding:20px;border-radius:18px;background:var(--ink-2);border:1px solid var(--line)}
 .copybox p{margin:0 0 14px;color:#CBD5CF;font-size:15.5px}
 @media (max-width:900px){.kit-grid{grid-template-columns:1fr}.kit-card.kit-wide{grid-column:auto}.swatches{grid-template-columns:1fr}}
+.nav-links a[aria-current="page"]{color:var(--green)}
