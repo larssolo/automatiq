@@ -4,11 +4,11 @@ title: TextFox — Privacy Policy
 
 # TextFox — Privacy Policy
 
-_Last updated: 4 November 2026_
+_Last updated: 11 November 2026_
 
 TextFox ("the app") is an automation app for Android, published by Lars Sohl, founder of kodekid.app ("we"). This policy explains what data the app uses, what leaves your phone, and why.
 
-**In short:** TextFox works on your phone. There is no account, no server of ours that stores your messages, no ads and no analytics. Data leaves your phone only in cases you set up yourself: when you use an **AI feature** (sent to Google's Gemini API with your own key), when you **report an AI-written text** to us, and when a macro **calls a web address** you entered.
+**In short:** TextFox works on your phone. There is no account, no server of ours that stores your messages, no ads and no analytics. Data leaves your phone only in cases you set up yourself: when you use an **AI feature** (sent to Google's Gemini API with your own key), when you **report an AI-written text** to us, and when a macro **calls a web address** you entered. If you buy TextFox, the purchase is handled by **Google Play**; we never see your payment details.
 
 ## 1. Data the app uses on your phone
 
@@ -23,6 +23,7 @@ To do its job, the app reads and stores the following **only on your device**:
 | Bluetooth and Wi-Fi state, charging state | For device-state triggers (e.g. "when my car's Bluetooth connects"). |
 | Sound mode and Do Not Disturb access | For the "change sound mode" action, which switches your phone to Normal, Vibrate, Silent or Do Not Disturb when a macro runs. |
 | Notifications, exact alarms, battery-optimisation exemption | So scheduled messages are sent on time and you can see/approve what was sent. |
+| Free-trial start date and whether TextFox is unlocked | To count the 30-day free trial and remember a purchase. |
 
 None of this is sent to us.
 
@@ -56,7 +57,13 @@ No phone numbers, contact names or incoming messages are included, and no identi
 
 If you create a macro with the **"call a web address"** action, the app sends a request to the URL you entered — including any text you wrote for it — when the macro runs. It goes directly from your phone to that address; we never receive it. What happens to it there is up to whoever runs that address (for example your own smart-home system).
 
-### 2.4 Location and device triggers (only in the separately distributed "full" version)
+### 2.4 Purchases — Google Play
+
+TextFox is free for 30 days. After that, a one-time in-app purchase unlocks it. The purchase is made and paid for entirely through **Google Play**, under [Google Play's Terms of Service](https://play.google.com/about/play-terms/) and [Google's Privacy Policy](https://policies.google.com/privacy). We never receive your name, email address, card or other payment details.
+
+To check whether TextFox is unlocked, the app asks Google Play on your phone which in-app products your Google account owns. Google Play answers with a purchase record for TextFox (including a purchase token), which the app uses only to unlock itself and to confirm the purchase to Google Play. It is not sent to us. Like every app on Google Play, we get Google Play's sales reports and order records, which we use only for accounting, refunds and support.
+
+### 2.5 Location and device triggers (only in the separately distributed "full" version)
 
 The version of TextFox on Google Play does **not** use location, Bluetooth or Wi-Fi triggers. A separately distributed version offers a location trigger; there, the place you set and your location are processed on your device by Google Play services geofencing and are not sent to us.
 

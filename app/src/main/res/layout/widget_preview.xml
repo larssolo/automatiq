@@ -6,20 +6,16 @@
     android:orientation="vertical" android:gravity="center"
     android:padding="6dp">
 
-    <FrameLayout android:layout_width="46dp" android:layout_height="46dp">
-        <ImageView android:layout_width="40dp" android:layout_height="40dp"
+    <FrameLayout android:layout_width="44dp" android:layout_height="44dp">
+        <ImageView android:layout_width="44dp" android:layout_height="44dp"
             android:layout_gravity="center"
             android:src="@drawable/widget_compact_background"
-            android:tint="#00E676"
+            android:tint="#00C853"
             android:contentDescription="@null" />
-        <ImageView android:layout_width="18dp" android:layout_height="18dp"
+        <ImageView android:layout_width="28dp" android:layout_height="28dp"
             android:layout_gravity="center"
-            android:src="@drawable/ic_send"
+            android:src="@drawable/ic_stat_textfox"
             android:tint="#000000"
-            android:contentDescription="@null" />
-        <ImageView android:layout_width="17dp" android:layout_height="17dp"
-            android:layout_gravity="bottom|end"
-            android:src="@drawable/widget_fox_badge"
             android:contentDescription="@null" />
     </FrameLayout>
 
