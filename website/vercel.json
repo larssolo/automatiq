@@ -93,6 +93,16 @@
       "source": "/404.html",
       "destination": "/404",
       "permanent": false
+    },
+    {
+      "source": "/creators.html",
+      "destination": "/creators",
+      "permanent": true
+    },
+    {
+      "source": "/da/influencere.html",
+      "destination": "/da/influencere",
+      "permanent": true
     }
   ],
   "headers": [
@@ -200,6 +210,14 @@
     {
       "source": "/da/sitemap",
       "destination": "/da/sitemap.html"
+    },
+    {
+      "source": "/creators",
+      "destination": "/creators.html"
+    },
+    {
+      "source": "/da/influencere",
+      "destination": "/da/influencere.html"
     }
   ]
 }

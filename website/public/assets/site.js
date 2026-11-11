@@ -26,6 +26,13 @@
     b.classList.add('copied'); setTimeout(() => { label.textContent = b.dataset.label; b.classList.remove('copied'); }, 2200);
   }));
 
+  // copy a block of text (creators page)
+  document.querySelectorAll('[data-copy-from]').forEach(b => b.addEventListener('click', async () => {
+    const label = b.querySelector('span'), text = document.getElementById(b.dataset.copyFrom).textContent;
+    try { await navigator.clipboard.writeText(text); label.textContent = DA ? 'Kopieret ✓' : 'Copied ✓'; } catch { return; }
+    b.classList.add('copied'); setTimeout(() => { label.textContent = b.dataset.label; b.classList.remove('copied'); }, 2200);
+  }));
+
   // film: our play button starts it with sound; native controls take over after that
   const film = $('#filmVideo');
   if (film) {

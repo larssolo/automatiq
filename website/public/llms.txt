@@ -10,12 +10,13 @@ Maker: Lars Sohl (Denmark), founder of kodekid.app, klokly.app and larssohl.dk �
 - [Auto-reply to text messages](https://www.textfox.app/auto-reply-sms): sender and keyword filters, quiet hours, fixed or AI-written replies
 - [Missed-call text-back](https://www.textfox.app/missed-call-text-back): texts callers after a missed or declined call, optional caller filter
 - [One-tap text widget](https://www.textfox.app/one-tap-text-widget): a home-screen widget per macro, one tap sends a ready-made text to one or many people
+- [For creators](https://www.textfox.app/creators): a free promo code that unlocks TextFox for good for people making videos, reviews or posts about it, plus a press kit with films, logos, screenshots and copy
 - [About the maker](https://www.textfox.app/about): Lars Sohl, Danish graphic designer, photographer and creative coder; founder of kodekid.app, klokly.app and larssohl.dk
 - [Privacy policy](https://www.textfox.app/privacy)
 
 ## Dansk
 - [TextFox på dansk](https://www.textfox.app/da): forside på dansk
-- [Planlagte sms'er](https://www.textfox.app/da/planlagte-sms) · [Autosvar](https://www.textfox.app/da/autosvar-sms) · [Sms ved ubesvaret opkald](https://www.textfox.app/da/sms-ved-ubesvaret-opkald) · [Sms med ét tryk](https://www.textfox.app/da/sms-med-et-tryk) · [Om skaberen](https://www.textfox.app/da/om)
+- [Planlagte sms'er](https://www.textfox.app/da/planlagte-sms) · [Autosvar](https://www.textfox.app/da/autosvar-sms) · [Sms ved ubesvaret opkald](https://www.textfox.app/da/sms-ved-ubesvaret-opkald) · [Sms med ét tryk](https://www.textfox.app/da/sms-med-et-tryk) · [Til influencere](https://www.textfox.app/da/influencere) · [Om skaberen](https://www.textfox.app/da/om)
 
 ## Key facts
 - Triggers: schedule, one tap (widget), incoming SMS (sender/keyword), missed call
