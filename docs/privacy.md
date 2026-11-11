@@ -99,4 +99,4 @@ textfox.app sets no cookies and uses no analytics, ads or third-party scripts. F
 
 ## 9. Contact
 
-Lars Sohl, founder of kodekid.app — hello@larssohl.dk
+Lars Sohl, founder of kodekid.app — hello@textfox.app

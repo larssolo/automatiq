@@ -9,7 +9,7 @@ Udkast til alt, der skal udfyldes i Play Console for `app.kodekid.automatiq`. Te
 ## 0. Før du starter
 
 - [x] **Privatlivspolitik online.** Online på `https://www.textfox.app/privacy`. Siden bygges fra `docs/privacy.md` (`python3 website/build.py`), så ret kun den fil. Den gamle kopi på `https://larssolo.github.io/automatiq-privacy/` skal pege hertil eller fjernes.
-- [x] Pladsholderne i `docs/privacy.md` er udfyldt (Lars Sohl, founder of kodekid.app · hello@larssohl.dk).
+- [x] Pladsholderne i `docs/privacy.md` er udfyldt (Lars Sohl, founder of kodekid.app · hello@textfox.app).
 - [x] Rapporter slettes senest efter 12 måneder (besluttet). Husk oprydning i Neon: `DELETE FROM ai_reports WHERE created_at < now() - interval '12 months'`.
 - [ ] Upload-nøglen er sikkerhedskopieret (`~/.android/automatiq-upload.jks` + `keystore.properties`).
 - [ ] Byg: `./gradlew bundlePlayRelease` → `app/build/outputs/bundle/playRelease/app-play-release.aab`.
@@ -77,7 +77,7 @@ Your macros, contacts and messages stay on your phone. Data only leaves it when 
 - [x] Feature graphic 1024×500: `store/feature-1024x500.png`
 - [x] 5 telefon-skærmbilleder 1080×1920: `store/screenshots/01-…05-*.jpg`
 
-**Kategori:** Tools · **Kontakt-e-mail:** `hello@larssohl.dk` · **Privatlivspolitik:** URL fra afsnit 0.
+**Kategori:** Tools · **Kontakt-e-mail:** `hello@textfox.app` · **Privatlivspolitik:** URL fra afsnit 0.
 
 ---
 

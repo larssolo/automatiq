@@ -19,7 +19,7 @@ SITE = "https://www.textfox.app"
 PLAY_URL = "https://play.google.com/apps/testing/app.kodekid.automatiq"  # swap for the production listing at launch
 CTA_NOTE = "Early access on Google Play · 30 days free · Android 8.0+"
 CTA_NOTE_DA = "Tidlig adgang på Google Play · 30 dage gratis · Android 8.0+"
-CONTACT = "hello@larssohl.dk"
+CONTACT = "hello@textfox.app"
 PUBLISHER = "kodekid.app"
 TODAY = datetime.date.today().isoformat()
 
@@ -42,7 +42,7 @@ def abs_url(path):
 
 T = {
     "en": {"locale": "en_US", "home": "/", "skip": "Skip to content", "home_aria": "TextFox home",
-           "nav": ["A day", "Features", "AI", "Privacy", "FAQ"], "get_app": "Get the app", "play_small": "Get it on",
+           "nav": ["A day", "Features", "AI", "Privacy", "FAQ"], "nav_creators": "Creators", "get_app": "Get the app", "play_small": "Get it on",
            "cta_note": CTA_NOTE,
            "f_tag": "Scheduled texts, auto-replies and missed-call text-back for Android. Set it up once. It just runs.",
            "f_features": "Features", "f_contact": "Contact", "about": "About the maker", "privacy": "Privacy policy", "made_by": "Made by",
@@ -57,7 +57,7 @@ T = {
            "og_alt": "TextFox: your phone texts for you. Scheduled texts, auto-replies and missed-call text-back for Android.",
            "switch": ("DA", "Dansk", "da")},
     "da": {"locale": "da_DK", "home": "/da", "skip": "Gå til indhold", "home_aria": "TextFox forside",
-           "nav": ["En dag", "Funktioner", "AI", "Privatliv", "FAQ"], "get_app": "Hent appen", "play_small": "Hent den på",
+           "nav": ["En dag", "Funktioner", "AI", "Privatliv", "FAQ"], "nav_creators": "Influencere", "get_app": "Hent appen", "play_small": "Hent den på",
            "cta_note": CTA_NOTE_DA,
            "f_tag": "Planlagte sms'er, autosvar og sms ved ubesvaret opkald til Android. Sæt det op én gang. Så kører det bare.",
            "f_features": "Funktioner", "f_contact": "Kontakt", "about": "Om skaberen", "privacy": "Privatlivspolitik (engelsk)", "made_by": "Lavet af",
@@ -342,6 +342,9 @@ def nav(path, lang):
     L = T[lang]
     p = "" if path == L["home"] else L["home"].rstrip("/") if lang == "da" else "/"
     links = "".join(f'<a href="{p}#{a}">{n}</a>' for a, n in zip(["day", "triggers", "ai", "privacy", "faq"], L["nav"]))
+    cr = L["pages"]["creators"]
+    current = ' aria-current="page"' if path == cr[0] else ""
+    links += f'<a href="{cr[0]}"{current}>{L["nav_creators"]}</a>'
     cp = counterpart(path)
     code, label, other = L["switch"]
     target = cp[1] if cp else T[other]["home"]
