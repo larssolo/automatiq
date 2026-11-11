@@ -19,6 +19,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -58,6 +59,7 @@ import com.vibeactions.ui.setup.SetupController
 import com.vibeactions.ui.setup.rememberSetupController
 import com.vibeactions.ui.theme.*
 import com.vibeactions.util.GEMINI_API_KEY_URL
+import com.vibeactions.util.GEMINI_KEY_VIDEO_URL
 import com.vibeactions.util.geminiGenerateWithFallback
 import com.vibeactions.util.resolveGeminiModel
 import kotlinx.coroutines.delay
@@ -423,6 +425,19 @@ private fun AiPage(
         "Let Google Gemini write auto-replies and fresh variations of your scheduled texts. " +
             "It needs your own free API key — takes about a minute."
     )
+    Spacer(Modifier.height(12.dp))
+    // Shown before the steps: watching first means the user knows what AI Studio looks like
+    // before they leave the app.
+    OutlinedButton(
+        onClick = { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(GEMINI_KEY_VIDEO_URL))) },
+        border = BorderStroke(1.dp, Teal.copy(alpha = 0.5f)),
+        colors = ButtonDefaults.outlinedButtonColors(contentColor = Teal),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Icon(Icons.Default.PlayCircle, null, modifier = Modifier.size(18.dp))
+        Spacer(Modifier.width(8.dp))
+        Text("Watch how — 49 s video", fontFamily = DmSans)
+    }
     Spacer(Modifier.height(16.dp))
 
     Step(1, "Open Google AI Studio and sign in with your Google account.")

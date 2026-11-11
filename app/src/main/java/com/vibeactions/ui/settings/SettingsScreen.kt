@@ -7,6 +7,7 @@ import com.vibeactions.R
 import com.vibeactions.widget.MacroWidgetProvider
 import com.vibeactions.widget.MacroWidgetConfigActivity
 import androidx.compose.material.icons.filled.Widgets
+import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.filled.Add
 import android.content.Context
 import android.content.ComponentName
@@ -72,6 +73,7 @@ import com.vibeactions.ui.common.BackgroundSetting
 import com.vibeactions.ui.common.rememberAiConsentGate
 import com.vibeactions.ui.setup.isXiaomi
 import com.vibeactions.util.GEMINI_API_KEY_URL
+import com.vibeactions.util.GEMINI_KEY_VIDEO_URL
 import com.vibeactions.util.GEMINI_MODELS
 import com.vibeactions.util.formatMinuteOfDay
 import com.vibeactions.util.geminiGenerate
@@ -230,6 +232,10 @@ fun SettingsScreen(
                         Icons.AutoMirrored.Filled.OpenInNew, "Get a free API key",
                         "Google AI Studio: sign in → \"Create API key\" → copy it and paste it above."
                     ) { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(GEMINI_API_KEY_URL))) }
+                    NavRow(
+                        Icons.Default.PlayCircle, "Watch how",
+                        "A 49-second video that walks you through getting the key."
+                    ) { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(GEMINI_KEY_VIDEO_URL))) }
                 }
                 OutlinedTextField(
                     value = systemPrompt,
