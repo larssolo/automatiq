@@ -1,6 +1,6 @@
 # TextFox
 
-> TextFox is a free Android app (Android 8.0+) that sends text messages (SMS) automatically: on a schedule, as a reply to incoming texts, after a missed or declined call, or with one tap on a home-screen widget. It runs on the phone, with no account, no ads and no analytics. Optional AI features use the user's own free Google Gemini API key.
+> TextFox is an Android app (Android 8.0+) that sends text messages (SMS) automatically: on a schedule, as a reply to incoming texts, after a missed or declined call, or with one tap on a home-screen widget. It runs on the phone, with no account, no ads and no analytics. Optional AI features use the user's own free Google Gemini API key.
 
 Maker: Lars Sohl (Denmark), founder of kodekid.app, klokly.app and larssohl.dk · Publisher: kodekid.app · Contact: hello@larssohl.dk · Google Play: https://play.google.com/apps/testing/app.kodekid.automatiq
 
@@ -22,11 +22,11 @@ Maker: Lars Sohl (Denmark), founder of kodekid.app, klokly.app and larssohl.dk �
 - Actions: send an SMS to one or many recipients or reply to the sender/caller, change sound mode or Do Not Disturb, show a reminder notification, call a web address
 - Reliability: exact alarms plus a backup scheduler; re-armed after restarts and updates; delivery receipts and a full log
 - Not supported: iPhone, WhatsApp and other chat apps (SMS only)
-- Price: free, no ads, no subscription; carrier SMS rates apply
+- Price: free for 30 days, then a one-time in-app purchase of 7 USD on Google Play; no ads, no subscription; carrier SMS rates apply
 
 ## FAQ
-- What is TextFox? TextFox is a free Android app that sends text messages (SMS) for you automatically. You create a macro, which is a trigger plus a message, and TextFox sends it on a schedule, as a reply to an incoming text, after a missed call, or when you tap a home-screen widget.
-- Is TextFox free? Yes. TextFox is free, with no ads and no subscription. The optional AI features use your own free Google Gemini API key. Texts are sent through your normal mobile plan, so your carrier's usual SMS rates apply.
+- What is TextFox? TextFox is an Android app that sends text messages (SMS) for you automatically. You create a macro, which is a trigger plus a message, and TextFox sends it on a schedule, as a reply to an incoming text, after a missed call, or when you tap a home-screen widget.
+- What does TextFox cost? The first 30 days are free, with every feature. After that, a one-time purchase of $7 on Google Play keeps your macros running. There is no subscription and no ads, and the purchase follows your Google account to a new phone. The optional AI features use your own free Google Gemini API key. Texts are sent through your normal mobile plan, so your carrier's usual SMS rates apply.
 - Do I need an account? No. There is no sign-up and no login. Install the app, allow the permissions the guided setup asks for, and create your first macro.
 - Does TextFox work on iPhone? No. TextFox is for Android 8.0 and newer. iPhones don't allow apps to send text messages automatically in the background.
 - Can TextFox reply to WhatsApp messages? No. TextFox sends and replies to regular SMS text messages only.

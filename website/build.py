@@ -17,8 +17,8 @@ SITE = "https://www.textfox.app"
 
 # ---- one place to change launch details ------------------------------------
 PLAY_URL = "https://play.google.com/apps/testing/app.kodekid.automatiq"  # swap for the production listing at launch
-CTA_NOTE = "Early access on Google Play · Free · Android 8.0+"
-CTA_NOTE_DA = "Tidlig adgang på Google Play · Gratis · Android 8.0+"
+CTA_NOTE = "Early access on Google Play · 30 days free · Android 8.0+"
+CTA_NOTE_DA = "Tidlig adgang på Google Play · 30 dage gratis · Android 8.0+"
 CONTACT = "hello@larssohl.dk"
 PUBLISHER = "kodekid.app"
 TODAY = datetime.date.today().isoformat()
@@ -52,8 +52,8 @@ T = {
            "privacy_href": "/privacy", "crumb_root": "TextFox",
            "share_text": "TextFox sends your texts for you: scheduled SMS, auto-replies and missed-call text-back for Android.",
            "share_subject": "Have a look at TextFox", "share_h": "Know someone who's always running late?",
-           "share_p": "Send them TextFox. It's free, and it might save them a lot of typing.", "share": "Share", "email": "Email", "copy": "Copy link",
-           "final_h": "Set it up once.<br>It just runs.", "final_p": "Free for Android 8.0 and newer. Runs on your phone: no account, no ads, no tracking.",
+           "share_p": "Send them TextFox. The first 30 days are free, and it might save them a lot of typing.", "share": "Share", "email": "Email", "copy": "Copy link",
+           "final_h": "Set it up once.<br>It just runs.", "final_p": "For Android 8.0 and newer. Free for 30 days, then a one-time $7. Runs on your phone: no account, no ads, no tracking.",
            "og_alt": "TextFox: your phone texts for you. Scheduled texts, auto-replies and missed-call text-back for Android.",
            "switch": ("DA", "Dansk", "da")},
     "da": {"locale": "da_DK", "home": "/da", "skip": "Gå til indhold", "home_aria": "TextFox forside",
@@ -67,16 +67,16 @@ T = {
            "privacy_href": "/privacy", "crumb_root": "TextFox",
            "share_text": "TextFox sender dine sms'er for dig: planlagte sms'er, autosvar og sms ved ubesvaret opkald til Android.",
            "share_subject": "Kig lige på TextFox", "share_h": "Kender du en, der altid kommer for sent?",
-           "share_p": "Send dem TextFox. Den er gratis og kan spare dem for en masse tasten.", "share": "Del", "email": "E-mail", "copy": "Kopiér link",
-           "final_h": "Sæt det op én gang.<br>Så kører det bare.", "final_p": "Gratis til Android 8.0 og nyere. Kører på din telefon: ingen konto, ingen reklamer, ingen sporing.",
+           "share_p": "Send dem TextFox. De første 30 dage er gratis, og den kan spare dem for en masse tasten.", "share": "Del", "email": "E-mail", "copy": "Kopiér link",
+           "final_h": "Sæt det op én gang.<br>Så kører det bare.", "final_p": "Til Android 8.0 og nyere. Gratis i 30 dage, derefter et engangskøb på 7 USD. Kører på din telefon: ingen konto, ingen reklamer, ingen sporing.",
            "og_alt": "TextFox: din telefon sender sms'er for dig. Planlagte sms'er, autosvar og sms ved ubesvaret opkald til Android.",
            "switch": ("EN", "English", "en")},
 }
 
 FAQ = {
     "home": [
-        ("What is TextFox?", "TextFox is a free Android app that sends text messages (SMS) for you automatically. You create a macro, which is a trigger plus a message, and TextFox sends it on a schedule, as a reply to an incoming text, after a missed call, or when you tap a home-screen widget."),
-        ("Is TextFox free?", "Yes. TextFox is free, with no ads and no subscription. The optional AI features use your own free Google Gemini API key. Texts are sent through your normal mobile plan, so your carrier's usual SMS rates apply."),
+        ("What is TextFox?", "TextFox is an Android app that sends text messages (SMS) for you automatically. You create a macro, which is a trigger plus a message, and TextFox sends it on a schedule, as a reply to an incoming text, after a missed call, or when you tap a home-screen widget."),
+        ("What does TextFox cost?", "The first 30 days are free, with every feature. After that, a one-time purchase of $7 on Google Play keeps your macros running. There is no subscription and no ads, and the purchase follows your Google account to a new phone. The optional AI features use your own free Google Gemini API key. Texts are sent through your normal mobile plan, so your carrier's usual SMS rates apply."),
         ("Do I need an account?", "No. There is no sign-up and no login. Install the app, allow the permissions the guided setup asks for, and create your first macro."),
         ("Does TextFox work on iPhone?", "No. TextFox is for Android 8.0 and newer. iPhones don't allow apps to send text messages automatically in the background."),
         ("Can TextFox reply to WhatsApp messages?", "No. TextFox sends and replies to regular SMS text messages only."),
@@ -112,8 +112,8 @@ FAQ = {
 
 FAQ_DA = {
     "home": [
-        ("Hvad er TextFox?", "TextFox er en gratis Android-app, der sender sms'er for dig automatisk. Du laver en makro, som er en udløser plus en besked, og TextFox sender den på et fast tidspunkt, som svar på en indgående sms, efter et ubesvaret opkald, eller når du trykker på en widget på hjemmeskærmen."),
-        ("Er TextFox gratis?", "Ja. TextFox er gratis, uden reklamer og uden abonnement. De valgfrie AI-funktioner bruger din egen gratis Google Gemini-nøgle. Sms'erne sendes via dit almindelige mobilabonnement, så dit teleselskabs normale sms-priser gælder."),
+        ("Hvad er TextFox?", "TextFox er en Android-app, der sender sms'er for dig automatisk. Du laver en makro, som er en udløser plus en besked, og TextFox sender den på et fast tidspunkt, som svar på en indgående sms, efter et ubesvaret opkald, eller når du trykker på en widget på hjemmeskærmen."),
+        ("Hvad koster TextFox?", "De første 30 dage er gratis, med alle funktioner. Derefter holder et engangskøb på 7 USD på Google Play dine makroer kørende. Der er intet abonnement og ingen reklamer, og købet følger din Google-konto til en ny telefon. De valgfrie AI-funktioner bruger din egen gratis Google Gemini-nøgle. Sms'erne sendes via dit almindelige mobilabonnement, så dit teleselskabs normale sms-priser gælder."),
         ("Skal jeg oprette en konto?", "Nej. Der er ingen tilmelding og intet login. Installér appen, giv de tilladelser, den guidede opsætning beder om, og lav din første makro."),
         ("Virker TextFox på iPhone?", "Nej. TextFox er til Android 8.0 og nyere. iPhone tillader ikke apps at sende sms'er automatisk i baggrunden."),
         ("Kan TextFox svare på WhatsApp-beskeder?", "Nej. TextFox sender og svarer kun på almindelige sms'er."),
@@ -198,11 +198,11 @@ ORG = {"@type": "Organization", "@id": SITE + "/#org", "name": "TextFox", "url":
        "logo": SITE + "/icon-512.png", "email": CONTACT, "founder": {"@id": SITE + "/about#lars"},
        "parentOrganization": {"@type": "Organization", "name": PUBLISHER, "url": "https://www.kodekid.app", "founder": {"@id": SITE + "/about#lars"}}}
 APP = {"@type": "MobileApplication", "@id": SITE + "/#app", "name": "TextFox", "url": SITE + "/",
-       "description": "TextFox is a free Android app that sends text messages automatically: scheduled SMS, auto-replies to incoming texts, missed-call text-back and one-tap widget messages, with optional AI-written variations using Google Gemini. Runs on the phone, with no account and no ads.",
+       "description": "TextFox is an Android app that sends text messages automatically: scheduled SMS, auto-replies to incoming texts, missed-call text-back and one-tap widget messages, with optional AI-written variations using Google Gemini. Runs on the phone, with no account and no ads. Free for 30 days, then a one-time purchase.",
        "operatingSystem": "Android 8.0 or later", "applicationCategory": "UtilitiesApplication", "applicationSubCategory": "SMS automation",
        "installUrl": PLAY_URL, "downloadUrl": PLAY_URL, "image": SITE + "/icon-512.png",
        "screenshot": [SITE + f"/media/screen-{s}.webp" for s in ("autopilot", "macros", "ai-variation", "phone-setup", "log")],
-       "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"},
+       "offers": {"@type": "Offer", "price": "7.00", "priceCurrency": "USD", "description": "30-day free trial, then a one-time in-app purchase"},
        "featureList": ["Scheduled text messages by time, weekday, every 1–4 weeks, one date or random days", "Auto-reply to incoming SMS by sender or keyword, with quiet hours",
                        "Missed-call and declined-call text-back", "One-tap home-screen widgets", "Multiple recipients with personalised names",
                        "Optional AI variations and AI replies with your own Google Gemini key", "Delivery receipts and a full log", "Change sound mode, show a reminder or call a web address"],
@@ -523,7 +523,7 @@ def main():
     faq_txt = "\n".join(f"- {q} {a}" for q, a in FAQ["home"])
     (PUB / "llms.txt").write_text(f"""# TextFox
 
-> TextFox is a free Android app (Android 8.0+) that sends text messages (SMS) automatically: on a schedule, as a reply to incoming texts, after a missed or declined call, or with one tap on a home-screen widget. It runs on the phone, with no account, no ads and no analytics. Optional AI features use the user's own free Google Gemini API key.
+> TextFox is an Android app (Android 8.0+) that sends text messages (SMS) automatically: on a schedule, as a reply to incoming texts, after a missed or declined call, or with one tap on a home-screen widget. It runs on the phone, with no account, no ads and no analytics. Optional AI features use the user's own free Google Gemini API key.
 
 Maker: Lars Sohl (Denmark), founder of kodekid.app, klokly.app and larssohl.dk · Publisher: {PUBLISHER} · Contact: {CONTACT} · Google Play: {PLAY_URL}
 
@@ -545,7 +545,7 @@ Maker: Lars Sohl (Denmark), founder of kodekid.app, klokly.app and larssohl.dk �
 - Actions: send an SMS to one or many recipients or reply to the sender/caller, change sound mode or Do Not Disturb, show a reminder notification, call a web address
 - Reliability: exact alarms plus a backup scheduler; re-armed after restarts and updates; delivery receipts and a full log
 - Not supported: iPhone, WhatsApp and other chat apps (SMS only)
-- Price: free, no ads, no subscription; carrier SMS rates apply
+- Price: free for 30 days, then a one-time in-app purchase of 7 USD on Google Play; no ads, no subscription; carrier SMS rates apply
 
 ## FAQ
 {faq_txt}
