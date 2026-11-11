@@ -6,6 +6,7 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.OutOfQuotaPolicy
 import androidx.work.WorkManager
 import androidx.work.workDataOf
+import com.vibeactions.billing.License
 import com.vibeactions.data.repository.MacroLogRepository
 import com.vibeactions.data.repository.MacroRepository
 import com.vibeactions.domain.startOfDayMillis
@@ -59,6 +60,13 @@ class MacroFirer @Inject constructor(
         val macro = macroRepo.getById(macroId) ?: return null
         if (!macro.enabled) return null
         val now = System.currentTimeMillis()
+        // Trial over and not bought: nothing is sent. A scheduled fire still claims its day (so the
+        // catch-up worker doesn't log it again every run) and re-arms, so schedules simply resume
+        // once the app is unlocked.
+        if (!License.canRun(context)) {
+            if (enforceOncePerDay && !macroRepo.tryClaimScheduledFire(macro.id, now, startOfDayMillis(now))) return null
+            return blockedByTrial(macro, now)
+        }
         // Sound / reminder / webhook macros don't send SMS: run the action instead. Reply triggers
         // always answer by SMS, so they never take this path.
         if (macro.actionType != ActionType.SMS && overrideRecipient == null) {
@@ -149,6 +157,24 @@ class MacroFirer @Inject constructor(
         return FireResult(finalStatus, finalError)
     }
 
+    /** Logs a fire the expired trial stopped, so the Log shows what didn't go out, and tells the
+     *  user once. */
+    private suspend fun blockedByTrial(macro: Macro, now: Long): FireResult {
+        logRepo.add(
+            MacroLog(
+                macroId = macro.id, triggeredAt = now, status = MacroStatus.FAILED,
+                messagePreview = "Not sent", errorMessage = TRIAL_ENDED
+            )
+        )
+        macroRepo.updateStatus(macro.id, now, MacroStatus.FAILED)
+        if (License.claimExpiredNotice(context)) notifications.notifyTrialEnded()
+        if (macro.triggerType == TriggerType.SCHEDULED && macro.repeatDaily) {
+            alarmScheduler.schedule(macro.copy(lastTriggeredAt = now, lastStatus = MacroStatus.FAILED))
+        }
+        widgets.refreshFor(macro.id)
+        return FireResult(MacroStatus.FAILED, TRIAL_ENDED)
+    }
+
     /** Runs a non-SMS action, logs it like a send, and keeps schedule and widgets in step. */
     private suspend fun runAction(macro: Macro, now: Long): FireResult {
         val result = runCatching { actionRunner.run(macro) }
@@ -197,3 +223,6 @@ class MacroFirer @Inject constructor(
 
 /** Outcome of a completed fire: the final status and, for failures, a short human-readable reason. */
 data class FireResult(val status: MacroStatus, val error: String?)
+
+/** Log/result message for a fire stopped because the free trial is over. */
+const val TRIAL_ENDED = "Free trial ended. Unlock TextFox to keep sending."

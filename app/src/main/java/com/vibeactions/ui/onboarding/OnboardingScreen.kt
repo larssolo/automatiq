@@ -48,6 +48,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.vibeactions.BuildConfig
+import com.vibeactions.billing.TRIAL_DAYS
 import com.vibeactions.data.AppSettings
 import com.vibeactions.ui.common.ProvideAmbientPulse
 import com.vibeactions.ui.common.StaticBackground
@@ -560,8 +561,10 @@ private fun DonePage(active: Boolean, smsOk: Boolean, permsOk: Boolean, aiState:
         (if (smsOk) "✓" else "!") + " sms access ......... " + if (smsOk) "granted" else "missing",
         (if (permsOk) "✓" else "·") + " background ......... " + if (permsOk) "reliable" else "partial",
         (if (aiState == "skipped") "·" else "✓") + " gemini ............. " + aiState,
+        // The trial, said up front: free for 30 days, then a one-time purchase.
+        if (BuildConfig.PAYWALL) "✓ trial .............. $TRIAL_DAYS days free" else null,
         "> system armed"
-    )
+    ).filterNotNull()
     var visible by remember { mutableIntStateOf(0) }
     LaunchedEffect(active) {
         if (!active) return@LaunchedEffect
@@ -595,7 +598,9 @@ private fun DonePage(active: Boolean, smsOk: Boolean, permsOk: Boolean, aiState:
     Spacer(Modifier.height(14.dp))
     Body(
         "Tap + on the next screen to build your first macro. " +
-            "You can replay this guide any time from Settings."
+            "You can replay this guide any time from Settings." +
+            if (BuildConfig.PAYWALL) "\n\nTextFox is free for $TRIAL_DAYS days. After that, a one-time " +
+                "purchase keeps your macros running. No subscription." else ""
     )
 }
 

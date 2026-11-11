@@ -37,11 +37,15 @@ android {
             buildConfigField("boolean", "LOCATION_TRIGGER", "false")
             // Charging/Bluetooth/Wi-Fi need a specialUse foreground service — kept out of Play.
             buildConfigField("boolean", "DEVICE_TRIGGERS", "false")
+            // 30-day free trial, then a one-time Play purchase (billing/License.kt).
+            buildConfigField("boolean", "PAYWALL", "true")
         }
         create("full") {
             dimension = "dist"
             buildConfigField("boolean", "LOCATION_TRIGGER", "true")
             buildConfigField("boolean", "DEVICE_TRIGGERS", "true")
+            // The sideloaded APK can't use Play Billing, so it stays free.
+            buildConfigField("boolean", "PAYWALL", "false")
         }
     }
 
@@ -107,6 +111,7 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.reorderable)
     implementation(libs.play.services.location)
+    implementation(libs.billing)
     debugImplementation(libs.compose.ui.tooling)
     testImplementation(libs.junit)
     testImplementation(kotlin("test"))

@@ -1,6 +1,7 @@
 package com.vibeactions.scheduler
 
 import android.content.Context
+import com.vibeactions.billing.License
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.OutOfQuotaPolicy
 import androidx.work.WorkManager
@@ -34,7 +35,9 @@ class IncomingReplyRouter @Inject constructor(
             .filter { incomingMatches(it, sender, body) }
             .forEach { macro ->
                 if (!claimThrottle(macro.id, sender, now)) return@forEach
-                if (macro.aiReplyEnabled) {
+                // An expired trial sends nothing, so don't spend the user's Gemini quota writing
+                // a reply: fire() logs the blocked send instead.
+                if (macro.aiReplyEnabled && License.canRun(context)) {
                     // The event id identifies THIS incoming SMS: a WorkManager retry re-carries it
                     // (dedup works), while a later identical message mints a new id (and is
                     // answered again).
