@@ -8,6 +8,7 @@ import android.content.Context
 import android.content.Intent
 import androidx.core.app.NotificationCompat
 import com.vibeactions.R
+import com.vibeactions.billing.LicenseStatus
 import com.vibeactions.domain.model.Macro
 import com.vibeactions.domain.model.MacroStatus
 import com.vibeactions.domain.model.TriggerType
@@ -76,6 +77,41 @@ class MacroNotificationManager @Inject constructor(
             .addAction(0, "View Log", openLogIntent())
             .build()
         manager.notify(macro.id.hashCode(), n)
+    }
+
+    /** A few days before the free trial ends. */
+    fun notifyTrialEnding(status: LicenseStatus) {
+        val days = (status as? LicenseStatus.Trial)?.daysLeft ?: return
+        postTrial(
+            if (days == 1) "Your TextFox trial ends tomorrow" else "$days days left of your TextFox trial",
+            "Unlock TextFox once to keep your macros running. No subscription."
+        )
+    }
+
+    /** The trial is over: macros have stopped sending. */
+    fun notifyTrialEnded() = postTrial(
+        "Your macros are paused",
+        "TextFox's free trial has ended. Unlock it once to keep your macros running. Nothing is lost."
+    )
+
+    private fun postTrial(title: String, text: String) {
+        val intent = Intent(context, com.vibeactions.ui.MainActivity::class.java).apply {
+            putExtra("nav", com.vibeactions.ui.MainActivity.NAV_UNLOCK)
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+        }
+        val pi = PendingIntent.getActivity(
+            context, 3, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        val n = NotificationCompat.Builder(context, CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_stat_textfox)
+            .setContentTitle(title)
+            .setContentText(text)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(text))
+            .setContentIntent(pi)
+            .addAction(0, "Unlock", pi)
+            .setAutoCancel(true)
+            .build()
+        manager.notify(TRIAL_NOTIFICATION_ID, n)
     }
 
     /**
@@ -281,5 +317,6 @@ class MacroNotificationManager @Inject constructor(
         const val CHANNEL_ID_AI = "macro_ai"
         const val CHANNEL_ID_AI_WORK = "macro_ai_work"
         const val CHANNEL_ID_REMINDER = "macro_reminders"
+        private const val TRIAL_NOTIFICATION_ID = 0x7E57F0C5
     }
 }

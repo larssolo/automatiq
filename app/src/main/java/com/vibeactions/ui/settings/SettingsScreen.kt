@@ -7,6 +7,11 @@ import com.vibeactions.R
 import com.vibeactions.widget.MacroWidgetProvider
 import com.vibeactions.widget.MacroWidgetConfigActivity
 import androidx.compose.material.icons.filled.Widgets
+import androidx.compose.ui.res.vectorResource
+import com.vibeactions.billing.License
+import com.vibeactions.billing.LicenseStatus
+import com.vibeactions.billing.TRIAL_DAYS
+import com.vibeactions.ui.common.unlockLabel
 import androidx.compose.material.icons.filled.Add
 import android.content.Context
 import android.content.ComponentName
@@ -60,6 +65,7 @@ import com.vibeactions.ui.common.ScreenHeader
 import com.vibeactions.ui.editor.EditorSection
 import com.vibeactions.ui.editor.Hint
 import com.vibeactions.ui.editor.SwitchRow
+import com.vibeactions.ui.theme.ErrorRed
 import com.vibeactions.ui.theme.FoxGreen
 import com.vibeactions.ui.theme.JetBrainsMono
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -84,7 +90,8 @@ fun SettingsScreen(
     vm: SettingsViewModel = hiltViewModel(),
     onOpenHealth: () -> Unit = {},
     onOpenSetup: () -> Unit = {},
-    onShowGuide: () -> Unit = {}
+    onShowGuide: () -> Unit = {},
+    onUnlock: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val snackbar = remember { SnackbarHostState() }
@@ -152,6 +159,10 @@ fun SettingsScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             ScreenHeader("settings")
+
+            // ── Licence: on top while there's something to do, at the bottom once bought ──────
+            val license by License.status.collectAsState()
+            if (license != LicenseStatus.Unlocked) LicenseSection(license, onUnlock)
 
             // ── Phone: the things that keep macros firing ─────────────────────────────────
             EditorSection(Icons.Default.PhoneAndroid, "PHONE", Primary) {
@@ -359,6 +370,8 @@ fun SettingsScreen(
                 }
             }
 
+            if (license == LicenseStatus.Unlocked && BuildConfig.PAYWALL) LicenseSection(license, onUnlock)
+
             // The sign-off: the fox over the version line.
             Icon(
                 painterResource(R.drawable.ic_stat_textfox), contentDescription = null, tint = FoxGreen,
@@ -472,6 +485,34 @@ private fun NavRow(icon: ImageVector, title: String, subtitle: String, onClick: 
             Hint(subtitle)
         }
         Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null, tint = OnSurfaceVariant)
+    }
+}
+
+/** Trial days left and the unlock button; a short thank-you once bought. */
+@Composable
+private fun LicenseSection(status: LicenseStatus, onUnlock: () -> Unit) {
+    val expired = status == LicenseStatus.Expired
+    EditorSection(ImageVector.vectorResource(R.drawable.ic_stat_textfox), "TEXTFOX", if (expired) ErrorRed else Primary, trailing = {
+        Text(
+            when (status) {
+                is LicenseStatus.Trial -> "Trial · ${status.daysLeft} ${if (status.daysLeft == 1) "day" else "days"} left"
+                LicenseStatus.Expired -> "Trial ended"
+                LicenseStatus.Unlocked -> "Unlocked"
+            },
+            color = if (expired) ErrorRed else Primary,
+            style = MaterialTheme.typography.labelMedium
+        )
+    }) {
+        when (status) {
+            LicenseStatus.Unlocked -> Hint("Thank you for supporting TextFox. Every feature and future update is yours.")
+            else -> {
+                Hint(
+                    if (expired) "Your macros are paused. Unlock TextFox once and they start running again. Nothing is lost."
+                    else "Free for $TRIAL_DAYS days, then a one-time purchase keeps your macros running. No subscription."
+                )
+                Button(onClick = onUnlock, modifier = Modifier.fillMaxWidth()) { Text(unlockLabel()) }
+            }
+        }
     }
 }
 

@@ -10,6 +10,7 @@ import android.widget.Toast
 import com.vibeactions.data.repository.MacroRepository
 import com.vibeactions.domain.model.MacroStatus
 import com.vibeactions.scheduler.MacroFirer
+import com.vibeactions.scheduler.TRIAL_ENDED
 import com.vibeactions.util.aiVariationApplies
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
@@ -50,6 +51,7 @@ class WidgetTapReceiver : BroadcastReceiver() {
                             hasOverrideBody = false, hasOverrideRecipient = false
                         )
                     val msg = when {
+                        result?.error == TRIAL_ENDED -> "TextFox's free trial has ended. Open the app to unlock."
                         deferredToAi -> "Writing AI message: ${macro.name}…"
                         macro.lastStatus == MacroStatus.SUCCESS -> "Sent: ${macro.name}"
                         else -> "Failed: ${macro.name}"

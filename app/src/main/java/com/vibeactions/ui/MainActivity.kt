@@ -35,6 +35,16 @@ import androidx.core.content.pm.ShortcutInfoCompat
 import androidx.core.content.pm.ShortcutManagerCompat
 import androidx.core.graphics.drawable.IconCompat
 import com.vibeactions.R
+import android.widget.Toast
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import com.vibeactions.billing.BillingManager
+import com.vibeactions.billing.License
+import com.vibeactions.ui.common.LocalBilling
+import com.vibeactions.ui.common.TrialBanner
+import com.vibeactions.ui.common.UnlockSheet
+import javax.inject.Inject
+import kotlinx.coroutines.launch
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -82,6 +92,7 @@ class MainActivity : ComponentActivity() {
     private val pendingApproval = mutableStateOf<AiApproval?>(null)
     // Route a notification (e.g. a result's "View Log"/tap) asks us to open, consumed once by AppRoot.
     private val pendingNav = mutableStateOf<String?>(null)
+    @Inject lateinit var billing: BillingManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -92,6 +103,12 @@ class MainActivity : ComponentActivity() {
             splashScreen.setOnExitAnimationListener { it.remove() }
         }
         publishShortcuts()
+        // Purchase feedback ("unlocked", "pending", errors) from the billing flow.
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                billing.messages.collect { Toast.makeText(this@MainActivity, it, Toast.LENGTH_LONG).show() }
+            }
+        }
         // On recreation (process death, config change) Android hands back the original launch
         // intent; replaying it would yank the user back to the Log / approval dialog every time.
         if (savedInstanceState == null) {
@@ -103,6 +120,7 @@ class MainActivity : ComponentActivity() {
         val playIntro = savedInstanceState == null && AppSettings.onboardingDone(this) &&
             pendingApproval.value == null && pendingNav.value == null
         setContent {
+            CompositionLocalProvider(LocalBilling provides billing) {
             VibeActionsTheme {
                 var showIntro by rememberSaveable { mutableStateOf(playIntro) }
                 var showGuide by rememberSaveable { mutableStateOf(!AppSettings.onboardingDone(this)) }
@@ -130,7 +148,16 @@ class MainActivity : ComponentActivity() {
                     )
                 }
             }
+            }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Recount the trial and ask Play what this account owns (a purchase made on another
+        // phone, a pending payment that cleared, a refund).
+        License.refresh(this)
+        billing.refresh()
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -196,6 +223,8 @@ class MainActivity : ComponentActivity() {
         const val EXTRA_INCOMING = "incoming"
         /** EXTRA_NAV value that opens the list with an empty editor. */
         const val NAV_NEW_MACRO = "new_macro"
+        /** EXTRA_NAV value that opens the list with the unlock sheet (trial notifications). */
+        const val NAV_UNLOCK = "unlock"
     }
 }
 
@@ -315,12 +344,14 @@ private fun AppRoot(
     // A notification asked us to open a specific tab (e.g. the Log). Navigate once, then clear it so
     // it doesn't re-fire on recomposition.
     var openNewMacro by remember { mutableStateOf(false) }
+    var showUnlock by rememberSaveable { mutableStateOf(false) }
     LaunchedEffect(navTarget) {
         if (navTarget != null) {
-            if (navTarget == MainActivity.NAV_NEW_MACRO) {
-                navigateTab("list")
-                openNewMacro = true
-            } else navigateTab(navTarget)
+            when (navTarget) {
+                MainActivity.NAV_NEW_MACRO -> { navigateTab("list"); openNewMacro = true }
+                MainActivity.NAV_UNLOCK -> { navigateTab("list"); showUnlock = true }
+                else -> navigateTab(navTarget)
+            }
             onNavConsumed()
         }
     }
@@ -383,13 +414,17 @@ private fun AppRoot(
                     MacroListScreen(
                         openNewMacro = openNewMacro,
                         onNewMacroOpened = { openNewMacro = false },
+                        onRunLocked = { showUnlock = true },
                         banner = {
-                            if (missingSetup > 0) {
-                                PermissionBanner(
-                                    if (missingSetup == 1) "1 setup step left before your macros run reliably."
-                                    else "$missingSetup setup steps left before your macros run reliably.",
-                                    "Fix"
-                                ) { nav.navigate("setup") { launchSingleTop = true } }
+                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                TrialBanner { showUnlock = true }
+                                if (missingSetup > 0) {
+                                    PermissionBanner(
+                                        if (missingSetup == 1) "1 setup step left before your macros run reliably."
+                                        else "$missingSetup setup steps left before your macros run reliably.",
+                                        "Fix"
+                                    ) { nav.navigate("setup") { launchSingleTop = true } }
+                                }
                             }
                         }
                     )
@@ -399,7 +434,8 @@ private fun AppRoot(
                     SettingsScreen(
                         onOpenHealth = { nav.navigate("health") },
                         onOpenSetup = { nav.navigate("setup") },
-                        onShowGuide = onShowGuide
+                        onShowGuide = onShowGuide,
+                        onUnlock = { showUnlock = true }
                     )
                 }
                 composable("health") { HealthScreen() }
@@ -407,5 +443,6 @@ private fun AppRoot(
             }
         }
       }
+      if (showUnlock) UnlockSheet(onDismiss = { showUnlock = false })
     }
 }

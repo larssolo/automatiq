@@ -58,6 +58,7 @@ import com.vibeactions.util.aiVariationApplies
 import com.vibeactions.util.folderSwitchOn
 import com.vibeactions.util.hideMembers
 import kotlinx.coroutines.launch
+import com.vibeactions.billing.License
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyGridState
 
@@ -68,6 +69,8 @@ fun MacroListScreen(
     /** Set by the "New macro" launcher shortcut: open an empty editor once. */
     openNewMacro: Boolean = false,
     onNewMacroOpened: () -> Unit = {},
+    /** A manual run while the trial is over: show the unlock sheet instead of a failed send. */
+    onRunLocked: () -> Unit = {},
     vm: MacroListViewModel = hiltViewModel()
 ) {
     val macros by vm.macros.collectAsStateWithLifecycle()
@@ -75,6 +78,7 @@ fun MacroListScreen(
     val folders by vm.folders.collectAsStateWithLifecycle()
     val snackbar = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+    val context = androidx.compose.ui.platform.LocalContext.current
 
     var rows by remember { mutableStateOf(vmRows) }
     var draggedKey by remember { mutableStateOf<String?>(null) }
@@ -148,6 +152,7 @@ fun MacroListScreen(
         }
     }
     fun sendMacro(macro: Macro) {
+        if (!License.canRun(context)) { onRunLocked(); return }
         vm.onTrigger(macro)
         // An AI-variation macro doesn't send on the spot: Gemini writes the text first, and in
         // APPROVE mode it waits for the user — "On its way" would be a false promise.

@@ -4,11 +4,13 @@ import android.content.Context
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
+import com.vibeactions.billing.License
 import com.vibeactions.data.AppSettings
 import com.vibeactions.data.repository.MacroLogRepository
 import com.vibeactions.data.repository.MacroRepository
 import com.vibeactions.domain.alreadySentToday
 import com.vibeactions.domain.model.randomDays
+import com.vibeactions.notifications.MacroNotificationManager
 import com.vibeactions.util.isScheduledDay
 import com.vibeactions.util.parseHhMmOrNull
 import com.vibeactions.util.scheduledJitterMinutes
@@ -23,7 +25,8 @@ class MacroCatchUpWorker @AssistedInject constructor(
     @Assisted params: WorkerParameters,
     private val repo: MacroRepository,
     private val logRepo: MacroLogRepository,
-    private val firer: MacroFirer
+    private val firer: MacroFirer,
+    private val notifications: MacroNotificationManager
 ) : CoroutineWorker(appContext, params) {
 
     override suspend fun doWork(): Result {
@@ -53,6 +56,9 @@ class MacroCatchUpWorker @AssistedInject constructor(
                 firer.fire(macro.id, enforceOncePerDay = true)
             }
         }
+        // Trial reminders ride on this periodic run: once a few days before the end, once at it.
+        if (License.claimEndingWarning(applicationContext)) notifications.notifyTrialEnding(License.current(applicationContext))
+        if (License.claimExpiredNotice(applicationContext)) notifications.notifyTrialEnded()
         // Record that the periodic self-heal ran, so the Health screen can show it's alive.
         AppSettings.setLastCatchUpAt(applicationContext, now)
         return Result.success()
