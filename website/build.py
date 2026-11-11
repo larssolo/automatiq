@@ -26,7 +26,7 @@ TODAY = datetime.date.today().isoformat()
 # ---- languages -------------------------------------------------------------
 # English lives at the root, Danish under /da. PAIRS links each page to its translation (hreflang + language switch).
 PAIRS = [("/", "/da"), ("/scheduled-text-messages", "/da/planlagte-sms"), ("/auto-reply-sms", "/da/autosvar-sms"),
-         ("/missed-call-text-back", "/da/sms-ved-ubesvaret-opkald"), ("/one-tap-text-widget", "/da/sms-med-et-tryk"), ("/about", "/da/om"), ("/sitemap", "/da/sitemap")]
+         ("/missed-call-text-back", "/da/sms-ved-ubesvaret-opkald"), ("/one-tap-text-widget", "/da/sms-med-et-tryk"), ("/about", "/da/om"), ("/creators", "/da/influencere"), ("/sitemap", "/da/sitemap")]
 
 
 def counterpart(path):
@@ -48,7 +48,7 @@ T = {
            "f_features": "Features", "f_contact": "Contact", "about": "About the maker", "privacy": "Privacy policy", "made_by": "Made by",
            "no_track": "No cookies. No tracking.", "related_h": "More of what TextFox does",
            "pages": {"sched": ("/scheduled-text-messages", "Scheduled texts"), "auto": ("/auto-reply-sms", "Auto-reply"), "missed": ("/missed-call-text-back", "Missed-call text-back"),
-                     "tap": ("/one-tap-text-widget", "One-tap widget"), "ai": ("/#ai", "AI variations"), "about": ("/about", "About the maker"), "faq": ("/#faq", "FAQ")},
+                     "tap": ("/one-tap-text-widget", "One-tap widget"), "ai": ("/#ai", "AI variations"), "about": ("/about", "About the maker"), "faq": ("/#faq", "FAQ"), "creators": ("/creators", "For creators")},
            "privacy_href": "/privacy", "crumb_root": "TextFox",
            "share_text": "TextFox sends your texts for you: scheduled SMS, auto-replies and missed-call text-back for Android.",
            "share_subject": "Have a look at TextFox", "share_h": "Know someone who's always running late?",
@@ -63,7 +63,7 @@ T = {
            "f_features": "Funktioner", "f_contact": "Kontakt", "about": "Om skaberen", "privacy": "Privatlivspolitik (engelsk)", "made_by": "Lavet af",
            "no_track": "Ingen cookies. Ingen sporing.", "related_h": "Mere af det, TextFox kan",
            "pages": {"sched": ("/da/planlagte-sms", "Planlagte sms'er"), "auto": ("/da/autosvar-sms", "Autosvar"), "missed": ("/da/sms-ved-ubesvaret-opkald", "Sms ved ubesvaret opkald"),
-                     "tap": ("/da/sms-med-et-tryk", "Sms med ét tryk"), "ai": ("/da#ai", "AI-varianter"), "about": ("/da/om", "Om skaberen"), "faq": ("/da#faq", "FAQ")},
+                     "tap": ("/da/sms-med-et-tryk", "Sms med ét tryk"), "ai": ("/da#ai", "AI-varianter"), "about": ("/da/om", "Om skaberen"), "faq": ("/da#faq", "FAQ"), "creators": ("/da/influencere", "Til influencere")},
            "privacy_href": "/privacy", "crumb_root": "TextFox",
            "share_text": "TextFox sender dine sms'er for dig: planlagte sms'er, autosvar og sms ved ubesvaret opkald til Android.",
            "share_subject": "Kig lige på TextFox", "share_h": "Kender du en, der altid kommer for sent?",
@@ -361,7 +361,7 @@ def footer(lang):
   <div class="foot">
     <div><a class="brand" href="{L["home"]}" aria-label="{L["home_aria"]}"><svg aria-hidden="true"><use href="#fox"/></svg>textfox</a><p>{L["f_tag"]}</p></div>
     <div><h2>{L["f_features"]}</h2><ul>{feats}</ul></div>
-    <div><h2>TextFox</h2><ul><li><a href="{PLAY_URL}" rel="noopener">Google Play</a></li><li><a href="{P["faq"][0]}">FAQ</a></li><li><a href="{P["about"][0]}">{L["about"]}</a></li><li><a href="{L["privacy_href"]}">{L["privacy"]}</a></li></ul></div>
+    <div><h2>TextFox</h2><ul><li><a href="{PLAY_URL}" rel="noopener">Google Play</a></li><li><a href="{P["faq"][0]}">FAQ</a></li><li><a href="{P["about"][0]}">{L["about"]}</a></li><li><a href="{P["creators"][0]}">{P["creators"][1]}</a></li><li><a href="{L["privacy_href"]}">{L["privacy"]}</a></li></ul></div>
     <div><h2>{L["f_contact"]}</h2><ul><li><a href="mailto:{CONTACT}">{CONTACT}</a></li><li>{L["made_by"]} <a href="{P["about"][0]}">Lars Sohl</a></li><li><a href="https://www.kodekid.app" rel="noopener">{PUBLISHER}</a></li></ul></div>
   </div>
   <div class="legal"><span>© {datetime.date.today().year} TextFox · <a href="https://www.kodekid.app" rel="noopener">{PUBLISHER}</a></span><span><a href="{'/da/sitemap' if lang == 'da' else '/sitemap'}">Sitemap</a> · {L["no_track"]}</span></div>
@@ -533,12 +533,13 @@ Maker: Lars Sohl (Denmark), founder of kodekid.app, klokly.app and larssohl.dk �
 - [Auto-reply to text messages]({SITE}/auto-reply-sms): sender and keyword filters, quiet hours, fixed or AI-written replies
 - [Missed-call text-back]({SITE}/missed-call-text-back): texts callers after a missed or declined call, optional caller filter
 - [One-tap text widget]({SITE}/one-tap-text-widget): a home-screen widget per macro, one tap sends a ready-made text to one or many people
+- [For creators]({SITE}/creators): a free promo code that unlocks TextFox for good for people making videos, reviews or posts about it, plus a press kit with films, logos, screenshots and copy
 - [About the maker]({SITE}/about): Lars Sohl, Danish graphic designer, photographer and creative coder; founder of kodekid.app, klokly.app and larssohl.dk
 - [Privacy policy]({SITE}/privacy)
 
 ## Dansk
 - [TextFox på dansk]({SITE}/da): forside på dansk
-- [Planlagte sms'er]({SITE}/da/planlagte-sms) · [Autosvar]({SITE}/da/autosvar-sms) · [Sms ved ubesvaret opkald]({SITE}/da/sms-ved-ubesvaret-opkald) · [Sms med ét tryk]({SITE}/da/sms-med-et-tryk) · [Om skaberen]({SITE}/da/om)
+- [Planlagte sms'er]({SITE}/da/planlagte-sms) · [Autosvar]({SITE}/da/autosvar-sms) · [Sms ved ubesvaret opkald]({SITE}/da/sms-ved-ubesvaret-opkald) · [Sms med ét tryk]({SITE}/da/sms-med-et-tryk) · [Til influencere]({SITE}/da/influencere) · [Om skaberen]({SITE}/da/om)
 
 ## Key facts
 - Triggers: schedule, one tap (widget), incoming SMS (sender/keyword), missed call
