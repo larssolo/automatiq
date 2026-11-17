@@ -42,7 +42,7 @@ def abs_url(path):
 
 T = {
     "en": {"locale": "en_US", "home": "/", "skip": "Skip to content", "home_aria": "TextFox home",
-           "nav": ["A day", "Features", "AI", "Privacy", "FAQ"], "nav_creators": "Creators", "get_app": "Get the app", "play_small": "Get it on",
+           "nav": ["A day", "Features", "AI", "Privacy", "FAQ"], "nav_creators": "Creators", "menu": ["Menu", "Close menu"], "get_app": "Get the app", "play_small": "Get it on",
            "cta_note": CTA_NOTE,
            "f_tag": "Scheduled texts, auto-replies and missed-call text-back for Android. Set it up once. It just runs.",
            "f_features": "Features", "f_contact": "Contact", "about": "About the maker", "privacy": "Privacy policy", "made_by": "Made by",
@@ -57,7 +57,7 @@ T = {
            "og_alt": "TextFox: your phone texts for you. Scheduled texts, auto-replies and missed-call text-back for Android.",
            "switch": ("DA", "Dansk", "da")},
     "da": {"locale": "da_DK", "home": "/da", "skip": "Gå til indhold", "home_aria": "TextFox forside",
-           "nav": ["En dag", "Funktioner", "AI", "Privatliv", "FAQ"], "nav_creators": "Influencere", "get_app": "Hent appen", "play_small": "Hent den på",
+           "nav": ["En dag", "Funktioner", "AI", "Privatliv", "FAQ"], "nav_creators": "Influencere", "menu": ["Menu", "Luk menu"], "get_app": "Hent appen", "play_small": "Hent den på",
            "cta_note": CTA_NOTE_DA,
            "f_tag": "Planlagte sms'er, autosvar og sms ved ubesvaret opkald til Android. Sæt det op én gang. Så kører det bare.",
            "f_features": "Funktioner", "f_contact": "Kontakt", "about": "Om skaberen", "privacy": "Privatlivspolitik (engelsk)", "made_by": "Lavet af",
@@ -353,8 +353,10 @@ def nav(path, lang):
 <header class="nav"><div class="wrap">
   <a class="brand" href="{L["home"]}" aria-label="{L["home_aria"]}"><svg aria-hidden="true"><use href="#fox"/></svg>textfox</a>
   <nav class="nav-links" aria-label="Main">{links}</nav>
-  <div class="nav-end"><a class="lang" href="{target}" hreflang="{other}" lang="{other}" title="{label}" aria-label="{label}">{code}</a><a class="btn btn-g btn-sm" href="{PLAY_URL}" rel="noopener">{L["get_app"]}</a></div>
-</div></header>"""
+  <div class="nav-end"><a class="lang" href="{target}" hreflang="{other}" lang="{other}" title="{label}" aria-label="{label}">{code}</a><a class="btn btn-g btn-sm" href="{PLAY_URL}" rel="noopener">{L["get_app"]}</a><button class="menu-btn" type="button" aria-expanded="false" aria-controls="mnav" aria-label="{L["menu"][0]}" data-close="{L["menu"][1]}"><span></span><span></span></button></div>
+</div>
+  <nav class="mnav" id="mnav" aria-label="{L["menu"][0]}" hidden><div class="wrap">{links}<a class="btn btn-g" href="{PLAY_URL}" rel="noopener">{L["get_app"]}</a></div></nav>
+</header>"""
 
 
 def footer(lang):
