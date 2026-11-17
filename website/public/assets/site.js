@@ -8,6 +8,16 @@
   const nav = $('.nav');
   if (nav) { const set = () => nav.classList.toggle('solid', scrollY > 24); set(); addEventListener('scroll', set, {passive: true}); }
 
+  // mobile menu: the burger opens the nav as a panel; a link, Esc or a wider screen closes it
+  const mb = $('.menu-btn'), mn = $('#mnav');
+  if (nav && mb && mn) {
+    const open = on => { mn.hidden = !on; mb.setAttribute('aria-expanded', on); nav.classList.toggle('open', on); const l = mb.getAttribute('aria-label'); mb.setAttribute('aria-label', mb.dataset.close); mb.dataset.close = l; };
+    mb.addEventListener('click', () => open(mn.hidden));
+    mn.addEventListener('click', e => { if (e.target.closest('a')) open(false); });
+    addEventListener('keydown', e => { if (e.key === 'Escape' && !mn.hidden) { open(false); mb.focus(); } });
+    matchMedia('(min-width:901px)').addEventListener('change', e => { if (e.matches && !mn.hidden) open(false); });
+  }
+
   // step timelines end exactly in the last step's number
   const steps = [...document.querySelectorAll('.steps')];
   const fitSteps = () => steps.forEach(ol => { const li = ol.lastElementChild; if (!li) return; const pad = parseFloat(getComputedStyle(li).paddingTop), n = parseFloat(getComputedStyle(li, '::before').height) || 48; ol.style.setProperty('--end', (ol.offsetHeight - li.offsetTop - pad - n / 2) + 'px'); });
