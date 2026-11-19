@@ -17,8 +17,13 @@ SITE = "https://www.textfox.app"
 
 # ---- one place to change launch details ------------------------------------
 PLAY_URL = "https://play.google.com/apps/testing/app.kodekid.automatiq"  # swap for the production listing at launch
-CTA_NOTE = "Early access on Google Play · 30 days free · Android 8.0+"
-CTA_NOTE_DA = "Tidlig adgang på Google Play · 30 dage gratis · Android 8.0+"
+# Until launch every Play button opens a pre-written email asking to be notified. At launch: set NOTIFY = False and point PLAY_URL at the production listing.
+NOTIFY = True
+NOTIFY_SUBJECT = "Notify me when TextFox launches"
+NOTIFY_BODY = ("Hi TextFox team,\r\n\r\nI'd like to be notified when TextFox is released on Google Play in a few days.\r\n\r\n"
+               "Thank you!\r\n\r\nBest regards,\r\n")
+CTA_NOTE = "Launching on Google Play in a few days · 30 days free · Android 8.0+"
+CTA_NOTE_DA = "Udkommer på Google Play om få dage · 30 dage gratis · Android 8.0+"
 CONTACT = "hello@textfox.app"
 PUBLISHER = "kodekid.app"
 TODAY = datetime.date.today().isoformat()
@@ -42,7 +47,7 @@ def abs_url(path):
 
 T = {
     "en": {"locale": "en_US", "home": "/", "skip": "Skip to content", "home_aria": "TextFox home",
-           "nav": ["A day", "Features", "AI", "Privacy", "FAQ"], "nav_creators": "Creators", "menu": ["Menu", "Close menu"], "get_app": "Get the app", "play_small": "Get it on",
+           "nav": ["A day", "Features", "AI", "Privacy", "FAQ"], "nav_creators": "Creators", "menu": ["Menu", "Close menu"], "get_app": "Get the app", "play_small": "Get it on", "play_soon": "Coming soon on", "notify": "Get notified", "notify_title": "Get notified when TextFox launches on Google Play (opens an email)",
            "cta_note": CTA_NOTE,
            "f_tag": "Scheduled texts, auto-replies and missed-call text-back for Android. Set it up once. It just runs.",
            "f_features": "Features", "f_contact": "Contact", "about": "About the maker", "privacy": "Privacy policy", "made_by": "Made by",
@@ -57,7 +62,7 @@ T = {
            "og_alt": "TextFox: your phone texts for you. Scheduled texts, auto-replies and missed-call text-back for Android.",
            "switch": ("DA", "Dansk", "da")},
     "da": {"locale": "da_DK", "home": "/da", "skip": "Gå til indhold", "home_aria": "TextFox forside",
-           "nav": ["En dag", "Funktioner", "AI", "Privatliv", "FAQ"], "nav_creators": "Influencere", "menu": ["Menu", "Luk menu"], "get_app": "Hent appen", "play_small": "Hent den på",
+           "nav": ["En dag", "Funktioner", "AI", "Privatliv", "FAQ"], "nav_creators": "Influencere", "menu": ["Menu", "Luk menu"], "get_app": "Hent appen", "play_small": "Hent den på", "play_soon": "Kommer snart på", "notify": "Få besked", "notify_title": "Få besked, når TextFox udkommer på Google Play (åbner en mail)",
            "cta_note": CTA_NOTE_DA,
            "f_tag": "Planlagte sms'er, autosvar og sms ved ubesvaret opkald til Android. Sæt det op én gang. Så kører det bare.",
            "f_features": "Funktioner", "f_contact": "Kontakt", "about": "Om skaberen", "privacy": "Privatlivspolitik (engelsk)", "made_by": "Lavet af",
@@ -162,8 +167,21 @@ ICONS = """<svg width="0" height="0" style="position:absolute" aria-hidden="true
 </svg>"""
 
 PLAY_SVG = '<svg width="18" height="20" viewBox="0 0 16 18" aria-hidden="true"><path d="M1 1.2v15.6c0 .5.5.8.9.6L15 9.6a.7.7 0 0 0 0-1.2L1.9.6C1.5.4 1 .7 1 1.2Z" fill="currentColor"/></svg>'
+def store_href():
+    """Where the Play buttons point: the launch-notification email now, the Play listing after launch."""
+    if NOTIFY:
+        return f"mailto:{CONTACT}?subject={urllib.parse.quote(NOTIFY_SUBJECT)}&body={urllib.parse.quote(NOTIFY_BODY)}"
+    return PLAY_URL
+
+
+def store_attrs(lang="en"):
+    if NOTIFY:
+        return f' title="{html.escape(T[lang]["notify_title"])}" aria-label="{html.escape(T[lang]["notify_title"])}"'
+    return ' rel="noopener"'
+
+
 def play(lang="en"):
-    return f'<a class="btn btn-g play-btn" href="{PLAY_URL}" rel="noopener">{PLAY_SVG}<span><small>{T[lang]["play_small"]}</small>Google Play</span></a>'
+    return f'<a class="btn btn-g play-btn" href="{store_href()}"{store_attrs(lang)}>{PLAY_SVG}<span><small>{T[lang]["play_small"] if not NOTIFY else T[lang]["play_soon"]}</small>Google Play</span></a>'
 
 
 PLAY = play("en")
@@ -353,9 +371,9 @@ def nav(path, lang):
 <header class="nav"><div class="wrap">
   <a class="brand" href="{L["home"]}" aria-label="{L["home_aria"]}"><svg aria-hidden="true"><use href="#fox"/></svg>textfox</a>
   <nav class="nav-links" aria-label="Main">{links}</nav>
-  <div class="nav-end"><a class="lang" href="{target}" hreflang="{other}" lang="{other}" title="{label}" aria-label="{label}">{code}</a><a class="btn btn-g btn-sm" href="{PLAY_URL}" rel="noopener">{L["get_app"]}</a><button class="menu-btn" type="button" aria-expanded="false" aria-controls="mnav" aria-label="{L["menu"][0]}" data-close="{L["menu"][1]}"><span></span><span></span></button></div>
+  <div class="nav-end"><a class="lang" href="{target}" hreflang="{other}" lang="{other}" title="{label}" aria-label="{label}">{code}</a><a class="btn btn-g btn-sm" href="{store_href()}"{store_attrs(lang)}>{L["notify"] if NOTIFY else L["get_app"]}</a><button class="menu-btn" type="button" aria-expanded="false" aria-controls="mnav" aria-label="{L["menu"][0]}" data-close="{L["menu"][1]}"><span></span><span></span></button></div>
 </div>
-  <nav class="mnav" id="mnav" aria-label="{L["menu"][0]}" hidden><div class="wrap">{links}<a class="btn btn-g" href="{PLAY_URL}" rel="noopener">{L["get_app"]}</a></div></nav>
+  <nav class="mnav" id="mnav" aria-label="{L["menu"][0]}" hidden><div class="wrap">{links}<a class="btn btn-g" href="{store_href()}"{store_attrs(lang)}>{L["notify"] if NOTIFY else L["get_app"]}</a></div></nav>
 </header>"""
 
 
@@ -366,7 +384,7 @@ def footer(lang):
   <div class="foot">
     <div><a class="brand" href="{L["home"]}" aria-label="{L["home_aria"]}"><svg aria-hidden="true"><use href="#fox"/></svg>textfox</a><p>{L["f_tag"]}</p></div>
     <div><h2>{L["f_features"]}</h2><ul>{feats}</ul></div>
-    <div><h2>TextFox</h2><ul><li><a href="{PLAY_URL}" rel="noopener">Google Play</a></li><li><a href="{P["faq"][0]}">FAQ</a></li><li><a href="{P["about"][0]}">{L["about"]}</a></li><li><a href="{P["creators"][0]}">{P["creators"][1]}</a></li><li><a href="{L["privacy_href"]}">{L["privacy"]}</a></li></ul></div>
+    <div><h2>TextFox</h2><ul><li><a href="{store_href()}"{store_attrs(lang)}>{L["notify"] if NOTIFY else "Google Play"}</a></li><li><a href="{P["faq"][0]}">FAQ</a></li><li><a href="{P["about"][0]}">{L["about"]}</a></li><li><a href="{P["creators"][0]}">{P["creators"][1]}</a></li><li><a href="{L["privacy_href"]}">{L["privacy"]}</a></li></ul></div>
     <div><h2>{L["f_contact"]}</h2><ul><li><a href="mailto:{CONTACT}">{CONTACT}</a></li><li>{L["made_by"]} <a href="{P["about"][0]}">Lars Sohl</a></li><li><a href="https://www.kodekid.app" rel="noopener">{PUBLISHER}</a></li></ul></div>
   </div>
   <div class="legal"><span>© {datetime.date.today().year} TextFox · <a href="https://www.kodekid.app" rel="noopener">{PUBLISHER}</a></span><span><a href="{'/da/sitemap' if lang == 'da' else '/sitemap'}">Sitemap</a> · {L["no_track"]}</span></div>
