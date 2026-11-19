@@ -17,13 +17,10 @@ SITE = "https://www.textfox.app"
 
 # ---- one place to change launch details ------------------------------------
 PLAY_URL = "https://play.google.com/apps/testing/app.kodekid.automatiq"  # swap for the production listing at launch
-# Until launch every Play button opens a pre-written email asking to be notified. At launch: set NOTIFY = False and point PLAY_URL at the production listing.
+# Until launch every Play button opens the early-bird signup popup (name + email -> Resend list via /api/subscribe). At launch: set NOTIFY = False and point PLAY_URL at the production listing.
 NOTIFY = True
-NOTIFY_SUBJECT = "Notify me when TextFox launches"
-NOTIFY_BODY = ("Hi TextFox team,\r\n\r\nI'd like to be notified when TextFox is released on Google Play in a few days.\r\n\r\n"
-               "Thank you!\r\n\r\nBest regards,\r\n")
-CTA_NOTE = "Launching on Google Play in a few days · 30 days free · Android 8.0+"
-CTA_NOTE_DA = "Udkommer på Google Play om få dage · 30 dage gratis · Android 8.0+"
+CTA_NOTE = "Launching on Google Play in a few days · 50% early-bird discount · 30 days free · Android 8.0+"
+CTA_NOTE_DA = "Udkommer på Google Play om få dage · 50 % early bird-rabat · 30 dage gratis · Android 8.0+"
 CONTACT = "hello@textfox.app"
 PUBLISHER = "kodekid.app"
 TODAY = datetime.date.today().isoformat()
@@ -47,7 +44,7 @@ def abs_url(path):
 
 T = {
     "en": {"locale": "en_US", "home": "/", "skip": "Skip to content", "home_aria": "TextFox home",
-           "nav": ["A day", "Features", "AI", "Privacy", "FAQ"], "nav_creators": "Creators", "menu": ["Menu", "Close menu"], "get_app": "Get the app", "play_small": "Get it on", "play_soon": "Coming soon on", "notify": "Get notified", "notify_title": "Get notified when TextFox launches on Google Play (opens an email)",
+           "nav": ["A day", "Features", "AI", "Privacy", "FAQ"], "nav_creators": "Creators", "menu": ["Menu", "Close menu"], "get_app": "Get the app", "play_small": "Get it on", "play_soon": "50% off · coming soon on", "notify": "Get 50% off", "notify_title": "Get 50% off: join the early-bird list for the Google Play launch",
            "cta_note": CTA_NOTE,
            "f_tag": "Scheduled texts, auto-replies and missed-call text-back for Android. Set it up once. It just runs.",
            "f_features": "Features", "f_contact": "Contact", "about": "About the maker", "privacy": "Privacy policy", "made_by": "Made by",
@@ -62,7 +59,7 @@ T = {
            "og_alt": "TextFox: your phone texts for you. Scheduled texts, auto-replies and missed-call text-back for Android.",
            "switch": ("DA", "Dansk", "da")},
     "da": {"locale": "da_DK", "home": "/da", "skip": "Gå til indhold", "home_aria": "TextFox forside",
-           "nav": ["En dag", "Funktioner", "AI", "Privatliv", "FAQ"], "nav_creators": "Influencere", "menu": ["Menu", "Luk menu"], "get_app": "Hent appen", "play_small": "Hent den på", "play_soon": "Kommer snart på", "notify": "Få besked", "notify_title": "Få besked, når TextFox udkommer på Google Play (åbner en mail)",
+           "nav": ["En dag", "Funktioner", "AI", "Privatliv", "FAQ"], "nav_creators": "Influencere", "menu": ["Menu", "Luk menu"], "get_app": "Hent appen", "play_small": "Hent den på", "play_soon": "50 % rabat · snart på", "notify": "Få 50 % rabat", "notify_title": "Få 50 % rabat: skriv dig på early bird-listen til Google Play-lanceringen",
            "cta_note": CTA_NOTE_DA,
            "f_tag": "Planlagte sms'er, autosvar og sms ved ubesvaret opkald til Android. Sæt det op én gang. Så kører det bare.",
            "f_features": "Funktioner", "f_contact": "Kontakt", "about": "Om skaberen", "privacy": "Privatlivspolitik (engelsk)", "made_by": "Lavet af",
@@ -168,15 +165,13 @@ ICONS = """<svg width="0" height="0" style="position:absolute" aria-hidden="true
 
 PLAY_SVG = '<svg width="18" height="20" viewBox="0 0 16 18" aria-hidden="true"><path d="M1 1.2v15.6c0 .5.5.8.9.6L15 9.6a.7.7 0 0 0 0-1.2L1.9.6C1.5.4 1 .7 1 1.2Z" fill="currentColor"/></svg>'
 def store_href():
-    """Where the Play buttons point: the launch-notification email now, the Play listing after launch."""
-    if NOTIFY:
-        return f"mailto:{CONTACT}?subject={urllib.parse.quote(NOTIFY_SUBJECT)}&body={urllib.parse.quote(NOTIFY_BODY)}"
-    return PLAY_URL
+    """Where the Play buttons point: the early-bird signup popup now, the Play listing after launch."""
+    return "#early-bird" if NOTIFY else PLAY_URL
 
 
 def store_attrs(lang="en"):
     if NOTIFY:
-        return f' title="{html.escape(T[lang]["notify_title"])}" aria-label="{html.escape(T[lang]["notify_title"])}"'
+        return f' data-signup role="button" title="{html.escape(T[lang]["notify_title"])}" aria-haspopup="dialog"'
     return ' rel="noopener"'
 
 
@@ -185,6 +180,39 @@ def play(lang="en"):
 
 
 PLAY = play("en")
+
+
+SIGNUP = {
+    "en": {"h": "Get 50% off at launch", "p": "TextFox lands on Google Play in a few days. Join the early-bird list and we'll email you the link and your 50% discount code the moment it's live.",
+           "name": "Your name", "email": "Email", "consent": "I agree to get one email when TextFox launches, plus my discount code. Details in the <a href=\"/privacy\">privacy policy</a>. Unsubscribe any time.",
+           "go": "Get my 50% off", "busy": "Sending…", "ok_h": "Almost there!", "ok_p": "We just sent you an email. Open it and tap <strong>Confirm</strong> to secure your discount. (Check spam if it doesn't show up within a minute.)",
+           "err": "Something went wrong. Please try again, or write to hello@textfox.app.", "bad": "Please enter your name and a valid email, and tick the box.", "close": "Close", "done": "Done"},
+    "da": {"h": "Få 50 % rabat ved lancering", "p": "TextFox udkommer på Google Play om få dage. Skriv dig på early bird-listen, så sender vi dig linket og din rabatkode på 50 %, så snart den er live.",
+           "name": "Dit navn", "email": "E-mail", "consent": "Jeg vil gerne have én e-mail, når TextFox udkommer, plus min rabatkode. Læs mere i <a href=\"/privacy\">privatlivspolitikken</a> (engelsk). Du kan afmelde dig når som helst.",
+           "go": "Få min rabat på 50 %", "busy": "Sender…", "ok_h": "Næsten færdig!", "ok_p": "Vi har lige sendt dig en mail. Åbn den og tryk på <strong>Bekræft</strong> for at sikre din rabat. (Tjek spam, hvis den ikke kommer inden for et minut.)",
+           "err": "Noget gik galt. Prøv igen, eller skriv til hello@textfox.app.", "bad": "Skriv dit navn og en gyldig e-mail, og sæt flueben.", "close": "Luk", "done": "Færdig"},
+}
+
+
+def signup_dialog(lang="en"):
+    """The early-bird popup, present on every page while NOTIFY is on. site.js opens it from any [data-signup] link."""
+    if not NOTIFY:
+        return ""
+    S = SIGNUP[lang]
+    data = html.escape(json.dumps({k: S[k] for k in ("busy", "go", "err", "bad")}), quote=True)
+    return f"""<dialog class="lightbox signup" id="early-bird" aria-labelledby="eb-h" data-lang="{lang}" data-msg="{data}">
+<div class="su-card"><button class="lb-close" type="button" aria-label="{S["close"]}">×</button>
+<form class="su-form" method="post" action="/api/subscribe" novalidate>
+<p class="kicker">// early bird</p><h2 id="eb-h">{S["h"]}</h2><p class="su-p">{S["p"]}</p>
+<label>{S["name"]}<input name="name" autocomplete="name" required maxlength="80"></label>
+<label>{S["email"]}<input name="email" type="email" autocomplete="email" inputmode="email" required maxlength="254"></label>
+<label class="hp" aria-hidden="true">Website<input name="website" tabindex="-1" autocomplete="off"></label>
+<label class="su-consent"><input name="consent" type="checkbox" required><span>{S["consent"]}</span></label>
+<p class="su-err" role="alert" hidden></p>
+<button class="btn btn-g" type="submit">{S["go"]}</button>
+</form>
+<div class="su-ok" hidden tabindex="-1"><h2>{S["ok_h"]}</h2><p>{S["ok_p"]}</p><button class="btn btn-ghost" type="button" data-su-close>{S["done"]}</button></div>
+</div></dialog>"""
 
 
 def ver(rel):
@@ -450,6 +478,7 @@ def render(meta, body):
 {"" if meta.get("noindex") or meta["path"] == "/privacy" else share(url, lang)}
 </main>
 {footer(lang)}
+{signup_dialog(lang)}
 {scripts}
 </body>
 </html>

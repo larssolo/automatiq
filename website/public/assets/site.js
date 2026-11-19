@@ -92,4 +92,31 @@
       $('#segNote').textContent = notes[id];
     }));
   }
+  // thank-you pages: a bad confirmation link swaps in the error copy
+  if (/[?&](error|fejl)=1/.test(location.search)) document.querySelectorAll('[data-bad]').forEach(el => { el.innerHTML = el.dataset.bad; });
+
+  // early-bird signup: every [data-signup] link opens the popup; the form posts to /api/subscribe
+  const eb = document.getElementById('early-bird');
+  if (eb && eb.showModal) {
+    const form = eb.querySelector('form'), ok = eb.querySelector('.su-ok'), err = eb.querySelector('.su-err'), go = form.querySelector('[type=submit]');
+    const M = JSON.parse(eb.dataset.msg); let opened = 0, from = null;
+    const open = el => { from = el; opened = Date.now(); form.hidden = false; ok.hidden = true; err.hidden = true; go.disabled = false; go.textContent = M.go; if (!eb.open) eb.showModal(); };
+    document.querySelectorAll('[data-signup]').forEach(a => a.addEventListener('click', e => { e.preventDefault(); const m = document.getElementById('mnav'); if (m && !m.hidden) m.hidden = true; open(a); }));
+    if (location.hash === '#early-bird') open(null);
+    eb.querySelector('.lb-close').addEventListener('click', () => eb.close());
+    eb.querySelector('[data-su-close]').addEventListener('click', () => eb.close());
+    eb.addEventListener('click', e => { if (e.target === eb) eb.close(); });
+    eb.addEventListener('close', () => { if (location.hash === '#early-bird') history.replaceState(null, '', location.pathname + location.search); if (from && from.focus) from.focus(); });
+    form.addEventListener('submit', async e => {
+      e.preventDefault(); err.hidden = true;
+      const f = new FormData(form), email = String(f.get('email')).trim();
+      if (!String(f.get('name')).trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email) || !f.get('consent')) { err.textContent = M.bad; err.hidden = false; return; }
+      go.disabled = true; go.textContent = M.busy;
+      try {
+        const r = await fetch('/api/subscribe', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({name: f.get('name'), email, website: f.get('website'), consent: true, lang: eb.dataset.lang, t: opened})});
+        if (!r.ok) throw 0;
+        form.hidden = true; ok.hidden = false; ok.focus(); form.reset();
+      } catch { err.textContent = M.err; err.hidden = false; go.disabled = false; go.textContent = M.go; }
+    });
+  }
 })();
