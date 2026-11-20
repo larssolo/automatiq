@@ -5,8 +5,14 @@ import com.vibeactions.BuildConfig
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import java.time.Instant
+import java.time.ZoneId
+import java.time.temporal.ChronoUnit
 
-/** Where the user stands: free trial with [daysLeft], trial over, or bought. */
+/**
+ * Where the user stands: free trial, trial over, or bought. [Trial.daysLeft] counts calendar days
+ * to the day the trial ends: 30 on the first day, one less each new day, 0 on the last day.
+ */
 sealed interface LicenseStatus {
     data class Trial(val daysLeft: Int) : LicenseStatus
     data object Expired : LicenseStatus
@@ -19,14 +25,19 @@ private const val DAY_MS = 24 * 60 * 60_000L
 /**
  * The trial/unlock rule, kept pure for tests. [now] is clamped to [lastSeen] so winding the clock
  * back can't stretch a trial; the trial ends exactly [TRIAL_DAYS] days after [trialStart].
- * [daysLeft][LicenseStatus.Trial.daysLeft] rounds up: "1 day left" lasts until the very end.
+ * [daysLeft][LicenseStatus.Trial.daysLeft] counts calendar days in [zone], the way people count:
+ * each new day is one less, whatever the time.
  */
-fun licenseStatus(paywall: Boolean, unlocked: Boolean, trialStart: Long, lastSeen: Long, now: Long): LicenseStatus {
+fun licenseStatus(
+    paywall: Boolean, unlocked: Boolean, trialStart: Long, lastSeen: Long, now: Long,
+    zone: ZoneId = ZoneId.systemDefault()
+): LicenseStatus {
     if (!paywall || unlocked) return LicenseStatus.Unlocked
     val effectiveNow = maxOf(now, lastSeen)
-    val left = trialStart + TRIAL_DAYS * DAY_MS - effectiveNow
-    return if (left <= 0) LicenseStatus.Expired
-    else LicenseStatus.Trial(((left + DAY_MS - 1) / DAY_MS).toInt())
+    val end = trialStart + TRIAL_DAYS * DAY_MS
+    if (end <= effectiveNow) return LicenseStatus.Expired
+    fun date(ms: Long) = Instant.ofEpochMilli(ms).atZone(zone).toLocalDate()
+    return LicenseStatus.Trial(ChronoUnit.DAYS.between(date(effectiveNow), date(end)).toInt().coerceIn(0, TRIAL_DAYS))
 }
 
 /**

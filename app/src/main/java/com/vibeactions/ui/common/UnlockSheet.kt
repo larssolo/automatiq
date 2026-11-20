@@ -64,7 +64,7 @@ fun UnlockSheet(onDismiss: () -> Unit) {
                 LicenseStatus.Expired -> "Your macros are paused" to
                     "The $TRIAL_DAYS-day free trial has ended. Your macros, folders and log are all still here. " +
                     "Unlock TextFox and they start running again."
-                is LicenseStatus.Trial -> (if (s.daysLeft == 1) "Last day of your free trial" else "${s.daysLeft} days left of your free trial") to
+                is LicenseStatus.Trial -> (if (s.daysLeft == 0) "Last day of your free trial" else "${s.daysLeft} ${if (s.daysLeft == 1) "day" else "days"} left of your free trial") to
                     "Everything works during the trial. Unlock TextFox once to keep your macros running after it."
                 LicenseStatus.Unlocked -> "TextFox is unlocked" to
                     "Thank you for supporting TextFox. Every feature and future update is yours."
@@ -148,7 +148,7 @@ fun TrialBanner(onUnlock: () -> Unit) {
         LicenseStatus.Expired ->
             LicenseBanner("Free trial ended. Your macros are paused until you unlock TextFox.", ErrorRed, onUnlock)
         is LicenseStatus.Trial -> if (s.daysLeft <= License.WARN_DAYS) LicenseBanner(
-            if (s.daysLeft == 1) "Last day of your free trial." else "${s.daysLeft} days left of your free trial.",
+            if (s.daysLeft == 0) "Last day of your free trial." else "${s.daysLeft} ${if (s.daysLeft == 1) "day" else "days"} left of your free trial.",
             FoxGreen, onUnlock
         )
         LicenseStatus.Unlocked -> Unit
