@@ -501,7 +501,7 @@ private fun LicenseSection(status: LicenseStatus, onUnlock: () -> Unit) {
     EditorSection(ImageVector.vectorResource(R.drawable.ic_stat_textfox), "TEXTFOX", if (expired) ErrorRed else Primary, trailing = {
         Text(
             when (status) {
-                is LicenseStatus.Trial -> "Trial · ${status.daysLeft} ${if (status.daysLeft == 1) "day" else "days"} left"
+                is LicenseStatus.Trial -> if (status.daysLeft == 0) "Trial · last day" else "Trial · ${status.daysLeft} ${if (status.daysLeft == 1) "day" else "days"} left"
                 LicenseStatus.Expired -> "Trial ended"
                 LicenseStatus.Unlocked -> "Unlocked"
             },

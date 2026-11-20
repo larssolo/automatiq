@@ -83,7 +83,7 @@ class MacroNotificationManager @Inject constructor(
     fun notifyTrialEnding(status: LicenseStatus) {
         val days = (status as? LicenseStatus.Trial)?.daysLeft ?: return
         postTrial(
-            if (days == 1) "Your TextFox trial ends tomorrow" else "$days days left of your TextFox trial",
+            when (days) { 0 -> "Your TextFox trial ends today"; 1 -> "Your TextFox trial ends tomorrow"; else -> "$days days left of your TextFox trial" },
             "Unlock TextFox once to keep your macros running. No subscription."
         )
     }
