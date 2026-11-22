@@ -11,7 +11,8 @@ one() {   # $1 = clip id, $2 = seed (position in clips.json, so a clip keeps its
   id=$1; d="$WORK/$id"; rm -rf "$d"; mkdir -p "$d"
   node marketing/shorts/render.js "$id" "$d" >"$d/render.log" 2>&1 || { cat "$d/render.log"; exit 1; }
   secs=$(python3 -c "import json;print(json.load(open('$d/meta.json'))['end'])")
-  python3 marketing/shorts/score.py "$secs" "$d/music.wav" "$2" >/dev/null
+  gf=$(python3 -c "import json;print(next((c.get('groove_from',0) for c in json.load(open('marketing/shorts/clips.json'))['clips'] if c['id']=='$id'),0))")
+  python3 marketing/shorts/score.py "$secs" "$d/music.wav" "$2" "$gf" >/dev/null
   python3 marketing/film/sfx.py "$d/cues.json" "$d/music.wav" "$d/mix.wav" >/dev/null
   ffmpeg -v error -y -framerate 30 -i "$d/f%05d.jpg" -i "$d/mix.wav" -c:v libx264 -preset slow -crf 18 -pix_fmt yuv420p -movflags +faststart \
     -af "loudnorm=I=-14:TP=-1.5:LRA=11" -c:a aac -b:a 192k -shortest "marketing/shorts/out/$id.mp4"

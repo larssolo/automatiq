@@ -22,7 +22,7 @@ bash marketing/shorts/make.sh running-late       # ét klip
 JOBS=2 bash marketing/shorts/make.sh             # antal samtidige (standard 3)
 ```
 
-Kræver node + playwright, ffmpeg og python3 med numpy. Ca. 1,5 minut pr. klip. Lydniveau: −14 LUFS.
+Kræver node + playwright, ffmpeg og python3 med numpy. Ca. 1,5 minut pr. klip. Nye klip sættes **sidst** i `clips.json`: pladsen i listen bestemmer musikkens toneart. Lydniveau: −14 LUFS.
 
 ## Skabeloner
 
@@ -30,6 +30,8 @@ Kræver node + playwright, ffmpeg og python3 med numpy. Ca. 1,5 minut pr. klip. 
 Feltet `fire.kind` vælger udløsningen: `widget` (tryk på widget), `clock` (klokken slår), `missed` (ubesvaret opkald), `incoming` (en sms kommer ind), `none` (bruges med `thread.bubbles`, flere dages AI-varianter).
 
 **`fox`** (Fox says): ræven og en chat; `lines` er skiftevis `me` og `fox`. Ræven "skriver" før hver replik.
+
+**`teaser`** (Coming soon): ræven vågner i mørket (tre prikker tændes, ræven samles), "Something clever is coming to Android", en kort liste og CTA. Felter: `kicker`, `hook`, `list`, `cta`, `promo` og `groove_from` (sekund hvor beatet starter; før det kun pads og en riser).
 
 Nyt klip: kopiér et objekt i `clips.json`, skift `id`, tekster og farve (`rose`, `amber`, `teal`, `green`, `indigo`), og kør `make.sh <id>`. Hook-linjer med `*stjerner*` bliver grønne. Ikon: `tap`, `clock`, `reply`, `missed`, `spark`, `bell`, `moon`.
 
