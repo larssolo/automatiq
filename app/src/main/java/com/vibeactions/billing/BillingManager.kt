@@ -44,6 +44,14 @@ class BillingManager @Inject constructor(@ApplicationContext private val context
     /** Play's localized price, e.g. "$7.00" or "49,00 kr."; null until Play answers. */
     val price: StateFlow<String?> = _price.asStateFlow()
 
+    private val _discountPrice = MutableStateFlow<String?>(null)
+    /** The early-bird price, only while a valid code is redeemed and Play returned the offer; else null. */
+    val discountPrice: StateFlow<String?> = _discountPrice.asStateFlow()
+
+    private val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+    private var codeRedeemed = prefs.getBoolean(KEY_CODE_REDEEMED, false)
+    private var offers: List<OfferInfo> = emptyList()
+
     private val _pending = MutableStateFlow(false)
     /** A purchase is waiting for payment (e.g. cash at a shop); unlocks once Play confirms it. */
     val pending: StateFlow<Boolean> = _pending.asStateFlow()
@@ -87,12 +95,34 @@ class BillingManager @Inject constructor(@ApplicationContext private val context
             if (!connect()) { _messages.tryEmit("Google Play isn't available right now. Try again later."); return@launch }
             val product = details ?: loadDetails()
             if (product == null) { _messages.tryEmit("The purchase isn't available yet. Try again later."); return@launch }
+            // With a code the early-bird offer, otherwise the normal one. The token is what makes Play
+            // charge that offer's price; without any offers Play falls back to its default.
+            val productParams = BillingFlowParams.ProductDetailsParams.newBuilder().setProductDetails(product)
+            EarlyBird.offerFor(codeRedeemed, offers)?.let { productParams.setOfferToken(it.token) }
             val params = BillingFlowParams.newBuilder()
-                .setProductDetailsParamsList(
-                    listOf(BillingFlowParams.ProductDetailsParams.newBuilder().setProductDetails(product).build())
-                )
+                .setProductDetailsParamsList(listOf(productParams.build()))
                 .build()
             activity.runOnUiThread { client.launchBillingFlow(activity, params) }
+        }
+    }
+
+    /**
+     * Applies the early-bird code. A wrong code only reports back. A right one is remembered, so the
+     * price survives a restart, and the offer is looked up in Play again so the button shows what
+     * will actually be charged.
+     */
+    fun redeemCode(input: String) {
+        if (!BuildConfig.PAYWALL) return
+        if (!EarlyBird.accepts(input)) { _messages.tryEmit("That code isn't valid."); return }
+        codeRedeemed = true
+        prefs.edit().putBoolean(KEY_CODE_REDEEMED, true).apply()
+        scope.launch {
+            if (!connect()) { _messages.tryEmit("Google Play isn't available right now. Try again later."); return@launch }
+            loadDetails()
+            _messages.tryEmit(
+                if (_discountPrice.value != null) "Code accepted. The early-bird price is applied."
+                else "Code accepted, but the early-bird price isn't available for this account."
+            )
         }
     }
 
@@ -140,7 +170,16 @@ class BillingManager @Inject constructor(@ApplicationContext private val context
         }
         val product = list.firstOrNull { it.productId == PRODUCT_ID }
         details = product
-        product?.oneTimePurchaseOfferDetails?.formattedPrice?.let { _price.value = it }
+        offers = product?.oneTimePurchaseOfferDetailsList.orEmpty().mapNotNull { o ->
+            // An offer without a token can't be purchased, so it is skipped.
+            val token = o.offerToken ?: return@mapNotNull null
+            OfferInfo(token, o.offerTags.orEmpty(), o.formattedPrice)
+        }
+        // The normal price comes from the non-early-bird offer: with two offers the single-offer
+        // getter may hand back the discounted one, which would show everyone the early-bird price.
+        (EarlyBird.regularOffer(offers)?.price ?: product?.oneTimePurchaseOfferDetails?.formattedPrice)
+            ?.let { _price.value = it }
+        _discountPrice.value = if (codeRedeemed) EarlyBird.earlyBirdOffer(offers)?.price else null
         return product
     }
 
@@ -175,5 +214,8 @@ class BillingManager @Inject constructor(@ApplicationContext private val context
         const val PRODUCT_ID = "textfox_unlock"
         /** Shown until Play reports the localized price. */
         const val FALLBACK_PRICE = "$7"
+
+        private const val PREFS = "billing"
+        private const val KEY_CODE_REDEEMED = "early_bird_code_redeemed"
     }
 }

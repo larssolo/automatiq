@@ -23,8 +23,8 @@ android {
         applicationId = "app.kodekid.automatiq"
         minSdk = 26
         targetSdk = 36
-        versionCode = 17
-        versionName = "1.9.7"
+        versionCode = 18
+        versionName = "1.9.8"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 

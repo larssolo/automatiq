@@ -1,6 +1,16 @@
 # Overlevering — TextFox (VibeActions)
 
-> Kopiér denne fil ind i en ny chattråd som kontekst. Sidst opdateret: 2026-08-14 (fase 9: AI-variationer for planlagte afsendelser).
+> Kopiér denne fil ind i en ny chattråd som kontekst. Sidst opdateret: 2026-11-22 (1.9.8: early-bird-kode).
+
+## Seneste arbejde (1.9.8 — early-bird-kode, 2026-11-22)
+
+Én fælles kode (`EarlyBird.CODE`, p.t. `TEXTFOX50`) giver 50 % på `textfox_unlock`. Play står for prisen og betalingen; koden afgør kun, om appen beder om rabat-tilbuddet. `versionCode` 17→18, `versionName` "1.9.7"→"1.9.8".
+
+- **`billing/EarlyBird.kt` (ren, testet):** kodetjek (uden forskel på store/små bogstaver og mellemrum) og valg af tilbud. `offerFor(redeemed, offers)` giver early-bird-tilbuddet kun med indløst kode, ellers det almindelige.
+- **`BillingManager`:** `redeemCode()`, `discountPrice`, og `launchPurchase()` sender nu altid et `offerToken` med (early-bird eller almindeligt). Den almindelige pris læses fra tilbuddet UDEN tagget, fordi `oneTimePurchaseOfferDetails` ellers kan give rabatprisen til alle.
+- **`UnlockSheet`:** "Have a code?" → kodefelt → Apply. Knappen viser altid den pris, der faktisk trækkes.
+- **Play Console (skal gøres, ellers sker der intet):** engangsproduktet `textfox_unlock` → Tilføj tilbud → Rabat, 50 %, **tag `earlybird`**, købsgrænse 1 pr. bruger og en slutdato. Play afviser 100 %, så gratis-koder bliver ved med at være Plays promoveringskoder.
+- **Ikke gjort:** koden ligger i en offentlig kildefil, så den er ikke hemmelig. Personlige engangskoder kræver en server. UI'et (`UnlockSheet`) er ikke bygget i dette miljø (ingen Android SDK); `BillingManager` er typetjekket mod Billing 8.3.0 og de 8 nye JVM-tests kører grønt. Test købet som licenstester før udgivelse.
 
 ## Seneste arbejde (fase 9 — AI-variationer for planlagte afsendelser, 2026-08-14)
 

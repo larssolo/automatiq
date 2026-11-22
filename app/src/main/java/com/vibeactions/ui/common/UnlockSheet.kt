@@ -8,6 +8,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.*
@@ -19,11 +20,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.vibeactions.R
 import com.vibeactions.billing.BillingManager
+import com.vibeactions.billing.EarlyBird
 import com.vibeactions.billing.License
 import com.vibeactions.billing.LicenseStatus
 import com.vibeactions.billing.TRIAL_DAYS
@@ -32,11 +35,16 @@ import com.vibeactions.ui.theme.*
 /** The app's [BillingManager], provided by MainActivity; null in previews. */
 val LocalBilling = staticCompositionLocalOf<BillingManager?> { null }
 
-/** "Unlock for 49,00 kr." with Play's localized price, or the USD fallback until Play answers. */
+/**
+ * "Unlock for 49,00 kr." with Play's localized price, or the USD fallback until Play answers.
+ * With a redeemed early-bird code it shows the early-bird price: always what will be charged.
+ */
 @Composable
 fun unlockLabel(): String {
-    val price by (LocalBilling.current?.price ?: return "Unlock TextFox").collectAsState()
-    return "Unlock for ${price ?: BillingManager.FALLBACK_PRICE}"
+    val billing = LocalBilling.current ?: return "Unlock TextFox"
+    val price by billing.price.collectAsState()
+    val discount by billing.discountPrice.collectAsState()
+    return "Unlock for ${discount ?: price ?: BillingManager.FALLBACK_PRICE}"
 }
 
 /** The purchase sheet: what the trial means, the price, and the Play purchase button. */
@@ -47,6 +55,9 @@ fun UnlockSheet(onDismiss: () -> Unit) {
     val billing = LocalBilling.current
     val status by License.status.collectAsState()
     val pending by (billing?.pending ?: remember { kotlinx.coroutines.flow.MutableStateFlow(false) }).collectAsState()
+    val discount by (billing?.discountPrice ?: remember { kotlinx.coroutines.flow.MutableStateFlow<String?>(null) }).collectAsState()
+    var showCode by remember { mutableStateOf(false) }
+    var code by remember { mutableStateOf("") }
     LaunchedEffect(Unit) { License.refresh(context); billing?.refresh() }
 
     ModalBottomSheet(
@@ -99,6 +110,36 @@ fun UnlockSheet(onDismiss: () -> Unit) {
                         "TextFox unlocks as soon as Google confirms the payment.",
                         color = OnSurfaceVariant, fontSize = 12.5.sp, textAlign = TextAlign.Center
                     )
+                }
+                if (discount != null) {
+                    Spacer(Modifier.height(8.dp))
+                    Text("Early-bird code applied.", color = FoxGreen, fontSize = 12.5.sp, textAlign = TextAlign.Center)
+                } else if (showCode) {
+                    Spacer(Modifier.height(12.dp))
+                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                        OutlinedTextField(
+                            value = code,
+                            onValueChange = { code = it },
+                            singleLine = true,
+                            label = { Text("Code") },
+                            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = FoxGreen, focusedLabelColor = FoxGreen, cursorColor = FoxGreen,
+                                focusedTextColor = OnSurface, unfocusedTextColor = OnSurface
+                            ),
+                            modifier = Modifier.weight(1f)
+                        )
+                        Spacer(Modifier.width(10.dp))
+                        TextButton(
+                            onClick = {
+                                billing?.redeemCode(code)
+                                if (EarlyBird.accepts(code)) showCode = false
+                            },
+                            enabled = billing != null && code.isNotBlank()
+                        ) { Text("Apply", color = FoxGreen) }
+                    }
+                } else {
+                    TextButton(onClick = { showCode = true }) { Text("Have a code?", color = OnSurfaceVariant) }
                 }
                 TextButton(onClick = { billing?.refresh(announce = true) }) {
                     Text("Restore purchase", color = OnSurfaceVariant)
