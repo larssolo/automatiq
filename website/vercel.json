@@ -103,16 +103,6 @@
       "source": "/da/influencere.html",
       "destination": "/da/influencere",
       "permanent": true
-    },
-    {
-      "source": "/subscribed.html",
-      "destination": "/subscribed",
-      "permanent": true
-    },
-    {
-      "source": "/da/tilmeldt.html",
-      "destination": "/da/tilmeldt",
-      "permanent": true
     }
   ],
   "headers": [
@@ -228,14 +218,6 @@
     {
       "source": "/da/influencere",
       "destination": "/da/influencere.html"
-    },
-    {
-      "source": "/subscribed",
-      "destination": "/subscribed.html"
-    },
-    {
-      "source": "/da/tilmeldt",
-      "destination": "/da/tilmeldt.html"
     }
   ]
 }

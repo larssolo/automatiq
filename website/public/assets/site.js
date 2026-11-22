@@ -92,31 +92,33 @@
       $('#segNote').textContent = notes[id];
     }));
   }
-  // thank-you pages: a bad confirmation link swaps in the error copy
-  if (/[?&](error|fejl)=1/.test(location.search)) document.querySelectorAll('[data-bad]').forEach(el => { el.innerHTML = el.dataset.bad; });
-
-  // early-bird signup: every [data-signup] link opens the popup; the form posts to /api/subscribe
-  const eb = document.getElementById('early-bird');
-  if (eb && eb.showModal) {
-    const form = eb.querySelector('form'), ok = eb.querySelector('.su-ok'), err = eb.querySelector('.su-err'), go = form.querySelector('[type=submit]');
-    const M = JSON.parse(eb.dataset.msg); let opened = 0, from = null;
-    const open = el => { from = el; opened = Date.now(); form.hidden = false; ok.hidden = true; err.hidden = true; go.disabled = false; go.textContent = M.go; if (!eb.open) eb.showModal(); };
-    document.querySelectorAll('[data-signup]').forEach(a => a.addEventListener('click', e => { e.preventDefault(); const m = document.getElementById('mnav'); if (m && !m.hidden) m.hidden = true; open(a); }));
-    if (location.hash === '#early-bird') open(null);
-    eb.querySelector('.lb-close').addEventListener('click', () => eb.close());
-    eb.querySelector('[data-su-close]').addEventListener('click', () => eb.close());
-    eb.addEventListener('click', e => { if (e.target === eb) eb.close(); });
-    eb.addEventListener('close', () => { if (location.hash === '#early-bird') history.replaceState(null, '', location.pathname + location.search); if (from && from.focus) from.focus(); });
-    form.addEventListener('submit', async e => {
-      e.preventDefault(); err.hidden = true;
-      const f = new FormData(form), email = String(f.get('email')).trim();
-      if (!String(f.get('name')).trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email) || !f.get('consent')) { err.textContent = M.bad; err.hidden = false; return; }
-      go.disabled = true; go.textContent = M.busy;
-      try {
-        const r = await fetch('/api/subscribe', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({name: f.get('name'), email, website: f.get('website'), consent: true, lang: eb.dataset.lang, t: opened})});
-        if (!r.ok) throw 0;
-        form.hidden = true; ok.hidden = false; ok.focus(); form.reset();
-      } catch { err.textContent = M.err; err.hidden = false; go.disabled = false; go.textContent = M.go; }
-    });
+  // early bird: a popup glitches in after load, stays 4 s, then folds into the "Early Bird" nav chip; any [data-eb] opens the how-to
+  const pop = document.getElementById('ebPop'), dlg = document.getElementById('ebDlg'), chip = document.getElementById('ebChip');
+  if (pop && dlg && chip && dlg.showModal) {
+    if (Date.now() > Date.UTC(2026, 11, 31, 22, 0)) { pop.remove(); chip.remove(); document.querySelectorAll('.eb-link').forEach(l => l.remove()); }
+    else {
+      let seen = false; try { seen = !!sessionStorage.getItem('eb'); } catch {}
+      let folded = false, timer = 0;
+      const fold = () => {
+        if (folded) return; folded = true; clearTimeout(timer); try { sessionStorage.setItem('eb', '1'); } catch {}
+        const show = () => { pop.hidden = true; chip.classList.add('on'); if (!reduce) chip.animate([{transform: 'scale(1.35)', boxShadow: '0 0 0 0 rgba(0,230,118,.7)'}, {transform: 'scale(1)', boxShadow: '0 0 0 14px rgba(0,230,118,0)'}], {duration: 900, easing: 'ease-out'}); };
+        if (reduce || pop.hidden) return show();
+        const a = pop.getBoundingClientRect(), c = chip.getBoundingClientRect();
+        const dx = c.left + c.width / 2 - (a.left + a.width / 2), dy = c.top + c.height / 2 - (a.top + a.height / 2), k = Math.max(.08, c.width / a.width);
+        pop.classList.remove('glitch');
+        pop.animate([{transform: 'none', opacity: 1}, {transform: `translate(${dx}px,${dy}px) scale(${k})`, opacity: 0}], {duration: 650, easing: 'cubic-bezier(.6,0,.3,1)', fill: 'forwards'}).onfinish = show;
+      };
+      const popIn = () => { pop.hidden = false; pop.classList.add('glitch'); timer = setTimeout(fold, 4000); };
+      if (seen || reduce) chip.classList.add('on');
+      else { const go = () => setTimeout(popIn, 700); document.readyState === 'complete' ? go() : addEventListener('load', go, {once: true}); }
+      let from = null;
+      document.querySelectorAll('[data-eb]').forEach(el => el.addEventListener('click', e => {
+        e.preventDefault(); from = el; const m = document.getElementById('mnav'); if (m && !m.hidden) m.hidden = true;
+        fold(); dlg.showModal();
+      }));
+      dlg.querySelector('.lb-close').addEventListener('click', () => dlg.close());
+      dlg.addEventListener('click', e => { if (e.target === dlg) dlg.close(); });
+      dlg.addEventListener('close', () => { if (from && from.isConnected && from.offsetParent) from.focus(); else chip.focus(); });
+    }
   }
 })();

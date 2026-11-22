@@ -15,7 +15,7 @@
 <link rel="manifest" href="/site.webmanifest">
 <link rel="preload" href="/assets/fonts/DMSans.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/assets/fonts/JetBrainsMono.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/assets/site.css?v=1b8b383f">
+<link rel="stylesheet" href="/assets/site.css?v=9e96b59e">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="TextFox">
 <meta property="og:locale" content="da_DK">
@@ -55,9 +55,9 @@
 <header class="nav"><div class="wrap">
   <a class="brand" href="/da" aria-label="TextFox forside"><svg aria-hidden="true"><use href="#fox"/></svg>textfox</a>
   <nav class="nav-links" aria-label="Main"><a href="/da#day">En dag</a><a href="/da#triggers">Funktioner</a><a href="/da#ai">AI</a><a href="/da#privacy">Privatliv</a><a href="/da#faq">FAQ</a><a href="/da/influencere">Influencere</a></nav>
-  <div class="nav-end"><a class="lang" href="/one-tap-text-widget" hreflang="en" lang="en" title="English" aria-label="English">EN</a><a class="btn btn-g btn-sm" href="#early-bird" data-signup role="button" title="Få 50 % rabat: skriv dig på early bird-listen til Google Play-lanceringen" aria-haspopup="dialog">Få 50 % rabat</a><button class="menu-btn" type="button" aria-expanded="false" aria-controls="mnav" aria-label="Menu" data-close="Luk menu"><span></span><span></span></button></div>
+  <div class="nav-end"><a class="lang" href="/one-tap-text-widget" hreflang="en" lang="en" title="English" aria-label="English">EN</a><button class="eb-chip" type="button" id="ebChip" data-eb aria-haspopup="dialog">Early Bird</button><a class="btn btn-g btn-sm" href="https://play.google.com/apps/testing/app.kodekid.automatiq" rel="noopener">Hent appen</a><button class="menu-btn" type="button" aria-expanded="false" aria-controls="mnav" aria-label="Menu" data-close="Luk menu"><span></span><span></span></button></div>
 </div>
-  <nav class="mnav" id="mnav" aria-label="Menu" hidden><div class="wrap"><a href="/da#day">En dag</a><a href="/da#triggers">Funktioner</a><a href="/da#ai">AI</a><a href="/da#privacy">Privatliv</a><a href="/da#faq">FAQ</a><a href="/da/influencere">Influencere</a><a class="btn btn-g" href="#early-bird" data-signup role="button" title="Få 50 % rabat: skriv dig på early bird-listen til Google Play-lanceringen" aria-haspopup="dialog">Få 50 % rabat</a></div></nav>
+  <nav class="mnav" id="mnav" aria-label="Menu" hidden><div class="wrap"><a href="/da#day">En dag</a><a href="/da#triggers">Funktioner</a><a href="/da#ai">AI</a><a href="/da#privacy">Privatliv</a><a href="/da#faq">FAQ</a><a href="/da/influencere">Influencere</a><a class="eb-link" href="#early-bird" data-eb>Early Bird</a><a class="btn btn-g" href="https://play.google.com/apps/testing/app.kodekid.automatiq" rel="noopener">Hent appen</a></div></nav>
 </header>
 <main id="main">
 <section class="page-hero">
@@ -67,8 +67,8 @@
     <p class="kicker" style="color:var(--rose)">// on tap(widget)</p>
     <h1 class="h1 sub">Send en sms med ét tryk.</h1>
     <p class="lede"><strong>Læg enhver TextFox-makro på hjemmeskærmen som en widget.</strong> Ét tryk sender en færdig sms til alle på listen, uden at du åbner en app eller skriver et ord.</p>
-    <div class="cta-row"><a class="btn btn-g play-btn" href="#early-bird" data-signup role="button" title="Få 50 % rabat: skriv dig på early bird-listen til Google Play-lanceringen" aria-haspopup="dialog"><svg width="18" height="20" viewBox="0 0 16 18" aria-hidden="true"><path d="M1 1.2v15.6c0 .5.5.8.9.6L15 9.6a.7.7 0 0 0 0-1.2L1.9.6C1.5.4 1 .7 1 1.2Z" fill="currentColor"/></svg><span><small>50 % rabat · snart på</small>Google Play</span></a></div>
-    <p class="cta-note">Udkommer på Google Play om få dage · 50 % early bird-rabat · 30 dage gratis · Android 8.0+</p>
+    <div class="cta-row"><a class="btn btn-g play-btn" href="https://play.google.com/apps/testing/app.kodekid.automatiq" rel="noopener"><svg width="18" height="20" viewBox="0 0 16 18" aria-hidden="true"><path d="M1 1.2v15.6c0 .5.5.8.9.6L15 9.6a.7.7 0 0 0 0-1.2L1.9.6C1.5.4 1 .7 1 1.2Z" fill="currentColor"/></svg><span><small>Hent den på</small>Google Play</span></a></div>
+    <p class="cta-note">Early bird: <strong>50 % rabat</strong> med koden <strong>TEXTFOX50</strong> til 31. dec. kl. 23:00 · 30 dage gratis · Android 8.0+</p>
   </div>
 </section>
 
@@ -101,7 +101,7 @@
 <section class="section tight"><div class="wrap narrow"><h2 class="h2">Spørgsmål om widgetten</h2><div class="faq"><details><summary>Sender widgetten uden at åbne appen?</summary><div><p>Ja. Ét tryk på widgetten sender makroens sms med det samme. Du behøver ikke åbne TextFox.</p></div></details><details><summary>Kan én widget sende til flere personer?</summary><div><p>Ja. Widgetten sender makroen til alle modtagere på listen, og hver kopi kan indeholde personens navn.</p></div></details><details><summary>Hvordan ved jeg, at sms&#x27;en er sendt?</summary><div><p>Widgettens undertekst viser seneste afsendelse, fx &quot;Last: 14:32 ✓&quot;, og loggen i appen viser leveringsstatus.</p></div></details><details><summary>Kan jeg have flere widgets?</summary><div><p>Ja. Tilføj én widget pr. makro, og placér så mange, du vil, på dine hjemmeskærme.</p></div></details></div></div></section>
 <section class="section tight"><div class="wrap"><h2 class="h3">Mere af det, TextFox kan</h2><div class="related"><a href="/da/planlagte-sms"><span>Planlagte sms'er</span><span class="g">→</span></a><a href="/da/autosvar-sms"><span>Autosvar</span><span class="g">→</span></a><a href="/da/sms-ved-ubesvaret-opkald"><span>Sms ved ubesvaret opkald</span><span class="g">→</span></a><a href="/da#ai"><span>AI-varianter</span><span class="g">→</span></a></div></div></section>
 <section class="final"><div class="wrap"><div class="panel"><h2>Sæt det op én gang.<br>Så kører det bare.</h2>
-<p>Til Android 8.0 og nyere. Gratis i 30 dage, derefter et engangskøb på 7 USD. Kører på din telefon: ingen konto, ingen reklamer, ingen sporing.</p><div class="cta-row"><a class="btn btn-g play-btn" href="#early-bird" data-signup role="button" title="Få 50 % rabat: skriv dig på early bird-listen til Google Play-lanceringen" aria-haspopup="dialog"><svg width="18" height="20" viewBox="0 0 16 18" aria-hidden="true"><path d="M1 1.2v15.6c0 .5.5.8.9.6L15 9.6a.7.7 0 0 0 0-1.2L1.9.6C1.5.4 1 .7 1 1.2Z" fill="currentColor"/></svg><span><small>50 % rabat · snart på</small>Google Play</span></a></div><p class="cta-note">Udkommer på Google Play om få dage · 50 % early bird-rabat · 30 dage gratis · Android 8.0+</p></div></div></section>
+<p>Til Android 8.0 og nyere. Gratis i 30 dage, derefter et engangskøb på 7 USD. Kører på din telefon: ingen konto, ingen reklamer, ingen sporing.</p><div class="cta-row"><a class="btn btn-g play-btn" href="https://play.google.com/apps/testing/app.kodekid.automatiq" rel="noopener"><svg width="18" height="20" viewBox="0 0 16 18" aria-hidden="true"><path d="M1 1.2v15.6c0 .5.5.8.9.6L15 9.6a.7.7 0 0 0 0-1.2L1.9.6C1.5.4 1 .7 1 1.2Z" fill="currentColor"/></svg><span><small>Hent den på</small>Google Play</span></a></div><p class="cta-note">Early bird: <strong>50 % rabat</strong> med koden <strong>TEXTFOX50</strong> til 31. dec. kl. 23:00 · 30 dage gratis · Android 8.0+</p></div></div></section>
 
 <section class="share" aria-labelledby="share-h"><div class="wrap"><div class="share-in">
   <div><p class="kicker">// share</p><h2 class="h3" id="share-h">Kender du en, der altid kommer for sent?</h2><p class="body">Send dem TextFox. De første 30 dage er gratis, og den kan spare dem for en masse tasten.</p></div>
@@ -117,24 +117,19 @@
   <div class="foot">
     <div><a class="brand" href="/da" aria-label="TextFox forside"><svg aria-hidden="true"><use href="#fox"/></svg>textfox</a><p>Planlagte sms'er, autosvar og sms ved ubesvaret opkald til Android. Sæt det op én gang. Så kører det bare.</p></div>
     <div><h2>Funktioner</h2><ul><li><a href="/da/planlagte-sms">Planlagte sms'er</a></li><li><a href="/da/autosvar-sms">Autosvar</a></li><li><a href="/da/sms-ved-ubesvaret-opkald">Sms ved ubesvaret opkald</a></li><li><a href="/da/sms-med-et-tryk">Sms med ét tryk</a></li><li><a href="/da#ai">AI-varianter</a></li></ul></div>
-    <div><h2>TextFox</h2><ul><li><a href="#early-bird" data-signup role="button" title="Få 50 % rabat: skriv dig på early bird-listen til Google Play-lanceringen" aria-haspopup="dialog">Få 50 % rabat</a></li><li><a href="/da#faq">FAQ</a></li><li><a href="/da/om">Om skaberen</a></li><li><a href="/da/influencere">Til influencere</a></li><li><a href="/privacy">Privatlivspolitik (engelsk)</a></li></ul></div>
+    <div><h2>TextFox</h2><ul><li><a href="https://play.google.com/apps/testing/app.kodekid.automatiq" rel="noopener">Google Play</a></li><li><a href="/da#faq">FAQ</a></li><li><a href="/da/om">Om skaberen</a></li><li><a href="/da/influencere">Til influencere</a></li><li><a href="/privacy">Privatlivspolitik (engelsk)</a></li></ul></div>
     <div><h2>Kontakt</h2><ul><li><a href="mailto:hello@textfox.app">hello@textfox.app</a></li><li>Lavet af <a href="/da/om">Lars Sohl</a></li><li><a href="https://www.kodekid.app" rel="noopener">kodekid.app</a></li></ul></div>
   </div>
   <div class="legal"><span>© 2026 TextFox · <a href="https://www.kodekid.app" rel="noopener">kodekid.app</a></span><span><a href="/da/sitemap">Sitemap</a> · Ingen cookies. Ingen sporing.</span></div>
 </div></footer>
-<dialog class="lightbox signup" id="early-bird" aria-labelledby="eb-h" data-lang="da" data-msg="{&quot;busy&quot;: &quot;Sender\u2026&quot;, &quot;go&quot;: &quot;F\u00e5 min rabat p\u00e5 50 %&quot;, &quot;err&quot;: &quot;Noget gik galt. Pr\u00f8v igen, eller skriv til hello@textfox.app.&quot;, &quot;bad&quot;: &quot;Skriv dit navn og en gyldig e-mail, og s\u00e6t flueben.&quot;}">
+<aside class="eb-pop" id="ebPop" aria-live="polite" hidden><button type="button" class="eb-pop-btn" data-eb><span class="eb-pop-k">// early bird</span><span class="eb-pop-h" data-text="50 % rabat til early birds">50 % rabat til early birds</span><span class="eb-pop-s">Til 31. december kl. 23:00 · <b>TEXTFOX50</b></span></button></aside>
+<dialog class="lightbox signup" id="ebDlg" aria-labelledby="eb-h">
 <div class="su-card"><button class="lb-close" type="button" aria-label="Luk">×</button>
-<form class="su-form" method="post" action="/api/subscribe" novalidate>
-<p class="kicker">// early bird</p><h2 id="eb-h">Få 50 % rabat ved lancering</h2><p class="su-p">TextFox udkommer på Google Play om få dage. Skriv dig på early bird-listen, så sender vi dig linket og din rabatkode på 50 %, så snart den er live.</p>
-<label>Dit navn<input name="name" autocomplete="name" required maxlength="80"></label>
-<label>E-mail<input name="email" type="email" autocomplete="email" inputmode="email" required maxlength="254"></label>
-<label class="hp" aria-hidden="true">Website<input name="website" tabindex="-1" autocomplete="off"></label>
-<label class="su-consent"><input name="consent" type="checkbox" required><span>Jeg vil gerne have én e-mail, når TextFox udkommer, plus min rabatkode. Læs mere i <a href="/privacy">privatlivspolitikken</a> (engelsk). Du kan afmelde dig når som helst.</span></label>
-<p class="su-err" role="alert" hidden></p>
-<button class="btn btn-g" type="submit">Få min rabat på 50 %</button>
-</form>
-<div class="su-ok" hidden tabindex="-1"><h2>Næsten færdig!</h2><p>Vi har lige sendt dig en mail. Åbn den og tryk på <strong>Bekræft</strong> for at sikre din rabat. (Tjek spam, hvis den ikke kommer inden for et minut.)</p><button class="btn btn-ghost" type="button" data-su-close>Færdig</button></div>
+<p class="kicker">// early bird</p><h2 id="eb-h">Early Bird: 50 % rabat</h2><p class="su-p">Køb TextFox før årsskiftet og betal det halve. <strong>Til 31. december kl. 23:00.</strong></p>
+<ol class="eb-steps"><li><span>Hent TextFox på Google Play.</span></li><li><span>Når du køber den, så skriv koden <strong>TEXTFOX50</strong> i appen.</span></li><li><span>Det var det. 50 % rabat, trukket i appen.</span></li></ol>
+<button class="eb-code" type="button" data-copy="TEXTFOX50" data-label="Kopiér kode"><b>TEXTFOX50</b><span>Kopiér kode</span></button>
+<a class="btn btn-g" href="https://play.google.com/apps/testing/app.kodekid.automatiq" rel="noopener"><svg width="18" height="20" viewBox="0 0 16 18" aria-hidden="true"><path d="M1 1.2v15.6c0 .5.5.8.9.6L15 9.6a.7.7 0 0 0 0-1.2L1.9.6C1.5.4 1 .7 1 1.2Z" fill="currentColor"/></svg><span>Google Play</span></a>
 </div></dialog>
-<script src="/assets/bg.js?v=5fd2c919" defer></script><script src="/assets/site.js?v=b0665f36" defer></script>
+<script src="/assets/bg.js?v=5fd2c919" defer></script><script src="/assets/site.js?v=f78e5b70" defer></script>
 </body>
 </html>
