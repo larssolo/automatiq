@@ -1,6 +1,6 @@
 # TextFox: salgsplan (budget 0 kr)
 
-Sidst opdateret 22. november 2026. Ejer: Lars. Udfører: Claude (klip, tekster, hjemmeside, tal) + Lars til det, kun han kan (upload, Play Console, Reddit).
+Sidst opdateret 22. november 2026 (Windsor-handlinger verificeret med `list_actions`). Ejer: Lars. Udfører: Claude (klip, tekster, hjemmeside, tal) + Lars til det, kun han kan (upload, Play Console, Reddit).
 Alt indhold, der postes, er **på engelsk**. Selve planen er på dansk, ligesom resten af interne dokumenter.
 
 > Læs afsnit 1 først. Resten er værktøjskassen: hvad der skal tjekkes, hvem der gør hvad, hvad der postes hvornår, og hvordan vi ved, om det virker.
@@ -74,7 +74,7 @@ TextFox er en Android-app til **7 USD**, engangskøb efter 30 dages gratis prøv
 | Klip-pipeline til lodrette videoer (`marketing/shorts/`) | Bygget. To skabeloner ("macro" og "fox"), 8 klip i `clips.json`, musik og lyd syntetiseret fra kode, `make.sh` rendrer til `out/<id>.mp4` (ca. 1,5 min pr. klip) |
 | Early Bird på hjemmesiden | Live (popup, menupunkt, forklaring, kode TEXTFOX50, udløber automatisk efter 31/12 kl. 23:00 dansk tid) |
 | Go-links til måling | Klar som spec (afsnit 15). Bygges, når produktionslinket findes |
-| Windsor.ai | Forbundet (Trial), men det er den **generelle** connector (analyse). Den kan læse statistik og rette YouTube-detaljer, men **ikke uploade videoer** (afsnit 5) |
+| Windsor.ai for Social Media | Forbundet (Trial) med TikTok og YouTube. **Instagram, Facebook-side, LinkedIn-side og Threads er ikke forbundet endnu.** Windsor kan poste Instagram Reels og Facebook Reels fra en offentlig video-URL, men ikke uploade til YouTube eller TikTok (afsnit 5) |
 | Teaser-klip "Something clever is coming to Android" | Rendret (15,6 s) med cover og tekster, klar til upload (afsnit 9) |
 | Konti åbnet og omlagt til business/creator | Mangler: Lars |
 
@@ -100,18 +100,26 @@ Intet i dette afsnit koster penge, men hver ting kan ellers lække salg. Ejer i 
 
 ## 5. Adgang via Windsor.ai og arbejdsdeling
 
-### Hvad den forbundne Windsor kan (verificeret 22. nov.)
+### Hvad Windsor kan (`list_actions` kørt 22. nov. på "Windsor.ai for Social Media")
 
-Forbundet i dag: **TikTok** (brugernavn `textfox4`, visningsnavn "larssohl", ikke business-konto, 0 følgere, 2 videoer) og **YouTube-kanalen "TextFox"** (0 abonnenter, ingen offentlige videoer, ingen kanalbeskrivelse). **Instagram er ikke forbundet.** Windsor-planen er **Trial** (30 dages datahistorik).
+| Platform | Forbundet nu | Kan Windsor poste video? |
+|---|---|---|
+| **Instagram** | Nej. Mangler en Business/Creator-konto (via Facebook) | **Ja:** Reel fra en offentlig MP4/MOV-URL (3 s–15 min, ≤ 1 GB, 9:16 anbefalet, caption, cover), Story (video 3–60 s), billed- og karruselopslag, kommentarer (svar, skjul, slet), slet opslag |
+| **Facebook-side** | Nej | **Ja:** Reel (offentlig URL, 3–90 s, 9:16, ≥ 540×960, 24–60 fps), videoopslag, tekst/foto-opslag (kan **planlægges** 10 min til 29 dage frem), Messenger-svar |
+| **YouTube** | Ja (kanalen "TextFox": 0 abonnenter, ingen videoer, ingen beskrivelse) | **Nej.** Kun titel, beskrivelse, tags, kategori og synlighed på en video, der allerede er uploadet, plus kommentarer og playlister |
+| **TikTok** | Ja (`textfox4`, visningsnavn "larssohl", ikke business, 0 følgere) | **Nej.** Ingen handlinger overhovedet. Kun statistik |
+| **LinkedIn** | Nej | Kun en **virksomhedsside** (tekst, link, billede). Ingen video, ikke personlig profil |
+| **Threads** | Nej | Tekst og billede, ingen video |
 
-| Kan | Kan ikke |
-|---|---|
-| Læse statistik fra TikTok og YouTube: visninger, visningstid, profilbesøg, linkklik i bio, følgere, kommentarer, trafikkilder | **Uploade eller poste nye videoer**, hverken til YouTube, TikTok eller Instagram |
-| YouTube: rette titel, beskrivelse, tags, kategori og synlighed på en **eksisterende** video, svare på og moderere kommentarer, styre playlister | TikTok: ingen skrive-handlinger overhovedet |
+Windsor-planen er **Trial** (30 dages datahistorik). Prisen for en betalt plan er ikke verificeret (kilder er uenige), og 0 kr-budgettet gælder.
 
-**Hvorfor:** der ligger to Windsor-connectors i connector-biblioteket. Den forbundne hedder **"Windsor.ai"** (analyse og få skrive-handlinger). Den, der efter sin beskrivelse kan **poste organisk indhold** på Instagram, Facebook, TikTok, YouTube, LinkedIn og Threads, hedder **"Windsor.ai for Social Media"** og er **ikke** forbundet. Om den kan uploade en videofil, kan ikke ses, før den er forbundet (værktøjerne indlæses først i en ny session). Reddit er ikke med i nogen af dem.
+**Konsekvenser:**
 
-**Beslutningsregel:** forbind "Windsor.ai for Social Media", start en ny session og kør `list_actions` på YouTube, TikTok og Instagram. Findes en upload/publish-handling, bruger vi den. Ellers er **vej A** den faktiske vej, og Windsor bruges til tal og YouTube-detaljer. Budgettet er 0 kr: Trial-planen har kun 30 dages historik, og prisen for en betalt plan er ikke verificeret (kilder er uenige).
+- **Instagram og Facebook posteres af Claude** (efter Lars' godkendelse af hvert opslag), så snart de er forbundet. **YouTube og TikTok uploader Lars selv** (15 min/uge); Claude sætter YouTube-detaljer og læser tal.
+- **Ingen af handlingerne har en kladde-tilstand.** Et Instagram- eller Facebook-opslag er offentligt med det samme (kan slettes igen med `delete_media`/`delete_post`). Første opslag er derfor selve teaseren.
+- **Videoen skal ligge på en offentlig URL** (direkte til filen, uden login og uden redirect), for Instagram og Facebook henter den selv. Claude lægger de godkendte klip under `https://www.textfox.app/media/shorts/<id>.mp4` via en almindelig PR og rydder op i ældre filer.
+- LinkedIn: kun virksomhedsside, så Lars' personlige opslag (afsnit 14) laves manuelt.
+- To Windsor-connectors er forbundet (den almene og "for Social Media"). Den almene kan kobles fra, så der kun er én.
 
 ### Tre veje, billigste først
 
@@ -119,15 +127,13 @@ Forbundet i dag: **TikTok** (brugernavn `textfox4`, visningsnavn "larssohl", ikk
 |---|---|---|
 | **A. Post-pakker** | Claude leverer færdige filer + tekst + hashtags + tidspunkt + første kommentar. Lars planlægger i YouTube Studio, Meta Business Suite og TikToks upload. | 0 kr, ca. 20 min/uge |
 | **B. Lars' computer** | Lars forbinder sin computer, så Claude arbejder i hans indloggede Chrome. Lars godkender hvert skridt. | 0 kr, langsommere og skrøbeligt |
-| **C. Windsor.ai (valgt)** | Den forbundne: Claude henter statistik og redigerer YouTube-detaljer/kommentarer, men uploader ikke. "Windsor.ai for Social Media" kan måske mere (se ovenfor). | Trial nu, betalt plan ikke verificeret |
+| **C. Windsor.ai for Social Media (valgt)** | Claude poster **Instagram Reels** og **Facebook Reels** direkte fra en offentlig URL, henter statistik og redigerer YouTube-detaljer. Uploader ikke til YouTube/TikTok. | Trial nu, betalt plan ikke verificeret |
 
 ### Sådan forbinder Lars Windsor (ca. 15 min)
 
 1. claude.ai → **Settings → Connectors** → søg **"Windsor.ai for Social Media"** (ikke den almene "Windsor.ai") → **Connect**. Log ind hos Windsor.
-2. Hos Windsor: forbind hver konto med OAuth (**Instagram** via Facebook-siden, TikTok, YouTube, evt. Facebook-siden, LinkedIn og Threads). TikTok og YouTube er forbundet; Instagram mangler. Claude ser aldrig adgangskoder.
-3. Sig til, så starter Claude en ny session med connectoren, kører `list_actions` og prøver kun det, der kan gemmes som **privat kladde**.
-
-**Åbent spørgsmål (kun hvis upload findes):** om Windsor tager en videofil direkte eller kræver en offentlig URL. Kræver den URL, lægger Claude de godkendte klip under `https://www.textfox.app/media/shorts/<id>.mp4` kun så længe opslaget planlægges, og fjerner dem bagefter.
+2. Hos Windsor: forbind hver konto med OAuth (**Instagram** via Facebook-siden, TikTok, YouTube, evt. Facebook-siden, LinkedIn og Threads). TikTok og YouTube er forbundet; **Instagram (Business/Creator, knyttet til en Facebook-side) og Facebook-siden mangler**. Claude ser aldrig adgangskoder.
+3. Sig til, så poster Claude teaseren som Instagram Reel og Facebook Reel (efter Lars' OK på caption og tidspunkt).
 
 ### Spilleregler
 
@@ -136,14 +142,14 @@ Forbundet i dag: **TikTok** (brugernavn `textfox4`, visningsnavn "larssohl", ikk
 - Ingen adgangskoder i chat. To-faktor slået til på alle konti. Adgang kan altid trækkes tilbage hos Windsor.
 - Alle anmeldelser, kommentarer og DM'er besvares inden for 48 timer. Claude kladder svar, Lars godkender (de første uger; senere kan rutinesvar aftales).
 
-### Ugerytme (indtil upload via Windsor er bekræftet)
+### Ugerytme
 
 | Dag | Hvem | Hvad |
 |---|---|---|
 | Man | Claude | Producerer ugens pakke (5 korte klip + 1 tutorial), skriver tekster, henter tal via Windsor og analyserer sidste uge |
 | Tirs | **Lars** | Godkender pakken og tallene (20 min) |
-| Ons | **Lars** | Uploader/planlægger de godkendte filer i YouTube Studio, TikTok og Meta Business Suite med de færdige tekster (15–20 min) |
-| Ons–søn | Claude | Sætter YouTube-titel, beskrivelse, tags og synlighed via Windsor, når Lars har uploadet som privat. Svarkladder til kommentarer |
+| Ons | **Lars** | Uploader de godkendte filer til **YouTube Studio og TikTok** med de færdige tekster (15 min) |
+| Ons–søn | Claude | Poster **Instagram Reel og Facebook Reel** (efter godkendelse), sætter YouTube-titel/beskrivelse/tags/synlighed via Windsor, når Lars har uploadet som privat, og kladder svar til kommentarer |
 | Dagligt | **Lars** | 10 min Reddit/fora (afsnit 14) |
 | Fre | Claude | Én side: tal, hvad der virkede, næste eksperiment |
 
@@ -203,9 +209,9 @@ Det kun Lars kan: Play Console, kontoer og login, optagelser på egen telefon og
 
 ### Gratis ekstra, samme fil (næsten ingen ekstra tid via Windsor)
 
-- **Facebook-side (Reels):** forældre og selvstændige bruger både sms og Facebook.
-- **Threads:** samme klip, kort tekst.
-- **LinkedIn** (Lars' profil): ubesvaret-opkald-historien til selvstændige og designere i netværket. Her må Lars gerne skrive dansk.
+- **Facebook-side (Reels):** forældre og selvstændige bruger både sms og Facebook. Claude poster Reels via Windsor, når siden er forbundet.
+- **Threads:** Windsor kan kun tekst og billede, ikke video. Kort tekstopslag med link, eller Lars poster videoen selv.
+- **LinkedIn** (Lars' profil): ubesvaret-opkald-historien til selvstændige og designere i netværket. Lars poster selv (Windsor kan kun en virksomhedsside og ingen video). Her må Lars gerne skrive dansk.
 - **YouTube Community-opslag:** påmindelser om tutorials.
 
 ### Nye kanaler jeg foreslår (som ikke var på listen)
@@ -509,7 +515,7 @@ I dag er søndag 22. nov. Early Bird slutter torsdag 31. dec. kl. 23:00 (ca. 5,5
 | Early Bird rammer ikke dem, der installerer efter ca. 1. dec. | Afsnit 4: test køb under prøven, ellers ryk datoen |
 | Misbrug (spam, chikane) og juridisk risiko | Markedsfør kun svar og påmindelser, aldrig masseudsendelser (GDPR/ePrivacy; i USA TCPA) |
 | Platformregler for nye konti | Ingen købte følgere, én konto pr. platform, mærk gaver |
-| Windsor kan ikke uploade (bekræftet for den forbundne connector, 22/11), og en betalt plan er ikke verificeret | Vej A (post-pakker). Planen holder uændret. Test "Windsor.ai for Social Media" |
+| Windsor kan ikke uploade til YouTube/TikTok (bekræftet 22/11), og Instagram/Facebook har ingen kladde-tilstand. En betalt plan er ikke verificeret | YouTube/TikTok manuelt (vej A). Instagram/Facebook: godkend caption først, og slet opslaget, hvis noget er galt |
 | Lars' tid | Færre ting godt frem for mange halvt. Rytmen i afsnit 5 |
 
 ---
@@ -533,4 +539,4 @@ Kilder jeg har brugt (web, 22. nov. 2026). Flere er sammenligningssider eller le
 - [Android Central, udviklerregler](https://forums.androidcentral.com/help/developerrules) (gammel info)
 - [Mobilsiden.dk, Android-nyheder](https://mobilsiden.dk/nyheder/android-ios)
 
-**Ikke verificeret:** r/androidapps' regler, XDA og Android Central-forummets nuværende udviklerregler, om "Windsor.ai for Social Media" kan uploade video (og om en videofil eller en URL), hvad en betalt Windsor-plan koster, Google Messages' evne til at gentage beskeder, præcis Play-gebyrsats og promokode-grænse, TikToks aktuelle krav til business-konti. Alt dette står som tjek i planen, ikke som fakta.
+**Ikke verificeret:** r/androidapps' regler, XDA og Android Central-forummets nuværende udviklerregler, om Instagram og Facebook accepterer vores MP4 uden problemer (afprøves med første opslag), hvad en betalt Windsor-plan koster, Google Messages' evne til at gentage beskeder, præcis Play-gebyrsats og promokode-grænse, TikToks aktuelle krav til business-konti. Alt dette står som tjek i planen, ikke som fakta.
