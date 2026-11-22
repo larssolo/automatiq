@@ -1,0 +1,30 @@
+[
+  {
+    "id": "1050e893-22f9-58ce-b290-f22974f2cead",
+    "name": "Out of office",
+    "triggerType": "INCOMING",
+    "scheduledTime": null,
+    "repeatDaily": true,
+    "recipients": [],
+    "messageBody": "Thanks for your message! I'm out of office and will get back to you as soon as I can. If it's urgent, please call.",
+    "enabled": false,
+    "lastTriggeredAt": null,
+    "lastStatus": null,
+    "createdAt": 1795305600000,
+    "daysOfWeek": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "weekInterval": 1,
+    "aiReplyEnabled": false,
+    "aiSendMode": "APPROVE",
+    "aiReplyInstruction": null,
+    "actionType": "SMS",
+    "soundMode": "SILENT"
+  }
+]

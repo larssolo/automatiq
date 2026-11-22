@@ -1,0 +1,49 @@
+[
+  {"slug": "running-late", "icon": "i-tap", "color": "rose", "title": "Running late",
+   "blurb": "One tap from a widget on your home screen. The text is on its way before you reach the door.",
+   "summary": "Widget → \"Running about 10 minutes late. Sorry! I'm on my way.\"",
+   "macros": [{"name": "Running late", "trigger": "MANUAL", "body": "Running about 10 minutes late. Sorry! I'm on my way."}]},
+
+  {"slug": "good-morning", "icon": "i-clock", "color": "amber", "title": "Good morning",
+   "blurb": "A weekday good-morning that greets each person by their contact name.",
+   "summary": "Mon–Fri 08:00 → \"Good morning, {modtager}! ☀️\"",
+   "macros": [{"name": "Good morning", "trigger": "SCHEDULED", "time": "08:00", "days": [1, 2, 3, 4, 5],
+               "body": "Good morning, {modtager}! ☀️ Have a great {ugedag}."}]},
+
+  {"slug": "good-morning-ai", "icon": "i-spark", "color": "indigo", "title": "Good morning, never the same",
+   "blurb": "Same idea, but Gemini rewrites it every time, so nobody gets the same text twice. You approve each one before it goes. Needs a free Gemini key.",
+   "summary": "Every day 08:00 · ✦ AI variation · ask me first",
+   "macros": [{"name": "Good morning (AI-fresh)", "trigger": "SCHEDULED", "time": "08:00",
+               "body": "Good morning, {modtager}! ☀️ Have a lovely {ugedag}.",
+               "ai": "Warm and short, one or two sentences. Never use the same wording twice."}]},
+
+  {"slug": "out-of-office", "icon": "i-reply", "color": "teal", "title": "Out of office",
+   "blurb": "Everyone who texts you gets a polite answer while you're away. Add an end date in the editor and it switches itself off.",
+   "summary": "Incoming text → \"Thanks for your message! I'm out of office…\"",
+   "macros": [{"name": "Out of office", "trigger": "INCOMING",
+               "body": "Thanks for your message! I'm out of office and will get back to you as soon as I can. If it's urgent, please call."}]},
+
+  {"slug": "driving", "icon": "i-reply", "color": "green", "title": "Driving",
+   "blurb": "Tell people why you're not answering. Switch it on when you leave, off when you arrive.",
+   "summary": "Incoming text → \"I'm driving right now and will reply when I stop. 🚗\"",
+   "macros": [{"name": "Driving", "trigger": "INCOMING",
+               "body": "I'm driving right now and will reply when I stop. 🚗 If it's urgent, please call."}]},
+
+  {"slug": "missed-call-text-back", "icon": "i-missed", "color": "rose", "title": "Missed-call text-back",
+   "blurb": "When you can't pick up, the caller gets a text seconds later. Made for tradespeople, salons, meetings and school pickup.",
+   "summary": "Missed call → \"Sorry I missed your call. I'll call you back…\"",
+   "macros": [{"name": "Missed call text-back", "trigger": "MISSED_CALL",
+               "body": "Hi! Sorry I missed your call. I'll call you back as soon as I can. If it's quick, feel free to text me here."}]},
+
+  {"slug": "weekly-reminder", "icon": "i-bell", "color": "amber", "title": "Weekly reminder",
+   "blurb": "Practice, pickup, bin day. The same reminder to the same people every week, without you typing it again.",
+   "summary": "Tuesday 17:00 → \"Reminder: practice tonight at 18:30.\"",
+   "macros": [{"name": "Weekly reminder", "trigger": "SCHEDULED", "time": "17:00", "days": [2],
+               "body": "Reminder: practice tonight at 18:30. See you there! 🙌"}]},
+
+  {"slug": "quiet-nights", "icon": "i-moon", "color": "indigo", "title": "Quiet nights",
+   "blurb": "Not a text at all: TextFox also runs your phone's sound mode. Do Not Disturb goes on at 22:00 and off at 07:00, every night. Two macros in one file.",
+   "summary": "22:00 Do Not Disturb on · 07:00 off",
+   "macros": [{"name": "Quiet nights: on", "trigger": "SCHEDULED", "time": "22:00", "action": "SOUND", "sound": "DND_ON"},
+              {"name": "Quiet nights: off", "trigger": "SCHEDULED", "time": "07:00", "action": "SOUND", "sound": "DND_OFF"}]}
+]

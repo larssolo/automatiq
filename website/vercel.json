@@ -103,6 +103,11 @@
       "source": "/da/influencere.html",
       "destination": "/da/influencere",
       "permanent": true
+    },
+    {
+      "source": "/templates.html",
+      "destination": "/templates",
+      "permanent": true
     }
   ],
   "headers": [
@@ -218,6 +223,10 @@
     {
       "source": "/da/influencere",
       "destination": "/da/influencere.html"
+    },
+    {
+      "source": "/templates",
+      "destination": "/templates.html"
     }
   ]
 }

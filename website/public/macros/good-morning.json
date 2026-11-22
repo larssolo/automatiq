@@ -1,0 +1,28 @@
+[
+  {
+    "id": "2a2eb5a4-3e43-50da-8942-1f38440176db",
+    "name": "Good morning",
+    "triggerType": "SCHEDULED",
+    "scheduledTime": "08:00",
+    "repeatDaily": true,
+    "recipients": [],
+    "messageBody": "Good morning, {modtager}! ☀️ Have a great {ugedag}.",
+    "enabled": false,
+    "lastTriggeredAt": null,
+    "lastStatus": null,
+    "createdAt": 1795305600000,
+    "daysOfWeek": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "weekInterval": 1,
+    "aiReplyEnabled": false,
+    "aiSendMode": "APPROVE",
+    "aiReplyInstruction": null,
+    "actionType": "SMS",
+    "soundMode": "SILENT"
+  }
+]

@@ -1,0 +1,58 @@
+[
+  {
+    "id": "a0b8c6c4-7729-56ea-918a-7628b7d08948",
+    "name": "Quiet nights: on",
+    "triggerType": "SCHEDULED",
+    "scheduledTime": "22:00",
+    "repeatDaily": true,
+    "recipients": [],
+    "messageBody": "",
+    "enabled": false,
+    "lastTriggeredAt": null,
+    "lastStatus": null,
+    "createdAt": 1795305600000,
+    "daysOfWeek": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "weekInterval": 1,
+    "aiReplyEnabled": false,
+    "aiSendMode": "APPROVE",
+    "aiReplyInstruction": null,
+    "actionType": "SOUND",
+    "soundMode": "DND_ON"
+  },
+  {
+    "id": "5fd5169f-8104-5b92-acc4-e3e780e01b02",
+    "name": "Quiet nights: off",
+    "triggerType": "SCHEDULED",
+    "scheduledTime": "07:00",
+    "repeatDaily": true,
+    "recipients": [],
+    "messageBody": "",
+    "enabled": false,
+    "lastTriggeredAt": null,
+    "lastStatus": null,
+    "createdAt": 1795305600000,
+    "daysOfWeek": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "weekInterval": 1,
+    "aiReplyEnabled": false,
+    "aiSendMode": "APPROVE",
+    "aiReplyInstruction": null,
+    "actionType": "SOUND",
+    "soundMode": "DND_OFF"
+  }
+]

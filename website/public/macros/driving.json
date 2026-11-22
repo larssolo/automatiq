@@ -1,0 +1,30 @@
+[
+  {
+    "id": "7a94838c-aab2-5128-8e08-5e538b66d959",
+    "name": "Driving",
+    "triggerType": "INCOMING",
+    "scheduledTime": null,
+    "repeatDaily": true,
+    "recipients": [],
+    "messageBody": "I'm driving right now and will reply when I stop. 🚗 If it's urgent, please call.",
+    "enabled": false,
+    "lastTriggeredAt": null,
+    "lastStatus": null,
+    "createdAt": 1795305600000,
+    "daysOfWeek": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "weekInterval": 1,
+    "aiReplyEnabled": false,
+    "aiSendMode": "APPROVE",
+    "aiReplyInstruction": null,
+    "actionType": "SMS",
+    "soundMode": "SILENT"
+  }
+]
