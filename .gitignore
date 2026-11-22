@@ -13,3 +13,7 @@ captures/
 keystore.properties
 *.jks
 *.keystore
+
+# Rendered shorts (regenerate with marketing/shorts/make.sh)
+marketing/shorts/out/
+__pycache__/

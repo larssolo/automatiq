@@ -1,0 +1,24 @@
+[
+  {
+    "id": "4aaddf40-1047-5479-bcfd-a127d28b4e6a",
+    "name": "Weekly reminder",
+    "triggerType": "SCHEDULED",
+    "scheduledTime": "17:00",
+    "repeatDaily": true,
+    "recipients": [],
+    "messageBody": "Reminder: practice tonight at 18:30. See you there! 🙌",
+    "enabled": false,
+    "lastTriggeredAt": null,
+    "lastStatus": null,
+    "createdAt": 1795305600000,
+    "daysOfWeek": [
+      2
+    ],
+    "weekInterval": 1,
+    "aiReplyEnabled": false,
+    "aiSendMode": "APPROVE",
+    "aiReplyInstruction": null,
+    "actionType": "SMS",
+    "soundMode": "SILENT"
+  }
+]

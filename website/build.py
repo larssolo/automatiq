@@ -7,7 +7,7 @@ Pages live in src/pages/*.html with a JSON header comment. Shared head, nav,
 footer, FAQ data and schema.org markup are generated here, so every page
 stays consistent. The output in public/ is committed and served as-is by Vercel.
 """
-import datetime, hashlib, html, json, pathlib, re, urllib.parse
+import datetime, hashlib, html, json, pathlib, re, urllib.parse, uuid
 
 import markdown
 
@@ -50,7 +50,7 @@ T = {
            "f_features": "Features", "f_contact": "Contact", "about": "About the maker", "privacy": "Privacy policy", "made_by": "Made by",
            "no_track": "No cookies. No tracking.", "related_h": "More of what TextFox does",
            "pages": {"sched": ("/scheduled-text-messages", "Scheduled texts"), "auto": ("/auto-reply-sms", "Auto-reply"), "missed": ("/missed-call-text-back", "Missed-call text-back"),
-                     "tap": ("/one-tap-text-widget", "One-tap widget"), "ai": ("/#ai", "AI variations"), "about": ("/about", "About the maker"), "faq": ("/#faq", "FAQ"), "creators": ("/creators", "For creators")},
+                     "tap": ("/one-tap-text-widget", "One-tap widget"), "ai": ("/#ai", "AI variations"), "about": ("/about", "About the maker"), "faq": ("/#faq", "FAQ"), "creators": ("/creators", "For creators"), "templates": ("/templates", "Templates")},
            "privacy_href": "/privacy", "crumb_root": "TextFox",
            "share_text": "TextFox sends your texts for you: scheduled SMS, auto-replies and missed-call text-back for Android.",
            "share_subject": "Have a look at TextFox", "share_h": "Know someone who's always running late?",
@@ -65,7 +65,7 @@ T = {
            "f_features": "Funktioner", "f_contact": "Kontakt", "about": "Om skaberen", "privacy": "Privatlivspolitik (engelsk)", "made_by": "Lavet af",
            "no_track": "Ingen cookies. Ingen sporing.", "related_h": "Mere af det, TextFox kan",
            "pages": {"sched": ("/da/planlagte-sms", "Planlagte sms'er"), "auto": ("/da/autosvar-sms", "Autosvar"), "missed": ("/da/sms-ved-ubesvaret-opkald", "Sms ved ubesvaret opkald"),
-                     "tap": ("/da/sms-med-et-tryk", "Sms med ét tryk"), "ai": ("/da#ai", "AI-varianter"), "about": ("/da/om", "Om skaberen"), "faq": ("/da#faq", "FAQ"), "creators": ("/da/influencere", "Til influencere")},
+                     "tap": ("/da/sms-med-et-tryk", "Sms med ét tryk"), "ai": ("/da#ai", "AI-varianter"), "about": ("/da/om", "Om skaberen"), "faq": ("/da#faq", "FAQ"), "creators": ("/da/influencere", "Til influencere"), "templates": ("/templates", "Skabeloner (engelsk)")},
            "privacy_href": "/privacy", "crumb_root": "TextFox",
            "share_text": "TextFox sender dine sms'er for dig: planlagte sms'er, autosvar og sms ved ubesvaret opkald til Android.",
            "share_subject": "Kig lige på TextFox", "share_h": "Kender du en, der altid kommer for sent?",
@@ -233,6 +233,50 @@ def early_bird(lang="en"):
 <a class="btn btn-g" href="{PLAY_URL}" rel="noopener">{PLAY_SVG}<span>Google Play</span></a>
 <p class="eb-review">{E["review"]}</p>
 </div></dialog>"""
+
+
+# ---- importable macro templates ---------------------------------------------
+# src/templates.json is the single source: build.py expands each entry into the app's own import format
+# (see MacroJson.kt) and writes public/macros/<slug>.json plus one pack. Imported macros arrive switched
+# off with no recipients, so nothing can send until the person has looked at them.
+TEMPLATE_TS = 1795305600000  # fixed creation time (ms) so rebuilds are byte-identical
+TRIGGERS = {"SCHEDULED", "MANUAL", "INCOMING", "MISSED_CALL"}   # the Play build has no location or device-state triggers
+SOUNDS = {"NORMAL", "VIBRATE", "SILENT", "DND_ON", "DND_OFF"}
+
+
+def tpl_macro(slug, i, m):
+    assert m["trigger"] in TRIGGERS, m
+    if m["trigger"] == "SCHEDULED": assert re.fullmatch(r"([01]\d|2[0-3]):[0-5]\d", m["time"]), m
+    days = m.get("days", [1, 2, 3, 4, 5, 6, 7]); assert set(days) <= set(range(1, 8)), m
+    action = m.get("action", "SMS"); assert action in ("SMS", "SOUND"), m
+    if action == "SOUND": assert m["sound"] in SOUNDS, m
+    return {"id": str(uuid.uuid5(uuid.NAMESPACE_URL, f"{SITE}/templates/{slug}#{i}")), "name": m["name"], "triggerType": m["trigger"],
+            "scheduledTime": m.get("time"), "repeatDaily": True, "recipients": [], "messageBody": m.get("body", ""), "enabled": False,
+            "lastTriggeredAt": None, "lastStatus": None, "createdAt": TEMPLATE_TS, "daysOfWeek": days, "weekInterval": 1,
+            "aiReplyEnabled": bool(m.get("ai")), "aiSendMode": "APPROVE", "aiReplyInstruction": m.get("ai"),
+            "actionType": action, "soundMode": m.get("sound", "SILENT")}
+
+
+def write_templates():
+    items = json.loads((ROOT / "src" / "templates.json").read_text())
+    out = PUB / "macros"; out.mkdir(exist_ok=True)   # not /templates: that path is the page
+    pack = []
+    for t in items:
+        macros = [tpl_macro(t["slug"], i, m) for i, m in enumerate(t["macros"])]
+        pack += macros
+        (out / f"{t['slug']}.json").write_text(json.dumps(macros, indent=2, ensure_ascii=False) + "\n")
+    (out / "textfox-templates-all.json").write_text(json.dumps(pack, indent=2, ensure_ascii=False) + "\n")
+    return items, len(pack)
+
+
+def templates_html():
+    items = json.loads((ROOT / "src" / "templates.json").read_text())
+    cards = "".join(
+        f'<div class="tcard" style="--c:var(--{t["color"]})"><span class="ic"><svg aria-hidden="true"><use href="#{t["icon"]}"/></svg></span>'
+        f'<h3>{html.escape(t["title"])}</h3><p>{html.escape(t["blurb"])}</p><code>{html.escape(t["summary"])}</code>'
+        f'<div class="more"><a class="btn btn-ghost btn-sm" href="/macros/{t["slug"]}.json" download>Download .json</a></div></div>'
+        for t in items)
+    return f'<div class="tgrid" style="margin-top:44px">{cards}</div>'
 
 
 def ver(rel):
@@ -432,7 +476,7 @@ def footer(lang):
   <div class="foot">
     <div><a class="brand" href="{L["home"]}" aria-label="{L["home_aria"]}"><svg aria-hidden="true"><use href="#fox"/></svg>textfox</a><p>{L["f_tag"]}</p></div>
     <div><h2>{L["f_features"]}</h2><ul>{feats}</ul></div>
-    <div><h2>TextFox</h2><ul><li><a href="{store_href()}"{store_attrs(lang)}>Google Play</a></li><li><a href="{P["faq"][0]}">FAQ</a></li><li><a href="{P["about"][0]}">{L["about"]}</a></li><li><a href="{P["creators"][0]}">{P["creators"][1]}</a></li><li><a href="{L["privacy_href"]}">{L["privacy"]}</a></li></ul></div>
+    <div><h2>TextFox</h2><ul><li><a href="{store_href()}"{store_attrs(lang)}>Google Play</a></li><li><a href="{P["faq"][0]}">FAQ</a></li><li><a href="{P["about"][0]}">{L["about"]}</a></li><li><a href="{P["creators"][0]}">{P["creators"][1]}</a></li><li><a href="{P["templates"][0]}">{P["templates"][1]}</a></li><li><a href="{L["privacy_href"]}">{L["privacy"]}</a></li></ul></div>
     <div><h2>{L["f_contact"]}</h2><ul><li><a href="mailto:{CONTACT}">{CONTACT}</a></li><li>{L["made_by"]} <a href="{P["about"][0]}">Lars Sohl</a></li><li><a href="https://www.kodekid.app" rel="noopener">{PUBLISHER}</a></li></ul></div>
   </div>
   <div class="legal"><span>© {datetime.date.today().year} TextFox · <a href="https://www.kodekid.app" rel="noopener">{PUBLISHER}</a></span><span><a href="{'/da/sitemap' if lang == 'da' else '/sitemap'}">Sitemap</a> · {L["no_track"]}</span></div>
@@ -486,7 +530,7 @@ def render(meta, body):
     url = abs_url(meta["path"])
     lang = meta.get("lang", "en")
     body = (body.replace("{{PLAY}}", play(lang)).replace("{{CTA_NOTE}}", T[lang]["cta_note"]).replace("{{FAQ}}", faq_html(meta.get("faq", "home"), lang)).replace("{{CONTACT}}", CONTACT).replace("{{FILM_TRANSCRIPT}}", FILM_TRANSCRIPT_DA if lang == "da" else FILM_TRANSCRIPT)
-            .replace("{{RELATED}}", related(meta["path"], lang)).replace("{{FINAL}}", final(lang)).replace("{{EB_LINE}}", eb_line(lang)))
+            .replace("{{RELATED}}", related(meta["path"], lang)).replace("{{FINAL}}", final(lang)).replace("{{EB_LINE}}", eb_line(lang)).replace("{{TEMPLATES}}", templates_html()))
     scripts = "".join(f'<script src="{s}?v={ver(s)}" defer></script>' for s in ["/assets/bg.js", "/assets/site.js"] + meta.get("scripts", []))
     scripts += "".join(f'<script type="module" src="{s}?v={ver(s)}"></script>' for s in meta.get("modules", []))
     return f"""{head(meta, url)}
@@ -553,6 +597,8 @@ def sitemap_page(lang, pages):
 
 
 def main():
+    _, n_macros = write_templates()
+    print("templates:", n_macros, "macros")
     pages = []
     for f in sorted((ROOT / "src" / "pages").rglob("*.html")):
         raw = f.read_text()
@@ -605,6 +651,7 @@ Maker: Lars Sohl (Denmark), founder of kodekid.app, klokly.app and larssohl.dk �
 - [Auto-reply to text messages]({SITE}/auto-reply-sms): sender and keyword filters, quiet hours, fixed or AI-written replies
 - [Missed-call text-back]({SITE}/missed-call-text-back): texts callers after a missed or declined call, optional caller filter
 - [One-tap text widget]({SITE}/one-tap-text-widget): a home-screen widget per macro, one tap sends a ready-made text to one or many people
+- [Templates]({SITE}/templates): ready-made macros to import into TextFox as small JSON files: running late, good morning, AI-fresh good morning, out of office, driving, missed-call text-back, weekly reminder, quiet nights
 - [For creators]({SITE}/creators): a free promo code that unlocks TextFox for good for people making videos, reviews or posts about it, plus a press kit with films, logos, screenshots and copy
 - [About the maker]({SITE}/about): Lars Sohl, Danish graphic designer, photographer and creative coder; founder of kodekid.app, klokly.app and larssohl.dk
 - [Privacy policy]({SITE}/privacy)

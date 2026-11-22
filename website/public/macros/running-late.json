@@ -1,0 +1,30 @@
+[
+  {
+    "id": "bc29ee1d-ad77-5eb6-b0f1-ffd232499ed4",
+    "name": "Running late",
+    "triggerType": "MANUAL",
+    "scheduledTime": null,
+    "repeatDaily": true,
+    "recipients": [],
+    "messageBody": "Running about 10 minutes late. Sorry! I'm on my way.",
+    "enabled": false,
+    "lastTriggeredAt": null,
+    "lastStatus": null,
+    "createdAt": 1795305600000,
+    "daysOfWeek": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "weekInterval": 1,
+    "aiReplyEnabled": false,
+    "aiSendMode": "APPROVE",
+    "aiReplyInstruction": null,
+    "actionType": "SMS",
+    "soundMode": "SILENT"
+  }
+]

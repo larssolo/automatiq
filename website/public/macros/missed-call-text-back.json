@@ -1,0 +1,30 @@
+[
+  {
+    "id": "e1d1c0a5-c3b2-5545-9f7e-4e706195e534",
+    "name": "Missed call text-back",
+    "triggerType": "MISSED_CALL",
+    "scheduledTime": null,
+    "repeatDaily": true,
+    "recipients": [],
+    "messageBody": "Hi! Sorry I missed your call. I'll call you back as soon as I can. If it's quick, feel free to text me here.",
+    "enabled": false,
+    "lastTriggeredAt": null,
+    "lastStatus": null,
+    "createdAt": 1795305600000,
+    "daysOfWeek": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "weekInterval": 1,
+    "aiReplyEnabled": false,
+    "aiSendMode": "APPROVE",
+    "aiReplyInstruction": null,
+    "actionType": "SMS",
+    "soundMode": "SILENT"
+  }
+]

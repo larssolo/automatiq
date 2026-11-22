@@ -1,0 +1,30 @@
+[
+  {
+    "id": "03036507-385b-5bc6-9e45-862dab2f7386",
+    "name": "Good morning (AI-fresh)",
+    "triggerType": "SCHEDULED",
+    "scheduledTime": "08:00",
+    "repeatDaily": true,
+    "recipients": [],
+    "messageBody": "Good morning, {modtager}! ☀️ Have a lovely {ugedag}.",
+    "enabled": false,
+    "lastTriggeredAt": null,
+    "lastStatus": null,
+    "createdAt": 1795305600000,
+    "daysOfWeek": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "weekInterval": 1,
+    "aiReplyEnabled": true,
+    "aiSendMode": "APPROVE",
+    "aiReplyInstruction": "Warm and short, one or two sentences. Never use the same wording twice.",
+    "actionType": "SMS",
+    "soundMode": "SILENT"
+  }
+]
