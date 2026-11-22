@@ -1,106 +1,379 @@
 {
   "promo": "50% off · code TEXTFOX50 · until Dec 31",
   "clips": [
-    {"id": "running-late", "tpl": "macro", "title": "Never type “running late” again",
-     "kicker": "// steal this macro",
-     "hook": ["Never type", "*“running late”*", "again."],
-     "macro": {"name": "Running late", "icon": "tap", "color": "rose", "sub": "Manual trigger · home-screen widget",
-               "when": ["One tap", "Home-screen widget"], "to": ["Anna", "Mark", "+ 2"],
-               "say": "Running about 10 minutes late. Sorry! I'm on my way.", "armed": "Armed · tap the widget to send"},
-     "fire": {"kind": "widget", "label": "Running late"},
-     "thread": {"text": "Running about 10 minutes late. Sorry! I'm on my way.", "time": "08:41"},
-     "cta": {"line": "Get this macro free", "url": "textfox.app/templates"},
-     "post": {"caption": "Android users: one tap on a home-screen widget and everyone knows you're running late. Free macro template, link in bio. #android #androidtips #androidapps #textfox #productivity",
-              "yt_title": "Never type “running late” again (Android home-screen widget)",
-              "first_comment": "Free macro file: textfox.app/templates. Download it, import it in TextFox (Settings > Backup > Import), add your people."}},
-
-    {"id": "good-morning-ai", "tpl": "macro", "title": "My phone texts good morning for me",
-     "kicker": "// steal this macro",
-     "hook": ["My phone texts", "*good morning*", "for me."],
-     "macro": {"name": "Good morning, Mom", "icon": "clock", "color": "amber", "sub": "Every day · 08:00 · AI variation",
-               "when": ["Every day", "08:00"], "to": ["Mom"],
-               "say": "Good morning, {modtager}! Have a lovely {ugedag}.", "armed": "Armed · I approve each one"},
-     "fire": {"kind": "none"},
-     "thread": {"bubbles": [{"day": "Mon", "text": "Good morning, Mom! Have a lovely Monday."},
-                            {"day": "Tue", "text": "Morning, Mom! Hope your Tuesday starts well."},
-                            {"day": "Wed", "text": "Rise and shine, Mom! Happy Wednesday."}]},
-     "cta": {"line": "Never the same text twice", "url": "textfox.app/templates"},
-     "post": {"caption": "Same idea, new words every day: TextFox rewrites your scheduled text with AI (your own free Gemini key) and you approve each one. Android only. Free macro in bio. #android #androidtips #ai #textfox #automation",
-              "yt_title": "Schedule a daily text on Android that is never worded the same twice",
-              "first_comment": "AI is optional and off by default. Template: textfox.app/templates"}},
-
-    {"id": "missed-call", "tpl": "macro", "title": "Phone rings. You're on a ladder.",
-     "kicker": "// steal this macro",
-     "hook": ["Phone rings.", "You’re on", "*a ladder.*"],
-     "macro": {"name": "Missed call text-back", "icon": "missed", "color": "green", "sub": "Missed call · any caller",
-               "when": ["Missed call", "Any caller"], "to": ["The caller"],
-               "say": "Hi! Sorry I missed your call. I'll call you back as soon as I can.", "armed": "Armed · replies in seconds"},
-     "fire": {"kind": "missed", "who": "Customer · +1 555 0142"},
-     "thread": {"text": "Hi! Sorry I missed your call. I'll call you back as soon as I can.", "time": "14:07"},
-     "cta": {"line": "Text back, automatically", "url": "textfox.app/templates"},
-     "post": {"caption": "Missed call, lost customer? TextFox texts them back within seconds, from your own number. One-time purchase, no subscription. Android only. #smallbusiness #tradesman #android #missedcall #textfox",
-              "yt_title": "Missed call text back on Android (no subscription)",
-              "first_comment": "Free template: textfox.app/templates. Works with any Android 8.0+ phone."}},
-
-    {"id": "driving", "tpl": "macro", "title": "Driving? Let your phone answer",
-     "kicker": "// steal this macro",
-     "hook": ["Driving?", "*Don’t text back.*", "Let it answer."],
-     "macro": {"name": "Driving", "icon": "reply", "color": "teal", "sub": "Auto-reply · any sender",
-               "when": ["Incoming text", "Any sender"], "to": ["The sender"],
-               "say": "I'm driving right now and will reply when I stop. If it's urgent, please call.", "armed": "Armed · switch off when you arrive"},
-     "fire": {"kind": "incoming", "text": "Where are you?"},
-     "thread": {"text": "I'm driving right now and will reply when I stop. If it's urgent, please call.", "time": "17:32"},
-     "cta": {"line": "Hands on the wheel", "url": "textfox.app/templates"},
-     "post": {"caption": "An auto-reply for when you're behind the wheel. Switch it on when you leave, off when you arrive. Android only, free template in bio. #android #androidtips #driving #safedriving #textfox",
-              "yt_title": "Auto-reply to texts while driving on Android",
-              "first_comment": "Template: textfox.app/templates. It only ever answers people who text you."}},
-
-    {"id": "out-of-office", "tpl": "macro", "title": "Your boss texts you on vacation",
-     "kicker": "// steal this macro",
-     "hook": ["Your boss texts", "you on", "*vacation.*"],
-     "macro": {"name": "Out of office", "icon": "reply", "color": "teal", "sub": "Auto-reply · until Jan 2",
-               "when": ["Incoming text", "Until Jan 2"], "to": ["The sender"],
-               "say": "Thanks for your message! I'm out of office and will reply when I'm back on Jan 2. If it's urgent, please call.", "armed": "Armed · switches itself off Jan 2"},
-     "fire": {"kind": "incoming", "text": "Quick question about the Friday deck"},
-     "thread": {"text": "Thanks for your message! I'm out of office and will reply when I'm back on Jan 2.", "time": "09:12"},
-     "cta": {"line": "Switch off. For real.", "url": "textfox.app/templates"},
-     "post": {"caption": "Set an end date and the auto-reply switches itself off when you're back. Android only. Free template in bio. #android #outofoffice #worklifebalance #holiday #textfox",
-              "yt_title": "Out-of-office auto-reply for texts on Android",
-              "first_comment": "Free template: textfox.app/templates"}},
-
-    {"id": "fox-new-year", "tpl": "fox", "title": "23:58: the fox saves New Year's",
-     "kicker": "// the fox, at 23:58",
-     "lines": [{"who": "me", "text": "23:58. I forgot to text everyone Happy New Year."},
-               {"who": "fox", "text": "Relax. Already scheduled."},
-               {"who": "fox", "text": "00:00. 40 people. Each one by name."},
-               {"who": "me", "text": "How is that possible?"},
-               {"who": "fox", "text": "I'm TextFox."}],
-     "cta": {"line": "Schedule yours before midnight", "url": "textfox.app/templates"},
-     "post": {"caption": "One-time schedule, many recipients, every text greets the person by name. Set it up before midnight. Android only. #newyear #android #androidtips #textfox #automation",
-              "yt_title": "Schedule New Year's texts to everyone at midnight (Android)",
-              "first_comment": "Tip: use {modtager} in the text and TextFox puts each person's contact name in."}},
-
-    {"id": "fox-ladder", "tpl": "fox", "title": "The fox answers for me",
-     "kicker": "// fox says",
-     "lines": [{"who": "me", "text": "Me, up a ladder. Phone rings."},
-               {"who": "fox", "text": "Missed it? I texted them back."},
-               {"who": "me", "text": "You did what?"},
-               {"who": "fox", "text": "“Sorry I missed your call, I'll ring you back.” Delivered."}],
-     "cta": {"line": "Missed-call text-back, free template", "url": "textfox.app/templates"},
-     "post": {"caption": "Missed-call text-back that runs on your own phone. Android only. #smallbusiness #tradesman #android #textfox #funny",
-              "yt_title": "The fox texts your missed calls back",
-              "first_comment": "Template: textfox.app/templates"}},
-
-    {"id": "fox-mom", "tpl": "fox", "title": "I keep forgetting to text my mom",
-     "kicker": "// fox says",
-     "lines": [{"who": "me", "text": "I keep forgetting to text my mom good morning."},
-               {"who": "fox", "text": "You write it once."},
-               {"who": "fox", "text": "I send it at 08:00. Every day."},
-               {"who": "me", "text": "She'll think I'm so thoughtful."},
-               {"who": "fox", "text": "You are. You just forget."}],
-     "cta": {"line": "Set it once. Android.", "url": "textfox.app/templates"},
-     "post": {"caption": "You're thoughtful. You just forget. TextFox sends the text you wrote, on time. Android only. #android #androidtips #family #textfox #relatable",
-              "yt_title": "I keep forgetting to text my mom (Android scheduled text)",
-              "first_comment": "Free template: textfox.app/templates"}}
+    {
+      "id": "running-late",
+      "tpl": "macro",
+      "title": "Never type “running late” again",
+      "kicker": "// steal this macro",
+      "hook": [
+        "Never type",
+        "*“running late”*",
+        "again."
+      ],
+      "macro": {
+        "name": "Running late",
+        "icon": "tap",
+        "color": "rose",
+        "sub": "Manual trigger · home-screen widget",
+        "when": [
+          "One tap",
+          "Home-screen widget"
+        ],
+        "to": [
+          "Anna",
+          "Mark",
+          "+ 2"
+        ],
+        "say": "Running about 10 minutes late. Sorry! I'm on my way.",
+        "armed": "Armed · tap the widget to send"
+      },
+      "fire": {
+        "kind": "widget",
+        "label": "Running late"
+      },
+      "thread": {
+        "text": "Running about 10 minutes late. Sorry! I'm on my way.",
+        "time": "08:41"
+      },
+      "cta": {
+        "line": "Get this macro free",
+        "url": "textfox.app/templates"
+      },
+      "post": {
+        "caption": "Android users: one tap on a home-screen widget and everyone knows you're running late. Free macro template, link in bio. #android #androidtips #androidapps #textfox #productivity",
+        "yt_title": "Never type “running late” again (Android home-screen widget)",
+        "first_comment": "Free macro file: textfox.app/templates. Download it, import it in TextFox (Settings > Backup > Import), add your people."
+      }
+    },
+    {
+      "id": "good-morning-ai",
+      "tpl": "macro",
+      "title": "My phone texts good morning for me",
+      "kicker": "// steal this macro",
+      "hook": [
+        "My phone texts",
+        "*good morning*",
+        "for me."
+      ],
+      "macro": {
+        "name": "Good morning, Mom",
+        "icon": "clock",
+        "color": "amber",
+        "sub": "Every day · 08:00 · AI variation",
+        "when": [
+          "Every day",
+          "08:00"
+        ],
+        "to": [
+          "Mom"
+        ],
+        "say": "Good morning, {modtager}! Have a lovely {ugedag}.",
+        "armed": "Armed · I approve each one"
+      },
+      "fire": {
+        "kind": "none"
+      },
+      "thread": {
+        "bubbles": [
+          {
+            "day": "Mon",
+            "text": "Good morning, Mom! Have a lovely Monday."
+          },
+          {
+            "day": "Tue",
+            "text": "Morning, Mom! Hope your Tuesday starts well."
+          },
+          {
+            "day": "Wed",
+            "text": "Rise and shine, Mom! Happy Wednesday."
+          }
+        ]
+      },
+      "cta": {
+        "line": "Never the same text twice",
+        "url": "textfox.app/templates"
+      },
+      "post": {
+        "caption": "Same idea, new words every day: TextFox rewrites your scheduled text with AI (your own free Gemini key) and you approve each one. Android only. Free macro in bio. #android #androidtips #ai #textfox #automation",
+        "yt_title": "Schedule a daily text on Android that is never worded the same twice",
+        "first_comment": "AI is optional and off by default. Template: textfox.app/templates"
+      }
+    },
+    {
+      "id": "missed-call",
+      "tpl": "macro",
+      "title": "Phone rings. You're on a ladder.",
+      "kicker": "// steal this macro",
+      "hook": [
+        "Phone rings.",
+        "You’re on",
+        "*a ladder.*"
+      ],
+      "macro": {
+        "name": "Missed call text-back",
+        "icon": "missed",
+        "color": "green",
+        "sub": "Missed call · any caller",
+        "when": [
+          "Missed call",
+          "Any caller"
+        ],
+        "to": [
+          "The caller"
+        ],
+        "say": "Hi! Sorry I missed your call. I'll call you back as soon as I can.",
+        "armed": "Armed · replies in seconds"
+      },
+      "fire": {
+        "kind": "missed",
+        "who": "Customer · +1 555 0142"
+      },
+      "thread": {
+        "text": "Hi! Sorry I missed your call. I'll call you back as soon as I can.",
+        "time": "14:07"
+      },
+      "cta": {
+        "line": "Text back, automatically",
+        "url": "textfox.app/templates"
+      },
+      "post": {
+        "caption": "Missed call, lost customer? TextFox texts them back within seconds, from your own number. One-time purchase, no subscription. Android only. #smallbusiness #tradesman #android #missedcall #textfox",
+        "yt_title": "Missed call text back on Android (no subscription)",
+        "first_comment": "Free template: textfox.app/templates. Works with any Android 8.0+ phone."
+      }
+    },
+    {
+      "id": "driving",
+      "tpl": "macro",
+      "title": "Driving? Let your phone answer",
+      "kicker": "// steal this macro",
+      "hook": [
+        "Driving?",
+        "*Don’t text back.*",
+        "Let it answer."
+      ],
+      "macro": {
+        "name": "Driving",
+        "icon": "reply",
+        "color": "teal",
+        "sub": "Auto-reply · any sender",
+        "when": [
+          "Incoming text",
+          "Any sender"
+        ],
+        "to": [
+          "The sender"
+        ],
+        "say": "I'm driving right now and will reply when I stop. If it's urgent, please call.",
+        "armed": "Armed · switch off when you arrive"
+      },
+      "fire": {
+        "kind": "incoming",
+        "text": "Where are you?"
+      },
+      "thread": {
+        "text": "I'm driving right now and will reply when I stop. If it's urgent, please call.",
+        "time": "17:32"
+      },
+      "cta": {
+        "line": "Hands on the wheel",
+        "url": "textfox.app/templates"
+      },
+      "post": {
+        "caption": "An auto-reply for when you're behind the wheel. Switch it on when you leave, off when you arrive. Android only, free template in bio. #android #androidtips #driving #safedriving #textfox",
+        "yt_title": "Auto-reply to texts while driving on Android",
+        "first_comment": "Template: textfox.app/templates. It only ever answers people who text you."
+      }
+    },
+    {
+      "id": "out-of-office",
+      "tpl": "macro",
+      "title": "Your boss texts you on vacation",
+      "kicker": "// steal this macro",
+      "hook": [
+        "Your boss texts",
+        "you on",
+        "*vacation.*"
+      ],
+      "macro": {
+        "name": "Out of office",
+        "icon": "reply",
+        "color": "teal",
+        "sub": "Auto-reply · until Jan 2",
+        "when": [
+          "Incoming text",
+          "Until Jan 2"
+        ],
+        "to": [
+          "The sender"
+        ],
+        "say": "Thanks for your message! I'm out of office and will reply when I'm back on Jan 2. If it's urgent, please call.",
+        "armed": "Armed · switches itself off Jan 2"
+      },
+      "fire": {
+        "kind": "incoming",
+        "text": "Quick question about the Friday deck"
+      },
+      "thread": {
+        "text": "Thanks for your message! I'm out of office and will reply when I'm back on Jan 2.",
+        "time": "09:12"
+      },
+      "cta": {
+        "line": "Switch off. For real.",
+        "url": "textfox.app/templates"
+      },
+      "post": {
+        "caption": "Set an end date and the auto-reply switches itself off when you're back. Android only. Free template in bio. #android #outofoffice #worklifebalance #holiday #textfox",
+        "yt_title": "Out-of-office auto-reply for texts on Android",
+        "first_comment": "Free template: textfox.app/templates"
+      }
+    },
+    {
+      "id": "fox-new-year",
+      "tpl": "fox",
+      "title": "23:58: the fox saves New Year's",
+      "kicker": "// the fox, at 23:58",
+      "lines": [
+        {
+          "who": "me",
+          "text": "23:58. I forgot to text everyone Happy New Year."
+        },
+        {
+          "who": "fox",
+          "text": "Relax. Already scheduled."
+        },
+        {
+          "who": "fox",
+          "text": "00:00. 40 people. Each one by name."
+        },
+        {
+          "who": "me",
+          "text": "How is that possible?"
+        },
+        {
+          "who": "fox",
+          "text": "I'm TextFox."
+        }
+      ],
+      "cta": {
+        "line": "Schedule yours before midnight",
+        "url": "textfox.app/templates"
+      },
+      "post": {
+        "caption": "One-time schedule, many recipients, every text greets the person by name. Set it up before midnight. Android only. #newyear #android #androidtips #textfox #automation",
+        "yt_title": "Schedule New Year's texts to everyone at midnight (Android)",
+        "first_comment": "Tip: use {modtager} in the text and TextFox puts each person's contact name in."
+      }
+    },
+    {
+      "id": "fox-ladder",
+      "tpl": "fox",
+      "title": "The fox answers for me",
+      "kicker": "// fox says",
+      "lines": [
+        {
+          "who": "me",
+          "text": "Me, up a ladder. Phone rings."
+        },
+        {
+          "who": "fox",
+          "text": "Missed it? I texted them back."
+        },
+        {
+          "who": "me",
+          "text": "You did what?"
+        },
+        {
+          "who": "fox",
+          "text": "“Sorry I missed your call, I'll ring you back.” Delivered."
+        }
+      ],
+      "cta": {
+        "line": "Missed-call text-back, free template",
+        "url": "textfox.app/templates"
+      },
+      "post": {
+        "caption": "Missed-call text-back that runs on your own phone. Android only. #smallbusiness #tradesman #android #textfox #funny",
+        "yt_title": "The fox texts your missed calls back",
+        "first_comment": "Template: textfox.app/templates"
+      }
+    },
+    {
+      "id": "fox-mom",
+      "tpl": "fox",
+      "title": "I keep forgetting to text my mom",
+      "kicker": "// fox says",
+      "lines": [
+        {
+          "who": "me",
+          "text": "I keep forgetting to text my mom good morning."
+        },
+        {
+          "who": "fox",
+          "text": "You write it once."
+        },
+        {
+          "who": "fox",
+          "text": "I send it at 08:00. Every day."
+        },
+        {
+          "who": "me",
+          "text": "She'll think I'm so thoughtful."
+        },
+        {
+          "who": "fox",
+          "text": "You are. You just forget."
+        }
+      ],
+      "cta": {
+        "line": "Set it once. Android.",
+        "url": "textfox.app/templates"
+      },
+      "post": {
+        "caption": "You're thoughtful. You just forget. TextFox sends the text you wrote, on time. Android only. #android #androidtips #family #textfox #relatable",
+        "yt_title": "I keep forgetting to text my mom (Android scheduled text)",
+        "first_comment": "Free template: textfox.app/templates"
+      }
+    },
+    {
+      "id": "teaser",
+      "tpl": "teaser",
+      "title": "Something clever is coming to Android",
+      "kicker": "> textfox.init()",
+      "hook": [
+        "Something *clever*",
+        "is coming",
+        "to Android."
+      ],
+      "list": [
+        "Texts that send themselves",
+        "On a schedule",
+        "As an auto-reply",
+        "When you miss a call"
+      ],
+      "cta": {
+        "line": "Coming soon on Google Play",
+        "url": "textfox.app"
+      },
+      "promo": "Early-bird deal at launch",
+      "groove_from": 3.9,
+      "post": {
+        "caption": "Something clever is coming to Android. Texts that send themselves: on a schedule, as an auto-reply, when you miss a call. No account, no ads. Follow for launch day. #android #androidapps #comingsoon #textfox #automation",
+        "yt_title": "Something clever is coming to Android | TextFox",
+        "yt_description": "TextFox is an Android app that sends texts for you: on a schedule, as an auto-reply and as missed-call text-back. No account, no ads, runs on your phone.\n\nComing soon on Google Play. 30 days free, then a one-time unlock. Early-bird deal at launch.\n\nhttps://www.textfox.app\n\n#android #androidapps #textfox #shorts",
+        "yt_tags": [
+          "TextFox",
+          "Android",
+          "Android app",
+          "schedule text message",
+          "auto reply sms",
+          "missed call text back",
+          "sms automation",
+          "coming soon"
+        ],
+        "first_comment": "Follow for launch day. Ready-made macros to try: textfox.app/templates"
+      }
+    }
   ]
 }

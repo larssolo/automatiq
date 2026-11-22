@@ -82,7 +82,7 @@ html,body{width:1080px;height:1920px;overflow:hidden;background:var(--ink)}
 .cta{left:0;top:0;width:1080px;height:1920px;pointer-events:none}
 .cwm{position:absolute;left:0;width:1080px;text-align:center;font:600 64px/1 var(--mono);letter-spacing:-.02em}
 .cwm i{display:inline-block;width:20px;height:20px;border-radius:50%;background:var(--green);box-shadow:0 0 24px var(--green);margin-right:18px;vertical-align:8px}
-.cline{position:absolute;left:72px;width:936px;text-align:center;font:700 84px/1.02 var(--sans);letter-spacing:-.04em}
+.cline{position:absolute;left:72px;width:936px;text-align:center;text-wrap:balance;font:700 84px/1.02 var(--sans);letter-spacing:-.04em}
 .cline .g{color:var(--green)}
 .curl{position:absolute;left:0;width:1080px;text-align:center;font:600 46px/1 var(--mono);color:var(--green)}
 .cpromo{position:absolute;left:50%;transform:translateX(-50%);font:700 38px/1 var(--sans);padding:20px 34px;border-radius:999px;background:var(--green);color:var(--on);white-space:nowrap}
@@ -121,9 +121,13 @@ const foxSVG = w => `<svg class="fox" viewBox="0 0 354.18 302.05" width="${w}" h
 const blink = (fox, times) => times.forEach(t => tl.to(fox.querySelectorAll('.eye'), {scaleY: .08, duration: .09, yoyo: true, repeat: 1, ease: 'none'}, t));
 
 /* ---------- hook (auto-fits the widest line into the safe column) ---------- */
-function hook(lines, t) {
-  const h = mk('abs', '', stage); h.id = 'hook';
-  lines.forEach(l => { const ln = mk('ln', '', h); ln.style.whiteSpace = 'nowrap'; const hot = /^\*.*\*$/.test(l); (hot ? l.slice(1, -1) : l).split(' ').forEach(w => mk('wd', `<span${hot ? ' class="g"' : ''}>${esc(w)}</span>`, ln)); });
+function hook(lines, t, o = {}) {
+  const h = mk('abs', '', stage); h.id = 'hook'; if (o.top) h.style.top = o.top + 'px'; if (o.align) h.style.textAlign = o.align;
+  lines.forEach(l => {
+    const ln = mk('ln', '', h); ln.style.whiteSpace = 'nowrap';
+    const whole = /^\*[^*]+\*$/.test(l);                                   // "*Whole line*" turns green, so does a single "*word*" inside a line
+    (whole ? l.slice(1, -1) : l).split(' ').forEach(w => { const one = /^\*[^*]+\*$/.test(w); mk('wd', `<span${whole || one ? ' class="g"' : ''}>${esc(one ? w.slice(1, -1) : w)}</span>`, ln); });
+  });
   const lns = [...h.querySelectorAll('.ln')], wide = () => Math.max(...lns.map(l => l.lastElementChild.getBoundingClientRect().right - l.firstElementChild.getBoundingClientRect().left));
   let size = 142; h.style.fontSize = size + 'px';
   while (size > 70 && wide() > 880) { size -= 2; h.style.fontSize = size + 'px'; }      // the widest line sets the size for all
@@ -145,7 +149,7 @@ function cta(t, opts = {}) {
   const parts = [fox, wm, line, url];
   if (PROMO) { const p = mk('cpromo', PROMO, c); p.style.top = yy + 'px'; parts.push(p); yy += 78 + 34; }
   const meta = mk('cmeta', 'Android · 30 days free · no account', c); meta.style.top = yy + 'px'; parts.push(meta);
-  if (opts.fox) tl.to(fox, {x: 390 - 325, y: y - 230, scale: 300 / 430, transformOrigin: '0 0', duration: .8, ease: 'power3.inOut'}, t);
+  if (opts.fox) { const B = opts.box || {left: 325, top: 230, width: 430}; tl.to(fox, {x: 390 - B.left, y: y - B.top, scale: 300 / B.width, transformOrigin: '0 0', duration: .8, ease: 'power3.inOut'}, t); }
   else tl.fromTo(fox, {scale: .4, autoAlpha: 0, y: 60}, {scale: 1, autoAlpha: 1, y: 0, duration: .8, ease: 'back.out(2)'}, t);
   parts.slice(1).forEach((p, i) => tl.fromTo(p, {y: 50, autoAlpha: 0}, {y: 0, autoAlpha: 1, duration: .6}, t + .25 + i * .14));
   cue(t, 'whoosh', .5); cue(t + .45, 'chime', .7); cue(t + .9, 'ding', .5);
@@ -258,6 +262,39 @@ if (C.tpl === 'fox') {
   tl.to(chat, {autoAlpha: 0, y: '-=60', duration: .45, ease: 'power2.in'}, K0 - .1);
   tl.to(kk, {autoAlpha: 0, duration: .3}, K0 - .1);
   const K = cta(K0 + .1, {y: 520, fox}); END = K.end;
+}
+
+
+/* =====================================================================================================
+   TEMPLATE C · "teaser": the fox wakes up in the dark, "something clever is coming"
+   ===================================================================================================== */
+if (C.tpl === 'teaser') {
+  const FX = {left: 260, top: 250, width: 560};
+  const fox = mk('abs', foxSVG(FX.width), stage); fox.style.cssText = `left:${FX.left}px;top:${FX.top}px;width:${FX.width}px`;
+  const body = fox.firstChild;
+  // the three eyes light up first, as plain green dots where the fox's eyes will be
+  const er = FX.width * 19.4 / 354.18, ey = FX.top + FX.width * 149.52 / 354.18;
+  const dots = [121.96, 177.51, 233.04].map(x => { const d = mk('abs', ''); d.style.cssText = `left:${FX.left + FX.width * x / 354.18 - er}px;top:${ey - er}px;width:${er * 2}px;height:${er * 2}px;border-radius:50%;background:var(--green);box-shadow:0 0 70px 20px rgba(0,230,118,.5)`; return d; });
+  dots.forEach((d, i) => { tl.fromTo(d, {scale: 0, autoAlpha: 0}, {scale: 1, autoAlpha: 1, duration: .4, ease: 'back.out(3)'}, .45 + i * .35); cue(.45 + i * .35, i ? 'blip' : 'boot', i ? .7 : .8); });
+  tl.to(dots, {scale: 1.3, duration: .26, yoyo: true, repeat: 1, ease: 'sine.inOut', stagger: .07}, 1.55); cue(1.55, 'tick', .5); cue(1.62, 'tick', .5); cue(1.69, 'tick', .5);
+  // the fox assembles around them
+  const flash = mk('abs', ''); flash.style.cssText = `left:0;top:${ey - 540}px;width:1080px;height:1080px;background:radial-gradient(closest-side,rgba(180,255,215,.75),rgba(0,230,118,.25) 45%,transparent 72%)`;
+  tl.fromTo(fox, {autoAlpha: 0, scale: .8, rotate: -4, transformOrigin: '50% 50%'}, {autoAlpha: 1, scale: 1, rotate: 0, duration: 1, ease: 'expo.out'}, 2.1); cue(2.1, 'servo', .9); cue(2.95, 'clunk', .8);
+  tl.fromTo(flash, {autoAlpha: 0}, {autoAlpha: 1, duration: .12, yoyo: true, repeat: 1, ease: 'power2.out'}, 2.1);
+  tl.to(dots, {autoAlpha: 0, scale: .6, duration: .3, ease: 'power2.in'}, 2.2);
+  tl.to(body, {y: -14, duration: 1.3, yoyo: true, repeat: 13, ease: 'sine.inOut'}, 2.9);
+  blink(fox, [3.7, 6.3, 8.9]);
+
+  const kk = mk('abs kick', ''); kk.style.cssText += ';left:0;width:1080px;text-align:center;top:790px;font-size:40px'; type(kk, C.kicker, 3.1, .9);
+  const H = hook(C.hook, 3.9, {top: 880, align: 'center'});
+  tl.to(H.el, {y: -50, autoAlpha: 0, duration: .45, ease: 'power2.in'}, 7.3);
+
+  const list = mk('abs', ''); list.style.cssText = 'left:72px;top:900px;width:936px;text-align:center';
+  const items = C.list.map((x, i) => { const r = mk('', `<span style="color:var(--green);margin-right:18px">✓</span>${esc(x)}`, list); r.style.cssText = 'font:600 58px/1.25 var(--sans);letter-spacing:-.02em;margin-bottom:22px'; show(r, 7.7 + i * .62, .5, 34); cue(7.7 + i * .62, 'tick', .7); return r; });
+  const T = {cta: 7.7 + C.list.length * .62 + 1.2};
+  tl.to(list, {y: -40, autoAlpha: 0, duration: .4, ease: 'power2.in'}, T.cta - .4);
+  tl.to(kk, {autoAlpha: 0, duration: .3}, T.cta - .4);
+  const K = cta(T.cta, {y: 520, fox, box: FX}); END = K.end;
 }
 
 // slow drift of the background light
