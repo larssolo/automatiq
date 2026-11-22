@@ -17,10 +17,10 @@ SITE = "https://www.textfox.app"
 
 # ---- one place to change launch details ------------------------------------
 PLAY_URL = "https://play.google.com/apps/testing/app.kodekid.automatiq"  # swap for the production listing at launch
-# Until launch every Play button opens the early-bird signup popup (name + email -> Resend list via /api/subscribe). At launch: set NOTIFY = False and point PLAY_URL at the production listing.
-NOTIFY = True
-CTA_NOTE = "Launching on Google Play in a few days · 50% early-bird discount · 30 days free · Android 8.0+"
-CTA_NOTE_DA = "Udkommer på Google Play om få dage · 50 % early bird-rabat · 30 dage gratis · Android 8.0+"
+# Early-bird promo: the code is typed in the app at purchase (created in Play Console). EB_UNTIL_UTC must match site.js' expiry (31 Dec 23:00 Danish time).
+EB_CODE = "TEXTFOX50"
+CTA_NOTE = "Early bird: <strong>50% off</strong> with code <strong>TEXTFOX50</strong> until 31 Dec, 23:00 · 30 days free · Android 8.0+"
+CTA_NOTE_DA = "Early bird: <strong>50 % rabat</strong> med koden <strong>TEXTFOX50</strong> til 31. dec. kl. 23:00 · 30 dage gratis · Android 8.0+"
 CONTACT = "hello@textfox.app"
 PUBLISHER = "kodekid.app"
 TODAY = datetime.date.today().isoformat()
@@ -44,7 +44,7 @@ def abs_url(path):
 
 T = {
     "en": {"locale": "en_US", "home": "/", "skip": "Skip to content", "home_aria": "TextFox home",
-           "nav": ["A day", "Features", "AI", "Privacy", "FAQ"], "nav_creators": "Creators", "menu": ["Menu", "Close menu"], "get_app": "Get the app", "play_small": "Get it on", "play_soon": "50% off · coming soon on", "notify": "Get 50% off", "notify_title": "Get 50% off: join the early-bird list for the Google Play launch",
+           "nav": ["A day", "Features", "AI", "Privacy", "FAQ"], "nav_creators": "Creators", "menu": ["Menu", "Close menu"], "get_app": "Get the app", "play_small": "Get it on",
            "cta_note": CTA_NOTE,
            "f_tag": "Scheduled texts, auto-replies and missed-call text-back for Android. Set it up once. It just runs.",
            "f_features": "Features", "f_contact": "Contact", "about": "About the maker", "privacy": "Privacy policy", "made_by": "Made by",
@@ -59,7 +59,7 @@ T = {
            "og_alt": "TextFox: your phone texts for you. Scheduled texts, auto-replies and missed-call text-back for Android.",
            "switch": ("DA", "Dansk", "da")},
     "da": {"locale": "da_DK", "home": "/da", "skip": "Gå til indhold", "home_aria": "TextFox forside",
-           "nav": ["En dag", "Funktioner", "AI", "Privatliv", "FAQ"], "nav_creators": "Influencere", "menu": ["Menu", "Luk menu"], "get_app": "Hent appen", "play_small": "Hent den på", "play_soon": "50 % rabat · snart på", "notify": "Få 50 % rabat", "notify_title": "Få 50 % rabat: skriv dig på early bird-listen til Google Play-lanceringen",
+           "nav": ["En dag", "Funktioner", "AI", "Privatliv", "FAQ"], "nav_creators": "Influencere", "menu": ["Menu", "Luk menu"], "get_app": "Hent appen", "play_small": "Hent den på",
            "cta_note": CTA_NOTE_DA,
            "f_tag": "Planlagte sms'er, autosvar og sms ved ubesvaret opkald til Android. Sæt det op én gang. Så kører det bare.",
            "f_features": "Funktioner", "f_contact": "Kontakt", "about": "Om skaberen", "privacy": "Privatlivspolitik (engelsk)", "made_by": "Lavet af",
@@ -165,53 +165,72 @@ ICONS = """<svg width="0" height="0" style="position:absolute" aria-hidden="true
 
 PLAY_SVG = '<svg width="18" height="20" viewBox="0 0 16 18" aria-hidden="true"><path d="M1 1.2v15.6c0 .5.5.8.9.6L15 9.6a.7.7 0 0 0 0-1.2L1.9.6C1.5.4 1 .7 1 1.2Z" fill="currentColor"/></svg>'
 def store_href():
-    """Where the Play buttons point: the early-bird signup popup now, the Play listing after launch."""
-    return "#early-bird" if NOTIFY else PLAY_URL
+    return PLAY_URL
 
 
 def store_attrs(lang="en"):
-    if NOTIFY:
-        return f' data-signup role="button" title="{html.escape(T[lang]["notify_title"])}" aria-haspopup="dialog"'
     return ' rel="noopener"'
 
 
 def play(lang="en"):
-    return f'<a class="btn btn-g play-btn" href="{store_href()}"{store_attrs(lang)}>{PLAY_SVG}<span><small>{T[lang]["play_small"] if not NOTIFY else T[lang]["play_soon"]}</small>Google Play</span></a>'
+    return f'<a class="btn btn-g play-btn" href="{store_href()}"{store_attrs(lang)}>{PLAY_SVG}<span><small>{T[lang]["play_small"]}</small>Google Play</span></a>'
 
 
 PLAY = play("en")
 
 
-SIGNUP = {
-    "en": {"h": "Get 50% off at launch", "p": "TextFox lands on Google Play in a few days. Join the early-bird list and we'll email you the link and your 50% discount code the moment it's live.",
-           "name": "Your name", "email": "Email", "consent": "I agree to get one email when TextFox launches, plus my discount code. Details in the <a href=\"/privacy\">privacy policy</a>. Unsubscribe any time.",
-           "go": "Get my 50% off", "busy": "Sending…", "ok_h": "Almost there!", "ok_p": "We just sent you an email. Open it and tap <strong>Confirm</strong> to secure your discount. (Check spam if it doesn't show up within a minute.)",
-           "err": "Something went wrong. Please try again, or write to hello@textfox.app.", "bad": "Please enter your name and a valid email, and tick the box.", "close": "Close", "done": "Done"},
-    "da": {"h": "Få 50 % rabat ved lancering", "p": "TextFox udkommer på Google Play om få dage. Skriv dig på early bird-listen, så sender vi dig linket og din rabatkode på 50 %, så snart den er live.",
-           "name": "Dit navn", "email": "E-mail", "consent": "Jeg vil gerne have én e-mail, når TextFox udkommer, plus min rabatkode. Læs mere i <a href=\"/privacy\">privatlivspolitikken</a> (engelsk). Du kan afmelde dig når som helst.",
-           "go": "Få min rabat på 50 %", "busy": "Sender…", "ok_h": "Næsten færdig!", "ok_p": "Vi har lige sendt dig en mail. Åbn den og tryk på <strong>Bekræft</strong> for at sikre din rabat. (Tjek spam, hvis den ikke kommer inden for et minut.)",
-           "err": "Noget gik galt. Prøv igen, eller skriv til hello@textfox.app.", "bad": "Skriv dit navn og en gyldig e-mail, og sæt flueben.", "close": "Luk", "done": "Færdig"},
+EB = {
+ "en": {
+  "chip": "Early Bird",
+  "h": "Early Bird: 50% off",
+  "sub": "Until 31 December, 23:00",
+  "lead": "Buy TextFox before the year ends and pay half.",
+  "steps": [
+   "Get TextFox on Google Play.",
+   "When you buy it, enter the code <strong>TEXTFOX50</strong> in the app.",
+   "That's it. 50% off, applied in the app."
+  ],
+  "copy": "Copy code", "line": "50% off with code TEXTFOX50 until 31 Dec",
+  "close": "Close",
+  "note": "The code works until 31 December at 23:00.",
+  "pop": "50% off for early birds",
+  "cta": "How it works"
+ },
+ "da": {
+  "chip": "Early Bird",
+  "h": "Early Bird: 50 % rabat",
+  "sub": "Til 31. december kl. 23:00",
+  "lead": "Køb TextFox før årsskiftet og betal det halve.",
+  "steps": [
+   "Hent TextFox på Google Play.",
+   "Når du køber den, så skriv koden <strong>TEXTFOX50</strong> i appen.",
+   "Det var det. 50 % rabat, trukket i appen."
+  ],
+  "copy": "Kopiér kode", "line": "50 % rabat med koden TEXTFOX50 til 31. dec.",
+  "close": "Luk",
+  "note": "Koden gælder til 31. december kl. 23:00.",
+  "pop": "50 % rabat til early birds",
+  "cta": "Sådan gør du"
+ }
 }
 
 
-def signup_dialog(lang="en"):
-    """The early-bird popup, present on every page while NOTIFY is on. site.js opens it from any [data-signup] link."""
-    if not NOTIFY:
-        return ""
-    S = SIGNUP[lang]
-    data = html.escape(json.dumps({k: S[k] for k in ("busy", "go", "err", "bad")}), quote=True)
-    return f"""<dialog class="lightbox signup" id="early-bird" aria-labelledby="eb-h" data-lang="{lang}" data-msg="{data}">
-<div class="su-card"><button class="lb-close" type="button" aria-label="{S["close"]}">×</button>
-<form class="su-form" method="post" action="/api/subscribe" novalidate>
-<p class="kicker">// early bird</p><h2 id="eb-h">{S["h"]}</h2><p class="su-p">{S["p"]}</p>
-<label>{S["name"]}<input name="name" autocomplete="name" required maxlength="80"></label>
-<label>{S["email"]}<input name="email" type="email" autocomplete="email" inputmode="email" required maxlength="254"></label>
-<label class="hp" aria-hidden="true">Website<input name="website" tabindex="-1" autocomplete="off"></label>
-<label class="su-consent"><input name="consent" type="checkbox" required><span>{S["consent"]}</span></label>
-<p class="su-err" role="alert" hidden></p>
-<button class="btn btn-g" type="submit">{S["go"]}</button>
-</form>
-<div class="su-ok" hidden tabindex="-1"><h2>{S["ok_h"]}</h2><p>{S["ok_p"]}</p><button class="btn btn-ghost" type="button" data-su-close>{S["done"]}</button></div>
+def eb_line(lang="en"):
+    E = EB[lang]
+    return f'<p class="eb-line"><button type="button" data-eb><b>{E["chip"]}</b><span>{E["line"]}</span><i aria-hidden="true">→</i></button></p>'
+
+
+def early_bird(lang="en"):
+    """Glitch-in promo popup (site.js shows it for 4 s, then folds it into the nav chip) + the how-to dialog."""
+    E = EB[lang]
+    steps = "".join(f"<li><span>{x}</span></li>" for x in E["steps"])
+    return f"""<aside class="eb-pop" id="ebPop" aria-live="polite" hidden><button type="button" class="eb-pop-btn" data-eb><span class="eb-pop-k">// early bird</span><span class="eb-pop-h" data-text="{E["pop"]}">{E["pop"]}</span><span class="eb-pop-s">{E["sub"]} · <b>{EB_CODE}</b></span></button></aside>
+<dialog class="lightbox signup" id="ebDlg" aria-labelledby="eb-h">
+<div class="su-card"><button class="lb-close" type="button" aria-label="{E["close"]}">×</button>
+<p class="kicker">// early bird</p><h2 id="eb-h">{E["h"]}</h2><p class="su-p">{E["lead"]} <strong>{E["sub"]}.</strong></p>
+<ol class="eb-steps">{steps}</ol>
+<button class="eb-code" type="button" data-copy="{EB_CODE}" data-label="{E["copy"]}"><b>{EB_CODE}</b><span>{E["copy"]}</span></button>
+<a class="btn btn-g" href="{PLAY_URL}" rel="noopener">{PLAY_SVG}<span>Google Play</span></a>
 </div></dialog>"""
 
 
@@ -399,9 +418,9 @@ def nav(path, lang):
 <header class="nav"><div class="wrap">
   <a class="brand" href="{L["home"]}" aria-label="{L["home_aria"]}"><svg aria-hidden="true"><use href="#fox"/></svg>textfox</a>
   <nav class="nav-links" aria-label="Main">{links}</nav>
-  <div class="nav-end"><a class="lang" href="{target}" hreflang="{other}" lang="{other}" title="{label}" aria-label="{label}">{code}</a><a class="btn btn-g btn-sm" href="{store_href()}"{store_attrs(lang)}>{L["notify"] if NOTIFY else L["get_app"]}</a><button class="menu-btn" type="button" aria-expanded="false" aria-controls="mnav" aria-label="{L["menu"][0]}" data-close="{L["menu"][1]}"><span></span><span></span></button></div>
+  <div class="nav-end"><a class="lang" href="{target}" hreflang="{other}" lang="{other}" title="{label}" aria-label="{label}">{code}</a><button class="eb-chip" type="button" id="ebChip" data-eb aria-haspopup="dialog">{EB[lang]["chip"]}</button><a class="btn btn-g btn-sm" href="{store_href()}"{store_attrs(lang)}>{L["get_app"]}</a><button class="menu-btn" type="button" aria-expanded="false" aria-controls="mnav" aria-label="{L["menu"][0]}" data-close="{L["menu"][1]}"><span></span><span></span></button></div>
 </div>
-  <nav class="mnav" id="mnav" aria-label="{L["menu"][0]}" hidden><div class="wrap">{links}<a class="btn btn-g" href="{store_href()}"{store_attrs(lang)}>{L["notify"] if NOTIFY else L["get_app"]}</a></div></nav>
+  <nav class="mnav" id="mnav" aria-label="{L["menu"][0]}" hidden><div class="wrap">{links}<a class="eb-link" href="#early-bird" data-eb>{EB[lang]["chip"]}</a><a class="btn btn-g" href="{store_href()}"{store_attrs(lang)}>{L["get_app"]}</a></div></nav>
 </header>"""
 
 
@@ -412,7 +431,7 @@ def footer(lang):
   <div class="foot">
     <div><a class="brand" href="{L["home"]}" aria-label="{L["home_aria"]}"><svg aria-hidden="true"><use href="#fox"/></svg>textfox</a><p>{L["f_tag"]}</p></div>
     <div><h2>{L["f_features"]}</h2><ul>{feats}</ul></div>
-    <div><h2>TextFox</h2><ul><li><a href="{store_href()}"{store_attrs(lang)}>{L["notify"] if NOTIFY else "Google Play"}</a></li><li><a href="{P["faq"][0]}">FAQ</a></li><li><a href="{P["about"][0]}">{L["about"]}</a></li><li><a href="{P["creators"][0]}">{P["creators"][1]}</a></li><li><a href="{L["privacy_href"]}">{L["privacy"]}</a></li></ul></div>
+    <div><h2>TextFox</h2><ul><li><a href="{store_href()}"{store_attrs(lang)}>Google Play</a></li><li><a href="{P["faq"][0]}">FAQ</a></li><li><a href="{P["about"][0]}">{L["about"]}</a></li><li><a href="{P["creators"][0]}">{P["creators"][1]}</a></li><li><a href="{L["privacy_href"]}">{L["privacy"]}</a></li></ul></div>
     <div><h2>{L["f_contact"]}</h2><ul><li><a href="mailto:{CONTACT}">{CONTACT}</a></li><li>{L["made_by"]} <a href="{P["about"][0]}">Lars Sohl</a></li><li><a href="https://www.kodekid.app" rel="noopener">{PUBLISHER}</a></li></ul></div>
   </div>
   <div class="legal"><span>© {datetime.date.today().year} TextFox · <a href="https://www.kodekid.app" rel="noopener">{PUBLISHER}</a></span><span><a href="{'/da/sitemap' if lang == 'da' else '/sitemap'}">Sitemap</a> · {L["no_track"]}</span></div>
@@ -466,7 +485,7 @@ def render(meta, body):
     url = abs_url(meta["path"])
     lang = meta.get("lang", "en")
     body = (body.replace("{{PLAY}}", play(lang)).replace("{{CTA_NOTE}}", T[lang]["cta_note"]).replace("{{FAQ}}", faq_html(meta.get("faq", "home"), lang)).replace("{{CONTACT}}", CONTACT).replace("{{FILM_TRANSCRIPT}}", FILM_TRANSCRIPT_DA if lang == "da" else FILM_TRANSCRIPT)
-            .replace("{{RELATED}}", related(meta["path"], lang)).replace("{{FINAL}}", final(lang)))
+            .replace("{{RELATED}}", related(meta["path"], lang)).replace("{{FINAL}}", final(lang)).replace("{{EB_LINE}}", eb_line(lang)))
     scripts = "".join(f'<script src="{s}?v={ver(s)}" defer></script>' for s in ["/assets/bg.js", "/assets/site.js"] + meta.get("scripts", []))
     scripts += "".join(f'<script type="module" src="{s}?v={ver(s)}"></script>' for s in meta.get("modules", []))
     return f"""{head(meta, url)}
@@ -478,7 +497,7 @@ def render(meta, body):
 {"" if meta.get("noindex") or meta["path"] == "/privacy" else share(url, lang)}
 </main>
 {footer(lang)}
-{signup_dialog(lang)}
+{early_bird(lang)}
 {scripts}
 </body>
 </html>

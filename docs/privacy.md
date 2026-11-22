@@ -4,7 +4,7 @@ title: TextFox — Privacy Policy
 
 # TextFox — Privacy Policy
 
-_Last updated: 19 November 2026_
+_Last updated: 11 November 2026_
 
 TextFox ("the app") is an automation app for Android, published by Lars Sohl, founder of kodekid.app ("we"). This policy explains what data the app uses, what leaves your phone, and why.
 
@@ -97,14 +97,6 @@ We will update this page if the app's data handling changes, and change the date
 
 textfox.app sets no cookies and uses no analytics, ads or third-party scripts. Fonts and scripts are served from our own domain. The site is hosted by Vercel, which processes standard server logs (such as IP address and browser type) to deliver and protect the site.
 
-## 9. Early-bird list (website sign-up)
-
-If you join the early-bird list on textfox.app, we collect your **name and email address** and store them with our email provider **Resend** (servers in the EU), which acts as our data processor. We use them only to (1) send you one confirmation email, and (2) email you when TextFox launches on Google Play, with the link and your early-bird discount code. We do not sell or share the list and do not use it for anything else.
-
-- **Legal basis:** your consent (GDPR art. 6(1)(a)), given by ticking the box in the sign-up form and confirming via the link in the confirmation email. If you don't confirm, you won't receive anything beyond that one email.
-- **Retention:** until the launch emails have been sent. We then delete the list, or keep only the people who asked to stay in touch, and every email has an unsubscribe link.
-- **Your rights:** withdraw consent, unsubscribe, or ask for access to or deletion of your data at any time by writing to hello@textfox.app.
-
-## 10. Contact
+## 9. Contact
 
 Lars Sohl, founder of kodekid.app — hello@textfox.app
