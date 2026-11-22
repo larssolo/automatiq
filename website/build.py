@@ -190,7 +190,7 @@ EB = {
    "When you buy it, enter the code <strong>TEXTFOX50</strong> in the app.",
    "That's it. 50% off, applied in the app."
   ],
-  "copy": "Copy code", "line": "50% off with code TEXTFOX50 until 31 Dec",
+  "copy": "Copy code", "review": "TextFox would be so happy about a nice review on Google Play. Thank you! 🦊", "line": "50% off with code TEXTFOX50 until 31 Dec",
   "close": "Close",
   "note": "The code works until 31 December at 23:00.",
   "pop": "50% off for early birds",
@@ -206,7 +206,7 @@ EB = {
    "Når du køber den, så skriv koden <strong>TEXTFOX50</strong> i appen.",
    "Det var det. 50 % rabat, trukket i appen."
   ],
-  "copy": "Kopiér kode", "line": "50 % rabat med koden TEXTFOX50 til 31. dec.",
+  "copy": "Kopiér kode", "review": "TextFox ville blive rigtig glad for en flot anmeldelse på Google Play. Tusind tak! 🦊", "line": "50 % rabat med koden TEXTFOX50 til 31. dec.",
   "close": "Luk",
   "note": "Koden gælder til 31. december kl. 23:00.",
   "pop": "50 % rabat til early birds",
@@ -231,6 +231,7 @@ def early_bird(lang="en"):
 <ol class="eb-steps">{steps}</ol>
 <button class="eb-code" type="button" data-copy="{EB_CODE}" data-label="{E["copy"]}"><b>{EB_CODE}</b><span>{E["copy"]}</span></button>
 <a class="btn btn-g" href="{PLAY_URL}" rel="noopener">{PLAY_SVG}<span>Google Play</span></a>
+<p class="eb-review">{E["review"]}</p>
 </div></dialog>"""
 
 
