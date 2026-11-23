@@ -1,6 +1,6 @@
 # TextFox: salgsplan (budget 0 kr)
 
-Sidst opdateret 22. november 2026 (Windsor-handlinger verificeret med `list_actions`). Ejer: Lars. Udfører: Claude (klip, tekster, hjemmeside, tal) + Lars til det, kun han kan (upload, Play Console, Reddit).
+Sidst opdateret 23. november 2026. Ejer: Lars. Udfører: Claude (klip, tekster, hjemmeside, tal) + Lars til det, kun han kan (upload, Play Console, Reddit).
 Alt indhold, der postes, er **på engelsk**. Selve planen er på dansk, ligesom resten af interne dokumenter.
 
 > Læs afsnit 1 først. Resten er værktøjskassen: hvad der skal tjekkes, hvem der gør hvad, hvad der postes hvornår, og hvordan vi ved, om det virker.
@@ -11,7 +11,7 @@ Alt indhold, der postes, er **på engelsk**. Selve planen er på dansk, ligesom 
 2. [Beslutninger fra Lars](#2-beslutninger-fra-lars-22-nov)
 3. [Status: hvad er gjort](#3-status-hvad-er-gjort)
 4. [Porte: tjek før vi sender trafik](#4-porte-tjek-før-vi-sender-trafik)
-5. [Adgang via Windsor.ai og arbejdsdeling](#5-adgang-via-windsorai-og-arbejdsdeling)
+5. [Adgang og arbejdsdeling](#5-adgang-og-arbejdsdeling)
 6. [Hvad det kræver af Lars (tid)](#6-hvad-det-kræver-af-lars-tid)
 7. [Positionering, pris og sprog](#7-positionering-pris-og-sprog)
 8. [Kanaler: de tre, de gratis ekstra og de nye](#8-kanaler)
@@ -60,7 +60,7 @@ TextFox er en Android-app til **7 USD**, engangskøb efter 30 dages gratis prøv
 | Konti | Alle konti (TikTok, YouTube, Instagram) er **private** og skal åbnes. **Reddit kan komme til**. Claude må foreslå nye kanaler (se afsnit 8). |
 | Lars på kamera | **Ja, som test** for at se, hvad der virker bedst (afsnit 10). |
 | Tid | "Den tid det skal til." Hvad der kræves, står i afsnit 6. |
-| Adgang | **Windsor.ai** (afsnit 5). |
+| Adgang | ~~Windsor.ai~~ droppet 23/11 (kræver business-konti og penge). **Lars uploader selv**, eller Claude arbejder i Lars' egen browser via en lokal session (afsnit 5). |
 | Sprog | **Engelsk** til alt indhold. |
 
 ---
@@ -74,7 +74,7 @@ TextFox er en Android-app til **7 USD**, engangskøb efter 30 dages gratis prøv
 | Klip-pipeline til lodrette videoer (`marketing/shorts/`) | Bygget. To skabeloner ("macro" og "fox"), 8 klip i `clips.json`, musik og lyd syntetiseret fra kode, `make.sh` rendrer til `out/<id>.mp4` (ca. 1,5 min pr. klip) |
 | Early Bird på hjemmesiden | Live (popup, menupunkt, forklaring, kode TEXTFOX50, udløber automatisk efter 31/12 kl. 23:00 dansk tid) |
 | Go-links til måling | Klar som spec (afsnit 15). Bygges, når produktionslinket findes |
-| Windsor.ai for Social Media | Forbundet (Trial) med TikTok og YouTube. **Instagram, Facebook-side, LinkedIn-side og Threads er ikke forbundet endnu.** Windsor kan poste Instagram Reels og Facebook Reels fra en offentlig video-URL, men ikke uploade til YouTube eller TikTok (afsnit 5) |
+| Windsor.ai | Droppet (afsnit 5) |
 | Teaser-klip "Something clever is coming to Android" | Rendret (15,6 s) med cover og tekster, klar til upload (afsnit 9) |
 | Konti åbnet og omlagt til business/creator | Mangler: Lars |
 
@@ -98,69 +98,47 @@ Intet i dette afsnit koster penge, men hver ting kan ellers lække salg. Ejer i 
 
 ---
 
-## 5. Adgang via Windsor.ai og arbejdsdeling
+## 5. Adgang og arbejdsdeling
 
-### Hvad Windsor kan (`list_actions` kørt 22. nov. på "Windsor.ai for Social Media")
+### Windsor er droppet (besluttet 23. nov.)
 
-| Platform | Forbundet nu | Kan Windsor poste video? |
-|---|---|---|
-| **Instagram** | Nej. Mangler en Business/Creator-konto (via Facebook) | **Ja:** Reel fra en offentlig MP4/MOV-URL (3 s–15 min, ≤ 1 GB, 9:16 anbefalet, caption, cover), Story (video 3–60 s), billed- og karruselopslag, kommentarer (svar, skjul, slet), slet opslag |
-| **Facebook-side** | Nej | **Ja:** Reel (offentlig URL, 3–90 s, 9:16, ≥ 540×960, 24–60 fps), videoopslag, tekst/foto-opslag (kan **planlægges** 10 min til 29 dage frem), Messenger-svar |
-| **YouTube** | Ja (kanalen "TextFox": 0 abonnenter, ingen videoer, ingen beskrivelse) | **Nej.** Kun titel, beskrivelse, tags, kategori og synlighed på en video, der allerede er uploadet, plus kommentarer og playlister |
-| **TikTok** | Ja (`textfox4`, visningsnavn "larssohl", ikke business, 0 følgere) | **Nej.** Ingen handlinger overhovedet. Kun statistik |
-| **LinkedIn** | Nej | Kun en **virksomhedsside** (tekst, link, billede). Ingen video, ikke personlig profil |
-| **Threads** | Nej | Tekst og billede, ingen video |
+Windsor.ai blev afprøvet (`list_actions` 22. nov.). Det kan **ikke** uploade til YouTube og TikTok. Instagram- og Facebook-posting kræver Business/Creator-konti, en Facebook-side og en betalt plan (Trial giver kun 30 dages historik; prisen er ikke verificeret). Det strider mod 0 kr, så vi bruger det ikke. Koble begge Windsor-connectors fra i claude.ai (Settings → Connectors).
 
-Windsor-planen er **Trial** (30 dages datahistorik). Prisen for en betalt plan er ikke verificeret (kilder er uenige), og 0 kr-budgettet gælder.
-
-**Konsekvenser:**
-
-- **Instagram og Facebook posteres af Claude** (efter Lars' godkendelse af hvert opslag), så snart de er forbundet. **YouTube og TikTok uploader Lars selv** (15 min/uge); Claude sætter YouTube-detaljer og læser tal.
-- **Ingen af handlingerne har en kladde-tilstand.** Et Instagram- eller Facebook-opslag er offentligt med det samme (kan slettes igen med `delete_media`/`delete_post`). Første opslag er derfor selve teaseren.
-- **Videoen skal ligge på en offentlig URL** (direkte til filen, uden login og uden redirect), for Instagram og Facebook henter den selv. Claude lægger de godkendte klip under `https://www.textfox.app/media/shorts/<id>.mp4` via en almindelig PR og rydder op i ældre filer.
-- LinkedIn: kun virksomhedsside, så Lars' personlige opslag (afsnit 14) laves manuelt.
-- To Windsor-connectors er forbundet (den almene og "for Social Media"). Den almene kan kobles fra, så der kun er én.
-
-### Tre veje, billigste først
+### To veje, begge gratis
 
 | Vej | Hvad | Pris |
 |---|---|---|
-| **A. Post-pakker** | Claude leverer færdige filer + tekst + hashtags + tidspunkt + første kommentar. Lars planlægger i YouTube Studio, Meta Business Suite og TikToks upload. | 0 kr, ca. 20 min/uge |
-| **B. Lars' computer** | Lars forbinder sin computer, så Claude arbejder i hans indloggede Chrome. Lars godkender hvert skridt. | 0 kr, langsommere og skrøbeligt |
-| **C. Windsor.ai for Social Media (valgt)** | Claude poster **Instagram Reels** og **Facebook Reels** direkte fra en offentlig URL, henter statistik og redigerer YouTube-detaljer. Uploader ikke til YouTube/TikTok. | Trial nu, betalt plan ikke verificeret |
+| **A. Lars uploader** (standard) | Claude leverer fil + cover + caption + hashtags + tidspunkt + første kommentar. Lars uploader i appen eller i YouTube Studio/TikTok/Instagram (ca. 5 min pr. platform). Instagram og Facebook behøver ikke business-konto ved manuel upload. | 0 kr, ca. 15–20 min/uge |
+| **B. Claude i Lars' egen browser** | Claude arbejder i Lars' indloggede Chrome (YouTube Studio, TikTok, Instagram, Facebook) og uploader, skriver titel/beskrivelse og svarer på kommentarer. Lars godkender hvert skridt og logger selv ind; Claude ser aldrig adgangskoder. | 0 kr, langsommere og skrøbeligt (captchas, skiftende menuer) |
 
-### Sådan forbinder Lars Windsor (ca. 15 min)
+### Opsætning af vej B (ca. 15 min)
 
-1. claude.ai → **Settings → Connectors** → søg **"Windsor.ai for Social Media"** (ikke den almene "Windsor.ai") → **Connect**. Log ind hos Windsor.
-2. Hos Windsor: forbind hver konto med OAuth (**Instagram** via Facebook-siden, TikTok, YouTube, evt. Facebook-siden, LinkedIn og Threads). TikTok og YouTube er forbundet; **Instagram (Business/Creator, knyttet til en Facebook-side) og Facebook-siden mangler**. Claude ser aldrig adgangskoder.
-3. Sig til, så poster Claude teaseren som Instagram Reel og Facebook Reel (efter Lars' OK på caption og tidspunkt).
+Den bedste opsætning er en **lokal Claude Code-session på Lars' computer** (Claude desktop-appen) åbnet i repoet, med **Claude i Chrome**-udvidelsen slået til. Så ser Claude mapperne (de rendrede klip ligger på computeren), og browseren er Lars' egen.
+
+1. Klon repoet `larssolo/automatiq` lokalt og åbn mappen i Claude desktop (Code-fanen).
+2. Installér Claude i Chrome og log selv ind på YouTube, TikTok, Instagram og Facebook i den Chrome.
+3. Start en ny lokal session og skriv: "Læs `marketing/PLAN.md`, og upload teaseren til de platforme, jeg er logget ind på."
+4. Klippene ligger ikke i git. De ligger enten som filer fra chatten, eller de rendres igen med `bash marketing/shorts/make.sh` (kræver node + playwright, ffmpeg og python3 med numpy).
+
+Alternativt kan en cloud-session forbindes til computeren med **Remote Control** (Settings → Claude Code → Remote Control), men den lokale session er enklere.
 
 ### Spilleregler
 
-- **Intet postes, sendes som DM eller besvares uden Lars' OK.** Claude kladder, Lars godkender (20 min/uge).
+- **Intet postes, sendes som DM eller besvares uden Lars' OK.** Claude kladder, Lars godkender.
 - Ingen købte følgere, likes, visninger eller anmeldelser, ingen "engagement pods", ingen bots. Det kan koste både sociale konti og Play-kontoen.
-- Ingen adgangskoder i chat. To-faktor slået til på alle konti. Adgang kan altid trækkes tilbage hos Windsor.
-- Alle anmeldelser, kommentarer og DM'er besvares inden for 48 timer. Claude kladder svar, Lars godkender (de første uger; senere kan rutinesvar aftales).
+- Ingen adgangskoder i chat. To-faktor slået til på alle konti.
+- Alle anmeldelser, kommentarer og DM'er besvares inden for 48 timer. Claude kladder svar, Lars godkender (de første uger).
+- Konti skal være **offentlige**, før opslag kan nå nogen (TikTok, Instagram, YouTube er private i dag).
 
 ### Ugerytme
 
 | Dag | Hvem | Hvad |
 |---|---|---|
-| Man | Claude | Producerer ugens pakke (5 korte klip + 1 tutorial), skriver tekster, henter tal via Windsor og analyserer sidste uge |
-| Tirs | **Lars** | Godkender pakken og tallene (20 min) |
-| Ons | **Lars** | Uploader de godkendte filer til **YouTube Studio og TikTok** med de færdige tekster (15 min) |
-| Ons–søn | Claude | Poster **Instagram Reel og Facebook Reel** (efter godkendelse), sætter YouTube-titel/beskrivelse/tags/synlighed via Windsor, når Lars har uploadet som privat, og kladder svar til kommentarer |
+| Man | Claude | Producerer ugens pakke (5 korte klip + 1 tutorial) og skriver tekster |
+| Tirs | **Lars** | Godkender pakken (20 min) |
+| Ons | **Lars** (vej A) eller Claude i Lars' browser (vej B) | Uploader/planlægger på YouTube, TikTok, Instagram og Facebook |
 | Dagligt | **Lars** | 10 min Reddit/fora (afsnit 14) |
-| Fre | Claude | Én side: tal, hvad der virkede, næste eksperiment |
-
-Claude kan sætte rytmen op som en **ugentlig planlagt opgave**, så pakken står klar mandag.
-
----|---|---|
-| Man | Claude | Producerer ugens pakke (5 korte klip + 1 tutorial), skriver tekster, analyserer sidste uge |
-| Tirs | **Lars** | Godkender pakken og tallene (20 min) |
-| Ons–søn | Claude | Opslag går live på de planlagte tidspunkter; svarkladder til kommentarer |
-| Dagligt | **Lars** | 10 min Reddit/fora (afsnit 14) |
-| Fre | Claude | Én side: tal, hvad der virkede, næste eksperiment |
+| Fre | Lars + Claude | Lars læser tal fra platformenes egen statistik, og Claude skriver én side: hvad virkede, næste eksperiment (afsnit 15) |
 
 Claude kan sætte rytmen op som en **ugentlig planlagt opgave**, så pakken står klar mandag.
 
@@ -172,7 +150,7 @@ Lars har tiden, men vidste ikke hvad der kræves. Her er det ærlige billede:
 
 | Fase | Timer | Indhold |
 |---|---|---|
-| **Uge 0** (opsætning, én gang) | ca. 3–4 t | Åbne og omlægge konti (45 min), forbinde Windsor (15 min), Play Console (Early Bird, butikstekst, 45 min), teste import/kode/promokode på telefon (45 min), optage første skærmklip (45 min) |
+| **Uge 0** (opsætning, én gang) | ca. 3–4 t | Åbne og omlægge konti (45 min), opsætning af vej B (15 min, valgfri), Play Console (Early Bird, butikstekst, 45 min), teste import/kode/promokode på telefon (45 min), optage første skærmklip (45 min) |
 | **Uge 1–6** | ca. 2,5–3 t/uge | Godkendelse 20 min · optagelse 45–60 min (skærmklip + 1–2 klip med ansigt) · Reddit/fora 10 min/dag (≈ 60 min) · svar på anmeldelser/DM 30 min · tal 15 min |
 | **Fra uge 7** | ca. 1,5 t/uge | Godkendelse, 1 optagelse, svar, tal. Resten kører (Claude) |
 
@@ -207,11 +185,11 @@ Det kun Lars kan: Play Console, kontoer og login, optagelser på egen telefon og
 | **TikTok** | Opdagelse og TikTok-søgning (søgeord i tekst og caption) | 3–5 klip/uge. Klikbart link i bio kræver business-konto (eller 1.000 følgere). Ifølge guides må business-konti kun bruge Commercial Music Library. Vores egen syntetiserede musik er licensfri. |
 | **Instagram** | Samme Reels som TikTok (uden vandmærke) + highlights som dokumentation | Highlights: "How it works", anmeldelser, FAQ, templates |
 
-### Gratis ekstra, samme fil (næsten ingen ekstra tid via Windsor)
+### Gratis ekstra, samme fil
 
-- **Facebook-side (Reels):** forældre og selvstændige bruger både sms og Facebook. Claude poster Reels via Windsor, når siden er forbundet.
-- **Threads:** Windsor kan kun tekst og billede, ikke video. Kort tekstopslag med link, eller Lars poster videoen selv.
-- **LinkedIn** (Lars' profil): ubesvaret-opkald-historien til selvstændige og designere i netværket. Lars poster selv (Windsor kan kun en virksomhedsside og ingen video). Her må Lars gerne skrive dansk.
+- **Facebook-side (Reels):** forældre og selvstændige bruger både sms og Facebook.
+- **Threads:** samme klip, kort tekst.
+- **LinkedIn** (Lars' profil): ubesvaret-opkald-historien til selvstændige og designere i netværket. Her må Lars gerne skrive dansk.
 - **YouTube Community-opslag:** påmindelser om tutorials.
 
 ### Nye kanaler jeg foreslår (som ikke var på listen)
@@ -306,7 +284,7 @@ Betalt annoncering (regnestykket i afsnit 1), influencer-honorarer (budget 0), S
 
 **Design:** 4 uger, mindst 8 opslag pr. format, samme CTA, samme tidspunkter, rækkefølgen blandes. Platformene scores hver for sig (TikTok, Reels, Shorts).
 
-**Mål pr. opslag** (hentes via Windsor eller manuelt ind i `marketing/tracker.csv`): visninger efter 48 t, gennemsnitlig visningstid i %, delinger, gem, profilbesøg, linkklik (via go-links), installs.
+**Mål pr. opslag** (aflæses i platformenes egen statistik og skrives ind i `marketing/tracker.csv`): visninger efter 48 t, gennemsnitlig visningstid i %, delinger, gem, profilbesøg, linkklik (via go-links), installs.
 
 **Beslutning efter 4 uger:** formatet med flest linkklik og installs pr. opslag *og* pr. produktionstime vinder. Er forskellen mindre end støjen (færre end 8 opslag eller få klik), kører vi en uge mere i stedet for at gætte.
 
@@ -477,7 +455,7 @@ Kilder: `tiktok`, `youtube`, `instagram`, `facebook`, `threads`, `linkedin`, `re
 
 - **Nordstjerne:** betalte køb pr. uge.
 - Butiksbesøg og installs pr. kilde (UTM), **butiks-konvertering** (sammenlign med Play Consoles peer-benchmark), retention efter 7 dage, afinstallationer, rating og antal anmeldelser, Early Bird-køb (antal og andel af alle køb).
-- Pr. opslag: visninger efter 48 t, gns. visningstid i %, delinger, profilbesøg, linkklik. Samles i `marketing/tracker.csv` (Windsor kan fylde den).
+- Pr. opslag: visninger efter 48 t, gns. visningstid i %, delinger, profilbesøg, linkklik. Samles i `marketing/tracker.csv`.
 - Search Console: visninger og klik pr. forespørgsel for `/templates` og feature-sider.
 
 ### Beslutningsregler (mine forslag, justeres med data)
@@ -495,7 +473,7 @@ I dag er søndag 22. nov. Early Bird slutter torsdag 31. dec. kl. 23:00 (ca. 5,5
 
 | Hvornår | Fokus | Konkret |
 |---|---|---|
-| **Nu → produktionsgodkendelse (uge 0)** | Gør klar, **ingen trafik til Play endnu** | Afsnit 4 afkrydset, Windsor forbundet, konti åbne, de 8 første klip godkendt og i banken, creator-liste, Reddit-karma starter, teasers "kommer snart + Early Bird" til textfox.app |
+| **Nu → produktionsgodkendelse (uge 0)** | Gør klar, **ingen trafik til Play endnu** | Afsnit 4 afkrydset, konti åbne, de 8 første klip godkendt og i banken, creator-liste, Reddit-karma starter, teasers "kommer snart + Early Bird" til textfox.app |
 | **Lanceringsdag + uge 1** | Rolig, målt start | Link på alle profiler, testerne anmelder, Reddit/LinkedIn, første 10 creator-mails, svar på alt, ret de 3 hyppigste klager |
 | **Uge 2–6, til 31/12** | Early Bird-sprint | 5 klip + 1 tutorial/uge, "Christmas texts" (17.–23. dec.), nytårsstunt (28.–31. dec.), nedtælling "7 dage / 48 timer / last call", AlternativeTo |
 | **Januar** | Nytårsforsæt | Træning, vaner, "text to future me". Product Hunt hvis rating ≥ 4,5 og ≥ 20 anmeldelser. Evaluering 31/1. |
@@ -515,7 +493,7 @@ I dag er søndag 22. nov. Early Bird slutter torsdag 31. dec. kl. 23:00 (ca. 5,5
 | Early Bird rammer ikke dem, der installerer efter ca. 1. dec. | Afsnit 4: test køb under prøven, ellers ryk datoen |
 | Misbrug (spam, chikane) og juridisk risiko | Markedsfør kun svar og påmindelser, aldrig masseudsendelser (GDPR/ePrivacy; i USA TCPA) |
 | Platformregler for nye konti | Ingen købte følgere, én konto pr. platform, mærk gaver |
-| Windsor kan ikke uploade til YouTube/TikTok (bekræftet 22/11), og Instagram/Facebook har ingen kladde-tilstand. En betalt plan er ikke verificeret | YouTube/TikTok manuelt (vej A). Instagram/Facebook: godkend caption først, og slet opslaget, hvis noget er galt |
+| Manuel upload tager tid, og vej B (browser) er skrøbelig | Vej A er standard; vej B kun til rutineopgaver. Lars' tid prioriteres i afsnit 6 |
 | Lars' tid | Færre ting godt frem for mange halvt. Rytmen i afsnit 5 |
 
 ---
@@ -535,8 +513,7 @@ Kilder jeg har brugt (web, 22. nov. 2026). Flere er sammenligningssider eller le
 - [Google Messages: planlæg sms](https://www.androidauthority.com/schedule-text-google-messages-android-1182844/)
 - [MacroDroid-pris, AlternativeTo](https://alternativeto.net/software/macrodroid/about)
 - [Missed-call text-back, prisniveau](https://quo.com/blog/missed-call-text-back-software)
-- [Windsor.ai prisoversigt (tredjepart)](https://blog.coupler.io/windsor-ai-pricing-overview/amp/)
 - [Android Central, udviklerregler](https://forums.androidcentral.com/help/developerrules) (gammel info)
 - [Mobilsiden.dk, Android-nyheder](https://mobilsiden.dk/nyheder/android-ios)
 
-**Ikke verificeret:** r/androidapps' regler, XDA og Android Central-forummets nuværende udviklerregler, om Instagram og Facebook accepterer vores MP4 uden problemer (afprøves med første opslag), hvad en betalt Windsor-plan koster, Google Messages' evne til at gentage beskeder, præcis Play-gebyrsats og promokode-grænse, TikToks aktuelle krav til business-konti. Alt dette står som tjek i planen, ikke som fakta.
+**Ikke verificeret:** r/androidapps' regler, XDA og Android Central-forummets nuværende udviklerregler,  Google Messages' evne til at gentage beskeder, præcis Play-gebyrsats og promokode-grænse, TikToks aktuelle krav til business-konti. Alt dette står som tjek i planen, ikke som fakta.
