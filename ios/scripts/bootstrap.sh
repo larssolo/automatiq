@@ -1,6 +1,8 @@
 #!/bin/zsh
 # Checks the Mac is ready, generates the Xcode project, runs the core tests and builds the app.
-# Run from anywhere: ios/scripts/bootstrap.sh   (add --device to also build signed for a real iPhone)
+# Run from anywhere: ios/scripts/bootstrap.sh
+#   --ui      also run the UI tests in the simulator (clicks through every screen)
+#   --device  also build signed for a real iPhone
 set -euo pipefail
 cd "${0:A:h}/.."
 
@@ -23,7 +25,18 @@ xcodebuild -project TextFox.xcodeproj -scheme TextFox -destination 'generic/plat
   -derivedDataPath build/DerivedData CODE_SIGNING_ALLOWED=NO -quiet build \
   && ok "App and widget build for the simulator" || fail "Simulator build failed (see the errors above)"
 
-if [[ "${1:-}" == "--device" ]]; then
+if [[ " $* " == *" --ui "* ]]; then
+  # A regular iPhone Pro, the shape the screens are designed on; any iPhone if there's none.
+  SIMS=$(xcrun simctl list devices available)
+  SIM=$(print -r -- "$SIMS" | awk '/iPhone [0-9]+ Pro \(/ && !p {p=$0} /iPhone/ && !a {a=$0} END {print (p ? p : a)}' | grep -oE '[0-9A-F-]{36}' || true)
+  [[ -n "$SIM" ]] || fail "No iPhone simulator found. Install one in Xcode → Settings → Components"
+  rm -rf build/ui.xcresult
+  xcodebuild test -project TextFox.xcodeproj -scheme TextFox -destination "platform=iOS Simulator,id=$SIM" \
+    -derivedDataPath build/DerivedData -resultBundlePath build/ui.xcresult CODE_SIGNING_ALLOWED=NO -quiet >/dev/null 2>&1 \
+    && ok "UI tests pass" || fail "UI tests fail: open ios/build/ui.xcresult in Xcode for the screenshots"
+fi
+
+if [[ " $* " == *" --device "* ]]; then
   [[ "$TEAM" =~ ^[A-Z0-9]{10}$ ]] || fail "Put the Team ID in ios/Config/Signing.xcconfig first"
   xcodebuild -project TextFox.xcodeproj -scheme TextFox -destination 'generic/platform=iOS' \
     -derivedDataPath build/DerivedData -allowProvisioningUpdates -quiet build \

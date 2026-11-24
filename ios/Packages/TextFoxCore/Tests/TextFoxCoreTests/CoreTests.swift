@@ -202,3 +202,120 @@ func at(_ y: Int, _ m: Int, _ d: Int, _ h: Int, _ min: Int = 0) -> Date {
         #expect(back.daysOfWeek == [1, 5])
     }
 }
+
+@Suite struct PresentationTests {
+    @Test func accentIsStableAndFromPalette() {
+        let m = Macro(id: "abc", name: "x", triggerType: .manual, recipients: [], messageBody: "")
+        // Java: "abc".hashCode() = 96354, 96354 mod 10 = 4 → cyan.
+        #expect(m.accentColor == cardColorPalette[4])
+        var n = m; n.cardColor = 0xFFFF_0000
+        #expect(n.accentColor == 0xFFFF_0000)
+        let neg = Macro(id: "polygenelubricants", name: "x", triggerType: .manual, recipients: [], messageBody: "")
+        #expect(cardColorPalette.contains(neg.accentColor)) // negative hash still maps into the palette
+    }
+
+    @Test func summaries() {
+        var m = Macro(name: "x", triggerType: .scheduled, scheduledTime: "08:00", recipients: [], messageBody: "")
+        m.daysOfWeek = [1, 2, 3, 4, 5]
+        #expect(m.compactSummary(timeZone: cph) == "08:00 · Weekdays")
+        m.triggerType = .incoming; m.matchSender = "+45 12 34 56 78"
+        #expect(m.compactSummary(timeZone: cph) == "Auto-reply · ****5678")
+        m.triggerType = .manual; m.actionType = .reminder
+        #expect(m.compactSummary(timeZone: cph) == "Manual trigger · Reminder")
+    }
+
+    @Test func nextFireWording() {
+        let now = at(2026, 11, 24, 10)
+        #expect(formatNextFire(at(2026, 11, 24, 14, 55), now: now, timeZone: cph) == "today 14:55")
+        #expect(formatNextFire(at(2026, 11, 25, 8, 15), now: now, timeZone: cph) == "tomorrow 08:15")
+        #expect(formatNextFire(at(2026, 11, 27, 11, 13), now: now, timeZone: cph) == "Fri 11:13")
+        #expect(formatNextFire(at(2026, 12, 7, 7, 7), now: now, timeZone: cph) == "Mon 7 Dec 07:07")
+        #expect(formatNextFire(at(2027, 1, 4, 7, 7), now: now, timeZone: cph) == "Mon 4 Jan 2027 07:07")
+    }
+}
+
+@Suite struct FolderLayoutTests {
+    func macro(_ id: String, folder: String? = nil, order: Int) -> Macro {
+        var m = Macro(id: id, name: id, triggerType: .manual, recipients: [], messageBody: "")
+        m.folderId = folder; m.sortOrder = order
+        return m
+    }
+
+    @Test func flattensFoldersWithMembers() {
+        var fam = Folder(id: "fam", name: "Family"); fam.sortOrder = 0
+        var work = Folder(id: "work", name: "Work"); work.sortOrder = 2; work.expanded = false
+        let macros = [macro("a", folder: "fam", order: 1), macro("b", folder: "fam", order: 0),
+                      macro("c", order: 1), macro("d", folder: "work", order: 0), macro("e", folder: "gone", order: 3)]
+        let ids = flattenRows(folders: [fam, work], macros: macros).map(\.id)
+        #expect(ids == ["f:fam", "m:b", "m:a", "m:c", "f:work", "m:e"])
+    }
+
+    @Test func dropTakesTheFolderAbove() {
+        let fam = Folder(id: "fam", name: "Family")
+        let rows: [ListRow] = [.folder(fam, memberCount: 1, activeCount: 1), .macro(macro("a", folder: "fam", order: 0)),
+                               .macro(macro("x", order: 0)), .macro(macro("c", order: 1))]
+        #expect(folderForDrop(rows: rows, at: 2) == "fam")
+        #expect(folderForDrop(rows: rows, at: 1) == "fam")
+        #expect(folderForDrop(rows: rows, at: 3) == nil)
+        #expect(folderForDrop(rows: rows, at: 0) == nil)
+    }
+
+    @Test func ordersPerSpace() {
+        let fam = Folder(id: "fam", name: "Family")
+        let o = layoutOrders([.macro(macro("c", order: 9)), .folder(fam, memberCount: 2, activeCount: 0),
+                              .macro(macro("a", folder: "fam", order: 5)), .macro(macro("b", folder: "fam", order: 1))])
+        #expect(o.rootMacroOrder == ["c": 0])
+        #expect(o.folderOrder == ["fam": 1])
+        #expect(o.memberOrder == ["fam": ["a": 0, "b": 1]])
+    }
+}
+
+@Suite struct EditorDraftTests {
+    let today = CivilDate(year: 2026, month: 11, day: 24) // Tuesday
+
+    @Test func roundTripsAMacro() {
+        var m = Macro(id: "x", name: "Mom", triggerType: .scheduled, scheduledTime: "08:00",
+                      recipients: ["+4512345678"], messageBody: "Hi")
+        m.daysOfWeek = [1, 3, 5]; m.randomSpreadMinutes = 10; m.cardColor = cardColorPalette[2]
+        let back = EditorDraft(m).toMacro(id: "x", today: today)
+        #expect(back == m)
+    }
+
+    @Test func oneOffAnchorsAndExpiresOnItsDate() {
+        var d = EditorDraft()
+        d.name = "Once"; d.recipients = ["12345678"]; d.message = "Hi"
+        d.oneOff = true; d.oneOffEpochDay = today.adding(days: 3).epochDay // Friday
+        let m = d.toMacro(id: "o", today: today)
+        #expect(!m.repeatDaily)
+        #expect(m.daysOfWeek == [5])
+        #expect(m.anchorEpochDay == today.adding(days: 3).epochDay)
+        #expect(m.validUntilEpochDay == m.anchorEpochDay)
+    }
+
+    @Test func everyTwoWeeksAnchorsOnTheFirstSendDay() {
+        var d = EditorDraft()
+        d.name = "x"; d.recipients = ["12345678"]; d.message = "Hi"
+        d.weekInterval = 2; d.daysOfWeek = [4]; d.startEpochDay = today.epochDay
+        #expect(d.toMacro(id: "a", today: today).anchorEpochDay == today.adding(days: 2).epochDay) // Thursday
+    }
+
+    @Test func validation() {
+        var d = EditorDraft()
+        #expect(d.problems == ["Give the macro a name", "Add a recipient", "Write the message"])
+        d.name = "x"; d.recipients = ["abc"]; d.message = "Hi"
+        #expect(d.problems == ["Check the phone numbers"])
+        d.triggerType = .incoming
+        #expect(d.canSave) // replies answer the sender
+        d.triggerType = .manual; d.actionType = .webhook; d.webhookUrl = "ftp://x"
+        #expect(d.problems == ["Enter a URL starting with http:// or https://"])
+        #expect(isValidPhone("+45 12 34 56 78") && !isValidPhone("45+12") && !isValidPhone("12"))
+    }
+
+    @Test func repliesDropRecipients() {
+        var d = EditorDraft()
+        d.name = "x"; d.recipients = ["12345678"]; d.message = "Hi"; d.triggerType = .incoming
+        d.matchKeyword = " hello "
+        let m = d.toMacro(id: "r", today: today)
+        #expect(m.recipients.isEmpty && m.matchKeyword == "hello" && m.scheduledTime == nil)
+    }
+}

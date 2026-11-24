@@ -1,6 +1,6 @@
 # TextFox til iPhone — plan
 
-Sidst opdateret 24. november 2026. Ejer: Lars.
+Sidst opdateret 24. november 2026 (aften). Ejer: Lars.
 
 ## 1. Kort fortalt
 
@@ -47,7 +47,7 @@ ios/
 ```
 
 - **iOS 17+** (interaktive widgets, nye App Intents, SwiftData).
-- **Data:** SwiftData i en App Group (`group.app.kodekid.textfox`), så appen, widgetten og Genveje-handlingerne deler makroerne.
+- **Data:** én JSON-fil i en App Group (`group.app.kodekid.textfox`), så appen, widgetten og Genveje-handlingerne deler makroerne. Makroerne bruger samme format som Android-backuppen (valgt i stedet for SwiftData: enklere, og import/eksport er gratis).
 - **Bundle ID:** `app.kodekid.textfox` (widget: `.widget`).
 - **Ingen tredjepartsbiblioteker.** Gemini kaldes med URLSession. Nøglen gemmes i nøgleringen (Keychain).
 
@@ -56,7 +56,7 @@ ios/
 Hver milepæl ender med en build, der virker, tests der består, og en test på Lars' iPhone.
 
 1. **Bevis (1–2 dage).** En "Hent TextFox-besked"-handling i Genveje, der returnerer en udfyldt og AI-varieret tekst. Lars laver én automatisering, "Hver dag kl. 8 → Hent besked → Send besked", og den skal sende uden at spørge. Desuden notifikation → færdig besked → Send. **Hvis automatiseringen ikke kan køre uden bekræftelse, stopper vi og tænker om.**
-2. **Makroer (3–4 dage).** Liste med mapper, kort og farver, editor med alle felter for de understøttede typer, kontakter, variabler, søgning, slet/dupliker/fortryd. Lagring i SwiftData.
+2. **Makroer (3–4 dage). ✅ Bygget 24. nov. og testet i simulatoren.** Liste med mapper, kort og farver, editor med alle felter for de understøttede typer, kontakter, variabler, søgning, slet/dupliker/fortryd. Lagring i SwiftData.
 3. **Planlægning og notifikationer (2–3 dage).** Lokale notifikationer for de næste 64 afsendelser (iOS-loft), som fyldes op igen, når appen åbnes, og i baggrundsopdatering. Notifikationshandlingerne Send/Rediger/Spring over. Stille timer. Log.
 4. **Genveje og widgets (3–4 dage).** App Intents: hent besked, kør makro, autosvar på indgående besked (input: afsender og tekst). Guide i appen med billeder til hver automatisering. Interaktiv widget pr. makro.
 5. **AI (2 dage).** Gemini-klient, nøgletest, modelvalg, AI-svar/variation/skriv, godkend eller send automatisk. Samme reserveløsning som Android: fast tekst, hvis AI fejler.

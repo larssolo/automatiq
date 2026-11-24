@@ -38,6 +38,12 @@ targets:
       path: TextFox/Info.plist
       properties:
         CFBundleDisplayName: TextFox
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        UIAppFonts: [DMSans-Regular.ttf, DMSans-Medium.ttf, JetBrainsMono-Regular.ttf, JetBrainsMono-Medium.ttf]
+        CFBundleURLTypes:
+          - CFBundleURLName: app.kodekid.textfox
+            CFBundleURLSchemes: [textfox]
         UILaunchScreen:
           UIColorName: LaunchBackground
         UIApplicationSceneManifest:
@@ -66,15 +72,29 @@ targets:
       path: TextFoxWidget/Info.plist
       properties:
         CFBundleDisplayName: TextFox
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         NSExtension:
           NSExtensionPointIdentifier: com.apple.widgetkit-extension
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: app.kodekid.textfox.widget
+  TextFoxUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources: [TextFoxUITests]
+    dependencies:
+      - target: TextFox
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.kodekid.textfox.uitests
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_TARGET_NAME: TextFox
 schemes:
   TextFox:
     build:
       targets:
         TextFox: all
+        TextFoxUITests: [test]
     test:
-      targets: []
+      targets: [TextFoxUITests]
