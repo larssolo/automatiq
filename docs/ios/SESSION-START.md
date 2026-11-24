@@ -26,7 +26,7 @@ Read `docs/ios/PLAN.md` first: it is the plan and the scope.
 
 ## Rules (the same as the Android work)
 
-- **No AI attribution anywhere.** No Co-Authored-By lines, no "Generated with", and no mention of Claude in code, comments, commits or PRs.
+- **No AI attribution anywhere.** No Co-Authored-By lines, no "Generated with", and no mention of AI tools in code, comments, commits or PRs.
 - Commit as `larssolo <larssohl@gmail.com>` using the GIT_AUTHOR_* and GIT_COMMITTER_* env vars. Never change the git config.
 - Merge only when Lars says merge, with `gh pr merge N --merge --delete-branch`.
 - Lars writes in Danish, and he wants plain Danish without code in chat. The app UI is in English.
