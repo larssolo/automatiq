@@ -25,7 +25,10 @@ targets:
   TextFox:
     type: application
     platform: iOS
-    sources: [TextFox, Shared]
+    sources:
+      - path: TextFox
+        excludes: [TextFox.storekit]
+      - Shared
     dependencies:
       - package: TextFoxCore
       - target: TextFoxWidget
@@ -99,5 +102,7 @@ schemes:
       targets:
         TextFox: all
         TextFoxUITests: [test]
+    run:
+      storeKitConfiguration: TextFox/TextFox.storekit
     test:
       targets: [TextFoxUITests]

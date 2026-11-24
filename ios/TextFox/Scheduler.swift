@@ -44,7 +44,10 @@ enum Scheduler {
         let center = UNUserNotificationCenter.current()
         guard await authorization() == .authorized else { return }
         scheduleRefresh()
-        let plan = planFires(store.macros, after: now)
+        // Nothing is planned while the trial isn't running, nor after it ends.
+        let access = Purchases.shared.access
+        let end = Purchases.shared.trialEnd ?? .distantFuture
+        let plan = access.canRun ? planFires(store.macros, after: now).filter { $0.at < end } : []
         let wanted = Set(plan.map(\.id))
         let pending = await center.pendingNotificationRequests().map(\.identifier).filter { $0.hasPrefix("fire:") }
         let stale = pending.filter { !wanted.contains($0) }

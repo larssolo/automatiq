@@ -18,6 +18,7 @@ struct GetMessageIntent: AppIntent {
     @MainActor
     func perform() async throws -> some IntentResult & ReturnsValue<String> {
         guard let m = MacroStore.shared.macro(id: macro.id) else { throw IntentError.macroGone }
+        guard Purchases.shared.access.canRun else { throw IntentError.locked }
         let (text, note) = await AI.text(for: m)
         MacroStore.shared.record(m, status: .success, text: text, detail: ["Handed to Shortcuts", note].compactMap { $0 }.joined(separator: " · "))
         return .result(value: text)
@@ -54,6 +55,7 @@ struct AutoReplyIntent: AppIntent {
     @MainActor
     func perform() async throws -> some IntentResult & ReturnsValue<String> {
         let store = MacroStore.shared
+        guard Purchases.shared.access.canRun else { return .result(value: "") }
         guard let m = Macro.replyMacro(in: store.macros, sender: sender, body: message) else { return .result(value: "") }
         let s = store.settings
         let minute = Calendar.current.component(.hour, from: Date()) * 60 + Calendar.current.component(.minute, from: Date())
@@ -88,8 +90,13 @@ struct RunMacroIntent: AppIntent {
 }
 
 enum IntentError: Error, CustomLocalizedStringResourceConvertible {
-    case macroGone
-    var localizedStringResource: LocalizedStringResource { "That macro no longer exists in TextFox." }
+    case macroGone, locked
+    var localizedStringResource: LocalizedStringResource {
+        switch self {
+        case .macroGone: "That macro no longer exists in TextFox."
+        case .locked: "TextFox's free trial isn't running. Open TextFox to start it or unlock."
+        }
+    }
 }
 
 struct TextFoxShortcuts: AppShortcutsProvider {

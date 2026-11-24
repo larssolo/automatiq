@@ -44,6 +44,7 @@ struct RootView: View {
         #if DEBUG
         .sheet(isPresented: $app.showWidgetPreview) { WidgetPreviewSheet() }
         #endif
+        .sheet(isPresented: $app.showUnlock) { UnlockSheet() }
         .sheet(item: $app.outgoing) { message in
             MessageComposer(message: message) { result in app.finishedSending(message, result) }
                 .ignoresSafeArea()

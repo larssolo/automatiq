@@ -25,6 +25,8 @@ final class AppState {
     var tab: Tab = .macros
     /// Whether TextFox may show notifications; scheduled macros need it.
     var notificationStatus: UNAuthorizationStatus = .notDetermined
+    /// The trial / unlock sheet.
+    var showUnlock = false
     /// Debug: shows the widget's small and medium looks in a sheet.
     var showWidgetPreview = false
     /// The open macro editor, if any (set by the list, the + button and textfox:// links).
@@ -51,6 +53,7 @@ final class AppState {
                 Task { await Scheduler.testFire(m) }
             }
         case "widget-preview": showWidgetPreview = true
+        case "unlock": showUnlock = true
         case "test-tap", "test-skip":
             // What a tap on Send (or Skip) in a notification does, without the lock screen.
             if let m = store.macros.first(where: { $0.id == rest || $0.name.caseInsensitiveCompare(rest) == .orderedSame }) {
@@ -79,6 +82,8 @@ final class AppState {
 
     /// "Send now": opens the filled-in message for SMS, shows a reminder, or calls the webhook.
     func run(_ macro: Macro) {
+        // After the trial (or before it's started) a run opens the unlock sheet instead.
+        guard Purchases.shared.access.canRun else { showUnlock = true; return }
         switch macro.actionType {
         case .sms:
             if macro.recipients.isEmpty {
@@ -131,6 +136,7 @@ final class AppState {
 
     /// Logs what came due while closed and plans the next notifications. Runs on open and after changes.
     func refreshSchedule() async {
+        await Purchases.shared.load()
         notificationStatus = await Scheduler.authorization()
         let needs = store.macros.contains { $0.enabled && $0.triggerType == .scheduled }
         if needs && notificationStatus == .notDetermined {
@@ -154,6 +160,7 @@ final class AppState {
             break
         default:
             tab = .macros
+            guard Purchases.shared.access.canRun else { showUnlock = true; return }
             switch macro.actionType {
             case .sms:
                 compose(macro, at: at, fireId: fireId)

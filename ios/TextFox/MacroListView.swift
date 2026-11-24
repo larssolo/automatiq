@@ -32,6 +32,7 @@ struct MacroListView: View {
     var body: some View {
         VStack(spacing: 0) {
             header
+            LicenseBanner { app.showUnlock = true }
             if app.notificationStatus == .denied && store.macros.contains(where: { $0.enabled && $0.triggerType == .scheduled }) {
                 notificationsOffBanner
             }

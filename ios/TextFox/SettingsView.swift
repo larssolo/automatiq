@@ -49,6 +49,19 @@ struct SettingsView: View {
                     OutlineButton(title: "Import backup", color: Brand.green) { importing = true }
                 }
 
+                group("TextFox") {
+                    let access = Purchases.shared.access
+                    row("Status", { switch access {
+                        case .notStarted: return "Trial not started"
+                        case .license(.unlocked): return "Unlocked"
+                        case .license(.expired): return "Trial ended"
+                        case .license(.trial(let d)): return d == 0 ? "Trial · last day" : "Trial · \(d) days left"
+                    } }())
+                    if access != .license(.unlocked) {
+                        OutlineButton(title: "Unlock TextFox", color: Brand.green) { app.showUnlock = true }
+                    }
+                }
+
                 group("About") {
                     row("Version", Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "–")
                     row("Macros", "\(store.macros.count) · \(store.activeCount) live")
