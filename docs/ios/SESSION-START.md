@@ -12,6 +12,7 @@ Read `docs/ios/PLAN.md` first: it is the plan and the scope.
   - the trial in calendar days, and the early-bird code.
 - **The app and widget build for the simulator, and the app runs** (verified 2026-11-24 with Xcode 27.2 and the iOS 27.2 simulator; `bootstrap.sh` passes).
 - `ios/Config/Signing.xcconfig` is local and not in git. It holds Lars' Team ID (F545QS7GV6), and the Apple ID is signed in to Xcode.
+- **Lars' current phone is an iPhone 8 (max iOS 16), so it can't run the app.** Lars chose to keep iOS 17 and test in the simulator until he has a newer iPhone. The simulator can't send SMS or run Shortcuts automations, so the real-device part of milestone 1 waits for that phone; build everything else and check it in the simulator.
 - The signed device build doesn't work yet only because no iPhone has been registered with the team. Connect Lars' iPhone by cable (Developer Mode on, "Trust"), then run `bootstrap.sh --device` again: Xcode registers the device and creates the profiles itself.
 
 ## First steps
