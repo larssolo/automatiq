@@ -2,18 +2,19 @@ import SwiftUI
 
 /// TextFox's colours, the same as the Android app and the website.
 enum Brand {
-    static let green = Color(hex: 0x00E676)
+    /// TextFox green; the iPhone look uses Apple's own dark-mode green.
+    static var green: Color { Look.current.iPhoneStyle ? Color(hex: 0x30D158) : Color(hex: 0x00E676) }
     /// The fox logo's green, a shade darker than `green`.
-    static let foxGreen = Color(hex: 0x00C853)
+    static var foxGreen: Color { Look.current.iPhoneStyle ? Color(hex: 0x28B84C) : Color(hex: 0x00C853) }
     static let ink = Color(hex: 0x090B0A)
     static let background = Color(hex: 0x0D0D0D)
-    static let surface = Color(hex: 0x1A1A1A)
+    static var surface: Color { Look.current.iPhoneStyle ? Color(hex: 0x1C1C1E) : Color(hex: 0x1A1A1A) }
     static let sheet = Color(hex: 0x1C1C1E)
     static let card = Color(hex: 0x151A17)
     static let onSurface = Color(hex: 0xF0F0F0)
     static let mute = Color(hex: 0xAAAAAA)
-    static let red = Color(hex: 0xFF5252)
-    static let amber = Color(hex: 0xFFB300)
+    static var red: Color { Look.current.iPhoneStyle ? Color(hex: 0xFF453A) : Color(hex: 0xFF5252) }
+    static var amber: Color { Look.current.iPhoneStyle ? Color(hex: 0xFF9F0A) : Color(hex: 0xFFB300) }
     static let hairline = Color.white.opacity(0.15)
 }
 
@@ -27,21 +28,26 @@ extension Color {
     init(argb: Int64) { self.init(hex: UInt32(truncatingIfNeeded: argb & 0xFFFFFF)) }
 }
 
-/// DM Sans for text, JetBrains Mono for the terminal accents, as on Android.
+/// DM Sans for text and JetBrains Mono for the terminal accents, as on Android; the iPhone look uses
+/// Apple's system font (SF Pro, SF Mono), which also follows the user's text size.
 extension Font {
     static func sans(_ size: CGFloat, medium: Bool = false) -> Font {
-        .custom(medium ? "DMSans-Medium" : "DMSans-Regular", size: size)
+        Look.current.iPhoneStyle ? .system(size: size + 0.5, weight: medium ? .semibold : .regular)
+            : .custom(medium ? "DMSans-Medium" : "DMSans-Regular", size: size)
     }
     static func mono(_ size: CGFloat, medium: Bool = false) -> Font {
-        .custom(medium ? "JetBrainsMono-Medium" : "JetBrainsMono-Regular", size: size)
+        Look.current.iPhoneStyle ? .system(size: size, weight: medium ? .semibold : .regular, design: .monospaced)
+            : .custom(medium ? "JetBrainsMono-Medium" : "JetBrainsMono-Regular", size: size)
     }
 }
 
-/// The asymmetric "leaf-cut" corners: TextFox's signature card shape.
+/// The asymmetric "leaf-cut" corners: TextFox's signature card shape. The iPhone look uses even,
+/// continuous corners like the system's grouped lists.
 struct LeafShape: Shape {
     var big: CGFloat = 18, small: CGFloat = 6
     func path(in r: CGRect) -> Path {
-        Path(roundedRect: r, cornerRadii: .init(topLeading: big, bottomLeading: small, bottomTrailing: big, topTrailing: small))
+        if Look.current.iPhoneStyle { return Path(roundedRect: r, cornerRadius: 16, style: .continuous) }
+        return Path(roundedRect: r, cornerRadii: .init(topLeading: big, bottomLeading: small, bottomTrailing: big, topTrailing: small))
     }
 }
 

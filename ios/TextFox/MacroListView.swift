@@ -198,7 +198,7 @@ struct MacroListView: View {
     }
 
     private func macroRow(_ m: Macro, inFolder folder: Folder?) -> some View {
-        MacroCard(macro: m, veinColor: folder.map { Color(argb: $0.cardColor) }) { store.setEnabled(m, $0) }
+        MacroCard(macro: m, veinColor: folder.map { Look.current.accent(Color(argb: $0.cardColor)) }) { store.setEnabled(m, $0) }
             .padding(.leading, folder != nil && !searching ? 16 : 0)
             .onTapGesture { app.editor = .edit(m.id) }
             .contextMenu {

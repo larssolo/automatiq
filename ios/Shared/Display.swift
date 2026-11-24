@@ -52,7 +52,7 @@ extension ActionType {
 }
 
 extension Macro {
-    var accent: Color { Color(argb: accentColor) }
+    var accent: Color { Look.current.accent(Color(argb: accentColor)) }
     /// The card shows the trigger's icon for texts and the action's icon for everything else.
     var cardIcon: String {
         actionType == .sms || [.manual, .incoming, .missedCall].contains(triggerType) ? triggerType.icon : actionType.icon

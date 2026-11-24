@@ -8,7 +8,7 @@ final class TextFoxUITests: XCTestCase {
     override func setUp() {
         continueAfterFailure = false
         app = XCUIApplication()
-        app.launchArguments = ["-resetData", "YES", "-paywall", "NO"]
+        app.launchArguments = ["-resetData", "YES", "-paywall", "NO", "-skipIntro", "YES"]
         app.launch()
         allowNotifications()
     }
@@ -150,7 +150,7 @@ final class TextFoxUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Good morning, Mom"].waitForExistence(timeout: 5))
         // Debug link: a send notification for this macro in 3 seconds.
         app.terminate()
-        app.launchArguments = ["-paywall", "NO", "-open", "textfox://test-fire/Running late"]
+        app.launchArguments = ["-paywall", "NO", "-skipIntro", "YES", "-open", "textfox://test-fire/Running late"]
         app.launch()
         XCUIDevice.shared.press(.home)
         sleep(6)
@@ -169,7 +169,7 @@ final class TextFoxUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Good morning, Mom"].waitForExistence(timeout: 5))
         app.terminate()
         // (Names without apostrophes: the test runner escapes them in launch arguments.)
-        app.launchArguments = ["-paywall", "NO", "-open", "textfox://test-tap/Running late"]
+        app.launchArguments = ["-paywall", "NO", "-skipIntro", "YES", "-open", "textfox://test-tap/Running late"]
         app.launch()
         // The link is handled on appear (and switches to the list); wait for that before opening the log.
         XCTAssertTrue(app.staticTexts["Running late"].waitForExistence(timeout: 5))
@@ -179,7 +179,7 @@ final class TextFoxUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["FAILED · Running late"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.staticTexts["This device can't send text messages"].exists)
         app.terminate()
-        app.launchArguments = ["-paywall", "NO", "-open", "textfox://test-skip/Good morning, Mom"]
+        app.launchArguments = ["-paywall", "NO", "-skipIntro", "YES", "-open", "textfox://test-skip/Good morning, Mom"]
         app.launch()
         sleep(2)
         app.buttons["Log"].tap()
@@ -189,7 +189,7 @@ final class TextFoxUITests: XCTestCase {
 
     func testPaywallAsksToStartTheTrial() {
         app.terminate()
-        app.launchArguments = ["-resetData", "YES", "-paywall", "YES"]
+        app.launchArguments = ["-resetData", "YES", "-paywall", "YES", "-skipIntro", "YES"]
         app.launch()
         XCTAssertTrue(app.staticTexts["Start your free 30-day trial to run your macros."].waitForExistence(timeout: 5))
         shot("50-trial-banner")
@@ -201,5 +201,24 @@ final class TextFoxUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Try TextFox free for 30 days"].waitForExistence(timeout: 3))
         XCTAssertTrue(app.buttons["Start 30-day free trial"].exists)
         shot("51-unlock-sheet")
+    }
+
+    func testIntroAndFirstLaunchGuide() {
+        app.terminate()
+        app.launchArguments = ["-resetData", "YES", "-paywall", "NO"]
+        app.launch()
+        allowNotifications()
+        XCTAssertTrue(app.staticTexts["Meet TextFox"].waitForExistence(timeout: 8))
+        shot("60-onboarding")
+        for _ in 0..<3 { app.buttons["Next"].tap() }
+        XCTAssertTrue(app.staticTexts["Free for 30 days"].waitForExistence(timeout: 3))
+        app.buttons["Let's go"].tap()
+        XCTAssertTrue(app.staticTexts["Good morning, Mom"].waitForExistence(timeout: 5))
+        // Seen once: the next launch goes straight to the list after the fox.
+        app.terminate()
+        app.launchArguments = ["-paywall", "NO"]
+        app.launch()
+        XCTAssertTrue(app.staticTexts["Good morning, Mom"].waitForExistence(timeout: 8))
+        XCTAssertFalse(app.staticTexts["Meet TextFox"].exists)
     }
 }

@@ -1,4 +1,5 @@
 import BackgroundTasks
+import CoreLocation
 import Foundation
 import TextFoxCore
 import UIKit
@@ -14,6 +15,13 @@ enum Scheduler {
     static let skipAction = "SKIP"
 
     static let refreshTask = "app.kodekid.textfox.refresh"
+
+    private static let locationManager = CLLocationManager()
+
+    /// Place notifications need location access; asked when the user saves a location macro.
+    static func askForLocationIfNeeded() {
+        if locationManager.authorizationStatus == .notDetermined { locationManager.requestWhenInUseAuthorization() }
+    }
 
     /// Asks iOS to wake the app now and then to top up the notifications (at most 64 can wait).
     static func scheduleRefresh() {
@@ -47,12 +55,18 @@ enum Scheduler {
         // Nothing is planned while the trial isn't running, nor after it ends.
         let access = Purchases.shared.access
         let end = Purchases.shared.trialEnd ?? .distantFuture
-        let plan = access.canRun ? planFires(store.macros, after: now).filter { $0.at < end } : []
-        let wanted = Set(plan.map(\.id))
-        let pending = await center.pendingNotificationRequests().map(\.identifier).filter { $0.hasPrefix("fire:") }
+        // Location macros: iOS itself watches the place and shows the notification on arrival or departure.
+        let places = access.canRun ? Array(store.macros.filter { $0.enabled && $0.triggerType == .location && $0.latitude != nil && $0.longitude != nil }.prefix(20)) : []
+        // Both kinds share iOS's limit of 64 waiting notifications.
+        let plan = access.canRun ? planFires(store.macros, after: now, budget: notificationBudget - places.count).filter { $0.at < end } : []
+        let wanted = Set(plan.map(\.id) + places.map(locationId))
+        let pending = await center.pendingNotificationRequests().map(\.identifier).filter { $0.hasPrefix("fire:") || $0.hasPrefix("loc:") }
         let stale = pending.filter { !wanted.contains($0) }
         center.removePendingNotificationRequests(withIdentifiers: stale)
         let have = Set(pending)
+        for macro in places where !have.contains(locationId(macro)) {
+            try? await center.add(locationRequest(for: macro))
+        }
         for fire in plan where !have.contains(fire.id) {
             guard let macro = store.macro(id: fire.macroId) else { continue }
             try? await center.add(request(for: macro, at: fire))
@@ -70,6 +84,27 @@ enum Scheduler {
         try? await UNUserNotificationCenter.current().add(test)
     }
     #endif
+
+    /// The id carries what the region depends on, so moving the pin or radius replaces it.
+    static func locationId(_ m: Macro) -> String {
+        "loc:\(m.id):\(m.latitude ?? 0),\(m.longitude ?? 0),\(Int(m.radiusMeters ?? 200)),\(m.geofenceTransition ?? 1),\(stableHash(m.messageBody))"
+    }
+
+    private static func locationRequest(for macro: Macro) -> UNNotificationRequest {
+        let content = UNMutableNotificationContent()
+        content.title = macro.name
+        content.subtitle = (macro.geofenceTransition == 2 ? "You left · " : "You arrived · ") + "to " + macro.recipients.map(maskPhone).joined(separator: ", ")
+        content.body = expandTemplate(macro.messageBody, now: Date(), macroName: macro.name, locale: Locale(identifier: "en_GB"))
+        content.sound = .default
+        content.categoryIdentifier = macro.actionType == .reminder ? "" : category
+        content.userInfo = ["macroId": macro.id]
+        let region = CLCircularRegion(center: CLLocationCoordinate2D(latitude: macro.latitude!, longitude: macro.longitude!),
+                                      radius: max(macro.radiusMeters ?? 200, 100), identifier: macro.id)
+        region.notifyOnEntry = macro.geofenceTransition != 2
+        region.notifyOnExit = macro.geofenceTransition == 2
+        return UNNotificationRequest(identifier: locationId(macro), content: content,
+                                     trigger: UNLocationNotificationTrigger(region: region, repeats: true))
+    }
 
     private static func request(for macro: Macro, at fire: PlannedFire) -> UNNotificationRequest {
         let content = UNMutableNotificationContent()

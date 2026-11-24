@@ -36,7 +36,7 @@ struct MacroEditorView: View {
     }
 
     private var existing: Macro? { if case .edit(let id) = target { store.macro(id: id) } else { nil } }
-    private var accent: Color { Color(argb: d.cardColor) }
+    private var accent: Color { Look.current.accent(Color(argb: d.cardColor)) }
     private var hasChanges: Bool { loaded && d != baseline }
     private var today: CivilDate { CivilDate(Date(), in: .current) }
 
@@ -110,6 +110,7 @@ struct MacroEditorView: View {
         }
         let m = d.toMacro(id: d.id ?? UUID().uuidString, today: today)
         store.upsert(m)
+        if m.triggerType == .location { Scheduler.askForLocationIfNeeded() }
         UINotificationFeedbackGenerator().notificationOccurred(.success)
         dismiss()
     }
@@ -160,7 +161,7 @@ struct MacroEditorView: View {
                     let on = c == d.cardColor
                     Button { d.cardColor = c } label: {
                         ZStack {
-                            Circle().fill(Color(argb: c))
+                            Circle().fill(Look.current.accent(Color(argb: c)))
                             if on {
                                 Circle().stroke(.white, lineWidth: 2.5)
                                 Image(systemName: "checkmark").font(.system(size: 12, weight: .bold)).foregroundStyle(.black)

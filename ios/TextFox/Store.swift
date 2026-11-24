@@ -25,6 +25,8 @@ struct AppSettings: Codable, Hashable {
     /// The user agreed that message text may be sent to Google Gemini.
     var aiConsent = false
     var geminiModel = defaultGeminiModel
+    /// The first-launch guide has been seen.
+    var onboarded = false
 
     init() {}
 
@@ -36,6 +38,7 @@ struct AppSettings: Codable, Hashable {
         quietEnd = try c.decodeIfPresent(Int.self, forKey: .quietEnd) ?? 7 * 60
         aiConsent = try c.decodeIfPresent(Bool.self, forKey: .aiConsent) ?? false
         geminiModel = try c.decodeIfPresent(String.self, forKey: .geminiModel) ?? defaultGeminiModel
+        onboarded = try c.decodeIfPresent(Bool.self, forKey: .onboarded) ?? false
     }
 }
 

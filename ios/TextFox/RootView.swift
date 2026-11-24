@@ -20,7 +20,7 @@ struct RootView: View {
     var body: some View {
         @Bindable var app = app
         ZStack(alignment: .bottom) {
-            BackdropView().ignoresSafeArea()
+            BackdropView(look: app.previewLook ?? app.look).ignoresSafeArea()
             Group {
                 switch app.tab {
                 case .macros: MacroListView()
@@ -36,6 +36,8 @@ struct RootView: View {
                 TabBar(tab: $app.tab)
             }
         }
+        // A new look rebuilds the screens, since colours, fonts and shapes read it directly.
+        .id(app.look)
         .onOpenURL { app.open($0) }
         #if DEBUG
         // Screenshots and checks in the simulator: launch with `-open textfox://…`.
@@ -107,19 +109,6 @@ private struct ToastView: View {
         .background(RoundedRectangle(cornerRadius: 12).fill(Color(hex: 0x2A2D2B)))
         .padding(.horizontal, 12)
         .onTapGesture { withAnimation { app.toast = nil } }
-    }
-}
-
-/// The app's backdrop: a dark green-black wash with soft glows, like the Android ambient background.
-struct BackdropView: View {
-    var body: some View {
-        ZStack {
-            Brand.background
-            RadialGradient(colors: [Brand.green.opacity(0.10), .clear], center: .init(x: 0.15, y: 0.05),
-                           startRadius: 0, endRadius: 420)
-            RadialGradient(colors: [Color(hex: 0x1DE9B6).opacity(0.06), .clear], center: .init(x: 0.95, y: 0.7),
-                           startRadius: 0, endRadius: 380)
-        }
     }
 }
 

@@ -5,6 +5,7 @@ import SwiftUI
 import TextFoxCore
 import UserNotifications
 import UIKit
+import WidgetKit
 
 /// A short message at the bottom of the screen, optionally with an action (Undo).
 struct Toast: Identifiable, Equatable {
@@ -25,6 +26,12 @@ final class AppState {
     var tab: Tab = .macros
     /// Whether TextFox may show notifications; scheduled macros need it.
     var notificationStatus: UNAuthorizationStatus = .notDetermined
+    /// The appearance; changing it re-renders every screen and the widget.
+    var look = Look.current {
+        didSet { Look.save(look); WidgetCenter.shared.reloadAllTimelines() }
+    }
+    /// The background while a slider is being dragged (committed to `look` on release).
+    var previewLook: Look?
     /// The trial / unlock sheet.
     var showUnlock = false
     /// Debug: shows the widget's small and medium looks in a sheet.
@@ -151,7 +158,8 @@ final class AppState {
     func handle(_ tap: NotificationTap) {
         guard let id = tap.macroId, let macro = store.macro(id: id) else { return }
         let at = tap.at ?? Date()
-        let fireId = tap.fireId
+        // A place notification repeats under one id; give each arrival its own log line.
+        let fireId = tap.fireId.hasPrefix("loc:") ? "\(tap.fireId)@\(Int(Date().timeIntervalSince1970))" : tap.fireId
         let text = expandTemplate(macro.messageBody, now: at, macroName: macro.name, locale: Locale(identifier: "en_GB"))
         switch tap.action {
         case Scheduler.skipAction:

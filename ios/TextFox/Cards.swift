@@ -42,7 +42,7 @@ struct MacroCard: View {
         .background(
             LinearGradient(colors: [accent.opacity(0.13), accent.opacity(0.02)], startPoint: .leading, endPoint: .trailing)
         )
-        .background(Brand.surface.opacity(0.94))
+        .background(Brand.surface.opacity(Look.current.cardOpacity))
         .clipShape(LeafShape())
         .contentShape(LeafShape())
     }
@@ -73,7 +73,7 @@ struct FolderCard: View {
     let activeCount: Int
 
     var body: some View {
-        let accent = Color(argb: folder.cardColor == 0 ? cardColorPalette[3] : folder.cardColor)
+        let accent = Look.current.accent(Color(argb: folder.cardColor == 0 ? cardColorPalette[3] : folder.cardColor))
         VStack(spacing: 0) {
             Color.clear.frame(height: FolderTabShape.tabHeight)
             HStack(spacing: 0) {
@@ -106,7 +106,7 @@ struct FolderCard: View {
         .background(
             LinearGradient(colors: [accent.opacity(0.16), accent.opacity(0.03)], startPoint: .leading, endPoint: .trailing)
         )
-        .background(Brand.surface.opacity(0.94))
+        .background(Brand.surface.opacity(Look.current.cardOpacity))
         .clipShape(FolderTabShape())
         .contentShape(FolderTabShape())
     }
