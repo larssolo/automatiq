@@ -14,7 +14,7 @@
 
 ## Seneste arbejde (fase 9 — AI-variationer for planlagte afsendelser, 2026-08-14)
 
-Brugerønske: planlagte makroer skal kunne sende en frisk AI-genereret variation af beskeden ved hver affyring (modtageren får aldrig præcis samme tekst), med per-makro-valg mellem "Approve before sending" og "Send automatically and notify". Gren `claude/macro-message-ai-variations-gv8xir`. `versionCode` 2→3, `versionName` "1.1"→"1.2".
+Brugerønske: planlagte makroer skal kunne sende en frisk AI-genereret variation af beskeden ved hver affyring (modtageren får aldrig præcis samme tekst), med per-makro-valg mellem "Approve before sending" og "Send automatically and notify". Gren `macro-message-ai-variations`. `versionCode` 2→3, `versionName` "1.1"→"1.2".
 
 **Design: genbruger de eksisterende AI-kolonner** (`ai_reply_enabled`/`ai_send_mode`/`ai_reply_instruction`) for SCHEDULED — INGEN DB-migration (stadig v13), og backup/import virker uændret. Trigger-typen kontekstualiserer semantikken (INCOMING = AI-svar, SCHEDULED = AI-variation).
 
@@ -42,7 +42,7 @@ Brugerønske: planlagte makroer skal kunne sende en frisk AI-genereret variation
 
 ## Seneste arbejde (fase 8 — review-rettelser af fase 6+7, 2026-07-19)
 
-Adversarial kodegennemgang (to review-agenter) af mapper- + mistet-opkald/deferral-arbejdet fandt 2 reelle fejl + flere mellem/lav. Rettet på gren `claude/app-review-improvements-5fide7` (frisk fra main, da PR #3 er merget). **124 grønne JVM-tests** (fra 119). `versionCode` bumpet 1→2, `versionName` "1.0"→"1.1".
+Adversarial kodegennemgang (to review-agenter) af mapper- + mistet-opkald/deferral-arbejdet fandt 2 reelle fejl + flere mellem/lav. Rettet på gren `app-review-improvements` (frisk fra main, da PR #3 er merget). **124 grønne JVM-tests** (fra 119). `versionCode` bumpet 1→2, `versionName` "1.0"→"1.1".
 
 - **HØJ – crash under mappe-træk:** `MacroListScreen` nulstillede den lokale rækkeliste ved *enhver* vm-emission, også midt i et træk → gemte mappe-medlemmer blev gendannet, og `dropped()` gen-indsatte dem → dublerede LazyGrid-nøgler → crash. Fix: `LaunchedEffect(vmRows) { if (draggedKey == null) rows = vmRows }` + idempotent gen-indsættelse (kun medlemmer der ikke allerede er i listen). `draggedKey`/`hiddenMembers` flyttet før effekten.
 - **HØJ – mistet-opkald-svar droppet på mange OEM'er:** `advanceCallState` beskyttede kun mod `null`-nummer, ikke `""` (tom streng på dublet-broadcast) → rigtige nummer overskrevet. Fix: `number?.takeIf { it.isNotBlank() } ?: state.number` (+ test).
