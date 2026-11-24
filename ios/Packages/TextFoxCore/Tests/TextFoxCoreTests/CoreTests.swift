@@ -319,3 +319,44 @@ func at(_ y: Int, _ m: Int, _ d: Int, _ h: Int, _ min: Int = 0) -> Date {
         #expect(m.recipients.isEmpty && m.matchKeyword == "hello" && m.scheduledTime == nil)
     }
 }
+
+@Suite struct PlannerTests {
+    func daily(_ id: String, _ time: String) -> Macro {
+        Macro(id: id, name: id, triggerType: .scheduled, scheduledTime: time, recipients: ["12345678"], messageBody: "x")
+    }
+
+    @Test func upcomingFiresStepForward() {
+        let fires = daily("a", "08:00").upcomingFires(after: at(2026, 11, 24, 9), count: 3, timeZone: cph)
+        #expect(fires == [at(2026, 11, 25, 8), at(2026, 11, 26, 8), at(2026, 11, 27, 8)])
+        var off = daily("b", "08:00"); off.enabled = false
+        #expect(off.upcomingFires(after: at(2026, 11, 24, 9), count: 3, timeZone: cph).isEmpty)
+    }
+
+    @Test func oneOffFiresOnce() {
+        var m = daily("o", "10:00")
+        m.repeatDaily = false; m.anchorEpochDay = CivilDate(year: 2026, month: 11, day: 26).epochDay
+        m.validUntilEpochDay = m.anchorEpochDay; m.daysOfWeek = [4]
+        #expect(m.upcomingFires(after: at(2026, 11, 24, 9), count: 5, timeZone: cph) == [at(2026, 11, 26, 10)])
+    }
+
+    @Test func budgetGivesEveryMacroItsNextSend() {
+        var busy = (0..<10).map { daily("busy\($0)", String(format: "%02d:00", 8 + $0)) }
+        busy.append(daily("late", "23:30"))
+        let plan = planFires(busy, after: at(2026, 11, 24, 7), budget: 11, timeZone: cph)
+        #expect(plan.count == 11)
+        #expect(plan.contains { $0.macroId == "late" })
+        #expect(plan == plan.sorted { $0.at < $1.at })
+        let p = plan[0]
+        #expect(PlannedFire(id: p.id) == p)
+    }
+}
+
+@Suite struct DueFireTests {
+    @Test func listsWhatCameDue() {
+        let m = Macro(id: "a", name: "a", triggerType: .scheduled, scheduledTime: "08:00", recipients: [], messageBody: "x")
+        #expect(m.dueFires(since: at(2026, 11, 24, 9), until: at(2026, 11, 26, 8, 30), timeZone: cph)
+                == [at(2026, 11, 25, 8), at(2026, 11, 26, 8)])
+        #expect(m.dueFires(since: at(2026, 11, 1, 9), until: at(2026, 11, 26, 9), limit: 2, timeZone: cph).count == 2)
+        #expect(m.dueFires(since: at(2026, 11, 26, 9), until: at(2026, 11, 26, 9), timeZone: cph).isEmpty)
+    }
+}

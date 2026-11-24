@@ -9,10 +9,13 @@ struct OutgoingMessage: Identifiable {
     let macro: Macro
     let body: String
     let recipients: [String]
+    /// The planned send this is for, when it came from a notification.
+    var fireId: String? = nil
 
-    /// The macro's message with the variables filled in for right now.
-    init(macro: Macro, now: Date = Date()) {
+    /// The macro's message with the variables filled in for [now] (the send time for a notification).
+    init(macro: Macro, now: Date = Date(), fireId: String? = nil) {
         self.macro = macro
+        self.fireId = fireId
         self.body = expandTemplate(macro.messageBody, now: now, macroName: macro.name,
                                    locale: Locale(identifier: "en_GB"))
         self.recipients = macro.recipients

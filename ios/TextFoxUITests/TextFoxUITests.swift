@@ -10,6 +10,14 @@ final class TextFoxUITests: XCTestCase {
         app = XCUIApplication()
         app.launchArguments = ["-resetData", "YES"]
         app.launch()
+        allowNotifications()
+    }
+
+    /// The first launch asks for notifications (the demo has scheduled macros); say yes.
+    private func allowNotifications() {
+        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        let allow = springboard.buttons["Allow"]
+        if allow.waitForExistence(timeout: 3) { allow.tap() }
     }
 
     private func shot(_ name: String) {
@@ -119,7 +127,10 @@ final class TextFoxUITests: XCTestCase {
     }
 
     func testSendNowLogsInTheSimulator() {
-        app.staticTexts["Running late"].press(forDuration: 1.0)
+        let card = app.staticTexts["Running late"]
+        XCTAssertTrue(card.waitForExistence(timeout: 5))
+        card.press(forDuration: 1.5)
+        if !app.buttons["Send now"].waitForExistence(timeout: 2) { card.press(forDuration: 1.5) }
         app.buttons["Send now"].tap()
         // The simulator has no Messages, so the attempt is logged as failed.
         app.buttons["Log"].tap()
@@ -128,5 +139,46 @@ final class TextFoxUITests: XCTestCase {
         app.buttons["Settings"].tap()
         XCTAssertTrue(app.staticTexts["Quiet hours"].waitForExistence(timeout: 2))
         shot("31-settings")
+    }
+
+    func testScheduledNotificationIsDelivered() {
+        XCTAssertTrue(app.staticTexts["Good morning, Mom"].waitForExistence(timeout: 5))
+        // Debug link: a send notification for this macro in 3 seconds.
+        app.terminate()
+        app.launchArguments = ["-open", "textfox://test-fire/Running late"]
+        app.launch()
+        XCUIDevice.shared.press(.home)
+        sleep(6)
+        // Open Notification Center (swipe down from the top) and find it.
+        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        springboard.coordinate(withNormalizedOffset: CGVector(dx: 0.2, dy: 0.005))
+            .press(forDuration: 0.1, thenDragTo: springboard.coordinate(withNormalizedOffset: CGVector(dx: 0.2, dy: 0.7)))
+        let note = springboard.descendants(matching: .any)
+            .matching(NSPredicate(format: "label CONTAINS %@", "Running about 10 minutes late")).firstMatch
+        XCTAssertTrue(note.waitForExistence(timeout: 8))
+        shot("40-notification")
+        XCUIDevice.shared.press(.home)
+    }
+
+    func testNotificationSendAndSkipAreLogged() {
+        XCTAssertTrue(app.staticTexts["Good morning, Mom"].waitForExistence(timeout: 5))
+        app.terminate()
+        // (Names without apostrophes: the test runner escapes them in launch arguments.)
+        app.launchArguments = ["-open", "textfox://test-tap/Running late"]
+        app.launch()
+        // The link is handled on appear (and switches to the list); wait for that before opening the log.
+        XCTAssertTrue(app.staticTexts["Running late"].waitForExistence(timeout: 5))
+        sleep(1)
+        // The simulator can't send texts, so Send logs the planned send as failed.
+        app.buttons["Log"].tap()
+        XCTAssertTrue(app.staticTexts["FAILED · Running late"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["This device can't send text messages"].exists)
+        app.terminate()
+        app.launchArguments = ["-open", "textfox://test-skip/Good morning, Mom"]
+        app.launch()
+        sleep(2)
+        app.buttons["Log"].tap()
+        XCTAssertTrue(app.staticTexts["Skipped"].waitForExistence(timeout: 5))
+        shot("41-notification-logged")
     }
 }

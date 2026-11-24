@@ -32,6 +32,9 @@ struct MacroListView: View {
     var body: some View {
         VStack(spacing: 0) {
             header
+            if app.notificationStatus == .denied && store.macros.contains(where: { $0.enabled && $0.triggerType == .scheduled }) {
+                notificationsOffBanner
+            }
             content
         }
         .overlay(alignment: .bottom) { if !reordering { addButton.padding(.bottom, 14) } }
@@ -119,6 +122,25 @@ struct MacroListView: View {
         }
         .frame(minHeight: 44)
         .padding(.horizontal, 18)
+        .padding(.top, 6)
+    }
+
+    private var notificationsOffBanner: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "bell.slash.fill").foregroundStyle(Brand.amber)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Notifications are off").font(.sans(15, medium: true)).foregroundStyle(Brand.onSurface)
+                Text("Scheduled macros can't tell you when it's time to send.").font(.sans(12)).foregroundStyle(Brand.mute)
+            }
+            Spacer(minLength: 0)
+            Button("Turn on") { app.openSystemSettings() }
+                .font(.sans(14, medium: true)).foregroundStyle(.black)
+                .padding(.horizontal, 12).padding(.vertical, 6)
+                .background(Capsule().fill(Brand.amber))
+        }
+        .padding(12)
+        .background(RoundedRectangle(cornerRadius: 14).fill(Brand.amber.opacity(0.12)))
+        .padding(.horizontal, 10)
         .padding(.top, 6)
     }
 

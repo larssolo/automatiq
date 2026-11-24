@@ -4,6 +4,7 @@ import Observation
 import SwiftUI
 import TextFoxCore
 import UserNotifications
+import UIKit
 
 /// A short message at the bottom of the screen, optionally with an action (Undo).
 struct Toast: Identifiable, Equatable {
@@ -21,6 +22,8 @@ final class AppState {
     var toast: Toast?
     var outgoing: OutgoingMessage?
     var tab: Tab = .macros
+    /// Whether TextFox may show notifications; scheduled macros need it.
+    var notificationStatus: UNAuthorizationStatus = .notDetermined
     /// The open macro editor, if any (set by the list, the + button and textfox:// links).
     var editor: EditorTarget?
 
@@ -28,6 +31,9 @@ final class AppState {
 
     /// textfox://new, textfox://edit/<macro id or name>, textfox://log, textfox://settings.
     func open(_ url: URL) {
+        #if DEBUG
+        NSLog("TFLINK open %@", url.absoluteString)
+        #endif
         guard url.scheme == "textfox" else { return }
         let rest = url.path.trimmingCharacters(in: CharacterSet(charactersIn: "/")).removingPercentEncoding ?? ""
         switch url.host() {
@@ -36,6 +42,19 @@ final class AppState {
             if let m = store.macros.first(where: { $0.id == rest || $0.name.caseInsensitiveCompare(rest) == .orderedSame }) {
                 tab = .macros; editor = .edit(m.id)
             }
+        #if DEBUG
+        case "test-fire":
+            if let m = store.macros.first(where: { $0.id == rest || $0.name.caseInsensitiveCompare(rest) == .orderedSame }) {
+                Task { await Scheduler.testFire(m) }
+            }
+        case "test-tap", "test-skip":
+            // What a tap on Send (or Skip) in a notification does, without the lock screen.
+            if let m = store.macros.first(where: { $0.id == rest || $0.name.caseInsensitiveCompare(rest) == .orderedSame }) {
+                let at = m.nextFire() ?? Date()
+                handle(NotificationTap(action: url.host() == "test-tap" ? Scheduler.sendAction : Scheduler.skipAction,
+                                       fireId: PlannedFire(macroId: m.id, at: at).id, macroId: m.id, at: at))
+            }
+        #endif
         case "log": tab = .log
         case "settings": tab = .settings
         default: tab = .macros
@@ -80,14 +99,60 @@ final class AppState {
         outgoing = nil
         switch result {
         case .sent:
-            store.record(message.macro, status: .success, text: message.body)
+            store.record(message.macro, status: .success, text: message.body, fireId: message.fireId)
             show("Sent — \(message.macro.name)")
         case .failed:
-            store.record(message.macro, status: .failed, text: message.body, detail: "Messages couldn't send it")
+            store.record(message.macro, status: .failed, text: message.body, detail: "Messages couldn't send it", fireId: message.fireId)
             show("Couldn't send — \(message.macro.name)")
         default:
             show("Not sent")
         }
+    }
+
+    // MARK: Scheduling
+
+    /// Logs what came due while closed and plans the next notifications. Runs on open and after changes.
+    func refreshSchedule() async {
+        notificationStatus = await Scheduler.authorization()
+        let needs = store.macros.contains { $0.enabled && $0.triggerType == .scheduled }
+        if needs && notificationStatus == .notDetermined {
+            await Scheduler.requestPermission()
+            notificationStatus = await Scheduler.authorization()
+        }
+        await Scheduler.catchUp(store)
+        await Scheduler.replan(store)
+    }
+
+    /// A tap on a send notification: Send opens the finished message, Skip logs it as skipped.
+    func handle(_ tap: NotificationTap) {
+        guard let id = tap.macroId, let macro = store.macro(id: id) else { return }
+        let at = tap.at ?? Date()
+        let fireId = tap.fireId
+        let text = expandTemplate(macro.messageBody, now: at, macroName: macro.name, locale: Locale(identifier: "en_GB"))
+        switch tap.action {
+        case Scheduler.skipAction:
+            store.record(macro, status: .failed, text: text, detail: "Skipped", at: at, fireId: fireId)
+        case UNNotificationDismissActionIdentifier:
+            break
+        default:
+            tab = .macros
+            switch macro.actionType {
+            case .sms:
+                let message = OutgoingMessage(macro: macro, now: at, fireId: fireId)
+                if OutgoingMessage.canSend {
+                    outgoing = message
+                } else {
+                    store.record(macro, status: .failed, text: text, detail: "This device can't send text messages", at: at, fireId: fireId)
+                    show("This device can't send texts — logged the message instead")
+                }
+            case .webhook: Task { await callWebhook(macro) }
+            default: break
+            }
+        }
+    }
+
+    func openSystemSettings() {
+        if let url = URL(string: UIApplication.openNotificationSettingsURLString) { UIApplication.shared.open(url) }
     }
 
     private func remind(_ macro: Macro) async {

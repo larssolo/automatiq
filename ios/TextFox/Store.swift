@@ -11,6 +11,8 @@ struct LogEntry: Codable, Identifiable, Hashable {
     var status: MacroStatus
     var text: String
     var detail: String?
+    /// The planned send this entry is about, so tapping Send later updates the same line.
+    var fireId: String?
 }
 
 /// App-wide settings that live next to the macros (and travel in the backup's settings map).
@@ -88,6 +90,7 @@ final class MacroStore {
     /// Insert or replace. A new macro goes to the top of the list (or of its folder).
     func upsert(_ macro: Macro) {
         var m = macro
+        m.lastScheduledFireAt = Int64(Date().timeIntervalSince1970 * 1000)
         if let i = macros.firstIndex(where: { $0.id == m.id }) {
             macros[i] = m
         } else {
@@ -117,6 +120,7 @@ final class MacroStore {
         copy.lastTriggeredAt = nil
         copy.lastStatus = nil
         copy.createdAt = Int64(Date().timeIntervalSince1970 * 1000)
+        copy.lastScheduledFireAt = copy.createdAt
         // Right below the original.
         copy.sortOrder = macro.sortOrder
         macros.append(copy)
@@ -126,6 +130,7 @@ final class MacroStore {
     func setEnabled(_ macro: Macro, _ on: Bool) {
         guard let i = macros.firstIndex(where: { $0.id == macro.id }) else { return }
         macros[i].enabled = on
+        if on { macros[i].lastScheduledFireAt = Int64(Date().timeIntervalSince1970 * 1000) }
         save()
     }
 
@@ -166,7 +171,11 @@ final class MacroStore {
     }
 
     func setAllEnabled(in folder: Folder, _ on: Bool) {
-        for i in macros.indices where macros[i].folderId == folder.id { macros[i].enabled = on }
+        let now = Int64(Date().timeIntervalSince1970 * 1000)
+        for i in macros.indices where macros[i].folderId == folder.id {
+            if on && !macros[i].enabled { macros[i].lastScheduledFireAt = now }
+            macros[i].enabled = on
+        }
         save()
     }
 
@@ -229,8 +238,17 @@ final class MacroStore {
 
     // MARK: Log
 
-    func record(_ macro: Macro, status: MacroStatus, text: String, detail: String? = nil) {
-        log.insert(LogEntry(macroId: macro.id, macroName: macro.name, at: Date(), status: status, text: text, detail: detail), at: 0)
+    /// Adds a log line, or updates the line for the same planned send.
+    func record(_ macro: Macro, status: MacroStatus, text: String, detail: String? = nil,
+                at: Date = Date(), fireId: String? = nil) {
+        let entry = LogEntry(macroId: macro.id, macroName: macro.name, at: at, status: status, text: text, detail: detail, fireId: fireId)
+        if let fireId, let i = log.firstIndex(where: { $0.fireId == fireId }) {
+            log[i] = LogEntry(id: log[i].id, macroId: entry.macroId, macroName: entry.macroName, at: log[i].at,
+                              status: status, text: text, detail: detail, fireId: fireId)
+        } else {
+            log.insert(entry, at: 0)
+            log.sort { $0.at > $1.at }
+        }
         if let i = macros.firstIndex(where: { $0.id == macro.id }) {
             macros[i].lastTriggeredAt = Int64(Date().timeIntervalSince1970 * 1000)
             macros[i].lastStatus = status
@@ -239,6 +257,13 @@ final class MacroStore {
     }
 
     func clearLog() { log.removeAll(); save() }
+
+    /// Scheduled sends up to [at] are handled (logged); the catch-up starts after this next time.
+    func markScheduled(_ macro: Macro, at: Date) {
+        guard let i = macros.firstIndex(where: { $0.id == macro.id }) else { return }
+        macros[i].lastScheduledFireAt = Int64(at.timeIntervalSince1970 * 1000)
+        save()
+    }
 
     // MARK: Backup
 

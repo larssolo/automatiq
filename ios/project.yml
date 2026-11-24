@@ -40,6 +40,8 @@ targets:
         CFBundleDisplayName: TextFox
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        BGTaskSchedulerPermittedIdentifiers: [app.kodekid.textfox.refresh]
+        UIBackgroundModes: [fetch]
         UIAppFonts: [DMSans-Regular.ttf, DMSans-Medium.ttf, JetBrainsMono-Regular.ttf, JetBrainsMono-Medium.ttf]
         CFBundleURLTypes:
           - CFBundleURLName: app.kodekid.textfox
