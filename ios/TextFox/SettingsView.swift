@@ -22,6 +22,8 @@ struct SettingsView: View {
                     OutlineButton(title: "How to set it up", color: Brand.green) { guide = true }
                 }
 
+                group("AI") { AISettingsSection() }
+
                 group("Quiet hours") {
                     SwitchRow(title: "Pause auto-replies at night",
                               subtitle: "Auto-replies wait out the window and are sent right after it ends. Scheduled and manual sends still go through.",

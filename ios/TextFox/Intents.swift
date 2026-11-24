@@ -18,8 +18,8 @@ struct GetMessageIntent: AppIntent {
     @MainActor
     func perform() async throws -> some IntentResult & ReturnsValue<String> {
         guard let m = MacroStore.shared.macro(id: macro.id) else { throw IntentError.macroGone }
-        let text = expandTemplate(m.messageBody, now: Date(), macroName: m.name, locale: Locale(identifier: "en_GB"))
-        MacroStore.shared.record(m, status: .success, text: text, detail: "Handed to Shortcuts")
+        let (text, note) = await AI.text(for: m)
+        MacroStore.shared.record(m, status: .success, text: text, detail: ["Handed to Shortcuts", note].compactMap { $0 }.joined(separator: " · "))
         return .result(value: text)
     }
 }
@@ -61,8 +61,9 @@ struct AutoReplyIntent: AppIntent {
             store.record(m, status: .pending, text: m.messageBody, detail: "Quiet hours — not answered")
             return .result(value: "")
         }
-        let text = expandTemplate(m.messageBody, now: Date(), macroName: m.name, sender: sender, locale: Locale(identifier: "en_GB"))
-        store.record(m, status: .success, text: text, detail: "Reply to \(maskPhone(sender)) handed to Shortcuts")
+        let (text, note) = await AI.reply(for: m, sender: sender, incoming: message)
+        store.record(m, status: .success, text: text,
+                     detail: ["Reply to \(maskPhone(sender)) handed to Shortcuts", note].compactMap { $0 }.joined(separator: " · "))
         return .result(value: text)
     }
 }

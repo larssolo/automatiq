@@ -23,6 +23,9 @@ struct MacroEditorView: View {
     @State private var locating = false
     /// Until a place is chosen the map shows Denmark.
     @State private var guide = false
+    @State private var aiWrite = false
+    @State private var aiPreview: String?
+    @State private var aiPreviewBusy = false
     @State private var camera: MapCameraPosition = .region(MKCoordinateRegion(
         center: .init(latitude: 56.0, longitude: 10.5), latitudinalMeters: 450_000, longitudinalMeters: 450_000))
     @FocusState private var messageFocused: Bool
@@ -66,6 +69,7 @@ struct MacroEditorView: View {
         .onAppear(perform: load)
         .sheet(item: $sheet) { which in pickerSheet(which) }
         .sheet(isPresented: $guide) { ShortcutsGuideView(focus: d.triggerType) }
+        .sheet(isPresented: $aiWrite) { AIWriteSheet { d.message = $0 } }
         .sheet(item: Binding(get: { contactIndex.map(IdentifiedInt.init) }, set: { contactIndex = $0?.value })) { i in
             ContactPicker { number in
                 if d.recipients.indices.contains(i.value) { d.recipients[i.value] = number }
@@ -452,7 +456,7 @@ struct MacroEditorView: View {
     private var messageSection: some View {
         EditorSection(icon: "text.bubble", title: messageTitle, accent: accent) {
             if d.aiApplies {
-                Button { app.show("AI writing arrives with the Gemini key in Settings") } label: {
+                Button { aiWrite = true } label: {
                     Label("AI write", systemImage: "sparkles").font(.sans(14, medium: true)).foregroundStyle(Brand.green)
                 }
             }
@@ -525,6 +529,23 @@ struct MacroEditorView: View {
                     TextField("", text: $d.aiReplyInstruction, prompt: Text("e.g. warm and short, vary the wording").foregroundStyle(Brand.mute.opacity(0.6)),
                               axis: .vertical)
                         .lineLimit(2...5)
+                }
+                if !d.isReply {
+                    OutlineButton(title: aiPreviewBusy ? "Writing…" : "Preview AI variation", color: Brand.green) {
+                        aiPreviewBusy = true
+                        Task {
+                            var m = d.toMacro(id: d.id ?? "preview", today: today)
+                            m.aiReplyEnabled = true
+                            let (text, note) = await AI.text(for: m)
+                            aiPreview = note.map { "\(text)\n\n\($0)" } ?? text
+                            aiPreviewBusy = false
+                        }
+                    }
+                    .disabled(d.message.isEmpty || aiPreviewBusy)
+                    if let aiPreview { Text(aiPreview).font(.sans(15)).foregroundStyle(Brand.onSurface) }
+                }
+                if !AI.ready {
+                    Hint(GeminiKey.value.isEmpty ? "Add your free Gemini key in Settings → AI." : "Switch on “Allow AI” in Settings → AI.").foregroundStyle(Brand.amber)
                 }
             }
         }

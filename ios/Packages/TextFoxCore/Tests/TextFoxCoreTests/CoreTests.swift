@@ -376,3 +376,45 @@ func at(_ y: Int, _ m: Int, _ d: Int, _ h: Int, _ min: Int = 0) -> Date {
         #expect(StoredMacros.load(from: url.appendingPathExtension("missing")).macros.isEmpty)
     }
 }
+
+@Suite struct GeminiTests {
+    @Test func requestShape() throws {
+        let body = try geminiRequestBody(system: "S", user: "U", model: "gemini-3.6-flash", maxTokens: 300)
+        let json = try JSONSerialization.jsonObject(with: body) as! [String: Any]
+        let config = json["generationConfig"] as! [String: Any]
+        #expect(config["maxOutputTokens"] as? Int == 300)
+        #expect((config["thinkingConfig"] as? [String: Any])?["thinkingLevel"] as? String == "minimal")
+        let low = try JSONSerialization.jsonObject(with: geminiRequestBody(system: "", user: "U", model: "gemini-3.8-flash", maxTokens: 300)) as! [String: Any]
+        #expect((low["generationConfig"] as! [String: Any])["maxOutputTokens"] as? Int == 1324)
+        #expect(low["systemInstruction"] == nil)
+    }
+
+    @Test func parsesAnswersAndErrors() throws {
+        let ok = #"{"candidates":[{"content":{"parts":[{"text":" Hej mor! \n"}],"role":"model"}}]}"#
+        #expect(try parseGeminiResponse(Data(ok.utf8)) == "Hej mor!")
+        #expect(throws: GeminiError.empty) { try parseGeminiResponse(Data(#"{"candidates":[]}"#.utf8)) }
+        #expect(extractGeminiError(Data(#"{"error":{"message":"API key not valid"}}"#.utf8)) == "API key not valid")
+        #expect(parseSuggestions("1. Hi\n2. Hello there\n3. Hey") == ["Hi", "Hello there", "Hey"])
+        #expect(parseSuggestions("Just one") == ["Just one"])
+        #expect(resolveGeminiModel("gemini-2.0-flash") == defaultGeminiModel)
+        #expect(resolveGeminiModel(" my-model ") == "my-model")
+    }
+
+    @Test func fallsBackOnQuotaButNotOnABadKey() async throws {
+        var tried: [String] = []
+        let r = try await generateWithFallback(fallbackChain("gemini-3.8-flash")) { m in
+            tried.append(m)
+            if m != "gemini-3.5-flash-lite" { throw GeminiError.http(429, "quota") }
+            return "ok"
+        }
+        #expect(r == GeminiResult(text: "ok", model: "gemini-3.5-flash-lite"))
+        #expect(tried == ["gemini-3.8-flash", "gemini-3.6-flash", "gemini-3.5-flash-lite"])
+
+        await #expect(throws: GeminiError.http(400, "bad key")) {
+            try await generateWithFallback(["a", "b"]) { _ in throw GeminiError.http(400, "bad key") }
+        }
+        await #expect(throws: GeminiError.allModelsFailed(allQuota: true)) {
+            try await generateWithFallback(["a", "b"]) { _ in throw GeminiError.http(429, "") }
+        }
+    }
+}

@@ -85,14 +85,7 @@ final class AppState {
                 show(macro.triggerType == .incoming ? "Auto-replies answer whoever texted you" : "Add a recipient first")
                 return
             }
-            let message = OutgoingMessage(macro: macro)
-            if OutgoingMessage.canSend {
-                outgoing = message
-            } else {
-                store.record(macro, status: .failed, text: message.body,
-                             detail: "This device can't send text messages")
-                show("This device can't send texts — logged the message instead")
-            }
+            compose(macro, at: Date(), fireId: nil)
         case .reminder:
             Task { await remind(macro) }
         case .webhook:
@@ -102,11 +95,29 @@ final class AppState {
         }
     }
 
+    /// Opens the Messages sheet with the macro's text (an AI variation when it's on).
+    private func compose(_ macro: Macro, at: Date, fireId: String?) {
+        Task {
+            if macro.aiReplyEnabled && AI.ready { show("Writing AI message — \(macro.name)…") }
+            let (text, note) = await AI.text(for: macro, at: at)
+            var message = OutgoingMessage(macro: macro, body: text, fireId: fireId)
+            message.note = note
+            if OutgoingMessage.canSend {
+                outgoing = message
+            } else {
+                store.record(macro, status: .failed, text: text,
+                             detail: ["This device can't send text messages", note].compactMap { $0 }.joined(separator: " · "),
+                             at: at, fireId: fireId)
+                show("This device can't send texts — logged the message instead")
+            }
+        }
+    }
+
     func finishedSending(_ message: OutgoingMessage, _ result: MessageComposeResult) {
         outgoing = nil
         switch result {
         case .sent:
-            store.record(message.macro, status: .success, text: message.body, fireId: message.fireId)
+            store.record(message.macro, status: .success, text: message.body, detail: message.note, fireId: message.fireId)
             show("Sent — \(message.macro.name)")
         case .failed:
             store.record(message.macro, status: .failed, text: message.body, detail: "Messages couldn't send it", fireId: message.fireId)
@@ -145,13 +156,7 @@ final class AppState {
             tab = .macros
             switch macro.actionType {
             case .sms:
-                let message = OutgoingMessage(macro: macro, now: at, fireId: fireId)
-                if OutgoingMessage.canSend {
-                    outgoing = message
-                } else {
-                    store.record(macro, status: .failed, text: text, detail: "This device can't send text messages", at: at, fireId: fireId)
-                    show("This device can't send texts — logged the message instead")
-                }
+                compose(macro, at: at, fireId: fireId)
             case .webhook: Task { await callWebhook(macro) }
             default: break
             }

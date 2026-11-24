@@ -22,6 +22,21 @@ struct AppSettings: Codable, Hashable {
     /// Minutes after midnight.
     var quietStart = 22 * 60
     var quietEnd = 7 * 60
+    /// The user agreed that message text may be sent to Google Gemini.
+    var aiConsent = false
+    var geminiModel = defaultGeminiModel
+
+    init() {}
+
+    // Older files don't have the AI fields.
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        quietHoursEnabled = try c.decodeIfPresent(Bool.self, forKey: .quietHoursEnabled) ?? false
+        quietStart = try c.decodeIfPresent(Int.self, forKey: .quietStart) ?? 22 * 60
+        quietEnd = try c.decodeIfPresent(Int.self, forKey: .quietEnd) ?? 7 * 60
+        aiConsent = try c.decodeIfPresent(Bool.self, forKey: .aiConsent) ?? false
+        geminiModel = try c.decodeIfPresent(String.self, forKey: .geminiModel) ?? defaultGeminiModel
+    }
 }
 
 /// Everything the app stores, as one JSON file in the App Group so the widget and the Shortcuts
