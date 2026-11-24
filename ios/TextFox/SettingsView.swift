@@ -17,6 +17,8 @@ struct SettingsView: View {
             VStack(alignment: .leading, spacing: 18) {
                 Text("Settings").font(.sans(26, medium: true)).foregroundStyle(Brand.onSurface)
 
+                group("Phone check") { HealthSection() }
+
                 group("Send automatically") {
                     Hint("Let the Shortcuts app send your macros with no tap at all — scheduled texts and auto-replies.")
                     OutlineButton(title: "How to set it up", color: Brand.green) { guide = true }

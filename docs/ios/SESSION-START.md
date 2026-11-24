@@ -2,20 +2,23 @@
 
 Read `docs/ios/PLAN.md` first: it is the plan and the scope.
 
-## State (2026-11-24, evening)
+## State (2026-11-25, night)
 
-- **Milestone 2 (macros) is built and runs in the simulator.** It has the same look as Android: the fox header with "N of M live", search, folder cards with the raised tab, macro cards with the breathing edge, AI badge and green/amber switch, the blob + button (New macro / New folder), and the bottom bar (Macros, Log, Settings).
-  - **List:** long-press menu (Send now, Copy, Move to folder, Enable/Disable, Delete with Undo), swipe actions, and "Sort" mode (drag to reorder; a macro joins the folder above it).
-  - **Editor:** Macro, When (Scheduled with time, Repeat/Once, weekdays, next run, more options; Manual; Auto-reply with sender/keyword; Location with map, current location, radius, arrive/leave), Do this (SMS/Reminder/Webhook), Send to with the contact picker, Message with variables and a live preview, AI variation/reply settings, Send now (test), the list of what blocks Save, and a confirmation before discarding changes.
-  - **Log** with filters, and **Settings** with quiet hours, backup export/import in the Android format, and About.
-- **Storage:** one JSON file (`textfox.json`) in the App Group container, falling back to Documents when the group isn't available (unsigned simulator builds). It holds macros, folders, log and settings. The macros use the Android backup format. Debug builds seed demo macros on first launch, and `-resetData YES` starts over (the UI tests use it).
-- **Send now:** SMS opens the system Messages sheet, pre-filled. The simulator can't send texts, so it logs FAILED "This device can't send text messages". Reminders post a notification, and webhooks call the URL.
-- **Not yet:** scheduled sending/notifications (milestone 3), App Intents/Shortcuts and the real widget (4), Gemini (5; "AI write" shows a toast), purchases (6), onboarding (7).
-- **TextFoxCore** has 37 tests. New since the morning: `Presentation.swift` (accent colour, summaries, "Next …" wording), `FolderLayout.swift` (flattened rows, drop rules, sort orders) and `EditorDraft.swift` (the editor form, validation, and mapping to a macro, ported from Android's EditorState).
-- **UI tests** (`TextFoxUITests`, 4 tests) click through the list, folders, search, editor, every trigger, create/delete/undo, send/log and settings. Run `bootstrap.sh --ui`. Screenshots are saved to `$TEST_RUNNER_SHOT_DIR` when it's set.
-- **Debug links:** `textfox://new`, `textfox://edit/<id or name>`, `textfox://log`, `textfox://settings`. In the simulator, launch with `xcrun simctl launch <sim> app.kodekid.textfox -open textfox://…` to avoid the "Open in TextFox?" prompt.
-- Lars' phone is an **iPhone 8 (iOS 16)**, which can't run the app (iOS 17+). Lars chose to keep iOS 17 and test in the simulator until he has a newer iPhone. The simulator can't send SMS or run Shortcuts automations, so the real-device part of milestone 1 waits for that phone.
-- `ios/Config/Signing.xcconfig` (not in git) holds the Team ID F545QS7GV6. The signed device build only needs a registered iPhone: connect it with Developer Mode on, then run `bootstrap.sh --device`.
+Milestones 2–7 are built and run in the simulator (see PLAN.md). On PR branch `ios-scheduling`.
+
+- **Macros (2):** list, folders, search, sort mode, context menus, swipe, undo; the full editor; log; settings.
+- **Scheduling (3):** `Scheduler.swift` plans local notifications (core `Planner.swift`: 60 soonest sends, every macro gets its next one). Send opens the filled-in Messages sheet, Skip logs it. The catch-up logs what came due while the app was closed (PENDING until sent). Background refresh tops up. Location macros use `UNLocationNotificationTrigger` (shares the 64 budget).
+- **Shortcuts + widget (4):** `Intents.swift` (Get Message, Get Recipients, Get Auto-Reply with quiet hours, Run Macro), `Shared/MacroEntity.swift`, the widget (small = chosen macro, medium = first four, tap → `textfox://run/<id>`), and the in-app guide `ShortcutsGuideView`.
+- **AI (5):** core `Gemini.swift` (Android models, thinking config, quota fallback); `AI.swift` (key in the Keychain, consent, variation/reply with fixed-text fallback); Settings → AI; AI write and Preview AI variation in the editor. Not tried against Gemini yet (no key here; don't spend Lars' free quota in tests).
+- **Purchases (6):** `Purchases.swift` with StoreKit 2: `textfox_trial` (free non-consumable that starts the 30 days — Apple's rule), `textfox_unlock`, `textfox_unlock_earlybird` (after code TEXTFOX50). Trial dates are in the Keychain. Runs, notification taps, planning and intents pause outside the trial. `TextFox/TextFox.storekit` is the local test store (the scheme's Run uses it).
+- **Polish (7):** `Shared/Look.swift`: backdrop image (from Android) with hue/saturation/brightness, card opacity, presets, and the **iPhone look** (default on: calmer accents, SF fonts, Apple greens, even corners). `IntroViews.swift`: the fox intro on every cold start and the first-launch guide (replay in Settings). Phone check in Settings. Privacy manifest.
+- **Release (8):** `docs/ios/APP-STORE.md` (App Store Connect steps, products, texts, review notes); screenshots in `docs/ios/screenshots/` from `scripts/screenshots.sh`.
+- **Tests:** core 45 (`swift test`), UI 8 + the screenshot test (`bootstrap.sh --ui`, ~10 min). Debug launch arguments: `-resetData YES`, `-paywall NO`, `-skipIntro YES`, `-open textfox://…` (new, edit/<name>, run/<id>, log, settings, unlock, widget-preview, test-fire/<name>, test-tap/<name>, test-skip/<name>). Names with apostrophes don't survive XCUITest launch arguments.
+- **Simulator builds are signed locally** (`CODE_SIGN_IDENTITY=-`) so the App Group works; unsigned builds fall back to Documents.
+- Lars' phone is an **iPhone 8 (iOS 16)**: it can't run the app. He's finding a newer iPhone. The simulator can't send SMS or run Shortcuts automations, so milestone 1's real-device proof is still open.
+- `ios/Config/Signing.xcconfig` (not in git) holds the Team ID F545QS7GV6. The signed device build needs a registered iPhone.
+
+**Open / next:** Lars' review of the look (iPhone look vs TextFox look); real-device test of notifications, Shortcuts automations and purchases (TestFlight); a real Gemini call with Lars' key; App Store Connect setup per APP-STORE.md.
 
 ## First steps
 

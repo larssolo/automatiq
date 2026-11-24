@@ -221,4 +221,32 @@ final class TextFoxUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Good morning, Mom"].waitForExistence(timeout: 8))
         XCTAssertFalse(app.staticTexts["Meet TextFox"].exists)
     }
+
+    /// App Store screenshots; runs only from scripts/screenshots.sh (which sets STORE_SHOTS).
+    func testAppStoreScreenshots() throws {
+        try XCTSkipUnless(ProcessInfo.processInfo.environment["STORE_SHOTS"] != nil, "Only for scripts/screenshots.sh")
+        XCTAssertTrue(app.staticTexts["Good morning, Mom"].waitForExistence(timeout: 5))
+        sleep(1)
+        shot("1-macros")
+        app.staticTexts["Good morning, Mom"].tap()
+        XCTAssertTrue(app.staticTexts["MACRO"].waitForExistence(timeout: 3))
+        sleep(1)
+        shot("2-editor")
+        app.swipeUp(); app.swipeUp(); app.swipeUp()
+        sleep(1)
+        shot("3-message-ai")
+        app.buttons["Cancel"].tap()
+        app.terminate()
+        app.launchArguments = ["-paywall", "NO", "-skipIntro", "YES", "-open", "textfox://widget-preview"]
+        app.launch()
+        sleep(2)
+        shot("4-widgets")
+        app.terminate()
+        app.launchArguments = ["-paywall", "NO", "-skipIntro", "YES", "-open", "textfox://settings"]
+        app.launch()
+        XCTAssertTrue(app.buttons["How to set it up"].waitForExistence(timeout: 5))
+        app.buttons["How to set it up"].tap()
+        sleep(1)
+        shot("5-shortcuts")
+    }
 }
