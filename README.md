@@ -304,6 +304,6 @@ app/src/main/java/com/vibeactions/
 
 <div align="center">
 
-Built with [Claude](https://claude.ai) · [larssohl.dk](https://www.larssohl.dk)
+Made by [Lars Sohl](https://www.larssohl.dk)
 
 </div>

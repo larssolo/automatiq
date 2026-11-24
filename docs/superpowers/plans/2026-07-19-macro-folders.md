@@ -10,7 +10,7 @@
 
 ## Global Constraints
 
-- Working dir: `/Users/larssohl/Documents/Claude Work/automatiq-main`. Build: `./gradlew compileDebugKotlin`, tests: `./gradlew test` (baseline **100 green** — must never drop).
+- Working dir: the repo root. Build: `./gradlew compileDebugKotlin`, tests: `./gradlew test` (baseline **100 green** — must never drop).
 - Room migrations are additive only (`CREATE TABLE` / `ADD COLUMN`); `exportSchema=true` writes `app/schemas/...13.json` on build — commit it.
 - ALL app-facing text is **English** (user rule, 2026-07-19). Danish template tokens (`{dato}` `{tid}` `{ugedag}` `{navn}` `{afsender}`) are functional identifiers existing macros depend on — they stay unchanged.
 - Design language: leaf-cut corners (`RoundedCornerShape(topStart=18,topEnd=6,bottomEnd=18,bottomStart=6)`), JetBrains Mono names, breathing vein on enabled cards, accents from `CardColorPalette`.

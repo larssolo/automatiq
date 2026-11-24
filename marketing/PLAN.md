@@ -1,6 +1,6 @@
 # TextFox: salgsplan (budget 0 kr)
 
-Sidst opdateret 23. november 2026. Ejer: Lars. Udfører: Claude (klip, tekster, hjemmeside, tal) + Lars til det, kun han kan (upload, Play Console, Reddit).
+Sidst opdateret 23. november 2026. Ejer: Lars. Udfører: Assistenten (klip, tekster, hjemmeside, tal) + Lars til det, kun han kan (upload, Play Console, Reddit).
 Alt indhold, der postes, er **på engelsk**. Selve planen er på dansk, ligesom resten af interne dokumenter.
 
 > Læs afsnit 1 først. Resten er værktøjskassen: hvad der skal tjekkes, hvem der gør hvad, hvad der postes hvornår, og hvordan vi ved, om det virker.
@@ -57,10 +57,10 @@ TextFox er en Android-app til **7 USD**, engangskøb efter 30 dages gratis prøv
 | Emne | Beslutning |
 |---|---|
 | Pris og Early Bird | Appen koster **7 USD**. Koden **TEXTFOX50** giver 50 % (3,50 USD) **kun til dem, der køber med koden den første måned** (til 31. december kl. 23:00). |
-| Konti | Alle konti (TikTok, YouTube, Instagram) er **private** og skal åbnes. **Reddit kan komme til**. Claude må foreslå nye kanaler (se afsnit 8). |
+| Konti | Alle konti (TikTok, YouTube, Instagram) er **private** og skal åbnes. **Reddit kan komme til**. Assistenten må foreslå nye kanaler (se afsnit 8). |
 | Lars på kamera | **Ja, som test** for at se, hvad der virker bedst (afsnit 10). |
 | Tid | "Den tid det skal til." Hvad der kræves, står i afsnit 6. |
-| Adgang | ~~Windsor.ai~~ droppet 23/11 (kræver business-konti og penge). **Lars uploader selv**, eller Claude arbejder i Lars' egen browser via en lokal session (afsnit 5). |
+| Adgang | ~~Windsor.ai~~ droppet 23/11 (kræver business-konti og penge). **Lars uploader selv**, eller assistenten arbejder i Lars' egen browser via en lokal session (afsnit 5). |
 | Sprog | **Engelsk** til alt indhold. |
 
 ---
@@ -88,7 +88,7 @@ Intet i dette afsnit koster penge, men hver ting kan ellers lække salg. Ejer i 
 
 - [ ] **Produktionsadgang og SMS-erklæringen er godkendt** (Lars). Uden dem kan appen ikke sælges på Play med SMS. 12 testere i 14 dage er Googles regel for nye personlige konti.
 - [ ] **Early Bird i Play Console** (Lars): tilbud på `textfox_unlock`, rabat 50 %, **tag `earlybird`**, 1 køb pr. bruger, **slutdato 31. dec. kl. 23:00 dansk tid**. Tjek tidszonen i konsollen. Slutdato skal være ens tre steder: Play-tilbuddet, `Date.UTC(2026, 11, 31, 22, 0)` i `website/public/assets/site.js` og teksterne på siden/i klippene.
-- [ ] **Kan man købe med koden, mens de 30 gratis dage kører?** (Lars/Claude, test som licenstester.) Hvis ikke, kan ingen, der installerer efter ca. 1. december, nå at bruge koden. Så skal enten prøven kunne afkortes via koden, eller Early Bird-datoen rykkes.
+- [ ] **Kan man købe med koden, mens de 30 gratis dage kører?** (Lars/assistenten, test som licenstester.) Hvis ikke, kan ingen, der installerer efter ca. 1. december, nå at bruge koden. Så skal enten prøven kunne afkortes via koden, eller Early Bird-datoen rykkes.
 - [ ] **En Play-promokode (til creators) låser appen op for evigt** (Lars, test med en rigtig kode). Googles hjælpeside nævner 250–500 koder pr. kvartal afhængigt af opsætning. Ubrugte koder forsvinder ved kvartalsskiftet, så vi bruger dem hellere end at gemme dem.
 - [ ] **Import af skabeloner virker på en rigtig telefon** (Lars): download `running-late.json`, *Settings → Backup → Import*. Tjek at makroen kommer ind slukket og uden modtagere.
 - [ ] **Anmeldelses-prompt i appen** (app-ændring, Lars/udvikling): Googles In-App Review API, efter fx anden vellykkede afsendelse eller dag 7. Ikke ved første start, ikke bag en knap, ikke efter en fejl.
@@ -102,45 +102,45 @@ Intet i dette afsnit koster penge, men hver ting kan ellers lække salg. Ejer i 
 
 ### Windsor er droppet (besluttet 23. nov.)
 
-Windsor.ai blev afprøvet (`list_actions` 22. nov.). Det kan **ikke** uploade til YouTube og TikTok. Instagram- og Facebook-posting kræver Business/Creator-konti, en Facebook-side og en betalt plan (Trial giver kun 30 dages historik; prisen er ikke verificeret). Det strider mod 0 kr, så vi bruger det ikke. Koble begge Windsor-connectors fra i claude.ai (Settings → Connectors).
+Windsor.ai blev afprøvet (`list_actions` 22. nov.). Det kan **ikke** uploade til YouTube og TikTok. Instagram- og Facebook-posting kræver Business/Creator-konti, en Facebook-side og en betalt plan (Trial giver kun 30 dages historik; prisen er ikke verificeret). Det strider mod 0 kr, så vi bruger det ikke. Koble begge Windsor-connectors fra (Settings → Connectors).
 
 ### To veje, begge gratis
 
 | Vej | Hvad | Pris |
 |---|---|---|
-| **A. Lars uploader** (standard) | Claude leverer fil + cover + caption + hashtags + tidspunkt + første kommentar. Lars uploader i appen eller i YouTube Studio/TikTok/Instagram (ca. 5 min pr. platform). Instagram og Facebook behøver ikke business-konto ved manuel upload. | 0 kr, ca. 15–20 min/uge |
-| **B. Claude i Lars' egen browser** | Claude arbejder i Lars' indloggede Chrome (YouTube Studio, TikTok, Instagram, Facebook) og uploader, skriver titel/beskrivelse og svarer på kommentarer. Lars godkender hvert skridt og logger selv ind; Claude ser aldrig adgangskoder. | 0 kr, langsommere og skrøbeligt (captchas, skiftende menuer) |
+| **A. Lars uploader** (standard) | Assistenten leverer fil + cover + caption + hashtags + tidspunkt + første kommentar. Lars uploader i appen eller i YouTube Studio/TikTok/Instagram (ca. 5 min pr. platform). Instagram og Facebook behøver ikke business-konto ved manuel upload. | 0 kr, ca. 15–20 min/uge |
+| **B. Assistenten i Lars' egen browser** | Assistenten arbejder i Lars' indloggede Chrome (YouTube Studio, TikTok, Instagram, Facebook) og uploader, skriver titel/beskrivelse og svarer på kommentarer. Lars godkender hvert skridt og logger selv ind; assistenten ser aldrig adgangskoder. | 0 kr, langsommere og skrøbeligt (captchas, skiftende menuer) |
 
 ### Opsætning af vej B (ca. 15 min)
 
-Den bedste opsætning er en **lokal Claude Code-session på Lars' computer** (Claude desktop-appen) åbnet i repoet, med **Claude i Chrome**-udvidelsen slået til. Så ser Claude mapperne (de rendrede klip ligger på computeren), og browseren er Lars' egen.
+Den bedste opsætning er en **lokal session på Lars' computer** (desktop-appen) åbnet i repoet, med **Chrome-udvidelsen** slået til. Så ser assistenten mapperne (de rendrede klip ligger på computeren), og browseren er Lars' egen.
 
-1. Klon repoet `larssolo/automatiq` lokalt og åbn mappen i Claude desktop (Code-fanen).
-2. Installér Claude i Chrome og log selv ind på YouTube, TikTok, Instagram og Facebook i den Chrome.
+1. Klon repoet `larssolo/automatiq` lokalt og åbn mappen i desktop-appen.
+2. Installér Chrome-udvidelsen og log selv ind på YouTube, TikTok, Instagram og Facebook i den Chrome.
 3. Start en ny lokal session og skriv: "Læs `marketing/PLAN.md`, og upload teaseren til de platforme, jeg er logget ind på."
 4. Klippene ligger ikke i git. De ligger enten som filer fra chatten, eller de rendres igen med `bash marketing/shorts/make.sh` (kræver node + playwright, ffmpeg og python3 med numpy).
 
-Alternativt kan en cloud-session forbindes til computeren med **Remote Control** (Settings → Claude Code → Remote Control), men den lokale session er enklere.
+Alternativt kan en cloud-session forbindes til computeren med **Remote Control** (Remote Control), men den lokale session er enklere.
 
 ### Spilleregler
 
-- **Intet postes, sendes som DM eller besvares uden Lars' OK.** Claude kladder, Lars godkender.
+- **Intet postes, sendes som DM eller besvares uden Lars' OK.** Assistenten kladder, Lars godkender.
 - Ingen købte følgere, likes, visninger eller anmeldelser, ingen "engagement pods", ingen bots. Det kan koste både sociale konti og Play-kontoen.
 - Ingen adgangskoder i chat. To-faktor slået til på alle konti.
-- Alle anmeldelser, kommentarer og DM'er besvares inden for 48 timer. Claude kladder svar, Lars godkender (de første uger).
+- Alle anmeldelser, kommentarer og DM'er besvares inden for 48 timer. Assistenten kladder svar, Lars godkender (de første uger).
 - Konti skal være **offentlige**, før opslag kan nå nogen (TikTok, Instagram, YouTube er private i dag).
 
 ### Ugerytme
 
 | Dag | Hvem | Hvad |
 |---|---|---|
-| Man | Claude | Producerer ugens pakke (5 korte klip + 1 tutorial) og skriver tekster |
+| Man | Assistenten | Producerer ugens pakke (5 korte klip + 1 tutorial) og skriver tekster |
 | Tirs | **Lars** | Godkender pakken (20 min) |
-| Ons | **Lars** (vej A) eller Claude i Lars' browser (vej B) | Uploader/planlægger på YouTube, TikTok, Instagram og Facebook |
+| Ons | **Lars** (vej A) eller assistenten i Lars' browser (vej B) | Uploader/planlægger på YouTube, TikTok, Instagram og Facebook |
 | Dagligt | **Lars** | 10 min Reddit/fora (afsnit 14) |
-| Fre | Lars + Claude | Lars læser tal fra platformenes egen statistik, og Claude skriver én side: hvad virkede, næste eksperiment (afsnit 15) |
+| Fre | Lars + assistenten | Lars læser tal fra platformenes egen statistik, og assistenten skriver én side: hvad virkede, næste eksperiment (afsnit 15) |
 
-Claude kan sætte rytmen op som en **ugentlig planlagt opgave**, så pakken står klar mandag.
+Assistenten kan sætte rytmen op som en **ugentlig planlagt opgave**, så pakken står klar mandag.
 
 ---
 
@@ -152,9 +152,9 @@ Lars har tiden, men vidste ikke hvad der kræves. Her er det ærlige billede:
 |---|---|---|
 | **Uge 0** (opsætning, én gang) | ca. 3–4 t | Åbne og omlægge konti (45 min), opsætning af vej B (15 min, valgfri), Play Console (Early Bird, butikstekst, 45 min), teste import/kode/promokode på telefon (45 min), optage første skærmklip (45 min) |
 | **Uge 1–6** | ca. 2,5–3 t/uge | Godkendelse 20 min · optagelse 45–60 min (skærmklip + 1–2 klip med ansigt) · Reddit/fora 10 min/dag (≈ 60 min) · svar på anmeldelser/DM 30 min · tal 15 min |
-| **Fra uge 7** | ca. 1,5 t/uge | Godkendelse, 1 optagelse, svar, tal. Resten kører (Claude) |
+| **Fra uge 7** | ca. 1,5 t/uge | Godkendelse, 1 optagelse, svar, tal. Resten kører (Assistenten) |
 
-Det Claude tager sig af: klip, tekster, hashtags, planlægning, statistik, skabeloner, hjemmeside, outreach-kladder, analyse og ugerapport.
+Det assistenten tager sig af: klip, tekster, hashtags, planlægning, statistik, skabeloner, hjemmeside, outreach-kladder, analyse og ugerapport.
 Det kun Lars kan: Play Console, kontoer og login, optagelser på egen telefon og på kamera, Reddit-kontoen, godkendelser og det, der kræver, at en rigtig person svarer.
 
 ---
@@ -267,8 +267,8 @@ Betalt annoncering (regnestykket i afsnit 1), influencer-honorarer (budget 0), S
 ### Optageprotokol til Lars (45–60 min/uge)
 
 - Optag telefonens skærm i 9:16 med **Android skærmoptagelse**, ét emne ad gangen, uden notifikationer fra privat indhold (brug demo-kontakter og fiktive 555-numre).
-- Optag stille. Claude lægger tekst, musik og lyd på.
-- Til klippene med ansigt: 15–25 s, Lars taler direkte, ét budskab, naturligt lys. Claude skriver manuskript og tekster.
+- Optag stille. Assistenten lægger tekst, musik og lyd på.
+- Til klippene med ansigt: 15–25 s, Lars taler direkte, ét budskab, naturligt lys. Assistenten skriver manuskript og tekster.
 
 ---
 
@@ -278,9 +278,9 @@ Betalt annoncering (regnestykket i afsnit 1), influencer-honorarer (budget 0), S
 
 | Format | Beskrivelse | Hvem laver det |
 |---|---|---|
-| **F1 Ansigtsløst** | Klip fra pipeline'en ("Steal this macro") | Claude |
-| **F2 Maskot** | "Fox says"-sketcher | Claude |
-| **F3 Lars** | 15–25 s til kamera med skærmoptagelse ("I built this because…", "3 texts I never type anymore") | Lars + Claude klipper |
+| **F1 Ansigtsløst** | Klip fra pipeline'en ("Steal this macro") | Assistenten |
+| **F2 Maskot** | "Fox says"-sketcher | Assistenten |
+| **F3 Lars** | 15–25 s til kamera med skærmoptagelse ("I built this because…", "3 texts I never type anymore") | Lars + assistenten klipper |
 
 **Design:** 4 uger, mindst 8 opslag pr. format, samme CTA, samme tidspunkter, rækkefølgen blandes. Platformene scores hver for sig (TikTok, Reels, Shorts).
 
@@ -296,7 +296,7 @@ Betalt annoncering (regnestykket i afsnit 1), influencer-honorarer (budget 0), S
 
 **Sådan tilføjes en skabelon:** ret `website/src/templates.json` (ét objekt), kør `python3 website/build.py` og `python3 website/tools/check_templates.py` (den afviser manglende felter og ugyldige værdier mod `MacroJson.kt`).
 
-**Næste sider (Claude, i den rækkefølge):**
+**Næste sider (Assistenten, i den rækkefølge):**
 
 1. Ærlig sammenligningsside: *TextFox vs Google Messages vs MacroDroid* (EN).
 2. How-to-artikler til de seks tutorials (søgeord ovenfor), hver med skabelon-download.
@@ -363,7 +363,7 @@ Siden `/creators` findes og tilbyder allerede en personlig Play-promokode (låse
 
 **Hvem (mikro, 1.000–50.000 følgere):** Android-tips og app-anmeldere, forældre-/familiekanaler, selvstændige og solopreneurs, hjemmeautomatik (Home Assistant), danske tech-skabere (til LinkedIn/Facebook-vinklen).
 
-**Sådan finder vi dem:** søg YouTube efter "best Android automation apps", "MacroDroid tutorial", "Tasker beginners", "auto reply text Android", søg TikTok efter #androidtips #androidapps #androidhacks, og tjek hvem der kommenterer på sammenlignende videoer. Claude samler listen (kanal, antal følgere, seneste video, kontaktmetode). Ingen kontakt uden Lars' OK.
+**Sådan finder vi dem:** søg YouTube efter "best Android automation apps", "MacroDroid tutorial", "Tasker beginners", "auto reply text Android", søg TikTok efter #androidtips #androidapps #androidhacks, og tjek hvem der kommenterer på sammenlignende videoer. Assistenten samler listen (kanal, antal følgere, seneste video, kontaktmetode). Ingen kontakt uden Lars' OK.
 
 **Mail (engelsk):**
 ```
@@ -431,10 +431,10 @@ Dansk kortversion: "Jeg har lanceret TextFox, en Android-app der sender sms'er f
 | Tid | Hvem | Hvad |
 |---|---|---|
 | T-1 dag | Lars | Alt i afsnit 4 er afkrydset. Konti er åbne med 5–8 klip. |
-| T-0 morgen | Claude | Go-links bygget med produktionslinket (`PLAY_URL` i `build.py`, JSON-LD, `llms.txt`), site live, Early Bird-tekster tjekket |
-| T+0 | Claude/Lars | "It's live" klip + opslag på alle tre + Facebook/Threads/LinkedIn. Lars: Reddit-dev-opslag + LinkedIn |
+| T-0 morgen | Assistenten | Go-links bygget med produktionslinket (`PLAY_URL` i `build.py`, JSON-LD, `llms.txt`), site live, Early Bird-tekster tjekket |
+| T+0 | Assistenten/Lars | "It's live" klip + opslag på alle tre + Facebook/Threads/LinkedIn. Lars: Reddit-dev-opslag + LinkedIn |
 | T+0 | Lars | Bed de 12 testere om **ærlige** anmeldelser (aldrig om stjerner) |
-| T+0 til T+7 | Claude | Svarkladder til alle kommentarer og anmeldelser, ugerapport |
+| T+0 til T+7 | Assistenten | Svarkladder til alle kommentarer og anmeldelser, ugerapport |
 | T+7 | Begge | Ret de 3 hyppigste klager; først derefter mere trafik |
 
 ---
