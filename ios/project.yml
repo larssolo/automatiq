@@ -25,7 +25,7 @@ targets:
   TextFox:
     type: application
     platform: iOS
-    sources: [TextFox]
+    sources: [TextFox, Shared]
     dependencies:
       - package: TextFoxCore
       - target: TextFoxWidget
@@ -63,7 +63,7 @@ targets:
   TextFoxWidget:
     type: app-extension
     platform: iOS
-    sources: [TextFoxWidget]
+    sources: [TextFoxWidget, Shared]
     dependencies:
       - package: TextFoxCore
     entitlements:
@@ -76,6 +76,7 @@ targets:
         CFBundleDisplayName: TextFox
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        UIAppFonts: [DMSans-Regular.ttf, DMSans-Medium.ttf, JetBrainsMono-Regular.ttf, JetBrainsMono-Medium.ttf]
         NSExtension:
           NSExtensionPointIdentifier: com.apple.widgetkit-extension
     settings:

@@ -9,12 +9,18 @@ struct SettingsView: View {
     @State private var exporting = false
     @State private var importing = false
     @State private var backup: BackupFile?
+    @State private var guide = false
 
     var body: some View {
         @Bindable var store = store
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
                 Text("Settings").font(.sans(26, medium: true)).foregroundStyle(Brand.onSurface)
+
+                group("Send automatically") {
+                    Hint("Let the Shortcuts app send your macros with no tap at all — scheduled texts and auto-replies.")
+                    OutlineButton(title: "How to set it up", color: Brand.green) { guide = true }
+                }
 
                 group("Quiet hours") {
                     SwitchRow(title: "Pause auto-replies at night",
@@ -66,6 +72,7 @@ struct SettingsView: View {
             .padding(.top, 6)
             .padding(.bottom, 30)
         }
+        .sheet(isPresented: $guide) { ShortcutsGuideView() }
         .fileExporter(isPresented: $exporting, document: backup, contentType: .json,
                       defaultFilename: "textfox-backup-\(CivilDate(Date(), in: .current))") { result in
             if case .success = result { app.show("Backup saved") }

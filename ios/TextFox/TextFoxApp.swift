@@ -4,7 +4,7 @@ import TextFoxCore
 @main
 struct TextFoxApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) private var delegate
-    @State private var app = AppState(store: MacroStore())
+    @State private var app = AppState.shared
     @Environment(\.scenePhase) private var phase
 
     var body: some Scene {
@@ -23,8 +23,7 @@ struct TextFoxApp: App {
         }
         .backgroundTask(.appRefresh(Scheduler.refreshTask)) {
             await MainActor.run { Scheduler.scheduleRefresh() }
-            let store = await MacroStore()
-            await Scheduler.replan(store)
+            await Scheduler.replan(MacroStore.shared)
         }
     }
 }

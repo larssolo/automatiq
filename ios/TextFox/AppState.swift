@@ -18,12 +18,15 @@ struct Toast: Identifiable, Equatable {
 /// Screen-level state shared by the tabs: the toast and the Messages sheet.
 @MainActor @Observable
 final class AppState {
+    static let shared = AppState(store: .shared)
     let store: MacroStore
     var toast: Toast?
     var outgoing: OutgoingMessage?
     var tab: Tab = .macros
     /// Whether TextFox may show notifications; scheduled macros need it.
     var notificationStatus: UNAuthorizationStatus = .notDetermined
+    /// Debug: shows the widget's small and medium looks in a sheet.
+    var showWidgetPreview = false
     /// The open macro editor, if any (set by the list, the + button and textfox:// links).
     var editor: EditorTarget?
 
@@ -47,6 +50,7 @@ final class AppState {
             if let m = store.macros.first(where: { $0.id == rest || $0.name.caseInsensitiveCompare(rest) == .orderedSame }) {
                 Task { await Scheduler.testFire(m) }
             }
+        case "widget-preview": showWidgetPreview = true
         case "test-tap", "test-skip":
             // What a tap on Send (or Skip) in a notification does, without the lock screen.
             if let m = store.macros.first(where: { $0.id == rest || $0.name.caseInsensitiveCompare(rest) == .orderedSame }) {
@@ -55,6 +59,9 @@ final class AppState {
                                        fireId: PlannedFire(macroId: m.id, at: at).id, macroId: m.id, at: at))
             }
         #endif
+        case "run":
+            // From the widget: run the macro (for SMS this opens the filled-in message).
+            if let m = store.macro(id: rest) { tab = .macros; run(m) }
         case "log": tab = .log
         case "settings": tab = .settings
         default: tab = .macros

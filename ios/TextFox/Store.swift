@@ -1,6 +1,7 @@
 import Foundation
 import Observation
 import TextFoxCore
+import WidgetKit
 
 /// One line in the log: what ran, when, and how it went.
 struct LogEntry: Codable, Identifiable, Hashable {
@@ -27,6 +28,10 @@ struct AppSettings: Codable, Hashable {
 /// actions can read the same macros. The macros and folders use the Android backup format.
 @MainActor @Observable
 final class MacroStore {
+    /// The one store of the app process; the app's screens and the Shortcuts actions both use it,
+    /// so nothing writes over the other's changes.
+    static let shared = MacroStore()
+
     private(set) var macros: [Macro] = []
     private(set) var folders: [Folder] = []
     private(set) var log: [LogEntry] = []
@@ -42,9 +47,12 @@ final class MacroStore {
     private let url: URL
 
     init(fileName: String = "textfox.json") {
-        let dir = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.app.kodekid.textfox")
-            ?? FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-        url = dir.appendingPathComponent(fileName)
+        url = textFoxStoreURL(fileName: fileName)
+        // Earlier builds without the App Group kept the file in Documents; bring it along once.
+        let old = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent(fileName)
+        if old != url, !FileManager.default.fileExists(atPath: url.path), FileManager.default.fileExists(atPath: old.path) {
+            try? FileManager.default.moveItem(at: old, to: url)
+        }
         #if DEBUG
         // UI tests start from the demo data every time.
         if UserDefaults.standard.bool(forKey: "resetData") { try? FileManager.default.removeItem(at: url) }
@@ -78,6 +86,7 @@ final class MacroStore {
         do {
             let data = try JSONEncoder().encode(s)
             try data.write(to: url, options: .atomic)
+            WidgetCenter.shared.reloadAllTimelines()
         } catch {
             assertionFailure("save failed: \(error)")
         }

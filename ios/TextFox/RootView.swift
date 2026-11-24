@@ -41,6 +41,9 @@ struct RootView: View {
         // Screenshots and checks in the simulator: launch with `-open textfox://…`.
         .task { if let s = UserDefaults.standard.string(forKey: "open"), let url = URL(string: s) { app.open(url) } }
         #endif
+        #if DEBUG
+        .sheet(isPresented: $app.showWidgetPreview) { WidgetPreviewSheet() }
+        #endif
         .sheet(item: $app.outgoing) { message in
             MessageComposer(message: message) { result in app.finishedSending(message, result) }
                 .ignoresSafeArea()
@@ -118,3 +121,27 @@ struct BackdropView: View {
         }
     }
 }
+
+#if DEBUG
+/// The widget as it renders on the home screen, at its real sizes, for checking in the simulator.
+private struct WidgetPreviewSheet: View {
+    @Environment(MacroStore.self) private var store
+
+    var body: some View {
+        let all = StoredMacros.load().ordered
+        VStack(spacing: 24) {
+            Text("Widget preview").font(.mono(14, medium: true)).foregroundStyle(Brand.mute)
+            MacroWidgetView(entry: MacroWidgetEntry(date: .now, macros: [all.first { $0.triggerType == .manual } ?? all[0]]), familyOverride: .systemSmall)
+                .padding(16).frame(width: 170, height: 170)
+                .background(RoundedRectangle(cornerRadius: 24).fill(Brand.background))
+            MacroWidgetView(entry: MacroWidgetEntry(date: .now, macros: Array(all.filter(\.enabled).prefix(4))), familyOverride: .systemMedium)
+                .padding(16).frame(width: 364, height: 170)
+                .background(RoundedRectangle(cornerRadius: 24).fill(Brand.background))
+            Spacer()
+        }
+        .padding(.top, 30)
+        .frame(maxWidth: .infinity)
+        .background(Color(hex: 0x3A4A5A))
+    }
+}
+#endif

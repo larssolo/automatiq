@@ -360,3 +360,19 @@ func at(_ y: Int, _ m: Int, _ d: Int, _ h: Int, _ min: Int = 0) -> Date {
         #expect(m.dueFires(since: at(2026, 11, 26, 9), until: at(2026, 11, 26, 9), timeZone: cph).isEmpty)
     }
 }
+
+@Suite struct SharedStoreTests {
+    @Test func readsTheAppFileAndPicksTheReply() throws {
+        var reply = Macro(id: "r", name: "Away", triggerType: .incoming, recipients: [], messageBody: "Back Monday")
+        reply.matchKeyword = "meeting"
+        let other = Macro(id: "m", name: "Late", triggerType: .manual, recipients: ["1"], messageBody: "x")
+        let json = try JSONEncoder().encode(["macros": [reply, other]])
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("tf-\(UUID()).json")
+        try json.write(to: url)
+        let stored = StoredMacros.load(from: url)
+        #expect(stored.macros.count == 2)
+        #expect(Macro.replyMacro(in: stored.macros, sender: "+4511", body: "About the meeting")?.id == "r")
+        #expect(Macro.replyMacro(in: stored.macros, sender: "+4511", body: "Hi") == nil)
+        #expect(StoredMacros.load(from: url.appendingPathExtension("missing")).macros.isEmpty)
+    }
+}

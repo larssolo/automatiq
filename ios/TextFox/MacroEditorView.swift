@@ -22,6 +22,7 @@ struct MacroEditorView: View {
     @State private var contactIndex: Int?
     @State private var locating = false
     /// Until a place is chosen the map shows Denmark.
+    @State private var guide = false
     @State private var camera: MapCameraPosition = .region(MKCoordinateRegion(
         center: .init(latitude: 56.0, longitude: 10.5), latitudinalMeters: 450_000, longitudinalMeters: 450_000))
     @FocusState private var messageFocused: Bool
@@ -64,6 +65,7 @@ struct MacroEditorView: View {
         .interactiveDismissDisabled(hasChanges)
         .onAppear(perform: load)
         .sheet(item: $sheet) { which in pickerSheet(which) }
+        .sheet(isPresented: $guide) { ShortcutsGuideView(focus: d.triggerType) }
         .sheet(item: Binding(get: { contactIndex.map(IdentifiedInt.init) }, set: { contactIndex = $0?.value })) { i in
             ContactPicker { number in
                 if d.recipients.indices.contains(i.value) { d.recipients[i.value] = number }
@@ -214,6 +216,11 @@ struct MacroEditorView: View {
             if d.daysOfWeek.isEmpty { Text("Pick at least one day").font(.sans(12)).foregroundStyle(Brand.red) }
         }
         nextRunPreview
+        HStack(spacing: 6) {
+            Image(systemName: "bell.badge").foregroundStyle(Brand.mute)
+            Text("A notification asks you to send.").font(.sans(13)).foregroundStyle(Brand.mute)
+            Button("Send without a tap") { guide = true }.font(.sans(13, medium: true)).foregroundStyle(Brand.green)
+        }
         moreOptions
     }
 
@@ -320,7 +327,8 @@ struct MacroEditorView: View {
     }
 
     @ViewBuilder private var replyFields: some View {
-        Hint("Answers texts that match. On iPhone this runs through a Shortcuts automation (“When I get a message”) — TextFox will guide you through setting it up.")
+        Hint("Answers texts that match. On iPhone this runs through a Shortcuts automation (“When I get a message”).")
+        Button("How to set it up") { guide = true }.font(.sans(14, medium: true)).foregroundStyle(Brand.green)
         FieldBox(label: "From (optional — blank = anyone)") {
             TextField("", text: $d.matchSender, prompt: Text("+45 12 34 56 78").foregroundStyle(Brand.mute.opacity(0.6)))
                 .keyboardType(.phonePad)

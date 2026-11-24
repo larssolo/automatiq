@@ -139,6 +139,10 @@ final class TextFoxUITests: XCTestCase {
         app.buttons["Settings"].tap()
         XCTAssertTrue(app.staticTexts["Quiet hours"].waitForExistence(timeout: 2))
         shot("31-settings")
+        app.buttons["How to set it up"].tap()
+        XCTAssertTrue(app.staticTexts["Auto-reply"].waitForExistence(timeout: 3))
+        shot("32-shortcuts-guide")
+        app.buttons["Done"].tap()
     }
 
     func testScheduledNotificationIsDelivered() {
