@@ -10,8 +10,9 @@ Read `docs/ios/PLAN.md` first: it is the plan and the scope.
   - scheduling: weekdays, every N weeks, anchor, end date, random days and jitter. The random choices are deterministic because Swift's `hashValue` changes on every launch, so the core uses a Java-compatible `stableHash` with SplitMix64. The values are not bit-identical to Android's, and they don't need to be.
   - templates, sender and keyword matching, quiet hours and the AI vary prompt.
   - the trial in calendar days, and the early-bird code.
-- **The app and widget haven't been built yet.** Xcode 27.2 was installed on 2026-11-24, but its license wasn't accepted at that point. The app and widget sources were only type-checked against the macOS SDK.
-- `ios/Config/Signing.xcconfig` is local and not in git. It needs Lars' Team ID before a device build.
+- **The app and widget build for the simulator, and the app runs** (verified 2026-11-24 with Xcode 27.2 and the iOS 27.2 simulator; `bootstrap.sh` passes).
+- `ios/Config/Signing.xcconfig` is local and not in git. It holds Lars' Team ID (F545QS7GV6), and the Apple ID is signed in to Xcode.
+- The signed device build doesn't work yet only because no iPhone has been registered with the team. Connect Lars' iPhone by cable (Developer Mode on, "Trust"), then run `bootstrap.sh --device` again: Xcode registers the device and creates the profiles itself.
 
 ## First steps
 
