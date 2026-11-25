@@ -17,6 +17,8 @@ SITE = "https://www.textfox.app"
 
 # ---- one place to change launch details ------------------------------------
 PLAY_URL = "https://play.google.com/apps/testing/app.kodekid.automatiq"  # swap for the production listing at launch
+# While the app is not on Google Play yet, every Play button opens the Early Bird dialog (which says it launches in a few days and offers a mail link). At launch: LIVE = True and PLAY_URL = production listing.
+LIVE = False
 # Early-bird promo: the code is typed in the app at purchase (created in Play Console). EB_UNTIL_UTC must match site.js' expiry (31 Dec 23:00 Danish time).
 EB_CODE = "TEXTFOX50"
 CTA_NOTE = "Early bird: <strong>50% off</strong> with code <strong>TEXTFOX50</strong> until 31 Dec, 23:00 · 30 days free · Android 8.0+"
@@ -44,7 +46,7 @@ def abs_url(path):
 
 T = {
     "en": {"locale": "en_US", "home": "/", "skip": "Skip to content", "home_aria": "TextFox home",
-           "nav": ["A day", "Features", "AI", "Privacy", "FAQ"], "nav_creators": "Creators", "menu": ["Menu", "Close menu"], "get_app": "Get the app", "play_small": "Get it on",
+           "nav": ["A day", "Features", "AI", "Privacy", "FAQ"], "nav_creators": "Creators", "menu": ["Menu", "Close menu"], "get_app": "Get the app", "play_small": "Get it on", "play_soon": "Coming soon on", "get_deal": "Get 50% off",
            "cta_note": CTA_NOTE,
            "f_tag": "Scheduled texts, auto-replies and missed-call text-back for Android. Set it up once. It just runs.",
            "f_features": "Features", "f_contact": "Contact", "about": "About the maker", "privacy": "Privacy policy", "made_by": "Made by",
@@ -59,7 +61,7 @@ T = {
            "og_alt": "TextFox: your phone texts for you. Scheduled texts, auto-replies and missed-call text-back for Android.",
            "switch": ("DA", "Dansk", "da")},
     "da": {"locale": "da_DK", "home": "/da", "skip": "Gå til indhold", "home_aria": "TextFox forside",
-           "nav": ["En dag", "Funktioner", "AI", "Privatliv", "FAQ"], "nav_creators": "Influencere", "menu": ["Menu", "Luk menu"], "get_app": "Hent appen", "play_small": "Hent den på",
+           "nav": ["En dag", "Funktioner", "AI", "Privatliv", "FAQ"], "nav_creators": "Influencere", "menu": ["Menu", "Luk menu"], "get_app": "Hent appen", "play_small": "Hent den på", "play_soon": "Kommer snart på", "get_deal": "Få 50 % rabat",
            "cta_note": CTA_NOTE_DA,
            "f_tag": "Planlagte sms'er, autosvar og sms ved ubesvaret opkald til Android. Sæt det op én gang. Så kører det bare.",
            "f_features": "Funktioner", "f_contact": "Kontakt", "about": "Om skaberen", "privacy": "Privatlivspolitik (engelsk)", "made_by": "Lavet af",
@@ -165,15 +167,15 @@ ICONS = """<svg width="0" height="0" style="position:absolute" aria-hidden="true
 
 PLAY_SVG = '<svg width="18" height="20" viewBox="0 0 16 18" aria-hidden="true"><path d="M1 1.2v15.6c0 .5.5.8.9.6L15 9.6a.7.7 0 0 0 0-1.2L1.9.6C1.5.4 1 .7 1 1.2Z" fill="currentColor"/></svg>'
 def store_href():
-    return PLAY_URL
+    return PLAY_URL if LIVE else "#early-bird"
 
 
 def store_attrs(lang="en"):
-    return ' rel="noopener"'
+    return ' rel="noopener"' if LIVE else ' data-eb role="button" aria-haspopup="dialog"'
 
 
 def play(lang="en"):
-    return f'<a class="btn btn-g play-btn" href="{store_href()}"{store_attrs(lang)}>{PLAY_SVG}<span><small>{T[lang]["play_small"]}</small>Google Play</span></a>'
+    return f'<a class="btn btn-g play-btn" href="{store_href()}"{store_attrs(lang)}>{PLAY_SVG}<span><small>{T[lang]["play_small"] if LIVE else T[lang]["play_soon"]}</small>Google Play</span></a>'
 
 
 PLAY = play("en")
@@ -192,6 +194,9 @@ EB = {
   ],
   "copy": "Copy code", "review": "TextFox would be so happy about a nice review on Google Play. Thank you! 🦊", "line": "50% off with code TEXTFOX50 until 31 Dec",
   "close": "Close",
+  "soon": "TextFox isn't on Google Play yet. It lands within a few days, with the early-bird discount ready from day one. Keep an eye on this site, or send me your email and I'll let you know.",
+  "step_soon": "Get TextFox on Google Play when it launches in a few days.",
+  "mail": "Email me when it's live", "mail_subject": "Notify me when TextFox launches", "mail_body": "Hi Lars,\r\n\r\nPlease email me when TextFox is live on Google Play.\r\n\r\nThank you!",
   "note": "The code works until 31 December at 23:00.",
   "pop": "50% off for early birds",
   "cta": "How it works"
@@ -208,6 +213,9 @@ EB = {
   ],
   "copy": "Kopiér kode", "review": "TextFox ville blive rigtig glad for en flot anmeldelse på Google Play. Tusind tak! 🦊", "line": "50 % rabat med koden TEXTFOX50 til 31. dec.",
   "close": "Luk",
+  "soon": "TextFox er ikke på Google Play endnu. Den kommer inden for få dage, og early bird-rabatten er klar fra dag ét. Hold øje med siden, eller send mig din e-mail, så får du besked.",
+  "step_soon": "Hent TextFox på Google Play, når den kommer om få dage.",
+  "mail": "Giv mig besked, når den er live", "mail_subject": "Giv mig besked, når TextFox udkommer", "mail_body": "Hej Lars,\r\n\r\nSkriv til mig, når TextFox er live på Google Play.\r\n\r\nTak!",
   "note": "Koden gælder til 31. december kl. 23:00.",
   "pop": "50 % rabat til early birds",
   "cta": "Sådan gør du"
@@ -223,15 +231,19 @@ def eb_line(lang="en"):
 def early_bird(lang="en"):
     """Glitch-in promo popup (site.js shows it for 4 s, then folds it into the nav chip) + the how-to dialog."""
     E = EB[lang]
-    steps = "".join(f"<li><span>{x}</span></li>" for x in E["steps"])
+    st = E["steps"] if LIVE else [E["step_soon"]] + E["steps"][1:]
+    steps = "".join(f"<li><span>{x}</span></li>" for x in st)
+    mail = f"mailto:{CONTACT}?subject={urllib.parse.quote(E['mail_subject'])}&body={urllib.parse.quote(E['mail_body'])}"
+    soon = "" if LIVE else f'<p class="eb-soon"><strong>{E["soon"]}</strong></p>'
+    action = (f'<a class="btn btn-g" href="{PLAY_URL}" rel="noopener">{PLAY_SVG}<span>Google Play</span></a><p class="eb-review">{E["review"]}</p>' if LIVE
+              else f'<a class="btn btn-g" href="{mail}">{E["mail"]}</a>')
     return f"""<aside class="eb-pop" id="ebPop" aria-live="polite" hidden><button type="button" class="eb-pop-btn" data-eb><span class="eb-pop-k">// early bird</span><span class="eb-pop-h" data-text="{E["pop"]}">{E["pop"]}</span><span class="eb-pop-s">{E["sub"]} · <b>{EB_CODE}</b></span></button></aside>
 <dialog class="lightbox signup" id="ebDlg" aria-labelledby="eb-h">
 <div class="su-card"><button class="lb-close" type="button" aria-label="{E["close"]}">×</button>
-<p class="kicker">// early bird</p><h2 id="eb-h">{E["h"]}</h2><p class="su-p">{E["lead"]} <strong>{E["sub"]}.</strong></p>
+<p class="kicker">// early bird</p><h2 id="eb-h">{E["h"]}</h2><p class="su-p">{E["lead"]} <strong>{E["sub"]}.</strong></p>{soon}
 <ol class="eb-steps">{steps}</ol>
 <button class="eb-code" type="button" data-copy="{EB_CODE}" data-label="{E["copy"]}"><b>{EB_CODE}</b><span>{E["copy"]}</span></button>
-<a class="btn btn-g" href="{PLAY_URL}" rel="noopener">{PLAY_SVG}<span>Google Play</span></a>
-<p class="eb-review">{E["review"]}</p>
+{action}
 </div></dialog>"""
 
 
@@ -463,9 +475,9 @@ def nav(path, lang):
 <header class="nav"><div class="wrap">
   <a class="brand" href="{L["home"]}" aria-label="{L["home_aria"]}"><svg aria-hidden="true"><use href="#fox"/></svg>textfox</a>
   <nav class="nav-links" aria-label="Main">{links}</nav>
-  <div class="nav-end"><a class="lang" href="{target}" hreflang="{other}" lang="{other}" title="{label}" aria-label="{label}">{code}</a><button class="eb-chip" type="button" id="ebChip" data-eb aria-haspopup="dialog">{EB[lang]["chip"]}</button><a class="btn btn-g btn-sm" href="{store_href()}"{store_attrs(lang)}>{L["get_app"]}</a><button class="menu-btn" type="button" aria-expanded="false" aria-controls="mnav" aria-label="{L["menu"][0]}" data-close="{L["menu"][1]}"><span></span><span></span></button></div>
+  <div class="nav-end"><a class="lang" href="{target}" hreflang="{other}" lang="{other}" title="{label}" aria-label="{label}">{code}</a><button class="eb-chip" type="button" id="ebChip" data-eb aria-haspopup="dialog">{EB[lang]["chip"]}</button><a class="btn btn-g btn-sm" href="{store_href()}"{store_attrs(lang)}>{L["get_app"] if LIVE else L["get_deal"]}</a><button class="menu-btn" type="button" aria-expanded="false" aria-controls="mnav" aria-label="{L["menu"][0]}" data-close="{L["menu"][1]}"><span></span><span></span></button></div>
 </div>
-  <nav class="mnav" id="mnav" aria-label="{L["menu"][0]}" hidden><div class="wrap">{links}<a class="eb-link" href="#early-bird" data-eb>{EB[lang]["chip"]}</a><a class="btn btn-g" href="{store_href()}"{store_attrs(lang)}>{L["get_app"]}</a></div></nav>
+  <nav class="mnav" id="mnav" aria-label="{L["menu"][0]}" hidden><div class="wrap">{links}<a class="eb-link" href="#early-bird" data-eb>{EB[lang]["chip"]}</a><a class="btn btn-g" href="{store_href()}"{store_attrs(lang)}>{L["get_app"] if LIVE else L["get_deal"]}</a></div></nav>
 </header>"""
 
 

@@ -15,7 +15,7 @@
 <link rel="manifest" href="/site.webmanifest">
 <link rel="preload" href="/assets/fonts/DMSans.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/assets/fonts/JetBrainsMono.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/assets/site.css?v=3b09aca8">
+<link rel="stylesheet" href="/assets/site.css?v=7987de34">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="TextFox">
 <meta property="og:locale" content="en_US">
@@ -51,9 +51,9 @@
 <header class="nav"><div class="wrap">
   <a class="brand" href="/" aria-label="TextFox home"><svg aria-hidden="true"><use href="#fox"/></svg>textfox</a>
   <nav class="nav-links" aria-label="Main"><a href="/#day">A day</a><a href="/#triggers">Features</a><a href="/#ai">AI</a><a href="/#privacy">Privacy</a><a href="/#faq">FAQ</a><a href="/creators">Creators</a></nav>
-  <div class="nav-end"><a class="lang" href="/da" hreflang="da" lang="da" title="Dansk" aria-label="Dansk">DA</a><button class="eb-chip" type="button" id="ebChip" data-eb aria-haspopup="dialog">Early Bird</button><a class="btn btn-g btn-sm" href="https://play.google.com/apps/testing/app.kodekid.automatiq" rel="noopener">Get the app</a><button class="menu-btn" type="button" aria-expanded="false" aria-controls="mnav" aria-label="Menu" data-close="Close menu"><span></span><span></span></button></div>
+  <div class="nav-end"><a class="lang" href="/da" hreflang="da" lang="da" title="Dansk" aria-label="Dansk">DA</a><button class="eb-chip" type="button" id="ebChip" data-eb aria-haspopup="dialog">Early Bird</button><a class="btn btn-g btn-sm" href="#early-bird" data-eb role="button" aria-haspopup="dialog">Get 50% off</a><button class="menu-btn" type="button" aria-expanded="false" aria-controls="mnav" aria-label="Menu" data-close="Close menu"><span></span><span></span></button></div>
 </div>
-  <nav class="mnav" id="mnav" aria-label="Menu" hidden><div class="wrap"><a href="/#day">A day</a><a href="/#triggers">Features</a><a href="/#ai">AI</a><a href="/#privacy">Privacy</a><a href="/#faq">FAQ</a><a href="/creators">Creators</a><a class="eb-link" href="#early-bird" data-eb>Early Bird</a><a class="btn btn-g" href="https://play.google.com/apps/testing/app.kodekid.automatiq" rel="noopener">Get the app</a></div></nav>
+  <nav class="mnav" id="mnav" aria-label="Menu" hidden><div class="wrap"><a href="/#day">A day</a><a href="/#triggers">Features</a><a href="/#ai">AI</a><a href="/#privacy">Privacy</a><a href="/#faq">FAQ</a><a href="/creators">Creators</a><a class="eb-link" href="#early-bird" data-eb>Early Bird</a><a class="btn btn-g" href="#early-bird" data-eb role="button" aria-haspopup="dialog">Get 50% off</a></div></nav>
 </header>
 <main id="main">
 <section class="page-hero"><div class="wrap">
@@ -162,7 +162,7 @@
   <div class="foot">
     <div><a class="brand" href="/" aria-label="TextFox home"><svg aria-hidden="true"><use href="#fox"/></svg>textfox</a><p>Scheduled texts, auto-replies and missed-call text-back for Android. Set it up once. It just runs.</p></div>
     <div><h2>Features</h2><ul><li><a href="/scheduled-text-messages">Scheduled texts</a></li><li><a href="/auto-reply-sms">Auto-reply</a></li><li><a href="/missed-call-text-back">Missed-call text-back</a></li><li><a href="/one-tap-text-widget">One-tap widget</a></li><li><a href="/#ai">AI variations</a></li></ul></div>
-    <div><h2>TextFox</h2><ul><li><a href="https://play.google.com/apps/testing/app.kodekid.automatiq" rel="noopener">Google Play</a></li><li><a href="/#faq">FAQ</a></li><li><a href="/about">About the maker</a></li><li><a href="/creators">For creators</a></li><li><a href="/templates">Templates</a></li><li><a href="/privacy">Privacy policy</a></li></ul></div>
+    <div><h2>TextFox</h2><ul><li><a href="#early-bird" data-eb role="button" aria-haspopup="dialog">Google Play</a></li><li><a href="/#faq">FAQ</a></li><li><a href="/about">About the maker</a></li><li><a href="/creators">For creators</a></li><li><a href="/templates">Templates</a></li><li><a href="/privacy">Privacy policy</a></li></ul></div>
     <div><h2>Contact</h2><ul><li><a href="mailto:hello@textfox.app">hello@textfox.app</a></li><li>Made by <a href="/about">Lars Sohl</a></li><li><a href="https://www.kodekid.app" rel="noopener">kodekid.app</a></li></ul></div>
   </div>
   <div class="legal"><span>© 2026 TextFox · <a href="https://www.kodekid.app" rel="noopener">kodekid.app</a></span><span><a href="/sitemap">Sitemap</a> · No cookies. No tracking.</span></div>
@@ -170,11 +170,10 @@
 <aside class="eb-pop" id="ebPop" aria-live="polite" hidden><button type="button" class="eb-pop-btn" data-eb><span class="eb-pop-k">// early bird</span><span class="eb-pop-h" data-text="50% off for early birds">50% off for early birds</span><span class="eb-pop-s">Until 31 December, 23:00 · <b>TEXTFOX50</b></span></button></aside>
 <dialog class="lightbox signup" id="ebDlg" aria-labelledby="eb-h">
 <div class="su-card"><button class="lb-close" type="button" aria-label="Close">×</button>
-<p class="kicker">// early bird</p><h2 id="eb-h">Early Bird: 50% off</h2><p class="su-p">Buy TextFox before the year ends and pay half. <strong>Until 31 December, 23:00.</strong></p>
-<ol class="eb-steps"><li><span>Get TextFox on Google Play.</span></li><li><span>When you buy it, enter the code <strong>TEXTFOX50</strong> in the app.</span></li><li><span>That's it. 50% off, applied in the app.</span></li></ol>
+<p class="kicker">// early bird</p><h2 id="eb-h">Early Bird: 50% off</h2><p class="su-p">Buy TextFox before the year ends and pay half. <strong>Until 31 December, 23:00.</strong></p><p class="eb-soon"><strong>TextFox isn't on Google Play yet. It lands within a few days, with the early-bird discount ready from day one. Keep an eye on this site, or send me your email and I'll let you know.</strong></p>
+<ol class="eb-steps"><li><span>Get TextFox on Google Play when it launches in a few days.</span></li><li><span>When you buy it, enter the code <strong>TEXTFOX50</strong> in the app.</span></li><li><span>That's it. 50% off, applied in the app.</span></li></ol>
 <button class="eb-code" type="button" data-copy="TEXTFOX50" data-label="Copy code"><b>TEXTFOX50</b><span>Copy code</span></button>
-<a class="btn btn-g" href="https://play.google.com/apps/testing/app.kodekid.automatiq" rel="noopener"><svg width="18" height="20" viewBox="0 0 16 18" aria-hidden="true"><path d="M1 1.2v15.6c0 .5.5.8.9.6L15 9.6a.7.7 0 0 0 0-1.2L1.9.6C1.5.4 1 .7 1 1.2Z" fill="currentColor"/></svg><span>Google Play</span></a>
-<p class="eb-review">TextFox would be so happy about a nice review on Google Play. Thank you! 🦊</p>
+<a class="btn btn-g" href="mailto:hello@textfox.app?subject=Notify%20me%20when%20TextFox%20launches&body=Hi%20Lars%2C%0D%0A%0D%0APlease%20email%20me%20when%20TextFox%20is%20live%20on%20Google%20Play.%0D%0A%0D%0AThank%20you%21">Email me when it's live</a>
 </div></dialog>
 <script src="/assets/bg.js?v=5fd2c919" defer></script><script src="/assets/site.js?v=f78e5b70" defer></script>
 </body>
