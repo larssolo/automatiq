@@ -22,7 +22,7 @@ xcodegen generate --quiet && ok "TextFox.xcodeproj generated"
 (cd Packages/TextFoxCore && swift test --quiet >/dev/null 2>&1) && ok "Core tests pass" || fail "Core tests fail: cd ios/Packages/TextFoxCore && swift test"
 
 xcodebuild -project TextFox.xcodeproj -scheme TextFox -destination 'generic/platform=iOS Simulator' \
-  -derivedDataPath build/DerivedData CODE_SIGNING_ALLOWED=NO -quiet build \
+  -derivedDataPath build/DerivedData CODE_SIGN_IDENTITY=- -quiet build \
   && ok "App and widget build for the simulator" || fail "Simulator build failed (see the errors above)"
 
 if [[ " $* " == *" --ui "* ]]; then
@@ -32,7 +32,7 @@ if [[ " $* " == *" --ui "* ]]; then
   [[ -n "$SIM" ]] || fail "No iPhone simulator found. Install one in Xcode → Settings → Components"
   rm -rf build/ui.xcresult
   xcodebuild test -project TextFox.xcodeproj -scheme TextFox -destination "platform=iOS Simulator,id=$SIM" \
-    -derivedDataPath build/DerivedData -resultBundlePath build/ui.xcresult CODE_SIGNING_ALLOWED=NO -quiet >/dev/null 2>&1 \
+    -derivedDataPath build/DerivedData -resultBundlePath build/ui.xcresult CODE_SIGN_IDENTITY=- -quiet >/dev/null 2>&1 \
     && ok "UI tests pass" || fail "UI tests fail: open ios/build/ui.xcresult in Xcode for the screenshots"
 fi
 

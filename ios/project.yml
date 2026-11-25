@@ -25,7 +25,10 @@ targets:
   TextFox:
     type: application
     platform: iOS
-    sources: [TextFox]
+    sources:
+      - path: TextFox
+        excludes: [TextFox.storekit]
+      - Shared
     dependencies:
       - package: TextFoxCore
       - target: TextFoxWidget
@@ -40,6 +43,8 @@ targets:
         CFBundleDisplayName: TextFox
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        BGTaskSchedulerPermittedIdentifiers: [app.kodekid.textfox.refresh]
+        UIBackgroundModes: [fetch]
         UIAppFonts: [DMSans-Regular.ttf, DMSans-Medium.ttf, JetBrainsMono-Regular.ttf, JetBrainsMono-Medium.ttf]
         CFBundleURLTypes:
           - CFBundleURLName: app.kodekid.textfox
@@ -61,7 +66,7 @@ targets:
   TextFoxWidget:
     type: app-extension
     platform: iOS
-    sources: [TextFoxWidget]
+    sources: [TextFoxWidget, Shared]
     dependencies:
       - package: TextFoxCore
     entitlements:
@@ -74,6 +79,7 @@ targets:
         CFBundleDisplayName: TextFox
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        UIAppFonts: [DMSans-Regular.ttf, DMSans-Medium.ttf, JetBrainsMono-Regular.ttf, JetBrainsMono-Medium.ttf]
         NSExtension:
           NSExtensionPointIdentifier: com.apple.widgetkit-extension
     settings:
@@ -96,5 +102,7 @@ schemes:
       targets:
         TextFox: all
         TextFoxUITests: [test]
+    run:
+      storeKitConfiguration: TextFox/TextFox.storekit
     test:
       targets: [TextFoxUITests]

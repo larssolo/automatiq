@@ -1,6 +1,6 @@
 # TextFox til iPhone — plan
 
-Sidst opdateret 24. november 2026 (aften). Ejer: Lars.
+Sidst opdateret 25. november 2026 (nat). Ejer: Lars.
 
 ## 1. Kort fortalt
 
@@ -55,14 +55,14 @@ ios/
 
 Hver milepæl ender med en build, der virker, tests der består, og en test på Lars' iPhone.
 
-1. **Bevis (1–2 dage).** En "Hent TextFox-besked"-handling i Genveje, der returnerer en udfyldt og AI-varieret tekst. Lars laver én automatisering, "Hver dag kl. 8 → Hent besked → Send besked", og den skal sende uden at spørge. Desuden notifikation → færdig besked → Send. **Hvis automatiseringen ikke kan køre uden bekræftelse, stopper vi og tænker om.**
+1. **Bevis (1–2 dage). ⏳ Bygget (Genveje-handlinger + notifikation → Send); venter på test på en nyere iPhone.** En "Hent TextFox-besked"-handling i Genveje, der returnerer en udfyldt og AI-varieret tekst. Lars laver én automatisering, "Hver dag kl. 8 → Hent besked → Send besked", og den skal sende uden at spørge. Desuden notifikation → færdig besked → Send. **Hvis automatiseringen ikke kan køre uden bekræftelse, stopper vi og tænker om.**
 2. **Makroer (3–4 dage). ✅ Bygget 24. nov. og testet i simulatoren.** Liste med mapper, kort og farver, editor med alle felter for de understøttede typer, kontakter, variabler, søgning, slet/dupliker/fortryd. Lagring i SwiftData.
-3. **Planlægning og notifikationer (2–3 dage).** Lokale notifikationer for de næste 64 afsendelser (iOS-loft), som fyldes op igen, når appen åbnes, og i baggrundsopdatering. Notifikationshandlingerne Send/Rediger/Spring over. Stille timer. Log.
-4. **Genveje og widgets (3–4 dage).** App Intents: hent besked, kør makro, autosvar på indgående besked (input: afsender og tekst). Guide i appen med billeder til hver automatisering. Interaktiv widget pr. makro.
-5. **AI (2 dage).** Gemini-klient, nøgletest, modelvalg, AI-svar/variation/skriv, godkend eller send automatisk. Samme reserveløsning som Android: fast tekst, hvis AI fejler.
-6. **Køb (2 dage).** StoreKit 2, prøveperiode, oplåsning, gendan, rabatkode (Offer Code), banner og påmindelser.
-7. **Import, sted, finpudsning (2–3 dage).** Import/eksport af Android-backup, steds-makroer, onboarding med ræve-intro, Sundhed-skærm (notifikationer, Genveje-status), tilgængelighed og dansk/engelsk tekst.
-8. **Udgivelse (1–2 dage + Apples gennemgang).** App Store Connect-oplysninger, skærmbilleder, privatlivsoplysninger, TestFlight til Lars og testere, indsendelse.
+3. **Planlægning og notifikationer (2–3 dage). ✅ Bygget 24. nov.** Lokale notifikationer for de næste 64 afsendelser (iOS-loft), som fyldes op igen, når appen åbnes, og i baggrundsopdatering. Notifikationshandlingerne Send/Rediger/Spring over. Stille timer. Log.
+4. **Genveje og widgets (3–4 dage). ✅ Bygget 24. nov.** App Intents: hent besked, kør makro, autosvar på indgående besked (input: afsender og tekst). Guide i appen med billeder til hver automatisering. Interaktiv widget pr. makro.
+5. **AI (2 dage). ✅ Bygget 24. nov. (ikke prøvet mod Gemini endnu — kræver Lars' nøgle).** Gemini-klient, nøgletest, modelvalg, AI-svar/variation/skriv, godkend eller send automatisk. Samme reserveløsning som Android: fast tekst, hvis AI fejler.
+6. **Køb (2 dage). ✅ Bygget 24. nov., testet med lokal StoreKit; produkterne skal oprettes i App Store Connect.** StoreKit 2, prøveperiode, oplåsning, gendan, rabatkode (Offer Code), banner og påmindelser.
+7. **Import, sted, finpudsning (2–3 dage). ✅ Bygget 24. nov.: import/eksport, sted, intro med ræven, velkomstguide, telefontjek, iPhone-look og justerbar baggrund..** Import/eksport af Android-backup, steds-makroer, onboarding med ræve-intro, Sundhed-skærm (notifikationer, Genveje-status), tilgængelighed og dansk/engelsk tekst.
+8. **Udgivelse (1–2 dage + Apples gennemgang). ⏳ Tekster, screenshots og trin står i docs/ios/APP-STORE.md.** App Store Connect-oplysninger, skærmbilleder, privatlivsoplysninger, TestFlight til Lars og testere, indsendelse.
 
 I alt ca. 3–4 ugers arbejde plus Apples gennemgang.
 
@@ -70,7 +70,7 @@ I alt ca. 3–4 ugers arbejde plus Apples gennemgang.
 
 - Engangskøb (non-consumable) `textfox_unlock`, 7 USD.
 - **Prøveperiode:** Apple har ingen indbygget prøve for engangskøb. Apple tillader dette: appen er gratis, og der er et gratis køb ("30-day free trial", non-renewing subscription til 0 kr.), som starter prøven. Derefter købes oplåsningen. Prøven tælles i kalenderdage som på Android (TextFoxCore `licenseStatus`).
-- **Rabatkode:** Apples Offer Codes til engangskøb, eller en separat rabat-vare. Afklares i milepæl 6.
+- **Rabatkode:** en separat vare `textfox_unlock_earlybird` til halv pris, som vises når man taster TEXTFOX50 (valgt i milepæl 6).
 - Køb på Android og iPhone deles ikke. Det er to butikker.
 
 ## 6. Risici

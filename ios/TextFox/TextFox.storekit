@@ -1,0 +1,49 @@
+{
+  "identifier" : "6C1F1C2E-5B7B-4C64-9C61-6B0E5F0A7E11",
+  "nonRenewingSubscriptions" : [ ],
+  "products" : [
+    {
+      "displayPrice" : "0.0",
+      "familyShareable" : false,
+      "internalID" : "6755000001",
+      "localizations" : [
+        { "description" : "Try every TextFox feature free for 30 days.", "displayName" : "30-Day Free Trial", "locale" : "en_US" }
+      ],
+      "productID" : "textfox_trial",
+      "referenceName" : "30-Day Free Trial",
+      "type" : "NonConsumable"
+    },
+    {
+      "displayPrice" : "6.99",
+      "familyShareable" : false,
+      "internalID" : "6755000002",
+      "localizations" : [
+        { "description" : "Unlock TextFox once. No subscription.", "displayName" : "Unlock TextFox", "locale" : "en_US" }
+      ],
+      "productID" : "textfox_unlock",
+      "referenceName" : "Unlock TextFox",
+      "type" : "NonConsumable"
+    },
+    {
+      "displayPrice" : "3.49",
+      "familyShareable" : false,
+      "internalID" : "6755000003",
+      "localizations" : [
+        { "description" : "Unlock TextFox once, early-bird price.", "displayName" : "Unlock TextFox (early bird)", "locale" : "en_US" }
+      ],
+      "productID" : "textfox_unlock_earlybird",
+      "referenceName" : "Unlock TextFox Early Bird",
+      "type" : "NonConsumable"
+    }
+  ],
+  "settings" : {
+    "_applicationInternalID" : "6755000000",
+    "_developerTeamID" : "F545QS7GV6",
+    "_failTransactionsEnabled" : false,
+    "_locale" : "en_US",
+    "_storefront" : "USA",
+    "_storeKitErrors" : [ ]
+  },
+  "subscriptionGroups" : [ ],
+  "version" : { "major" : 4, "minor" : 0 }
+}

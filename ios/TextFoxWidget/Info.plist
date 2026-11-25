@@ -25,5 +25,12 @@
 		<key>NSExtensionPointIdentifier</key>
 		<string>com.apple.widgetkit-extension</string>
 	</dict>
+	<key>UIAppFonts</key>
+	<array>
+		<string>DMSans-Regular.ttf</string>
+		<string>DMSans-Medium.ttf</string>
+		<string>JetBrainsMono-Regular.ttf</string>
+		<string>JetBrainsMono-Medium.ttf</string>
+	</array>
 </dict>
 </plist>

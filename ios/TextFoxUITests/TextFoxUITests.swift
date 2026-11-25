@@ -8,8 +8,16 @@ final class TextFoxUITests: XCTestCase {
     override func setUp() {
         continueAfterFailure = false
         app = XCUIApplication()
-        app.launchArguments = ["-resetData", "YES"]
+        app.launchArguments = ["-resetData", "YES", "-paywall", "NO", "-skipIntro", "YES"]
         app.launch()
+        allowNotifications()
+    }
+
+    /// The first launch asks for notifications (the demo has scheduled macros); say yes.
+    private func allowNotifications() {
+        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        let allow = springboard.buttons["Allow"]
+        if allow.waitForExistence(timeout: 3) { allow.tap() }
     }
 
     private func shot(_ name: String) {
@@ -90,12 +98,13 @@ final class TextFoxUITests: XCTestCase {
 
         // Saving an empty form lists what's missing.
         app.buttons["Save"].tap()
-        app.swipeUp(); app.swipeUp(); app.swipeUp()
+        for _ in 0..<5 { app.swipeUp() }
         XCTAssertTrue(app.staticTexts["Give the macro a name"].waitForExistence(timeout: 2))
         shot("20-new-problems")
-        app.swipeDown(); app.swipeDown(); app.swipeDown()
-
+        // Scroll back up only until the name field shows (one swipe too many would close the sheet).
         let name = app.textFields["nameField"]
+        for _ in 0..<6 where !name.isHittable { app.swipeDown(velocity: .slow) }
+
         name.tap(); name.typeText("Hello Dad")
         app.buttons["Manual"].tap()
         let number = app.textFields["number0"]
@@ -119,7 +128,10 @@ final class TextFoxUITests: XCTestCase {
     }
 
     func testSendNowLogsInTheSimulator() {
-        app.staticTexts["Running late"].press(forDuration: 1.0)
+        let card = app.staticTexts["Running late"]
+        XCTAssertTrue(card.waitForExistence(timeout: 5))
+        card.press(forDuration: 1.5)
+        if !app.buttons["Send now"].waitForExistence(timeout: 2) { card.press(forDuration: 1.5) }
         app.buttons["Send now"].tap()
         // The simulator has no Messages, so the attempt is logged as failed.
         app.buttons["Log"].tap()
@@ -128,5 +140,113 @@ final class TextFoxUITests: XCTestCase {
         app.buttons["Settings"].tap()
         XCTAssertTrue(app.staticTexts["Quiet hours"].waitForExistence(timeout: 2))
         shot("31-settings")
+        app.buttons["How to set it up"].tap()
+        XCTAssertTrue(app.staticTexts["Auto-reply"].waitForExistence(timeout: 3))
+        shot("32-shortcuts-guide")
+        app.buttons["Done"].tap()
+    }
+
+    func testScheduledNotificationIsDelivered() {
+        XCTAssertTrue(app.staticTexts["Good morning, Mom"].waitForExistence(timeout: 5))
+        // Debug link: a send notification for this macro in 3 seconds.
+        app.terminate()
+        app.launchArguments = ["-paywall", "NO", "-skipIntro", "YES", "-open", "textfox://test-fire/Running late"]
+        app.launch()
+        XCUIDevice.shared.press(.home)
+        sleep(6)
+        // Open Notification Center (swipe down from the top) and find it.
+        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        springboard.coordinate(withNormalizedOffset: CGVector(dx: 0.2, dy: 0.005))
+            .press(forDuration: 0.1, thenDragTo: springboard.coordinate(withNormalizedOffset: CGVector(dx: 0.2, dy: 0.7)))
+        let note = springboard.descendants(matching: .any)
+            .matching(NSPredicate(format: "label CONTAINS %@", "Running about 10 minutes late")).firstMatch
+        XCTAssertTrue(note.waitForExistence(timeout: 8))
+        shot("40-notification")
+        XCUIDevice.shared.press(.home)
+    }
+
+    func testNotificationSendAndSkipAreLogged() {
+        XCTAssertTrue(app.staticTexts["Good morning, Mom"].waitForExistence(timeout: 5))
+        app.terminate()
+        // (Names without apostrophes: the test runner escapes them in launch arguments.)
+        app.launchArguments = ["-paywall", "NO", "-skipIntro", "YES", "-open", "textfox://test-tap/Running late"]
+        app.launch()
+        // The link is handled on appear (and switches to the list); wait for that before opening the log.
+        XCTAssertTrue(app.staticTexts["Running late"].waitForExistence(timeout: 5))
+        sleep(1)
+        // The simulator can't send texts, so Send logs the planned send as failed.
+        app.buttons["Log"].tap()
+        XCTAssertTrue(app.staticTexts["FAILED · Running late"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["This device can't send text messages"].exists)
+        app.terminate()
+        app.launchArguments = ["-paywall", "NO", "-skipIntro", "YES", "-open", "textfox://test-skip/Good morning, Mom"]
+        app.launch()
+        sleep(2)
+        app.buttons["Log"].tap()
+        XCTAssertTrue(app.staticTexts["Skipped"].waitForExistence(timeout: 5))
+        shot("41-notification-logged")
+    }
+
+    func testPaywallAsksToStartTheTrial() {
+        app.terminate()
+        app.launchArguments = ["-resetData", "YES", "-paywall", "YES", "-skipIntro", "YES"]
+        app.launch()
+        XCTAssertTrue(app.staticTexts["Start your free 30-day trial to run your macros."].waitForExistence(timeout: 5))
+        shot("50-trial-banner")
+        // A run before the trial opens the unlock sheet instead of sending.
+        let card = app.staticTexts["Running late"]
+        card.press(forDuration: 1.5)
+        if !app.buttons["Send now"].waitForExistence(timeout: 2) { card.press(forDuration: 1.5) }
+        app.buttons["Send now"].tap()
+        XCTAssertTrue(app.staticTexts["Try TextFox free for 30 days"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.buttons["Start 30-day free trial"].exists)
+        shot("51-unlock-sheet")
+    }
+
+    func testIntroAndFirstLaunchGuide() {
+        app.terminate()
+        app.launchArguments = ["-resetData", "YES", "-paywall", "NO"]
+        app.launch()
+        allowNotifications()
+        XCTAssertTrue(app.staticTexts["Meet TextFox"].waitForExistence(timeout: 8))
+        shot("60-onboarding")
+        for _ in 0..<3 { app.buttons["Next"].tap() }
+        XCTAssertTrue(app.staticTexts["Free for 30 days"].waitForExistence(timeout: 3))
+        app.buttons["Let's go"].tap()
+        XCTAssertTrue(app.staticTexts["Good morning, Mom"].waitForExistence(timeout: 5))
+        // Seen once: the next launch goes straight to the list after the fox.
+        app.terminate()
+        app.launchArguments = ["-paywall", "NO"]
+        app.launch()
+        XCTAssertTrue(app.staticTexts["Good morning, Mom"].waitForExistence(timeout: 8))
+        XCTAssertFalse(app.staticTexts["Meet TextFox"].exists)
+    }
+
+    /// App Store screenshots; runs only from scripts/screenshots.sh (which sets STORE_SHOTS).
+    func testAppStoreScreenshots() throws {
+        try XCTSkipUnless(ProcessInfo.processInfo.environment["STORE_SHOTS"] != nil, "Only for scripts/screenshots.sh")
+        XCTAssertTrue(app.staticTexts["Good morning, Mom"].waitForExistence(timeout: 5))
+        sleep(1)
+        shot("1-macros")
+        app.staticTexts["Good morning, Mom"].tap()
+        XCTAssertTrue(app.staticTexts["MACRO"].waitForExistence(timeout: 3))
+        sleep(1)
+        shot("2-editor")
+        app.swipeUp(); app.swipeUp(); app.swipeUp()
+        sleep(1)
+        shot("3-message-ai")
+        app.buttons["Cancel"].tap()
+        app.terminate()
+        app.launchArguments = ["-paywall", "NO", "-skipIntro", "YES", "-open", "textfox://widget-preview"]
+        app.launch()
+        sleep(2)
+        shot("4-widgets")
+        app.terminate()
+        app.launchArguments = ["-paywall", "NO", "-skipIntro", "YES", "-open", "textfox://settings"]
+        app.launch()
+        XCTAssertTrue(app.buttons["How to set it up"].waitForExistence(timeout: 5))
+        app.buttons["How to set it up"].tap()
+        sleep(1)
+        shot("5-shortcuts")
     }
 }

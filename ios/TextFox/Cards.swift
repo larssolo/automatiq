@@ -1,62 +1,6 @@
 import SwiftUI
 import TextFoxCore
 
-extension TriggerType {
-    var icon: String {
-        switch self {
-        case .scheduled: "clock"
-        case .manual: "hand.tap"
-        case .incoming: "arrowshape.turn.up.left.fill"
-        case .location: "mappin.and.ellipse"
-        case .charging: "battery.100percent.bolt"
-        case .bluetooth: "antenna.radiowaves.left.and.right"
-        case .wifi: "wifi"
-        case .missedCall: "phone.arrow.down.left"
-        }
-    }
-
-    var label: String {
-        switch self {
-        case .scheduled: "Scheduled"
-        case .manual: "Manual"
-        case .incoming: "Auto-reply"
-        case .location: "Location"
-        case .charging: "Charging"
-        case .bluetooth: "Bluetooth"
-        case .wifi: "Wi-Fi"
-        case .missedCall: "Missed call"
-        }
-    }
-}
-
-extension ActionType {
-    var icon: String {
-        switch self {
-        case .sms: "message.fill"
-        case .sound: "speaker.wave.2.fill"
-        case .reminder: "bell.badge.fill"
-        case .webhook: "link"
-        }
-    }
-
-    var label: String {
-        switch self {
-        case .sms: "Send SMS"
-        case .sound: "Sound mode"
-        case .reminder: "Reminder"
-        case .webhook: "Webhook"
-        }
-    }
-}
-
-extension Macro {
-    var accent: Color { Color(argb: accentColor) }
-    /// The card shows the trigger's icon for texts and the action's icon for everything else.
-    var cardIcon: String {
-        actionType == .sms || [.manual, .incoming, .missedCall].contains(triggerType) ? triggerType.icon : actionType.icon
-    }
-}
-
 /// One macro in the list: the breathing edge, the kind icon, name, summary, next run, AI mark and switch.
 struct MacroCard: View {
     let macro: Macro
@@ -98,7 +42,7 @@ struct MacroCard: View {
         .background(
             LinearGradient(colors: [accent.opacity(0.13), accent.opacity(0.02)], startPoint: .leading, endPoint: .trailing)
         )
-        .background(Brand.surface.opacity(0.94))
+        .background(Brand.surface.opacity(Look.current.cardOpacity))
         .clipShape(LeafShape())
         .contentShape(LeafShape())
     }
@@ -129,7 +73,7 @@ struct FolderCard: View {
     let activeCount: Int
 
     var body: some View {
-        let accent = Color(argb: folder.cardColor == 0 ? cardColorPalette[3] : folder.cardColor)
+        let accent = Look.current.accent(Color(argb: folder.cardColor == 0 ? cardColorPalette[3] : folder.cardColor))
         VStack(spacing: 0) {
             Color.clear.frame(height: FolderTabShape.tabHeight)
             HStack(spacing: 0) {
@@ -162,7 +106,7 @@ struct FolderCard: View {
         .background(
             LinearGradient(colors: [accent.opacity(0.16), accent.opacity(0.03)], startPoint: .leading, endPoint: .trailing)
         )
-        .background(Brand.surface.opacity(0.94))
+        .background(Brand.surface.opacity(Look.current.cardOpacity))
         .clipShape(FolderTabShape())
         .contentShape(FolderTabShape())
     }

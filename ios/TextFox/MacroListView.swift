@@ -32,6 +32,10 @@ struct MacroListView: View {
     var body: some View {
         VStack(spacing: 0) {
             header
+            LicenseBanner { app.showUnlock = true }
+            if app.notificationStatus == .denied && store.macros.contains(where: { $0.enabled && $0.triggerType == .scheduled }) {
+                notificationsOffBanner
+            }
             content
         }
         .overlay(alignment: .bottom) { if !reordering { addButton.padding(.bottom, 14) } }
@@ -122,6 +126,25 @@ struct MacroListView: View {
         .padding(.top, 6)
     }
 
+    private var notificationsOffBanner: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "bell.slash.fill").foregroundStyle(Brand.amber)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Notifications are off").font(.sans(15, medium: true)).foregroundStyle(Brand.onSurface)
+                Text("Scheduled macros can't tell you when it's time to send.").font(.sans(12)).foregroundStyle(Brand.mute)
+            }
+            Spacer(minLength: 0)
+            Button("Turn on") { app.openSystemSettings() }
+                .font(.sans(14, medium: true)).foregroundStyle(.black)
+                .padding(.horizontal, 12).padding(.vertical, 6)
+                .background(Capsule().fill(Brand.amber))
+        }
+        .padding(12)
+        .background(RoundedRectangle(cornerRadius: 14).fill(Brand.amber.opacity(0.12)))
+        .padding(.horizontal, 10)
+        .padding(.top, 6)
+    }
+
     // MARK: List
 
     @ViewBuilder private var content: some View {
@@ -175,7 +198,7 @@ struct MacroListView: View {
     }
 
     private func macroRow(_ m: Macro, inFolder folder: Folder?) -> some View {
-        MacroCard(macro: m, veinColor: folder.map { Color(argb: $0.cardColor) }) { store.setEnabled(m, $0) }
+        MacroCard(macro: m, veinColor: folder.map { Look.current.accent(Color(argb: $0.cardColor)) }) { store.setEnabled(m, $0) }
             .padding(.leading, folder != nil && !searching ? 16 : 0)
             .onTapGesture { app.editor = .edit(m.id) }
             .contextMenu {

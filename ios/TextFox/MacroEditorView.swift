@@ -22,6 +22,10 @@ struct MacroEditorView: View {
     @State private var contactIndex: Int?
     @State private var locating = false
     /// Until a place is chosen the map shows Denmark.
+    @State private var guide = false
+    @State private var aiWrite = false
+    @State private var aiPreview: String?
+    @State private var aiPreviewBusy = false
     @State private var camera: MapCameraPosition = .region(MKCoordinateRegion(
         center: .init(latitude: 56.0, longitude: 10.5), latitudinalMeters: 450_000, longitudinalMeters: 450_000))
     @FocusState private var messageFocused: Bool
@@ -32,7 +36,7 @@ struct MacroEditorView: View {
     }
 
     private var existing: Macro? { if case .edit(let id) = target { store.macro(id: id) } else { nil } }
-    private var accent: Color { Color(argb: d.cardColor) }
+    private var accent: Color { Look.current.accent(Color(argb: d.cardColor)) }
     private var hasChanges: Bool { loaded && d != baseline }
     private var today: CivilDate { CivilDate(Date(), in: .current) }
 
@@ -64,6 +68,8 @@ struct MacroEditorView: View {
         .interactiveDismissDisabled(hasChanges)
         .onAppear(perform: load)
         .sheet(item: $sheet) { which in pickerSheet(which) }
+        .sheet(isPresented: $guide) { ShortcutsGuideView(focus: d.triggerType) }
+        .sheet(isPresented: $aiWrite) { AIWriteSheet { d.message = $0 } }
         .sheet(item: Binding(get: { contactIndex.map(IdentifiedInt.init) }, set: { contactIndex = $0?.value })) { i in
             ContactPicker { number in
                 if d.recipients.indices.contains(i.value) { d.recipients[i.value] = number }
@@ -104,6 +110,7 @@ struct MacroEditorView: View {
         }
         let m = d.toMacro(id: d.id ?? UUID().uuidString, today: today)
         store.upsert(m)
+        if m.triggerType == .location { Scheduler.askForLocationIfNeeded() }
         UINotificationFeedbackGenerator().notificationOccurred(.success)
         dismiss()
     }
@@ -154,7 +161,7 @@ struct MacroEditorView: View {
                     let on = c == d.cardColor
                     Button { d.cardColor = c } label: {
                         ZStack {
-                            Circle().fill(Color(argb: c))
+                            Circle().fill(Look.current.accent(Color(argb: c)))
                             if on {
                                 Circle().stroke(.white, lineWidth: 2.5)
                                 Image(systemName: "checkmark").font(.system(size: 12, weight: .bold)).foregroundStyle(.black)
@@ -214,6 +221,11 @@ struct MacroEditorView: View {
             if d.daysOfWeek.isEmpty { Text("Pick at least one day").font(.sans(12)).foregroundStyle(Brand.red) }
         }
         nextRunPreview
+        HStack(spacing: 6) {
+            Image(systemName: "bell.badge").foregroundStyle(Brand.mute)
+            Text("A notification asks you to send.").font(.sans(13)).foregroundStyle(Brand.mute)
+            Button("Send without a tap") { guide = true }.font(.sans(13, medium: true)).foregroundStyle(Brand.green)
+        }
         moreOptions
     }
 
@@ -320,7 +332,8 @@ struct MacroEditorView: View {
     }
 
     @ViewBuilder private var replyFields: some View {
-        Hint("Answers texts that match. On iPhone this runs through a Shortcuts automation (“When I get a message”) — TextFox will guide you through setting it up.")
+        Hint("Answers texts that match. On iPhone this runs through a Shortcuts automation (“When I get a message”).")
+        Button("How to set it up") { guide = true }.font(.sans(14, medium: true)).foregroundStyle(Brand.green)
         FieldBox(label: "From (optional — blank = anyone)") {
             TextField("", text: $d.matchSender, prompt: Text("+45 12 34 56 78").foregroundStyle(Brand.mute.opacity(0.6)))
                 .keyboardType(.phonePad)
@@ -444,7 +457,7 @@ struct MacroEditorView: View {
     private var messageSection: some View {
         EditorSection(icon: "text.bubble", title: messageTitle, accent: accent) {
             if d.aiApplies {
-                Button { app.show("AI writing arrives with the Gemini key in Settings") } label: {
+                Button { aiWrite = true } label: {
                     Label("AI write", systemImage: "sparkles").font(.sans(14, medium: true)).foregroundStyle(Brand.green)
                 }
             }
@@ -517,6 +530,23 @@ struct MacroEditorView: View {
                     TextField("", text: $d.aiReplyInstruction, prompt: Text("e.g. warm and short, vary the wording").foregroundStyle(Brand.mute.opacity(0.6)),
                               axis: .vertical)
                         .lineLimit(2...5)
+                }
+                if !d.isReply {
+                    OutlineButton(title: aiPreviewBusy ? "Writing…" : "Preview AI variation", color: Brand.green) {
+                        aiPreviewBusy = true
+                        Task {
+                            var m = d.toMacro(id: d.id ?? "preview", today: today)
+                            m.aiReplyEnabled = true
+                            let (text, note) = await AI.text(for: m)
+                            aiPreview = note.map { "\(text)\n\n\($0)" } ?? text
+                            aiPreviewBusy = false
+                        }
+                    }
+                    .disabled(d.message.isEmpty || aiPreviewBusy)
+                    if let aiPreview { Text(aiPreview).font(.sans(15)).foregroundStyle(Brand.onSurface) }
+                }
+                if !AI.ready {
+                    Hint(GeminiKey.value.isEmpty ? "Add your free Gemini key in Settings → AI." : "Switch on “Allow AI” in Settings → AI.").foregroundStyle(Brand.amber)
                 }
             }
         }

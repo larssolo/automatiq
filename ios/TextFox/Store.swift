@@ -1,6 +1,7 @@
 import Foundation
 import Observation
 import TextFoxCore
+import WidgetKit
 
 /// One line in the log: what ran, when, and how it went.
 struct LogEntry: Codable, Identifiable, Hashable {
@@ -11,6 +12,8 @@ struct LogEntry: Codable, Identifiable, Hashable {
     var status: MacroStatus
     var text: String
     var detail: String?
+    /// The planned send this entry is about, so tapping Send later updates the same line.
+    var fireId: String?
 }
 
 /// App-wide settings that live next to the macros (and travel in the backup's settings map).
@@ -19,12 +22,34 @@ struct AppSettings: Codable, Hashable {
     /// Minutes after midnight.
     var quietStart = 22 * 60
     var quietEnd = 7 * 60
+    /// The user agreed that message text may be sent to Google Gemini.
+    var aiConsent = false
+    var geminiModel = defaultGeminiModel
+    /// The first-launch guide has been seen.
+    var onboarded = false
+
+    init() {}
+
+    // Older files don't have the AI fields.
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        quietHoursEnabled = try c.decodeIfPresent(Bool.self, forKey: .quietHoursEnabled) ?? false
+        quietStart = try c.decodeIfPresent(Int.self, forKey: .quietStart) ?? 22 * 60
+        quietEnd = try c.decodeIfPresent(Int.self, forKey: .quietEnd) ?? 7 * 60
+        aiConsent = try c.decodeIfPresent(Bool.self, forKey: .aiConsent) ?? false
+        geminiModel = try c.decodeIfPresent(String.self, forKey: .geminiModel) ?? defaultGeminiModel
+        onboarded = try c.decodeIfPresent(Bool.self, forKey: .onboarded) ?? false
+    }
 }
 
 /// Everything the app stores, as one JSON file in the App Group so the widget and the Shortcuts
 /// actions can read the same macros. The macros and folders use the Android backup format.
 @MainActor @Observable
 final class MacroStore {
+    /// The one store of the app process; the app's screens and the Shortcuts actions both use it,
+    /// so nothing writes over the other's changes.
+    static let shared = MacroStore()
+
     private(set) var macros: [Macro] = []
     private(set) var folders: [Folder] = []
     private(set) var log: [LogEntry] = []
@@ -40,9 +65,12 @@ final class MacroStore {
     private let url: URL
 
     init(fileName: String = "textfox.json") {
-        let dir = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.app.kodekid.textfox")
-            ?? FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-        url = dir.appendingPathComponent(fileName)
+        url = textFoxStoreURL(fileName: fileName)
+        // Earlier builds without the App Group kept the file in Documents; bring it along once.
+        let old = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent(fileName)
+        if old != url, !FileManager.default.fileExists(atPath: url.path), FileManager.default.fileExists(atPath: old.path) {
+            try? FileManager.default.moveItem(at: old, to: url)
+        }
         #if DEBUG
         // UI tests start from the demo data every time.
         if UserDefaults.standard.bool(forKey: "resetData") { try? FileManager.default.removeItem(at: url) }
@@ -76,6 +104,7 @@ final class MacroStore {
         do {
             let data = try JSONEncoder().encode(s)
             try data.write(to: url, options: .atomic)
+            WidgetCenter.shared.reloadAllTimelines()
         } catch {
             assertionFailure("save failed: \(error)")
         }
@@ -88,6 +117,7 @@ final class MacroStore {
     /// Insert or replace. A new macro goes to the top of the list (or of its folder).
     func upsert(_ macro: Macro) {
         var m = macro
+        m.lastScheduledFireAt = Int64(Date().timeIntervalSince1970 * 1000)
         if let i = macros.firstIndex(where: { $0.id == m.id }) {
             macros[i] = m
         } else {
@@ -117,6 +147,7 @@ final class MacroStore {
         copy.lastTriggeredAt = nil
         copy.lastStatus = nil
         copy.createdAt = Int64(Date().timeIntervalSince1970 * 1000)
+        copy.lastScheduledFireAt = copy.createdAt
         // Right below the original.
         copy.sortOrder = macro.sortOrder
         macros.append(copy)
@@ -126,6 +157,7 @@ final class MacroStore {
     func setEnabled(_ macro: Macro, _ on: Bool) {
         guard let i = macros.firstIndex(where: { $0.id == macro.id }) else { return }
         macros[i].enabled = on
+        if on { macros[i].lastScheduledFireAt = Int64(Date().timeIntervalSince1970 * 1000) }
         save()
     }
 
@@ -166,7 +198,11 @@ final class MacroStore {
     }
 
     func setAllEnabled(in folder: Folder, _ on: Bool) {
-        for i in macros.indices where macros[i].folderId == folder.id { macros[i].enabled = on }
+        let now = Int64(Date().timeIntervalSince1970 * 1000)
+        for i in macros.indices where macros[i].folderId == folder.id {
+            if on && !macros[i].enabled { macros[i].lastScheduledFireAt = now }
+            macros[i].enabled = on
+        }
         save()
     }
 
@@ -229,8 +265,17 @@ final class MacroStore {
 
     // MARK: Log
 
-    func record(_ macro: Macro, status: MacroStatus, text: String, detail: String? = nil) {
-        log.insert(LogEntry(macroId: macro.id, macroName: macro.name, at: Date(), status: status, text: text, detail: detail), at: 0)
+    /// Adds a log line, or updates the line for the same planned send.
+    func record(_ macro: Macro, status: MacroStatus, text: String, detail: String? = nil,
+                at: Date = Date(), fireId: String? = nil) {
+        let entry = LogEntry(macroId: macro.id, macroName: macro.name, at: at, status: status, text: text, detail: detail, fireId: fireId)
+        if let fireId, let i = log.firstIndex(where: { $0.fireId == fireId }) {
+            log[i] = LogEntry(id: log[i].id, macroId: entry.macroId, macroName: entry.macroName, at: log[i].at,
+                              status: status, text: text, detail: detail, fireId: fireId)
+        } else {
+            log.insert(entry, at: 0)
+            log.sort { $0.at > $1.at }
+        }
         if let i = macros.firstIndex(where: { $0.id == macro.id }) {
             macros[i].lastTriggeredAt = Int64(Date().timeIntervalSince1970 * 1000)
             macros[i].lastStatus = status
@@ -239,6 +284,13 @@ final class MacroStore {
     }
 
     func clearLog() { log.removeAll(); save() }
+
+    /// Scheduled sends up to [at] are handled (logged); the catch-up starts after this next time.
+    func markScheduled(_ macro: Macro, at: Date) {
+        guard let i = macros.firstIndex(where: { $0.id == macro.id }) else { return }
+        macros[i].lastScheduledFireAt = Int64(at.timeIntervalSince1970 * 1000)
+        save()
+    }
 
     // MARK: Backup
 

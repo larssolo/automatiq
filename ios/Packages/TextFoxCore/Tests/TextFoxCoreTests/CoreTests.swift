@@ -319,3 +319,102 @@ func at(_ y: Int, _ m: Int, _ d: Int, _ h: Int, _ min: Int = 0) -> Date {
         #expect(m.recipients.isEmpty && m.matchKeyword == "hello" && m.scheduledTime == nil)
     }
 }
+
+@Suite struct PlannerTests {
+    func daily(_ id: String, _ time: String) -> Macro {
+        Macro(id: id, name: id, triggerType: .scheduled, scheduledTime: time, recipients: ["12345678"], messageBody: "x")
+    }
+
+    @Test func upcomingFiresStepForward() {
+        let fires = daily("a", "08:00").upcomingFires(after: at(2026, 11, 24, 9), count: 3, timeZone: cph)
+        #expect(fires == [at(2026, 11, 25, 8), at(2026, 11, 26, 8), at(2026, 11, 27, 8)])
+        var off = daily("b", "08:00"); off.enabled = false
+        #expect(off.upcomingFires(after: at(2026, 11, 24, 9), count: 3, timeZone: cph).isEmpty)
+    }
+
+    @Test func oneOffFiresOnce() {
+        var m = daily("o", "10:00")
+        m.repeatDaily = false; m.anchorEpochDay = CivilDate(year: 2026, month: 11, day: 26).epochDay
+        m.validUntilEpochDay = m.anchorEpochDay; m.daysOfWeek = [4]
+        #expect(m.upcomingFires(after: at(2026, 11, 24, 9), count: 5, timeZone: cph) == [at(2026, 11, 26, 10)])
+    }
+
+    @Test func budgetGivesEveryMacroItsNextSend() {
+        var busy = (0..<10).map { daily("busy\($0)", String(format: "%02d:00", 8 + $0)) }
+        busy.append(daily("late", "23:30"))
+        let plan = planFires(busy, after: at(2026, 11, 24, 7), budget: 11, timeZone: cph)
+        #expect(plan.count == 11)
+        #expect(plan.contains { $0.macroId == "late" })
+        #expect(plan == plan.sorted { $0.at < $1.at })
+        let p = plan[0]
+        #expect(PlannedFire(id: p.id) == p)
+    }
+}
+
+@Suite struct DueFireTests {
+    @Test func listsWhatCameDue() {
+        let m = Macro(id: "a", name: "a", triggerType: .scheduled, scheduledTime: "08:00", recipients: [], messageBody: "x")
+        #expect(m.dueFires(since: at(2026, 11, 24, 9), until: at(2026, 11, 26, 8, 30), timeZone: cph)
+                == [at(2026, 11, 25, 8), at(2026, 11, 26, 8)])
+        #expect(m.dueFires(since: at(2026, 11, 1, 9), until: at(2026, 11, 26, 9), limit: 2, timeZone: cph).count == 2)
+        #expect(m.dueFires(since: at(2026, 11, 26, 9), until: at(2026, 11, 26, 9), timeZone: cph).isEmpty)
+    }
+}
+
+@Suite struct SharedStoreTests {
+    @Test func readsTheAppFileAndPicksTheReply() throws {
+        var reply = Macro(id: "r", name: "Away", triggerType: .incoming, recipients: [], messageBody: "Back Monday")
+        reply.matchKeyword = "meeting"
+        let other = Macro(id: "m", name: "Late", triggerType: .manual, recipients: ["1"], messageBody: "x")
+        let json = try JSONEncoder().encode(["macros": [reply, other]])
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("tf-\(UUID()).json")
+        try json.write(to: url)
+        let stored = StoredMacros.load(from: url)
+        #expect(stored.macros.count == 2)
+        #expect(Macro.replyMacro(in: stored.macros, sender: "+4511", body: "About the meeting")?.id == "r")
+        #expect(Macro.replyMacro(in: stored.macros, sender: "+4511", body: "Hi") == nil)
+        #expect(StoredMacros.load(from: url.appendingPathExtension("missing")).macros.isEmpty)
+    }
+}
+
+@Suite struct GeminiTests {
+    @Test func requestShape() throws {
+        let body = try geminiRequestBody(system: "S", user: "U", model: "gemini-3.6-flash", maxTokens: 300)
+        let json = try JSONSerialization.jsonObject(with: body) as! [String: Any]
+        let config = json["generationConfig"] as! [String: Any]
+        #expect(config["maxOutputTokens"] as? Int == 300)
+        #expect((config["thinkingConfig"] as? [String: Any])?["thinkingLevel"] as? String == "minimal")
+        let low = try JSONSerialization.jsonObject(with: geminiRequestBody(system: "", user: "U", model: "gemini-3.8-flash", maxTokens: 300)) as! [String: Any]
+        #expect((low["generationConfig"] as! [String: Any])["maxOutputTokens"] as? Int == 1324)
+        #expect(low["systemInstruction"] == nil)
+    }
+
+    @Test func parsesAnswersAndErrors() throws {
+        let ok = #"{"candidates":[{"content":{"parts":[{"text":" Hej mor! \n"}],"role":"model"}}]}"#
+        #expect(try parseGeminiResponse(Data(ok.utf8)) == "Hej mor!")
+        #expect(throws: GeminiError.empty) { try parseGeminiResponse(Data(#"{"candidates":[]}"#.utf8)) }
+        #expect(extractGeminiError(Data(#"{"error":{"message":"API key not valid"}}"#.utf8)) == "API key not valid")
+        #expect(parseSuggestions("1. Hi\n2. Hello there\n3. Hey") == ["Hi", "Hello there", "Hey"])
+        #expect(parseSuggestions("Just one") == ["Just one"])
+        #expect(resolveGeminiModel("gemini-2.0-flash") == defaultGeminiModel)
+        #expect(resolveGeminiModel(" my-model ") == "my-model")
+    }
+
+    @Test func fallsBackOnQuotaButNotOnABadKey() async throws {
+        var tried: [String] = []
+        let r = try await generateWithFallback(fallbackChain("gemini-3.8-flash")) { m in
+            tried.append(m)
+            if m != "gemini-3.5-flash-lite" { throw GeminiError.http(429, "quota") }
+            return "ok"
+        }
+        #expect(r == GeminiResult(text: "ok", model: "gemini-3.5-flash-lite"))
+        #expect(tried == ["gemini-3.8-flash", "gemini-3.6-flash", "gemini-3.5-flash-lite"])
+
+        await #expect(throws: GeminiError.http(400, "bad key")) {
+            try await generateWithFallback(["a", "b"]) { _ in throw GeminiError.http(400, "bad key") }
+        }
+        await #expect(throws: GeminiError.allModelsFailed(allQuota: true)) {
+            try await generateWithFallback(["a", "b"]) { _ in throw GeminiError.http(429, "") }
+        }
+    }
+}

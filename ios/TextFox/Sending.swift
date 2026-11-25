@@ -9,12 +9,25 @@ struct OutgoingMessage: Identifiable {
     let macro: Macro
     let body: String
     let recipients: [String]
+    /// The planned send this is for, when it came from a notification.
+    var fireId: String? = nil
+    /// How the text came about (e.g. "AI · gemini-3.6-flash"), for the log.
+    var note: String? = nil
 
-    /// The macro's message with the variables filled in for right now.
-    init(macro: Macro, now: Date = Date()) {
+    /// The macro's message with the variables filled in for [now] (the send time for a notification).
+    init(macro: Macro, now: Date = Date(), fireId: String? = nil) {
         self.macro = macro
+        self.fireId = fireId
         self.body = expandTemplate(macro.messageBody, now: now, macroName: macro.name,
                                    locale: Locale(identifier: "en_GB"))
+        self.recipients = macro.recipients
+    }
+
+    /// A message with its text already decided (e.g. written by AI).
+    init(macro: Macro, body: String, fireId: String? = nil) {
+        self.macro = macro
+        self.fireId = fireId
+        self.body = body
         self.recipients = macro.recipients
     }
 
