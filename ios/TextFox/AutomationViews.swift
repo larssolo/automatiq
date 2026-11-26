@@ -36,11 +36,14 @@ struct AutomationSection: View {
             OutlineButton(title: "Auto-replies and other triggers", color: Brand.green) { sheet = .guide }
         }
         .sheet(item: $sheet) { s in
-            switch s {
-            case .shortcut: AutomationStepsView(title: "TextFox Send", steps: buildSteps)
-            case .time(let t): AutomationStepsView(title: "Automation at \(t)", steps: timeSteps(t))
-            case .guide: ShortcutsGuideView(focus: .incoming)
+            Group {
+                switch s {
+                case .shortcut: AutomationStepsView(title: "TextFox Send", steps: buildSteps) { sheet = nil }
+                case .time(let t): AutomationStepsView(title: "Automation at \(t)", steps: timeSteps(t)) { sheet = nil }
+                case .guide: ShortcutsGuideView(focus: .incoming)
+                }
             }
+            .id(s.id)
         }
     }
 
@@ -118,9 +121,9 @@ enum AutomationSheet: Identifiable {
 
 /// Numbered steps with a button that opens Shortcuts.
 struct AutomationStepsView: View {
-    @Environment(\.dismiss) private var dismiss
     let title: String
     let steps: [String]
+    let close: () -> Void
 
     var body: some View {
         NavigationStack {
@@ -147,7 +150,7 @@ struct AutomationStepsView: View {
             .background(Brand.sheet)
             .navigationTitle(title)
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
+            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done", action: close) } }
         }
     }
 }

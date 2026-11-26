@@ -140,9 +140,23 @@ final class TextFoxUITests: XCTestCase {
         app.buttons["Settings"].tap()
         XCTAssertTrue(app.staticTexts["Quiet hours"].waitForExistence(timeout: 2))
         shot("31-settings")
-        app.buttons["How to set it up"].tap()
+        // Send automatically: the shortcut steps, then the steps for one of the demo times.
+        app.buttons["How"].tap()
+        XCTAssertTrue(app.staticTexts["TextFox Send"].waitForExistence(timeout: 3))
+        shot("32-shortcut-steps")
+        app.buttons["Done"].tap()
+        sleep(1)
+        app.buttons["Add"].firstMatch.tap()
+        XCTAssertTrue(app.navigationBars.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'Automation at'")).firstMatch.waitForExistence(timeout: 3))
+        sleep(1)
+        app.buttons["Done"].tap()
+        sleep(2)
+        // It sits low on the screen, behind the tab bar; scroll it up first.
+        app.swipeUp()
+        sleep(1)
+        app.buttons["Auto-replies and other triggers"].tap()
         XCTAssertTrue(app.staticTexts["Auto-reply"].waitForExistence(timeout: 3))
-        shot("32-shortcuts-guide")
+        shot("33-shortcuts-guide")
         app.buttons["Done"].tap()
     }
 
@@ -244,8 +258,8 @@ final class TextFoxUITests: XCTestCase {
         app.terminate()
         app.launchArguments = ["-paywall", "NO", "-skipIntro", "YES", "-open", "textfox://settings"]
         app.launch()
-        XCTAssertTrue(app.buttons["How to set it up"].waitForExistence(timeout: 5))
-        app.buttons["How to set it up"].tap()
+        XCTAssertTrue(app.buttons["Auto-replies and other triggers"].waitForExistence(timeout: 5))
+        app.buttons["Auto-replies and other triggers"].tap()
         sleep(1)
         shot("5-shortcuts")
     }
