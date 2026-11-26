@@ -61,24 +61,40 @@ enum Scheduler {
         let plan = access.canRun ? planFires(store.macros, after: now, budget: notificationBudget - places.count).filter { $0.at < end } : []
         // Sends Shortcuts already made (an automation can run a little before the time) aren't planned again.
         let sent = Set(store.log.filter { $0.status == .success }.compactMap(\.fireId))
-        let automated = Set(store.settings.automatedTimes.keys)
-        func isBackup(_ m: Macro) -> Bool { m.sendsText && m.scheduledTime.map(automated.contains) == true }
         let fires = plan.filter { !sent.contains($0.id) }.compactMap { f in store.macro(id: f.macroId).map { (f, $0) } }
-        let wanted = Set(fires.map(\.0.id) + places.map(locationId))
+        let autoSend = store.settings.notificationAutomationAt != nil
+        let wanted = Set(fires.map(\.0.id) + places.map { locationId($0, autoSend: autoSend) })
         let pendingRequests = await center.pendingNotificationRequests().filter { $0.identifier.hasPrefix("fire:") || $0.identifier.hasPrefix("loc:") }
-        // A send whose time got an automation since is planned again, as a backup.
-        let backupIds = Set(fires.filter { isBackup($0.1) }.map(\.0.id))
+        // A send whose kind of automation changed since is planned again in the new style.
+        let styles = Dictionary(fires.map { ($0.0.id, style(for: $0.1, store: store).rawValue) }, uniquingKeysWith: { a, _ in a })
         let stale = pendingRequests.filter { r in
-            !wanted.contains(r.identifier) || (r.identifier.hasPrefix("fire:") && (r.content.userInfo["backup"] as? Bool ?? false) != backupIds.contains(r.identifier))
+            !wanted.contains(r.identifier) || (r.identifier.hasPrefix("fire:") && (r.content.userInfo["style"] as? String ?? FireStyle.plain.rawValue) != styles[r.identifier])
         }.map(\.identifier)
         center.removePendingNotificationRequests(withIdentifiers: stale)
         let have = Set(pendingRequests.map(\.identifier)).subtracting(stale)
-        for macro in places where !have.contains(locationId(macro)) {
-            try? await center.add(locationRequest(for: macro))
+        for macro in places where !have.contains(locationId(macro, autoSend: autoSend)) {
+            try? await center.add(locationRequest(for: macro, autoSend: autoSend))
         }
         for (fire, macro) in fires where !have.contains(fire.id) {
-            try? await center.add(request(for: macro, at: fire, backup: isBackup(macro)))
+            try? await center.add(request(for: macro, at: fire, style: style(for: macro, store: store)))
         }
+    }
+
+    /// How a planned text's notification behaves, depending on the automation the user has.
+    enum FireStyle: String {
+        /// No automation: the notification asks you to tap Send.
+        case plain
+        /// The notification starts the "TextFox Send" shortcut (iOS 27), which sends and removes it.
+        case autoSend
+        /// A Time of Day automation sends it; the notification only comes 5 minutes later, if it didn't.
+        case backup
+    }
+
+    static func style(for macro: Macro, store: MacroStore) -> FireStyle {
+        guard macro.sendsText else { return .plain }
+        if store.settings.notificationAutomationAt != nil { return .autoSend }
+        if let t = macro.scheduledTime, store.settings.automatedTimes[t] != nil { return .backup }
+        return .plain
     }
 
     #if DEBUG
@@ -94,14 +110,15 @@ enum Scheduler {
     #endif
 
     /// The id carries what the region depends on, so moving the pin or radius replaces it.
-    static func locationId(_ m: Macro) -> String {
-        "loc:\(m.id):\(m.latitude ?? 0),\(m.longitude ?? 0),\(Int(m.radiusMeters ?? 200)),\(m.geofenceTransition ?? 1),\(stableHash(m.messageBody))"
+    static func locationId(_ m: Macro, autoSend: Bool) -> String {
+        "loc:\(m.id):\(m.latitude ?? 0),\(m.longitude ?? 0),\(Int(m.radiusMeters ?? 200)),\(m.geofenceTransition ?? 1),\(stableHash(m.messageBody))" + (autoSend ? ",a" : "")
     }
 
-    private static func locationRequest(for macro: Macro) -> UNNotificationRequest {
+    private static func locationRequest(for macro: Macro, autoSend: Bool) -> UNNotificationRequest {
         let content = UNMutableNotificationContent()
         content.title = macro.name
-        content.subtitle = (macro.geofenceTransition == 2 ? "You left · " : "You arrived · ") + "to " + macro.recipients.map(maskPhone).joined(separator: ", ")
+        let sending = autoSend && macro.actionType == .sms ? "sending automatically to " : "to "
+        content.subtitle = (macro.geofenceTransition == 2 ? "You left · " : "You arrived · ") + sending + macro.recipients.map(maskPhone).joined(separator: ", ")
         content.body = expandTemplate(macro.messageBody, now: Date(), macroName: macro.name, locale: Locale(identifier: "en_GB"))
         content.sound = .default
         content.categoryIdentifier = macro.actionType == .reminder ? "" : category
@@ -110,18 +127,16 @@ enum Scheduler {
                                       radius: max(macro.radiusMeters ?? 200, 100), identifier: macro.id)
         region.notifyOnEntry = macro.geofenceTransition != 2
         region.notifyOnExit = macro.geofenceTransition == 2
-        return UNNotificationRequest(identifier: locationId(macro), content: content,
+        return UNNotificationRequest(identifier: locationId(macro, autoSend: autoSend), content: content,
                                      trigger: UNLocationNotificationTrigger(region: region, repeats: true))
     }
 
-    /// [backup]: a Shortcuts automation sends this one, so the notification only comes a few
-    /// minutes later, if the automation didn't run (it removes the notification when it does).
-    private static func request(for macro: Macro, at fire: PlannedFire, backup: Bool = false) -> UNNotificationRequest {
+    private static func request(for macro: Macro, at fire: PlannedFire, style: FireStyle = .plain) -> UNNotificationRequest {
         let content = UNMutableNotificationContent()
         let text = expandTemplate(macro.messageBody, now: fire.at, macroName: macro.name, locale: Locale(identifier: "en_GB"))
         content.title = macro.name
         content.sound = .default
-        content.userInfo = ["macroId": macro.id, "at": fire.at.timeIntervalSince1970, "backup": backup]
+        content.userInfo = ["macroId": macro.id, "at": fire.at.timeIntervalSince1970, "style": style.rawValue]
         switch macro.actionType {
         case .reminder:
             content.body = text
@@ -129,13 +144,18 @@ enum Scheduler {
             content.body = "Tap to run the webhook"
             content.categoryIdentifier = category
         default:
-            content.subtitle = (backup ? "Shortcuts didn't send it · " : "") + "To " + macro.recipients.map(maskPhone).joined(separator: ", ")
+            let lead = switch style {
+            case .plain: "To "
+            case .autoSend: "Sending automatically to "
+            case .backup: "Shortcuts didn't send it · To "
+            }
+            content.subtitle = lead + macro.recipients.map(maskPhone).joined(separator: ", ")
             content.body = text
             content.categoryIdentifier = category
             content.interruptionLevel = .timeSensitive
         }
         let comps = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute, .second],
-                                                    from: fire.at.addingTimeInterval(backup ? 5 * 60 : 0))
+                                                    from: fire.at.addingTimeInterval(style == .backup ? 5 * 60 : 0))
         return UNNotificationRequest(identifier: fire.id, content: content,
                                      trigger: UNCalendarNotificationTrigger(dateMatching: comps, repeats: false))
     }
@@ -155,7 +175,15 @@ enum Scheduler {
                 } else if macro.actionType == .reminder {
                     store.record(macro, status: .success, text: text, detail: "Reminder", at: at, fireId: fire.id)
                 } else if !store.log.contains(where: { $0.fireId == fire.id }) {
-                    store.record(macro, status: .pending, text: text, detail: "Waiting for you — tap the notification to send", at: at, fireId: fire.id)
+                    // The notification should have started the shortcut. When it plainly didn't (the
+                    // shortcut was removed or its automation turned off), go back to tap-to-send.
+                    if let since = store.settings.notificationAutomationAt, macro.sendsText,
+                       at.timeIntervalSince1970 > since, now.timeIntervalSince(at) > 10 * 60 {
+                        store.settings.notificationAutomationAt = nil
+                        store.record(macro, status: .pending, text: text, detail: "Shortcuts didn't send it — tap the notification to send", at: at, fireId: fire.id)
+                    } else {
+                        store.record(macro, status: .pending, text: text, detail: "Waiting for you — tap the notification to send", at: at, fireId: fire.id)
+                    }
                 }
             }
             store.markScheduled(macro, at: now)

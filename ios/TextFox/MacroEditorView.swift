@@ -66,6 +66,7 @@ struct MacroEditorView: View {
             .toolbar { toolbar }
         }
         .interactiveDismissDisabled(hasChanges)
+        .presentsAppSheets(app)
         .onAppear(perform: load)
         .sheet(item: $sheet) { which in pickerSheet(which) }
         .sheet(isPresented: $guide) { ShortcutsGuideView(focus: d.triggerType) }
