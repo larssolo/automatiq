@@ -18,7 +18,7 @@ struct HealthSection: View {
             if store.macros.contains(where: { $0.triggerType == .location }) {
                 let ok = location == .authorizedWhenInUse || location == .authorizedAlways
                 row("Location", ok: ok, value: ok ? "On" : location == .denied ? "Off" : "Not asked yet",
-                    fix: ok ? nil : { app.openSystemSettings() })
+                    fix: ok ? nil : { fixLocation() })
             }
             row("Free trial / unlock", ok: Purchases.shared.access.canRun,
                 value: Purchases.shared.access.canRun ? "Running" : "Paused", fix: Purchases.shared.access.canRun ? nil : { app.showUnlock = true })
@@ -42,6 +42,23 @@ struct HealthSection: View {
         .task {
             pending = await UNUserNotificationCenter.current().pendingNotificationRequests().count
             location = CLLocationManager().authorizationStatus
+        }
+    }
+
+    /// Not asked yet: ask right here (TextFox has no Location row in Settings until it has asked).
+    /// Said no: open TextFox's own page in Settings, where Location now is.
+    private func fixLocation() {
+        guard location == .notDetermined else {
+            if let url = URL(string: UIApplication.openSettingsURLString) { UIApplication.shared.open(url) }
+            return
+        }
+        Scheduler.askForLocationIfNeeded()
+        Task {
+            for _ in 0..<120 where location == .notDetermined {
+                try? await Task.sleep(for: .milliseconds(500))
+                location = CLLocationManager().authorizationStatus
+            }
+            await app.refreshSchedule()
         }
     }
 
