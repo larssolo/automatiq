@@ -27,6 +27,8 @@ struct AppSettings: Codable, Hashable {
     var geminiModel = defaultGeminiModel
     /// The first-launch guide has been seen.
     var onboarded = false
+    /// Clock times ("08:00") whose Shortcuts automation has run, with when it last did (seconds).
+    var automatedTimes: [String: Double] = [:]
 
     init() {}
 
@@ -39,6 +41,7 @@ struct AppSettings: Codable, Hashable {
         aiConsent = try c.decodeIfPresent(Bool.self, forKey: .aiConsent) ?? false
         geminiModel = try c.decodeIfPresent(String.self, forKey: .geminiModel) ?? defaultGeminiModel
         onboarded = try c.decodeIfPresent(Bool.self, forKey: .onboarded) ?? false
+        automatedTimes = try c.decodeIfPresent([String: Double].self, forKey: .automatedTimes) ?? [:]
     }
 }
 

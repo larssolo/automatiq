@@ -15,12 +15,9 @@ struct ShortcutsGuideView: View {
                         .font(.sans(15)).foregroundStyle(Brand.onSurface)
 
                     guide(title: "Scheduled macro", icon: "clock", steps: [
-                        "Open **Shortcuts** → **Automation** → **+** → **Time of Day**.",
-                        "Choose the time and the days — the same as in your macro. Pick **Run Immediately** and turn off **Notify When Run**.",
-                        "Tap **New Blank Automation**, search for **TextFox** and add **Get TextFox Message**. Tap **Macro** and choose yours.",
-                        "Add **Get TextFox Recipients** with the same macro.",
-                        "Add **Send Message**. Set the message to **TextFox Message** and the recipients to **TextFox Recipients**. Turn off **Show When Run**.",
-                        "In TextFox, switch the macro off — or keep it on to get a reminder too.",
+                        "In TextFox → **Settings** → **Send automatically**, get the **TextFox Send** shortcut (once).",
+                        "In **Shortcuts** → **Automation** → **+** → **Time of Day**, set the macro's time and **Daily**. Choose **Run Immediately**.",
+                        "Pick **TextFox Send** under **My Shortcuts**. It sends every TextFox text due at that time — one automation covers them all.",
                     ], highlight: focus == .scheduled)
 
                     guide(title: "Auto-reply", icon: "arrowshape.turn.up.left.fill", steps: [

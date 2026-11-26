@@ -19,10 +19,7 @@ struct SettingsView: View {
 
                 group("Phone check") { HealthSection() }
 
-                group("Send automatically") {
-                    Hint("Let the Shortcuts app send your macros with no tap at all — scheduled texts and auto-replies.")
-                    OutlineButton(title: "How to set it up", color: Brand.green) { guide = true }
-                }
+                group("Send automatically") { AutomationSection() }
 
                 group("Appearance") { AppearanceSection() }
 

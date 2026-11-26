@@ -1,6 +1,7 @@
 import AppIntents
 import Foundation
 import TextFoxCore
+import UserNotifications
 
 // The actions TextFox gives the Shortcuts app. A Shortcuts automation ("Every day at 8:00",
 // "When I get a message from…") can run them and pass the text to Shortcuts' own Send Message,
@@ -20,8 +21,39 @@ struct GetMessageIntent: AppIntent {
         guard let m = MacroStore.shared.macro(id: macro.id) else { throw IntentError.macroGone }
         guard Purchases.shared.access.canRun else { throw IntentError.locked }
         let (text, note) = await AI.text(for: m)
-        MacroStore.shared.record(m, status: .success, text: text, detail: ["Handed to Shortcuts", note].compactMap { $0 }.joined(separator: " · "))
+        // Run by the "TextFox Send" automation: the line for that planned send says it went out.
+        let fire = dueForAutomation([m], now: Date()).first
+        let what = fire == nil ? "Handed to Shortcuts" : "Sent automatically by Shortcuts"
+        MacroStore.shared.record(m, status: .success, text: text, detail: [what, note].compactMap { $0 }.joined(separator: " · "),
+                                 fireId: fire?.id)
+        if fire != nil { await Scheduler.replan(MacroStore.shared) }
         return .result(value: text)
+    }
+}
+
+/// "Get Due TextFox Macros": the scheduled texts due about now. The "TextFox Send" shortcut runs it
+/// from a Time of Day automation and sends each one, so one automation covers every macro at that time.
+struct GetDueMacrosIntent: AppIntent {
+    static let title: LocalizedStringResource = "Get Due TextFox Macros"
+    static let description = IntentDescription("Gives the scheduled TextFox texts that are due now (within half an hour). Repeat with each: get its message and recipients and send it.")
+
+    @MainActor
+    func perform() async throws -> some IntentResult & ReturnsValue<[MacroEntity]> {
+        let store = MacroStore.shared
+        guard Purchases.shared.access.canRun else { throw IntentError.locked }
+        let now = Date()
+        if let t = automationTime(at: now, among: automationTimes(store.macros)) {
+            store.settings.automatedTimes[t] = now.timeIntervalSince1970
+        }
+        let sent = Set(store.log.filter { $0.status == .success }.compactMap(\.fireId))
+        let due = dueForAutomation(store.macros, now: now).filter { !sent.contains($0.id) }
+        // Shortcuts sends these, so their notifications (waiting, or already shown) go away.
+        let ids = due.map(\.id)
+        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ids)
+        UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: ids)
+        // A first run at this time turns its notifications into backups.
+        if due.isEmpty { await Scheduler.replan(store) }
+        return .result(value: due.compactMap { f in store.macro(id: f.macroId).map(MacroEntity.init) })
     }
 }
 

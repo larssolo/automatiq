@@ -59,17 +59,25 @@ enum Scheduler {
         let places = access.canRun ? Array(store.macros.filter { $0.enabled && $0.triggerType == .location && $0.latitude != nil && $0.longitude != nil }.prefix(20)) : []
         // Both kinds share iOS's limit of 64 waiting notifications.
         let plan = access.canRun ? planFires(store.macros, after: now, budget: notificationBudget - places.count).filter { $0.at < end } : []
-        let wanted = Set(plan.map(\.id) + places.map(locationId))
-        let pending = await center.pendingNotificationRequests().map(\.identifier).filter { $0.hasPrefix("fire:") || $0.hasPrefix("loc:") }
-        let stale = pending.filter { !wanted.contains($0) }
+        // Sends Shortcuts already made (an automation can run a little before the time) aren't planned again.
+        let sent = Set(store.log.filter { $0.status == .success }.compactMap(\.fireId))
+        let automated = Set(store.settings.automatedTimes.keys)
+        func isBackup(_ m: Macro) -> Bool { m.sendsText && m.scheduledTime.map(automated.contains) == true }
+        let fires = plan.filter { !sent.contains($0.id) }.compactMap { f in store.macro(id: f.macroId).map { (f, $0) } }
+        let wanted = Set(fires.map(\.0.id) + places.map(locationId))
+        let pendingRequests = await center.pendingNotificationRequests().filter { $0.identifier.hasPrefix("fire:") || $0.identifier.hasPrefix("loc:") }
+        // A send whose time got an automation since is planned again, as a backup.
+        let backupIds = Set(fires.filter { isBackup($0.1) }.map(\.0.id))
+        let stale = pendingRequests.filter { r in
+            !wanted.contains(r.identifier) || (r.identifier.hasPrefix("fire:") && (r.content.userInfo["backup"] as? Bool ?? false) != backupIds.contains(r.identifier))
+        }.map(\.identifier)
         center.removePendingNotificationRequests(withIdentifiers: stale)
-        let have = Set(pending)
+        let have = Set(pendingRequests.map(\.identifier)).subtracting(stale)
         for macro in places where !have.contains(locationId(macro)) {
             try? await center.add(locationRequest(for: macro))
         }
-        for fire in plan where !have.contains(fire.id) {
-            guard let macro = store.macro(id: fire.macroId) else { continue }
-            try? await center.add(request(for: macro, at: fire))
+        for (fire, macro) in fires where !have.contains(fire.id) {
+            try? await center.add(request(for: macro, at: fire, backup: isBackup(macro)))
         }
     }
 
@@ -106,12 +114,14 @@ enum Scheduler {
                                      trigger: UNLocationNotificationTrigger(region: region, repeats: true))
     }
 
-    private static func request(for macro: Macro, at fire: PlannedFire) -> UNNotificationRequest {
+    /// [backup]: a Shortcuts automation sends this one, so the notification only comes a few
+    /// minutes later, if the automation didn't run (it removes the notification when it does).
+    private static func request(for macro: Macro, at fire: PlannedFire, backup: Bool = false) -> UNNotificationRequest {
         let content = UNMutableNotificationContent()
         let text = expandTemplate(macro.messageBody, now: fire.at, macroName: macro.name, locale: Locale(identifier: "en_GB"))
         content.title = macro.name
         content.sound = .default
-        content.userInfo = ["macroId": macro.id, "at": fire.at.timeIntervalSince1970]
+        content.userInfo = ["macroId": macro.id, "at": fire.at.timeIntervalSince1970, "backup": backup]
         switch macro.actionType {
         case .reminder:
             content.body = text
@@ -119,12 +129,13 @@ enum Scheduler {
             content.body = "Tap to run the webhook"
             content.categoryIdentifier = category
         default:
-            content.subtitle = "To " + macro.recipients.map(maskPhone).joined(separator: ", ")
+            content.subtitle = (backup ? "Shortcuts didn't send it · " : "") + "To " + macro.recipients.map(maskPhone).joined(separator: ", ")
             content.body = text
             content.categoryIdentifier = category
             content.interruptionLevel = .timeSensitive
         }
-        let comps = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute, .second], from: fire.at)
+        let comps = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute, .second],
+                                                    from: fire.at.addingTimeInterval(backup ? 5 * 60 : 0))
         return UNNotificationRequest(identifier: fire.id, content: content,
                                      trigger: UNCalendarNotificationTrigger(dateMatching: comps, repeats: false))
     }
