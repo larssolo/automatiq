@@ -114,6 +114,17 @@ final class Purchases {
     func unlock() async { await buy(earlyBird ? ProductID.unlockEarlyBird : ProductID.unlock) }
 
     private func buy(_ id: String) async {
+        #if DEBUG
+        // A test build put on the phone from this Mac can't reach the store before the products
+        // exist in App Store Connect; start the trial on the phone itself so the rest can be tested.
+        if id == ProductID.trial, products[id] == nil {
+            let now = Date()
+            trialStart = now
+            Keychain.set(date: now, "trial_start")
+            message = nil
+            return
+        }
+        #endif
         guard let product = products[id] ?? (id == ProductID.unlockEarlyBird ? products[ProductID.unlock] : nil) else {
             message = "The App Store isn't reachable right now. Try again in a moment."
             return
