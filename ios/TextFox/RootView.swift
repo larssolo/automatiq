@@ -46,8 +46,9 @@ struct RootView: View {
         #if DEBUG
         .sheet(isPresented: $app.showWidgetPreview) { WidgetPreviewSheet() }
         #endif
-        .sheet(isPresented: $app.showUnlock) { UnlockSheet() }
-        .sheet(item: $app.outgoing) { message in
+        // While the editor is open it shows these itself, on top of it (see `presentsAppSheets`).
+        .sheet(isPresented: Binding(get: { app.editor == nil && app.showUnlock }, set: { app.showUnlock = $0 })) { UnlockSheet() }
+        .sheet(item: Binding(get: { app.editor == nil ? app.outgoing : nil }, set: { app.outgoing = $0 })) { message in
             MessageComposer(message: message) { result in app.finishedSending(message, result) }
                 .ignoresSafeArea()
         }
@@ -87,7 +88,7 @@ private struct TabBar: View {
     }
 }
 
-private struct ToastView: View {
+struct ToastView: View {
     let toast: Toast
     @Environment(AppState.self) private var app
 
@@ -135,3 +136,29 @@ private struct WidgetPreviewSheet: View {
     }
 }
 #endif
+
+extension View {
+    /// The Messages sheet, the unlock sheet and the toast, for a sheet (the editor) that covers the
+    /// root: SwiftUI can't show the root's sheets on top of it, so "Send now (test)" waited until it closed.
+    func presentsAppSheets(_ app: AppState) -> some View {
+        modifier(AppSheets(app: app))
+    }
+}
+
+private struct AppSheets: ViewModifier {
+    @Bindable var app: AppState
+
+    func body(content: Content) -> some View {
+        content
+            .overlay(alignment: .bottom) {
+                if let toast = app.toast {
+                    ToastView(toast: toast).padding(.bottom, 16).transition(.move(edge: .bottom).combined(with: .opacity))
+                }
+            }
+            .sheet(isPresented: $app.showUnlock) { UnlockSheet() }
+            .sheet(item: $app.outgoing) { message in
+                MessageComposer(message: message) { result in app.finishedSending(message, result) }
+                    .ignoresSafeArea()
+            }
+    }
+}

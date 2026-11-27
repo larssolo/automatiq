@@ -1,6 +1,6 @@
 # TextFox til iPhone: App Store
 
-Sidst opdateret 24. november 2026. Det her er det, Lars skal gøre i App Store Connect, og teksterne der skal ind.
+Sidst opdateret 27. november 2026. Det her er det, Lars skal gøre i App Store Connect, og teksterne der skal ind.
 
 ## 1. Opret appen
 
@@ -58,7 +58,7 @@ Svar: **Data Not Collected**. TextFox har ingen server. Makroer, log og indstill
 > At the send time you get a notification with the finished message: recipients, date, weekday and names filled in. Tap Send and it's gone.
 >
 > NO TAP AT ALL
-> TextFox works with the Shortcuts app. A Shortcuts automation can send your TextFox messages and auto-replies by itself — the step-by-step guide in the app shows how.
+> Add the TextFox Send shortcut once and switch it on. From then on it starts by itself with every TextFox notification and sends the message — scheduled texts and arrivals alike (iOS 27). Auto-replies work through a Shortcuts automation too; the guide in the app shows how.
 >
 > SCHEDULE IT YOUR WAY
 > • Weekdays, weekends or any days you pick
@@ -95,7 +95,7 @@ Svar: **Data Not Collected**. TextFox har ingen server. Makroer, log og indstill
 
 ## 6. Noter til Apples gennemgang (App Review Information)
 
-> TextFox never sends texts in the background. At a scheduled time it shows a local notification; tapping Send opens the system message composer pre-filled, and the user sends it. For fully automatic sending the app offers App Intents ("Get TextFox Message", "Get TextFox Recipients", "Get TextFox Auto-Reply") that the user can place in their own Shortcuts automation together with Shortcuts' Send Message action — the in-app guide (Settings → Send automatically) explains this.
+> TextFox never sends texts in the background. At a scheduled time it shows a local notification; tapping Send opens the system message composer pre-filled, and the user sends it. For fully automatic sending the app offers App Intents ("Get Due TextFox Macros", "Get TextFox Message", "Get TextFox Recipients", "Get TextFox Auto-Reply"). The user adds a shared shortcut, "TextFox Send", whose iOS 27 notification automation runs these with Shortcuts' own Send Message action when a TextFox notification arrives; the user switches the automation on themselves (Settings → Send automatically explains it). On older iOS versions the same shortcut runs from Time of Day automations the user creates.
 >
 > To test: open the app, go through the short intro, tap "Start 30-day free trial", then long-press any macro → Send now. No login is needed. AI features need a free Google Gemini API key and are optional.
 

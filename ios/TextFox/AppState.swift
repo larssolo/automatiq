@@ -38,6 +38,8 @@ final class AppState {
     var showWidgetPreview = false
     /// The open macro editor, if any (set by the list, the + button and textfox:// links).
     var editor: EditorTarget?
+    /// Settings → Send automatically opens its set-up (from the editor's nudge after saving a text).
+    var automationSetup = false
 
     init(store: MacroStore) { self.store = store }
 
@@ -59,6 +61,16 @@ final class AppState {
             if let m = store.macros.first(where: { $0.id == rest || $0.name.caseInsensitiveCompare(rest) == .orderedSame }) {
                 Task { await Scheduler.testFire(m) }
             }
+        case "test-due":
+            // A text due at the next whole minute, to see the TextFox Send shortcut start from its notification.
+            let at = Date().addingTimeInterval(65)
+            let c = Calendar.current.dateComponents([.hour, .minute], from: at)
+            var m = store.macros.first { $0.name == "Automation test" }
+                ?? Macro(name: "Automation test", triggerType: .scheduled, recipients: ["+4512345678"], messageBody: "Automation test at {time}")
+            m.scheduledTime = String(format: "%02d:%02d", c.hour ?? 0, c.minute ?? 0)
+            m.enabled = true
+            store.upsert(m)
+            show("Automation test at \(m.scheduledTime ?? "")")
         case "widget-preview": showWidgetPreview = true
         case "unlock": showUnlock = true
         case "test-tap", "test-skip":

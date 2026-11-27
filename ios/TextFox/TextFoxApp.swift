@@ -46,6 +46,8 @@ struct AppRoot: View {
         }
         // Every change to the macros re-plans the notifications.
         .onChange(of: app.store.macros) { Task { await app.refreshSchedule() } }
+        // So does starting the trial or unlocking (nothing is planned before).
+        .onChange(of: Purchases.shared.access) { Task { await app.refreshSchedule() } }
         // "Replay" in Settings clears the flag.
         .onChange(of: app.store.settings.onboarded) { _, done in if !done { onboarding = true } }
         .onChange(of: phase) { _, now in if now == .active { Task { await app.refreshSchedule() } } }

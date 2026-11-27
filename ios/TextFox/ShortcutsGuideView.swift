@@ -11,17 +11,21 @@ struct ShortcutsGuideView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 18) {
-                    Text("iPhone doesn't let apps send texts by themselves. TextFox reminds you with a notification — one tap on Send and it's gone. To send with no tap at all, let the Shortcuts app do the sending. It takes two minutes per macro.")
+                    Text("iPhone doesn't let apps send texts by themselves. TextFox reminds you with a notification — one tap on Send and it's gone. To send with no tap at all, let the Shortcuts app do the sending.")
                         .font(.sans(15)).foregroundStyle(Brand.onSurface)
 
-                    guide(title: "Scheduled macro", icon: "clock", steps: [
-                        "Open **Shortcuts** → **Automation** → **+** → **Time of Day**.",
-                        "Choose the time and the days — the same as in your macro. Pick **Run Immediately** and turn off **Notify When Run**.",
-                        "Tap **New Blank Automation**, search for **TextFox** and add **Get TextFox Message**. Tap **Macro** and choose yours.",
-                        "Add **Get TextFox Recipients** with the same macro.",
-                        "Add **Send Message**. Set the message to **TextFox Message** and the recipients to **TextFox Recipients**. Turn off **Show When Run**.",
-                        "In TextFox, switch the macro off — or keep it on to get a reminder too.",
-                    ], highlight: focus == .scheduled)
+                    if supportsNotificationAutomation {
+                        guide(title: "Scheduled and place macros", icon: "clock", steps: [
+                            "In TextFox → **Settings** → **Send automatically**, add the **TextFox Send** shortcut and turn on its automation.",
+                            "That's all: it starts by itself with every TextFox notification and sends what's due.",
+                        ], highlight: focus == .scheduled || focus == .location)
+                    } else {
+                        guide(title: "Scheduled macro", icon: "clock", steps: [
+                            "In TextFox → **Settings** → **Send automatically**, get the **TextFox Send** shortcut (once).",
+                            "In **Shortcuts** → **Automation** → **+** → **Time of Day**, set the macro's time and **Daily**. Choose **Run Immediately**.",
+                            "Pick **TextFox Send** under **My Shortcuts**. It sends every TextFox text due at that time — one automation covers them all.",
+                        ], highlight: focus == .scheduled)
+                    }
 
                     guide(title: "Auto-reply", icon: "arrowshape.turn.up.left.fill", steps: [
                         "Open **Shortcuts** → **Automation** → **+** → **Message**.",

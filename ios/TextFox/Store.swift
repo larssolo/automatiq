@@ -27,6 +27,15 @@ struct AppSettings: Codable, Hashable {
     var geminiModel = defaultGeminiModel
     /// The first-launch guide has been seen.
     var onboarded = false
+    /// Clock times ("08:00") whose Shortcuts automation has run, with when it last did (seconds).
+    var automatedTimes: [String: Double] = [:]
+    /// When the "TextFox Send" shortcut last started from a TextFox notification (iOS 27's
+    /// notification automation). While set, sends aren't delayed: the notification is the trigger.
+    var notificationAutomationAt: Double?
+    /// When the "TextFox Send" shortcut last ran at all (seconds).
+    var lastAutomationRunAt: Double?
+    /// The planned send each due macro stands for in a running shortcut, so its log line is the right one.
+    var automationClaims: [String: AutomationClaim] = [:]
 
     init() {}
 
@@ -39,7 +48,20 @@ struct AppSettings: Codable, Hashable {
         aiConsent = try c.decodeIfPresent(Bool.self, forKey: .aiConsent) ?? false
         geminiModel = try c.decodeIfPresent(String.self, forKey: .geminiModel) ?? defaultGeminiModel
         onboarded = try c.decodeIfPresent(Bool.self, forKey: .onboarded) ?? false
+        automatedTimes = try c.decodeIfPresent([String: Double].self, forKey: .automatedTimes) ?? [:]
+        notificationAutomationAt = try c.decodeIfPresent(Double.self, forKey: .notificationAutomationAt)
+        lastAutomationRunAt = try c.decodeIfPresent(Double.self, forKey: .lastAutomationRunAt)
+        automationClaims = try c.decodeIfPresent([String: AutomationClaim].self, forKey: .automationClaims) ?? [:]
     }
+
+    /// Shortcuts has sent at least once, by either kind of automation.
+    var automationWorks: Bool { notificationAutomationAt != nil || !automatedTimes.isEmpty }
+}
+
+struct AutomationClaim: Codable, Hashable {
+    var fireId: String
+    /// Seconds; a claim is only good for a few minutes, while the shortcut runs.
+    var at: Double
 }
 
 /// Everything the app stores, as one JSON file in the App Group so the widget and the Shortcuts

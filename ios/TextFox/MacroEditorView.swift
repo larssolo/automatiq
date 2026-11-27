@@ -66,6 +66,7 @@ struct MacroEditorView: View {
             .toolbar { toolbar }
         }
         .interactiveDismissDisabled(hasChanges)
+        .presentsAppSheets(app)
         .onAppear(perform: load)
         .sheet(item: $sheet) { which in pickerSheet(which) }
         .sheet(isPresented: $guide) { ShortcutsGuideView(focus: d.triggerType) }
@@ -112,6 +113,15 @@ struct MacroEditorView: View {
         store.upsert(m)
         if m.triggerType == .location { Scheduler.askForLocationIfNeeded() }
         UINotificationFeedbackGenerator().notificationOccurred(.success)
+        // A first text: say how it goes out, and offer to make it fully automatic.
+        let sendsByItself = m.sendsText || (m.triggerType == .location && m.actionType == .sms && supportsNotificationAutomation)
+        if existing == nil && sendsByItself && !store.settings.automationWorks {
+            let app = app
+            app.show("You'll get a notification to send it. Want TextFox to send by itself?", actionLabel: "Set up") {
+                app.tab = .settings
+                app.automationSetup = true
+            }
+        }
         dismiss()
     }
 

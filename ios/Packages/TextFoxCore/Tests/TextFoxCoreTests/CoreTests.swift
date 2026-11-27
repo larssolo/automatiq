@@ -418,3 +418,37 @@ func at(_ y: Int, _ m: Int, _ d: Int, _ h: Int, _ min: Int = 0) -> Date {
         }
     }
 }
+
+@Suite struct AutomationTests {
+    func text(_ time: String, days: [Int] = [1, 2, 3, 4, 5, 6, 7]) -> Macro {
+        var m = Macro(name: time, triggerType: .scheduled, scheduledTime: time, recipients: ["+4512345678"], messageBody: "hi")
+        m.daysOfWeek = days
+        m.createdAt = Int64(at(2026, 11, 1, 0).timeIntervalSince1970 * 1000)
+        return m
+    }
+
+    @Test func dueNearTheTime() {
+        let m = text("08:00")
+        #expect(dueForAutomation([m], now: at(2026, 11, 26, 8, 0), timeZone: cph).map(\.at) == [at(2026, 11, 26, 8)])
+        #expect(dueForAutomation([m], now: at(2026, 11, 26, 8, 20), timeZone: cph).map(\.at) == [at(2026, 11, 26, 8)])
+        #expect(dueForAutomation([m], now: at(2026, 11, 26, 7, 45), timeZone: cph).map(\.at) == [at(2026, 11, 26, 8)])
+        #expect(dueForAutomation([m], now: at(2026, 11, 26, 9, 0), timeZone: cph).isEmpty)
+    }
+
+    @Test func skipsDaysOffAndOtherKinds() {
+        // 26 Nov 2026 is a Thursday; the macro runs Mondays only.
+        #expect(dueForAutomation([text("08:00", days: [1])], now: at(2026, 11, 26, 8), timeZone: cph).isEmpty)
+        var reminder = text("08:00"); reminder.actionType = .reminder
+        var off = text("08:00"); off.enabled = false
+        #expect(dueForAutomation([reminder, off], now: at(2026, 11, 26, 8), timeZone: cph).isEmpty)
+    }
+
+    @Test func timesAndMatching() {
+        let times = automationTimes([text("20:15"), text("08:00"), text("08:00")])
+        #expect(times == ["08:00", "20:15"])
+        #expect(automationTime(at: at(2026, 11, 26, 8, 2), among: times, timeZone: cph) == "08:00")
+        #expect(automationTime(at: at(2026, 11, 26, 20, 0), among: times, timeZone: cph) == "20:15")
+        #expect(automationTime(at: at(2026, 11, 26, 12, 0), among: times, timeZone: cph) == nil)
+        #expect(automationTime(at: at(2026, 11, 26, 23, 50), among: ["00:05"], timeZone: cph) == "00:05")
+    }
+}
