@@ -69,7 +69,8 @@ final class TextFoxUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["AI VARIATION"].waitForExistence(timeout: 2))
         shot("13-editor-ai")
 
-        app.swipeDown(); app.swipeDown(); app.swipeDown(); app.swipeDown(); app.swipeDown()
+        // Back to the top, but no further: one swipe too many closes the unchanged editor.
+        for _ in 0..<8 where !app.buttons["Manual"].isHittable { app.swipeDown(); sleep(1) }
         for trigger in ["Manual", "Auto-reply", "Location"] {
             app.buttons[trigger].tap()
             if trigger == "Location" { sleep(5) } // let the map tiles load
@@ -127,6 +128,21 @@ final class TextFoxUITests: XCTestCase {
         XCTAssertTrue(card.waitForExistence(timeout: 2))
     }
 
+    func testSendTestFromTheEditor() {
+        // "Send now (test)" answers on top of the editor (it used to wait until the editor closed).
+        let card = app.staticTexts["Running late"]
+        XCTAssertTrue(card.waitForExistence(timeout: 5))
+        card.tap()
+        XCTAssertTrue(app.navigationBars["Edit macro"].waitForExistence(timeout: 3))
+        let test = app.buttons["Send now (test)"]
+        for _ in 0..<4 where !test.isHittable { app.swipeUp() }
+        test.tap()
+        let toast = app.staticTexts.matching(NSPredicate(format: "label CONTAINS 'logged the message instead'")).firstMatch
+        XCTAssertTrue(toast.waitForExistence(timeout: 4))
+        XCTAssertTrue(app.navigationBars["Edit macro"].exists)
+        shot("22-editor-test-send")
+    }
+
     func testSendNowLogsInTheSimulator() {
         let card = app.staticTexts["Running late"]
         XCTAssertTrue(card.waitForExistence(timeout: 5))
@@ -140,14 +156,12 @@ final class TextFoxUITests: XCTestCase {
         app.buttons["Settings"].tap()
         XCTAssertTrue(app.staticTexts["Quiet hours"].waitForExistence(timeout: 2))
         shot("31-settings")
-        // Send automatically: the shortcut steps, then the steps for one of the demo times.
-        app.buttons["How"].tap()
+        // Send automatically: the set-up steps (iOS 27: one shortcut; older: plus one automation per time).
+        let setup = app.buttons.matching(NSPredicate(format: "label == 'Set up TextFox Send' OR label == 'How'")).firstMatch
+        XCTAssertTrue(setup.waitForExistence(timeout: 3))
+        setup.tap()
         XCTAssertTrue(app.staticTexts["TextFox Send"].waitForExistence(timeout: 3))
         shot("32-shortcut-steps")
-        app.buttons["Done"].tap()
-        sleep(1)
-        app.buttons["Add"].firstMatch.tap()
-        XCTAssertTrue(app.navigationBars.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'Automation at'")).firstMatch.waitForExistence(timeout: 3))
         sleep(1)
         app.buttons["Done"].tap()
         sleep(2)

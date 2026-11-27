@@ -32,6 +32,8 @@ struct AppSettings: Codable, Hashable {
     /// When the "TextFox Send" shortcut last started from a TextFox notification (iOS 27's
     /// notification automation). While set, sends aren't delayed: the notification is the trigger.
     var notificationAutomationAt: Double?
+    /// When the "TextFox Send" shortcut last ran at all (seconds).
+    var lastAutomationRunAt: Double?
     /// The planned send each due macro stands for in a running shortcut, so its log line is the right one.
     var automationClaims: [String: AutomationClaim] = [:]
 
@@ -48,6 +50,7 @@ struct AppSettings: Codable, Hashable {
         onboarded = try c.decodeIfPresent(Bool.self, forKey: .onboarded) ?? false
         automatedTimes = try c.decodeIfPresent([String: Double].self, forKey: .automatedTimes) ?? [:]
         notificationAutomationAt = try c.decodeIfPresent(Double.self, forKey: .notificationAutomationAt)
+        lastAutomationRunAt = try c.decodeIfPresent(Double.self, forKey: .lastAutomationRunAt)
         automationClaims = try c.decodeIfPresent([String: AutomationClaim].self, forKey: .automationClaims) ?? [:]
     }
 

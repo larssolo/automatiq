@@ -66,6 +66,8 @@ Hver milepæl ender med en build, der virker, tests der består, og en test på 
 
 I alt ca. 3–4 ugers arbejde plus Apples gennemgang.
 
+**Automatisk afsendelse (27. nov.).** iOS 27 kan starte en genvej, når en notifikation fra en bestemt app kommer, og en delt genvej har automatiseringen med (slået fra, indtil modtageren slår den til). Derfor: én færdig genvej, "TextFox Send" (Hent forfaldne TextFox-makroer → for hver: besked, modtagere, Send besked), der starter på hver TextFox-notifikation. TextFox mærker selv, når det er notifikationen, der startede den, og skriver så "Sending automatically" i notifikationen; holder den op med at virke, går appen tilbage til tryk-for-at-sende. Steds-makroer sendes også. Før iOS 27: samme genvej plus én tidsautomatisering pr. klokkeslæt, med tjekliste. Mangler: Lars' iPhone på iOS 27, genvejen bygget på den og delt som iCloud-link, linket sat ind i appen (`sendShortcutURL`).
+
 ## 5. Pris og køb på iPhone
 
 - Engangskøb (non-consumable) `textfox_unlock`, 7 USD.

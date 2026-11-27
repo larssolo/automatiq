@@ -49,6 +49,7 @@ struct GetDueMacrosIntent: AppIntent {
         let store = MacroStore.shared
         guard Purchases.shared.access.canRun else { throw IntentError.locked }
         let now = Date()
+        store.settings.lastAutomationRunAt = now.timeIntervalSince1970
         let center = UNUserNotificationCenter.current()
         // The TextFox notifications shown in the last two minutes: the one that started this run, if any.
         let recent = await center.deliveredNotifications().filter {
