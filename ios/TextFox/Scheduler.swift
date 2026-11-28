@@ -153,6 +153,8 @@ enum Scheduler {
             content.body = text
             content.categoryIdentifier = category
             content.interruptionLevel = .timeSensitive
+            // A number on the app icon until it's sent, also after the notification is cleared.
+            if style != .autoSend { content.badge = 1 }
         }
         let comps = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute, .second],
                                                     from: fire.at.addingTimeInterval(style == .backup ? 5 * 60 : 0))
