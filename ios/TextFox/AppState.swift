@@ -137,11 +137,32 @@ final class AppState {
         }
     }
 
+    /// Send on a waiting text in the Ready to send list: the same as tapping its notification.
+    func send(_ waiting: LogEntry) {
+        guard let macro = store.macro(id: waiting.macroId) else { return }
+        guard Purchases.shared.access.canRun else { showUnlock = true; return }
+        compose(macro, at: waiting.at, fireId: waiting.fireId)
+    }
+
+    func skip(_ waiting: LogEntry) {
+        guard let macro = store.macro(id: waiting.macroId) else { return }
+        store.record(macro, status: .failed, text: waiting.text, detail: "Skipped", at: waiting.at, fireId: waiting.fireId)
+        if let id = waiting.fireId { UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: [id]) }
+        updateBadge()
+    }
+
+    /// The app icon's number: how many texts are waiting to be sent.
+    func updateBadge() {
+        UNUserNotificationCenter.current().setBadgeCount(store.readyToSend().count)
+    }
+
     func finishedSending(_ message: OutgoingMessage, _ result: MessageComposeResult) {
         outgoing = nil
         switch result {
         case .sent:
             store.record(message.macro, status: .success, text: message.body, detail: message.note, fireId: message.fireId)
+            if let id = message.fireId { UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: [id]) }
+            updateBadge()
             show("Sent — \(message.macro.name)")
         case .failed:
             store.record(message.macro, status: .failed, text: message.body, detail: "Messages couldn't send it", fireId: message.fireId)
@@ -164,6 +185,7 @@ final class AppState {
         }
         await Scheduler.catchUp(store)
         await Scheduler.replan(store)
+        updateBadge()
     }
 
     /// A tap on a send notification: Send opens the finished message, Skip logs it as skipped.
@@ -176,6 +198,7 @@ final class AppState {
         switch tap.action {
         case Scheduler.skipAction:
             store.record(macro, status: .failed, text: text, detail: "Skipped", at: at, fireId: fireId)
+            updateBadge()
         case UNNotificationDismissActionIdentifier:
             break
         default:

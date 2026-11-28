@@ -166,6 +166,10 @@ struct MacroListView: View {
             }
         } else {
             List {
+                let waiting = store.readyToSend()
+                if !waiting.isEmpty && !reordering {
+                    ReadyToSendCard(entries: waiting, send: app.send, skip: app.skip).rowStyle()
+                }
                 ForEach(store.rows) { row in
                     switch row {
                     case .folder(let f, let count, let active): folderRow(f, count: count, active: active)

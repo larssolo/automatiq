@@ -136,6 +136,15 @@ final class MacroStore {
 
     func macro(id: String) -> Macro? { macros.first { $0.id == id } }
 
+    /// Planned texts that came due but weren't sent or skipped (last 7 days), oldest first. They stay
+    /// in the app even when their notification is gone, so they can still be sent.
+    func readyToSend(now: Date = Date()) -> [LogEntry] {
+        log.filter { e in
+            e.status == .pending && e.fireId != nil && now.timeIntervalSince(e.at) < 7 * 24 * 3600
+                && macro(id: e.macroId)?.actionType == .sms
+        }.reversed()
+    }
+
     /// Insert or replace. A new macro goes to the top of the list (or of its folder).
     func upsert(_ macro: Macro) {
         var m = macro

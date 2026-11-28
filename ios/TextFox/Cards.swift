@@ -111,3 +111,48 @@ struct FolderCard: View {
         .contentShape(FolderTabShape())
     }
 }
+
+/// Texts that came due and are still waiting for a tap, at the top of the macro list. They stay here
+/// until sent or skipped, so a cleared notification doesn't lose them.
+struct ReadyToSendCard: View {
+    let entries: [LogEntry]
+    let send: (LogEntry) -> Void
+    let skip: (LogEntry) -> Void
+
+    private static let time: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "dd/MM HH:mm"
+        return f
+    }()
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Label(entries.count == 1 ? "1 text ready to send" : "\(entries.count) texts ready to send", systemImage: "paperplane.fill")
+                .font(.sans(15, medium: true)).foregroundStyle(Brand.amber)
+            ForEach(entries) { e in
+                HStack(alignment: .top, spacing: 10) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        HStack(spacing: 6) {
+                            Text(e.macroName).font(.sans(15, medium: true)).foregroundStyle(Brand.onSurface)
+                            Text(Self.time.string(from: e.at)).font(.mono(12)).foregroundStyle(Brand.mute)
+                        }
+                        Text(e.text).font(.sans(13)).foregroundStyle(Brand.mute).lineLimit(2)
+                    }
+                    Spacer(minLength: 0)
+                    Button("Skip") { skip(e) }
+                        .font(.sans(14)).foregroundStyle(Brand.mute)
+                        .buttonStyle(.borderless)
+                    Button("Send") { send(e) }
+                        .font(.sans(14, medium: true)).foregroundStyle(.black)
+                        .padding(.horizontal, 14).padding(.vertical, 6)
+                        .background(Capsule().fill(Brand.amber))
+                        .buttonStyle(.borderless)
+                        .accessibilityIdentifier("readySend")
+                }
+            }
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(RoundedRectangle(cornerRadius: 14).fill(Brand.amber.opacity(0.12)))
+    }
+}
